@@ -33,13 +33,28 @@ export function useApiQuery<T>(
     }
   }, [path]);
 
+  // Fetch on mount / when path changes. setState happens only after `await`
+  // (never synchronously in the effect body, never after unmount), which keeps
+  // it lint-clean under react-hooks/set-state-in-effect without a setTimeout hack.
   useEffect(() => {
-    if (autoFetch) {
-      setTimeout(() => {
-        refetch();
-      }, 0);
-    }
-  }, [autoFetch, refetch]);
+    if (!autoFetch) return;
+    let active = true;
+    (async () => {
+      try {
+        const result = await apiClient<T>(path);
+        if (!active) return;
+        setData(result);
+      } catch (err) {
+        if (!active) return;
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [autoFetch, path]);
 
   return { data, loading, error, refetch, setData };
 }

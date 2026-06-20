@@ -44,11 +44,30 @@ export function useDashboardData() {
     }
   }, []);
 
+  // Fetch on mount. setState only after `await` (lint-safe, no setTimeout).
   useEffect(() => {
-    setTimeout(() => {
-      fetchData();
-    }, 0);
-  }, [fetchData]);
+    let active = true;
+    (async () => {
+      try {
+        const [sData, pData] = await Promise.all([
+          apiClient<DashboardSummary>('/client/dashboard-summary'),
+          apiClient<ProtectionStatus>('/client/protection-status'),
+        ]);
+        if (!active) return;
+        setSummary(sData);
+        setProtectionStatus(pData);
+      } catch (err) {
+        if (!active) return;
+        console.error(err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return {
     summary,

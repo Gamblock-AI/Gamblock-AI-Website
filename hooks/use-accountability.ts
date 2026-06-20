@@ -65,11 +65,47 @@ export function useAccountability() {
     }
   }, []);
 
+  // Fetch on mount. setState only after `await` (lint-safe, no setTimeout).
   useEffect(() => {
-    setTimeout(() => {
-      fetchData();
-    }, 0);
-  }, [fetchData]);
+    let active = true;
+    (async () => {
+      try {
+        const partnersData = await apiClient<{
+          active_partner: PartnerLink | null | undefined;
+          items: PartnerLink[];
+        }>('/partners');
+        if (!active) return;
+        if (partnersData.active_partner) {
+          setPartnerEmail(partnersData.active_partner.partner_email);
+          setPartnerStatus('active');
+          setPartnerLinkId(partnersData.active_partner.id);
+        } else if (partnersData.items && partnersData.items.length > 0) {
+          const invited = partnersData.items.find((p) => p.status === 'invited');
+          if (invited) {
+            setPartnerEmail(invited.partner_email);
+            setPartnerStatus('invited');
+            setPartnerLinkId(invited.id);
+          } else {
+            setPartnerStatus('none');
+            setPartnerLinkId(null);
+          }
+        } else {
+          setPartnerStatus('none');
+          setPartnerLinkId(null);
+        }
+        const approvalData =
+          await apiClient<ApprovalRequest[]>('/approval-requests');
+        if (!active) return;
+        setRequests(approvalData || []);
+      } catch (err) {
+        if (!active) return;
+        console.error('Failed to load accountability data', err);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleInvitePartner = useCallback(
     async (email: string) => {

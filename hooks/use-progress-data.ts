@@ -28,11 +28,25 @@ export function useProgressData() {
     }
   }, []);
 
+  // Fetch on mount. setState only after `await` (lint-safe, no setTimeout).
   useEffect(() => {
-    setTimeout(() => {
-      fetchProgress();
-    }, 0);
-  }, [fetchProgress]);
+    let active = true;
+    (async () => {
+      try {
+        const data = await apiClient<ProgressSnapshot>('/client/progress');
+        if (!active) return;
+        setProgress(data);
+      } catch (err) {
+        if (!active) return;
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const toggleCheck = useCallback((idx: number) => {
     setChecked((prev) => prev.map((v, i) => (i === idx ? !v : v)));

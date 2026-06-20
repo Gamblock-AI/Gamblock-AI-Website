@@ -1,34 +1,46 @@
-# Dependencies
+# ===== Dependencies =====
 /node_modules
 
-# Next.js
+# ===== Next.js build output (regenerable) =====
 /.next/
 /out/
 /build
+*.tsbuildinfo
+next-env.d.ts
 
-# Environment
+# ===== Testing / coverage =====
+/coverage
+/coverage/**
+/test-results/
+/test-results/**
+/playwright-report/
+/playwright-report/**
+/blob-report/
+/playwright/.cache/
+
+# ===== Secrets / environment =====
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+secrets.*
 
-# Debug
+# ===== Logs =====
+*.log
 npm-debug.log*
 yarn-debug.log*
 .pnpm-debug.log*
 
-# Vercel
+# ===== Vercel =====
 .vercel
 
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-
-# OS
-.DS_Store
-
-# IDE
+# ===== IDE / Editors =====
 .idea/
 .vscode/
+*.swp
+*.swo
 
-# Testing
-/coverage
+# ===== OS =====
+.DS_Store
+Thumbs.db

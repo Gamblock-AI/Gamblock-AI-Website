@@ -4,172 +4,159 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-gsap.registerPlugin(ScrollTrigger);
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const FRAME_COUNT = 120;
-const currentFrame = (index: number) => 
+const currentFrame = (index: number) =>
   `/maskot-sequence/frame_${index.toString().padStart(4, '0')}.webp`;
 
+/**
+ * MaskotSequence — pinned scroll-bound frame animation.
+ * Preloads every frame once, then renders via requestAnimationFrame on scroll updates
+ * (no React re-renders during scrub).
+ */
 export default function MaskotSequence() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [images, setImages] = useState<HTMLImageElement[]>([]);
-  const currentFrameRef = useRef(0);
+  const frameObj = useRef({ frame: 0, x: 0.8, scale: 1.0 });
+  const rafId = useRef<number | null>(null);
+  const imagesRef = useRef<HTMLImageElement[]>([]);
+  const [progress, setProgress] = useState(0);
 
-  // Preload images
+  // Preload
   useEffect(() => {
-    const loadedImages: HTMLImageElement[] = [];
-    let loadedCount = 0;
-    
+    const loaded: HTMLImageElement[] = [];
+    let count = 0;
     for (let i = 1; i <= FRAME_COUNT; i++) {
       const img = new window.Image();
       img.src = currentFrame(i);
-      img.onload = () => {
-        loadedCount++;
-        if (loadedCount === FRAME_COUNT) {
-          setImages(loadedImages);
-          if (canvasRef.current) {
-            renderFrame(0, canvasRef.current, loadedImages[0]);
-          }
+      const tick = () => {
+        count++;
+        if (count === FRAME_COUNT) {
+          imagesRef.current = loaded;
+          setProgress(1);
+          drawFrame(0);
         }
       };
-      // Make sure we also handle errors to avoid getting stuck
-      img.onerror = () => {
-        loadedCount++;
-        if (loadedCount === FRAME_COUNT) {
-          setImages(loadedImages);
-        }
-      }
-      loadedImages.push(img);
+      img.onload = tick;
+      img.onerror = tick;
+      loaded.push(img);
     }
   }, []);
 
-  // Setup GSAP ScrollTrigger
-  useEffect(() => {
-    if (!canvasRef.current || !containerRef.current || images.length === 0) return;
-
-    // Start Pose 1 on the right (x: 0.8), zoomed in slightly
-    const frameObj = { frame: 0, x: 0.8, scale: 1.15 };
-    
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 0.5,
-      },
-      onUpdate: () => {
-        const index = Math.round(frameObj.frame);
-        currentFrameRef.current = index;
-        if (images[index]) {
-          // Pass the current animated x and scale to renderFrame
-          renderFrame(index, canvasRef.current!, images[index], undefined, undefined, frameObj.x, frameObj.scale);
-        }
-      }
-    });
-
-    // 0 -> 33% (Transition 1 to 2) Move to Left
-    tl.to(frameObj, {
-      frame: 30,
-      x: 0.2, // Left
-      ease: "none",
-      duration: 1
-    })
-    // 33% -> 66% (Transition 2 to 3) Move to Right
-    .to(frameObj, {
-      frame: 60,
-      x: 0.8, // Right
-      ease: "none",
-      duration: 1
-    })
-    // 66% -> 100% (Transition 3 to 4) Move to Left
-    .to(frameObj, {
-      frame: 90, // Stop at 90 (Pose 4)
-      x: 0.2, // Left
-      ease: "none",
-      duration: 1
-    });
-
-    return () => {
-      tl.kill();
-      ScrollTrigger.getAll().forEach(t => t.kill());
-    };
-  }, [images]);
-
-  // Handle Resize
-  useEffect(() => {
-    const resizeCanvas = () => {
-      if (canvasRef.current && canvasRef.current.parentElement) {
-        const canvas = canvasRef.current;
-        const rect = canvas.parentElement.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-
-        // Set physical size multiplied by DPR
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-
-        // Force CSS size to logical size
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
-
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          // Scale all drawing operations by the DPR
-          ctx.scale(dpr, dpr);
-        }
-        
-        if (images.length > 0 && images[currentFrameRef.current]) {
-          renderFrame(currentFrameRef.current, canvas, images[currentFrameRef.current], rect.width, rect.height);
-        }
-      }
-    };
-
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas(); // init size
-
-    return () => window.removeEventListener('resize', resizeCanvas);
-  }, [images]);
-
-  const renderFrame = (index: number, canvas: HTMLCanvasElement, img: HTMLImageElement, logicalWidth?: number, logicalHeight?: number, xPos: number = 0.5, scaleFactor: number = 1.0) => {
-    const ctx = canvas.getContext('2d');
+  const drawFrame = (index: number) => {
+    const canvas = canvasRef.current;
+    const img = imagesRef.current[index];
+    if (!canvas || !img) return;
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
-    
-    // Ensure high quality image scaling
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Contain with custom x-offset and scale
+    const baseRatio = Math.min(w / img.width, h / img.height);
+    const ratio = baseRatio * frameObj.current.scale;
+    const emptySpaceX = w - img.width * ratio;
+    const offsetX = emptySpaceX * frameObj.current.x;
+    const offsetY = (h - img.height * ratio) / 2;
+
+    // Honour device pixel ratio crisply
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-
-    // If logical sizes are not passed (e.g. from initial load), calculate them
-    const dpr = window.devicePixelRatio || 1;
-    const w = logicalWidth || (canvas.width / dpr);
-    const h = logicalHeight || (canvas.height / dpr);
-    
-    ctx.clearRect(0, 0, w, h);
-    
-    // Contain logic so the mascot is always fully visible
-    const hRatio = w / img.width;
-    const vRatio = h / img.height;
-    const baseRatio = Math.min(hRatio, vRatio);
-    const ratio = baseRatio * scaleFactor;
-    
-    // xPos = 0.5 means center. 0 = left edge, 1 = right edge.
-    const emptySpaceX = w - (img.width * ratio);
-    const centerShift_x = emptySpaceX * xPos;
-    const centerShift_y = (h - img.height * ratio) / 2;
-    
-    ctx.drawImage(img, 0, 0, img.width, img.height,
-                  centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+    ctx.drawImage(img, offsetX, offsetY, img.width * ratio, img.height * ratio);
   };
+
+  // Resize observer
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resize = () => {
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      const rect = parent.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+      drawFrame(Math.round(frameObj.current.frame));
+    };
+
+    resize();
+    const ro = new ResizeObserver(resize);
+    if (canvas.parentElement) ro.observe(canvas.parentElement);
+    return () => ro.disconnect();
+  }, [progress]);
+
+  // ScrollTrigger scrub timeline
+  useEffect(() => {
+    if (progress < 1) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const tickRender = () => {
+      rafId.current = requestAnimationFrame(tickRender);
+      drawFrame(Math.round(frameObj.current.frame));
+    };
+    rafId.current = requestAnimationFrame(tickRender);
+
+    if (reduce) {
+      // Static: pose 1 only
+      frameObj.current = { frame: 0, x: 0.8, scale: 1.0 };
+      return () => {
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+      };
+    }
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.5,
+        },
+        onUpdate: () => {
+          // requestAnimationFrame already drives drawFrame
+        },
+      });
+
+      tl.to(frameObj.current, { frame: 30, x: 0.8, ease: 'none', duration: 1 })
+        .to(frameObj.current, { frame: 60, x: 0.8, ease: 'none', duration: 1 })
+        .to(frameObj.current, { frame: 90, x: 0.8, ease: 'none', duration: 1 });
+    }, container);
+
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      ctx.revert();
+    };
+  }, [progress]);
 
   return (
     <div ref={containerRef} className="absolute inset-0 z-0 h-full w-full pointer-events-none">
-       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
-         {images.length < FRAME_COUNT && (
-           <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-white/50 z-10 backdrop-blur-sm">
-             <div className="animate-pulse">Memuat Aset Animasi...</div>
-           </div>
-         )}
-         <canvas ref={canvasRef} className="w-full h-full object-contain" />
-       </div>
+      <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
+        {progress < 1 && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/80 text-white/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-crimson" />
+              <div className="text-xs font-bold tracking-widest text-white/60 uppercase">
+                memuat aset animasi
+              </div>
+            </div>
+          </div>
+        )}
+        <canvas ref={canvasRef} className="h-full w-full object-contain" />
+      </div>
     </div>
   );
 }

@@ -1,4 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { config } from './config';
+import { ApiError } from './api-error';
+
+const API_URL = config.apiUrl;
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -12,6 +15,26 @@ function onRefreshed(token: string) {
   refreshSubscribers = [];
 }
 
+// Parse a failed response body into the backend envelope's error code/message
+// (shape: { data, error: { code, message }, request_id }) and throw an ApiError
+// that carries the production-safe message. Callers should catch ApiError and
+// surface `error.friendly()` (or the friendlyMessage() helper) to users.
+async function throwApiError(res: Response): Promise<never> {
+  let code: string | undefined;
+  let message: string | undefined;
+  try {
+    const json = await res.json();
+    if (json && typeof json === 'object' && 'error' in json) {
+      const err = (json as { error?: { code?: string; message?: string } }).error;
+      code = err?.code;
+      message = err?.message;
+    }
+  } catch {
+    // Non-JSON body (e.g. gateway error); fall back to status-based message.
+  }
+  throw new ApiError(res.status, code, message);
+}
+
 export async function apiClient<T>(path: string, options?: RequestInit): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('gamblock_access_token') : null;
   const headers: HeadersInit = {
@@ -22,7 +45,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
     (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
   }
   const cleanPath = path.startsWith("/v1/") || path === "/healthz" || path === "/readyz" ? path : `/v1${path}`;
-  
+
   const res = await fetch(`${API_URL}${cleanPath}`, {
     ...options,
     headers,
@@ -52,10 +75,10 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
               isRefreshing = false;
               onRefreshed(refreshData.data.access_token);
             } else {
-              throw new Error('Invalid refresh response');
+              throw new ApiError(401, 'invalid_refresh_token', 'Invalid refresh response');
             }
           } else {
-            throw new Error('Refresh failed');
+            throw new ApiError(401, 'invalid_refresh_token', 'Refresh failed');
           }
         } catch (err) {
           isRefreshing = false;
@@ -64,7 +87,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
           localStorage.removeItem('gamblock_user');
           document.cookie = 'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
           window.location.href = '/login';
-          throw err;
+          throw err instanceof ApiError ? err : new ApiError(401, 'invalid_refresh_token');
         }
       } else {
         localStorage.removeItem('gamblock_access_token');
@@ -72,7 +95,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
         localStorage.removeItem('gamblock_user');
         document.cookie = 'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
         window.location.href = '/login';
-        throw new Error('No refresh token available');
+        throw new ApiError(401, 'refresh_token_required');
       }
     }
 
@@ -88,7 +111,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
             headers: retriedHeaders,
             credentials: 'include',
           }).then(async (r) => {
-            if (!r.ok) throw new Error(`API error after retry: ${r.status}`);
+            if (!r.ok) await throwApiError(r);
             const json = await r.json();
             return json && typeof json === 'object' && 'data' in json ? json.data : json;
           }) as Promise<T>
@@ -97,7 +120,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
     });
   }
 
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) await throwApiError(res);
   const json = await res.json();
   return json && typeof json === 'object' && 'data' in json ? json.data : json;
 }
