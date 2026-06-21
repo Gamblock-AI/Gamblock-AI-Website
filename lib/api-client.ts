@@ -71,7 +71,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
             if (refreshData?.data?.access_token) {
               localStorage.setItem('gamblock_access_token', refreshData.data.access_token);
               localStorage.setItem('gamblock_refresh_token', refreshData.data.refresh_token);
-              document.cookie = `gamblock_access_token=${refreshData.data.access_token}; path=/; max-age=3600; SameSite=Lax`;
+              document.cookie = `gamblock_access_token=${refreshData.data.access_token}; path=/; max-age=3600; SameSite=Lax; Secure`;
               isRefreshing = false;
               onRefreshed(refreshData.data.access_token);
             } else {
@@ -85,7 +85,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
           localStorage.removeItem('gamblock_access_token');
           localStorage.removeItem('gamblock_refresh_token');
           localStorage.removeItem('gamblock_user');
-          document.cookie = 'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+          document.cookie = 'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
           window.location.href = '/login';
           throw err instanceof ApiError ? err : new ApiError(401, 'invalid_refresh_token');
         }
@@ -93,7 +93,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
         localStorage.removeItem('gamblock_access_token');
         localStorage.removeItem('gamblock_refresh_token');
         localStorage.removeItem('gamblock_user');
-        document.cookie = 'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+        document.cookie = 'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
         window.location.href = '/login';
         throw new ApiError(401, 'refresh_token_required');
       }

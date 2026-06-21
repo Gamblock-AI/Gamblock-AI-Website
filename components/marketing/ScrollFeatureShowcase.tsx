@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Brain, Shield, Users, Scan, Heart, Eye } from 'lucide-react';
 import Image from 'next/image';
+import { useTranslations } from "next-intl";
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -56,6 +57,7 @@ const POSES = [
 ];
 
 export function ScrollFeatureShowcase() {
+    const t = useTranslations('ScrollFeatureShowcase');
   const sectionRef = useRef<HTMLElement>(null);
   const stagesRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -117,15 +119,13 @@ export function ScrollFeatureShowcase() {
           mekanisme
         </span>
         <span className="hidden text-xs font-medium text-white/40 md:inline">
-          scroll untuk menjelajah
-        </span>
+          {t('text_320')}</span>
       </div>
 
       {/* Persistent chapter counter top-right */}
       <div className="absolute top-8 right-8 z-20 hidden items-center gap-2 md:flex md:top-12 md:right-16">
         <span className="text-xs font-bold tracking-widest text-white/30 uppercase">
-          bab 02 / 03
-        </span>
+          {t('text_321')}</span>
       </div>
 
       {/* Stages container */}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useTranslations } from "next-intl";
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -18,6 +19,7 @@ const currentFrame = (index: number) =>
  * (no React re-renders during scrub).
  */
 export default function MaskotSequence() {
+    const t = useTranslations('MaskotSequence');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const frameObj = useRef({ frame: 0, x: 0.8, scale: 1.0 });
@@ -150,8 +152,7 @@ export default function MaskotSequence() {
             <div className="flex items-center gap-3">
               <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-crimson" />
               <div className="text-xs font-bold tracking-widest text-white/60 uppercase">
-                memuat aset animasi
-              </div>
+                {t('text_311')}</div>
             </div>
           </div>
         )}

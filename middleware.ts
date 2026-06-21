@@ -1,34 +1,45 @@
+import createMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { routing } from './i18n/routing';
 import { PROTECTED_ROUTES, GUEST_ROUTES } from './routes';
 
+const intlMiddleware = createMiddleware(routing);
+
 export function middleware(request: NextRequest) {
+  // First, apply i18n routing
+  const response = intlMiddleware(request);
+
   const { pathname } = request.nextUrl;
+  const localeMatch = pathname.match(/^\/(id|en)/);
+  const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
+  const pathnameWithoutLocale = pathname.replace(/^\/(id|en)/, '') || '/';
+  
   const token = request.cookies.get('gamblock_access_token')?.value;
 
   const isProtected = PROTECTED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(route + '/')
+    (route) => pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(route + '/')
   );
-  if (isProtected) {
-    if (!token) {
-      const url = new URL('/login', request.url);
-      return NextResponse.redirect(url);
-    }
+  
+  if (isProtected && !token) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}/login`;
+    return NextResponse.redirect(url);
   }
 
   const isGuest = GUEST_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(route + '/')
+    (route) => pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(route + '/')
   );
-  if (isGuest) {
-    if (token) {
-      const url = new URL('/dashboard', request.url);
-      return NextResponse.redirect(url);
-    }
+  
+  if (isGuest && token) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}/dashboard`;
+    return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|images).*)'],
+  matcher: ['/', '/(id|en)/:path*', '/((?!api|_next|_vercel|.*\\..*).*)']
 };

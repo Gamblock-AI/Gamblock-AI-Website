@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/routes';
+import { useTranslations } from "next-intl";
 
 const NAV_LINKS = [
   { href: '/technology', label: 'Teknologi' },
@@ -14,6 +15,7 @@ const NAV_LINKS = [
 ];
 
 export function MarketingNav() {
+    const t = useTranslations('MarketingNav');
   return (
     <nav className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between gap-4 px-6 pt-6 md:px-10">
       {/* Logo pill */}
@@ -21,8 +23,8 @@ export function MarketingNav() {
         href={ROUTES.HOME}
         className="flex items-center gap-2 rounded-full border border-white/10 bg-neutral-900/90 py-3 pr-5 pl-4 backdrop-blur transition-colors hover:border-navy/30"
       >
-        <Image src="/images/logo.jpg" alt="Gamblock AI" width={22} height={22} className="rounded-md" />
-        <span className="text-sm font-semibold tracking-tight text-white">gamblock ai</span>
+        <Image src="/images/logo.png" alt={t('text_319')} width={22} height={22} className="rounded-md" />
+        <span className="text-sm font-semibold tracking-tight text-white">{t('text_317')}</span>
       </Link>
 
       {/* Center nav links - hidden on mobile */}
@@ -55,8 +57,7 @@ export function MarketingNav() {
             size="sm"
             className="rounded-full bg-crimson px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-crimson-light"
           >
-            mulai gratis
-          </Button>
+            {t('text_318')}</Button>
         </Link>
       </div>
     </nav>

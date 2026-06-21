@@ -1,0 +1,429 @@
+{
+  "LandingPage": {
+    "title": "Ambil Alih Masa Depan",
+    "titleAccent": "Anda.",
+    "subtitle": "Gamblock-AI bukan sekadar pemblokir biasa. Ini adalah ekosistem pertahanan digital berbasis kecerdasan buatan lokal (On-Device AI) dan intervensi psikologis otomatis untuk membantu mahasiswa lepas dari jeratan judi online.",
+    "btnStart": "Mulai Pemulihan Anda",
+    "btnLearn": "Pelajari Teknologi Kami"
+  },
+  "[locale]Page": {
+    "text_0": "Nilai Perputaran Judi Online 2025.",
+    "text_1": "Deteksi hibrida yang bekerja dalam keheningan, mengawasi tanpa melanggar privasi Anda.",
+    "text_2": "Tiga Langkah Menuju Kebebasan Diri.",
+    "text_3": "Lihat Jalur Pemulihan",
+    "text_4": "Program Kreativitas Mahasiswa (PKM-KC).",
+    "text_5": "Didanai sepenuhnya oleh Kemdikbudristek (Belmawa) tahun 2026. Dikembangkan dengan metode akademis terstruktur sebagai inisiatif nyata melawan darurat judi online bagi mahasiswa Indonesia.",
+    "text_6": "On-Device AI",
+    "text_7": "Kepatuhan Privasi (UU PDP)",
+    "text_8": "DOM Analysis",
+    "text_9": "Logistic Regression",
+    "text_10": "440 Rb",
+    "text_11": "Pemain dalam rentang usia 10-20 tahun",
+    "text_12": "520 Rb",
+    "text_13": "Pemain dalam rentang usia 21-30 tahun",
+    "text_14": "Sumber: PPATK, 2025",
+    "text_15": "Tinggalkan godaan. Putuskan siklusnya, hari ini.",
+    "text_16": "Terbuka gratis, 100% terjaga privasinya, dan dirancang khusus dari mahasiswa untuk mahasiswa.",
+    "text_17": "Mulai Langkah Pertama",
+    "text_18": "Android App",
+    "text_19": "Windows Service",
+    "text_20": "Enkripsi AES-256"
+  },
+  "DampakContent": {
+    "text_21": "darurat nasional",
+    "text_22": "judi online bukan hiburan.",
+    "text_23": "ini krisis generasi.",
+    "text_24": "sepanjang 2025 perputaran dana judi online di indonesia mencapai rp286,84 triliun. 12,3 juta orang tercatat melakukan deposit. mahasiswa berada di jantung krisis ini, dan kami membangun jawabannya.",
+    "text_25": "generasi muda menanggung beban terbesar.",
+    "text_26": "dampak pada mahasiswa bersifat destruktif dan berlapis: penyalahgunaan uang kuliah, keterlibatan pinjaman online ilegal, hingga gangguan psikologis berat berupa stres, kecemasan, dan depresi.",
+    "text_27": "(ppatk, 2025)",
+    "text_28": "blokir tanpa intervensi hanya memindahkan masalah.",
+    "text_29": "operator judi berganti domain dan url segera setelah pemblokiran berlaku, bahkan membajak domain pemerintahan. lebih penting lagi, pemblokiran tanpa tindak lanjut psikologis memicu efek reaktansi: pengguna mencari jalur alternatif lewat vpn atau proxy. solusi harus menyatukan deteksi cerdas dan intervensi psikologis otomatis.",
+    "text_30": "bukan sekadar pemblokiran. ini rekayasa perilaku.",
+    "text_31": "dari dorongan, menuju kendali diri.",
+    "text_32": "tahan manipulasi. bangun di atas kepercayaan.",
+    "text_33": "pencopotan aplikasi sepihak adalah titik lemah setiap pemblokir. gamblock ai mengatasinya dengan accountability partner: setiap permohonan uninstall memerlukan persetujuan eksplisit dari pendamping terdaftar. friction prosedural inilah yang menjaga pengguna tetap pada jalur pemulihan.",
+    "text_34": "ekosistem rehabilitasi mandiri",
+    "text_35": "setelah pattern interrupt memutus dorongan, pengguna diarahkan ke laman psikoedukasi berbasis self-regulation theory: penetapan niat perubahan, konten kesadaran impulsif, mood tracker, misi harian, dan pengembangan keterampilan. satu ekosistem yang menumbuhkan kendali diri secara siklikal.",
+    "text_36": "fase pemulihan",
+    "text_37": "privasi on-device",
+    "text_38": "android & windows",
+    "text_39": "putuskan siklus kecanduan,",
+    "text_40": "hari ini.",
+    "text_41": "gratis, 100% privat, dirancang oleh dan untuk mahasiswa indonesia. ambil kendali atas hidup anda sekarang.",
+    "text_42": "mulai gratis"
+  },
+  "TechnologyContent": {
+    "text_43": "kecerdasan yang berjalan",
+    "text_44": "di dalam perangkat anda.",
+    "text_45": "pemblokiran konvensional berbasis daftar hitam statis kalah dari situs judi yang berganti domain setiap hari. gamblock ai menjawabnya dengan hybrid analysis dan on-device ai: mendeteksi dari konten halaman, bukan sekadar alamat, semuanya tanpa menyentuh privasi anda.",
+    "text_46": "mulai gratis",
+    "text_47": "lihat dampaknya",
+    "text_48": "dirancang untuk akurasi, dibangun untuk privasi.",
+    "text_49": "dari akses hingga blokir, dalam milidetik.",
+    "text_50": "teknologi yang bekerja diam-diam,",
+    "text_51": "melindungi tanpa henti.",
+    "text_52": "tanpa data dikirim, tanpa performa terganggu. rasakan deteksi cerdas yang menghormati privasi anda.",
+    "text_53": "mulai gratis"
+  },
+  "ApprovalRequestModal": {
+    "text_54": "Persetujuan Pendamping Diperlukan",
+    "text_55": "Berdasarkan protokol akuntabilitas sosial, tindakan menonaktifkan Kunci Proteksi memerlukan otorisasi persetujuan dari pendamping Anda. Silakan isi alasan Anda di bawah ini.",
+    "text_56": "Alasan Penonaktifan",
+    "text_57": "Mengapa Anda ingin menonaktifkan proteksi ini? (Tulis alasan yang jujur untuk pendamping Anda)..."
+  },
+  "PartnerSetupCard": {
+    "text_58": "Email Calon Pendamping",
+    "text_59": "Masukkan email pendamping tepercaya Anda (misal: keluarga, teman dekat, atau konselor).",
+    "text_60": "Undang Pendamping",
+    "text_61": "Email Pendamping",
+    "text_62": "Putuskan Hubungan Pendamping",
+    "text_63": "nama.pendamping@example.com"
+  },
+  "PendingRequestNotification": {
+    "text_64": "Permohonan Persetujuan Tertunda",
+    "text_65": "Permohonan untuk menonaktifkan proteksi (",
+    "text_66": ") sedang menunggu konfirmasi dari pendamping Anda dengan alasan:",
+    "text_67": "&ldquo;",
+    "text_68": "&rdquo;",
+    "text_69": "Batalkan Permohonan"
+  },
+  "RequestsHistoryTable": {
+    "text_70": "Riwayat Permohonan Persetujuan"
+  },
+  "accountabilityPage": {
+    "text_71": "Social Accountability Protocol",
+    "text_72": "Sistem Pendamping & Akuntabilitas 🤝",
+    "text_73": "Hubungkan akun Anda dengan kerabat atau profesional konseling untuk mencegah penonaktifan proteksi secara impulsif.",
+    "text_74": "Kunci Proteksi Aplikasi",
+    "text_75": "Anti-Uninstall & Pause Lock",
+    "text_76": "Jika diaktifkan, aplikasi tidak dapat dihapus atau dijeda tanpa melalui proses persetujuan (friction) dari pendamping Anda.",
+    "text_77": "STATUS AKUNTABILITAS",
+    "text_78": "Social Protection Status",
+    "text_79": "Tingkat Friction",
+    "text_80": "Otorisasi Diperlukan",
+    "text_81": "Mengapa butuh pendamping?",
+    "text_82": "Keterlibatan orang lain dalam proses pemulihan (Social Accountability) terbukti secara klinis memotong dorongan impulsif hingga 68%. Hambatan prosedural (friction) memaksa otak berpikir rasional sebelum kembali melakukan taruhan."
+  },
+  "adminPage": {
+    "text_83": "Panel Kontrol Admin",
+    "text_84": "Kelola modul psikoedukasi, rilis model AI, tiket bantuan, dan kunci darurat.",
+    "text_85": "Rilis AI",
+    "text_86": "Kunci Darurat",
+    "text_87": "Memuat data...",
+    "text_88": "Manajemen Modul Psikoedukasi",
+    "text_89": "Rilis Model AI Pertahanan",
+    "text_90": "Tiket Dukungan",
+    "text_91": "Kunci Darurat (Emergency Master Key)",
+    "text_92": "Kunci darurat bersifat satu kali pakai dan berlaku 24 jam. Gunakan hanya jika WhatsApp Kepala mengalami gangguan permanen.",
+    "text_93": "Kunci Darurat Dihasilkan",
+    "text_94": "Berlaku 24 jam - satu kali pakai",
+    "text_95": "Generate Kunci Darurat"
+  },
+  "BlockedCategories": {
+    "text_96": "Kategori Domain Terblokir"
+  },
+  "LastInterventions": {
+    "text_97": "Intervensi Terakhir",
+    "text_98": "Lihat Semua"
+  },
+  "PeakHoursChart": {
+    "text_99": "Pola Waktu Penggunaan (Peak Hours)",
+    "text_100": "Aktivitas puncak terdeteksi pada pukul 18:00 - 20:00.",
+    "text_101": "Sistem perlindungan otomatis ditingkatkan ke level maksimal selama jendela waktu ini berdasarkan pola historis."
+  },
+  "ProtectionStats": {
+    "text_102": "HARI INI",
+    "text_103": "Akses Dicegah",
+    "text_104": "Efektivitas AI Shield",
+    "text_105": "Durasi Perlindungan"
+  },
+  "WeeklyTrendChart": {
+    "text_106": "Tren Upaya Akses (Mingguan)"
+  },
+  "dashboardPage": {
+    "text_107": "dashboard pengawasan grup",
+    "text_108": "pantau aktivitas, progres pemulihan, dan permohonan pencopotan dari seluruh member dalam grup pendampingan anda.",
+    "text_109": "efektivitas ai",
+    "text_110": "hybrid rule + logistic regression",
+    "text_111": "permohonan menunggu keputusan anda",
+    "text_112": "ada permintaan pencopotan atau jeda proteksi yang perlu persetujuan pendampingan.",
+    "text_113": "tinjau sekarang",
+    "text_114": "daftar member",
+    "text_115": "anggota terdaftar",
+    "text_116": "analitik perlindungan",
+    "text_117": "tinjauan efektivitas sistem dan tren upaya akses yang berhasil dicegah oleh gamblock ai.",
+    "text_118": "status sistem",
+    "text_119": "aktif & terproteksi",
+    "text_120": "pembaruan terakhir: hari ini",
+    "text_121": "Belum ada member yang terhubung"
+  },
+  "data-requestsPage": {
+    "text_122": "Kepatuhan Privasi",
+    "text_123": "Permintaan Data & Privasi 🔐",
+    "text_124": "Kelola ekspor riwayat aktivitas lokal Anda atau ajukan penghapusan akun sesuai ketentuan UU PDP.",
+    "text_125": "Ekspor Data Pribadi",
+    "text_126": "Unduh semua arsip aktivitas proteksi, log deteksi lokal, riwayat sinkronisasi ruleset, dan entri refleksi harian Anda dalam format standar JSON/ZIP.",
+    "text_127": "Mulai Ekspor Data",
+    "text_128": "Hapus Akun & Data",
+    "text_129": "Menghapus seluruh identitas akun Anda di server kami secara permanen. Tindakan ini memerlukan otorisasi konfirmasi melalui email dan tidak dapat dibatalkan.",
+    "text_130": "Hapus Akun Permanen",
+    "text_131": "Riwayat Permintaan Data",
+    "text_132": "Tanggal Pengajuan",
+    "text_133": "Jenis Permintaan",
+    "text_134": "Hasil / Unduh",
+    "text_135": "Tidak ada riwayat pengajuan permintaan data",
+    "text_136": "Unduh ZIP (1.2 MB)"
+  },
+  "educationPage": {
+    "text_137": "Modul Pemulihan",
+    "text_138": "Psikoedukasi & Regulasi Diri",
+    "text_139": "Materi edukasi dan latihan psikologis mandiri terstruktur yang didesain berdasarkan Self-Regulation Theory.",
+    "text_140": "Progres Bacaan",
+    "text_141": "Buka Modul"
+  },
+  "partnersPage": {
+    "text_142": "User Terproteksi",
+    "text_143": "Perangkat Sehat",
+    "text_144": "Tiket Bantuan",
+    "text_145": "Rilis Model Aktif",
+    "text_146": "Permohonan Akuntabilitas Sosial",
+    "text_147": "Tinjau permohonan jeda/penonaktifan perlindungan dari pengguna terproteksi Anda.",
+    "text_148": "Tidak ada permohonan persetujuan yang terdaftar.",
+    "text_149": "Aksi Proteksi",
+    "text_150": "Alasan Pengguna",
+    "text_151": "Aksi Pendamping",
+    "text_152": "&ldquo;",
+    "text_153": "&rdquo;",
+    "text_154": "Mitra Organisasi Pendamping",
+    "text_155": "Daftar lembaga konseling dan rehabilitasi terintegrasi.",
+    "text_156": "Tambah Mitra",
+    "text_157": "Tambah Mitra Baru",
+    "text_158": "Form tambah mitra rehabilitasi baru akan ditampilkan di sini.",
+    "text_159": "Tanggal Bergabung"
+  },
+  "profilePage": {
+    "text_160": "Konfigurasi Pengguna",
+    "text_161": "Update Profile 👤",
+    "text_162": "Perbarui informasi data diri Anda dan ubah kata sandi akun.",
+    "text_163": "Update Data Diri",
+    "text_164": "Nama Lengkap",
+    "text_165": "Alamat Email",
+    "text_166": "Simpan Profil",
+    "text_167": "Ubah Kata Sandi",
+    "text_168": "Kata Sandi Saat Ini",
+    "text_169": "Kata Sandi Baru",
+    "text_170": "Konfirmasi Kata Sandi Baru",
+    "text_171": "Ubah Password",
+    "text_172": "Nama Lengkap"
+  },
+  "MissionsList": {
+    "text_173": "Misi Harian Pemulihan",
+    "text_174": "Target harian kecil untuk membangun kebiasaan regulasi diri yang baru.",
+    "text_175": "/5 Selesai"
+  },
+  "MoodTracker": {
+    "text_176": "Bagaimana kondisi emosi Anda hari ini?",
+    "text_177": "Pencatatan emosi rutin dapat mendeteksi kondisi psikologis rentan yang memicu impuls adiksi."
+  },
+  "StreakCard": {
+    "text_178": "Streak Pemulihan",
+    "text_179": "Bebas Judi",
+    "text_180": "Hebat! Anda berhasil bertahan selama satu minggu penuh. Pertahankan konsistensi ini untuk memperkuat regulasi kognitif Anda."
+  },
+  "progressPage": {
+    "text_181": "Pemantauan Mandiri",
+    "text_182": "Progres Harian & Misi",
+    "text_183": "Lacak stabilitas emosi, capai misi harian pemulihan, dan bangun konsistensi streak tanpa judi.",
+    "text_184": "Tips Pemulihan Hari Ini",
+    "text_185": "Jika dorongan impulsif terasa sangat mendesak, segera hubungi",
+    "text_186": "Accountability Partner",
+    "text_187": "Anda. Meluapkan perasaan secara verbal terbukti menurunkan stres kognitif hingga 40%."
+  },
+  "recoveryPage": {
+    "text_188": "Pemulihan & Terapi",
+    "text_189": "Rehabilitasi & Jurnal Refleksi",
+    "text_190": "Ungkapkan perasaan Anda, tuangkan refleksi diri harian, dan isi check-in psikologis mingguan.",
+    "text_191": "Tulis Jurnal Refleksi",
+    "text_192": "Riwayat Refleksi",
+    "text_193": "Komitmen Saya",
+    "text_194": "&ldquo;",
+    "text_195": "&rdquo;",
+    "text_196": "Target Bebas Judi",
+    "text_197": "Evaluasi Mingguan",
+    "text_198": "Evaluasi rutin mingguan untuk mengukur kemajuan kemandirian Anda.",
+    "text_199": "Laporan Mingguan Disimpan!",
+    "text_200": "Data evaluasi psikologis Anda berhasil dikompilasi untuk memetakan progres jangka panjang.",
+    "text_201": "Kirim Evaluasi",
+    "text_202": "Ceritakan bagaimana perasaan Anda hari ini. Apa yang memicu dorongan? Bagaimana Anda mengatasinya?"
+  },
+  "NotificationSelector": {
+    "text_203": "Notifikasi & Laporan",
+    "text_204": "Saluran Pengiriman",
+    "text_205": "Pilih jenis kejadian yang dilaporkan ke pendamping.",
+    "text_206": "Semua (Blokir, Aksesibilitas Mati, Request)",
+    "text_207": "Hanya Request & Peringatan Darurat",
+    "text_208": "Hanya Notifikasi In-App"
+  },
+  "SensitivitySelector": {
+    "text_209": "Sensivitas Model AI",
+    "text_210": "Ambang Batas (Threshold)",
+    "text_211": "Menentukan tingkat keyakinan model Logistic Regression sebelum memicu pemblokiran halaman.",
+    "text_212": "*Rekomendasi (Sedang): Memblokir dengan akurasi 99.8% dengan minimal False Positive pada situs akademik."
+  },
+  "settingsPage": {
+    "text_213": "Konfigurasi Aplikasi",
+    "text_214": "Pengaturan Proteksi ⚙️",
+    "text_215": "Kelola ambang batas sensitivitas kecerdasan buatan, aksesibilitas sistem, dan parameter akun pendamping.",
+    "text_216": "Friction Protocol",
+    "text_217": "Kunci Proteksi (Anti-Uninstall)",
+    "text_218": "Mencegah aplikasi dimatikan paksa atau dihapus tanpa persetujuan dari Akun Pendamping.",
+    "text_219": "Undang Pendamping & Simpan",
+    "text_220": "Akun Pendamping"
+  },
+  "supportPage": {
+    "text_221": "Layanan Bantuan",
+    "text_222": "Pusat Dukungan & Bantuan 💬",
+    "text_223": "Ajukan pertanyaan seputar instalasi sensor, kendali otorisasi, atau laporkan kendala operasional aplikasi.",
+    "text_224": "Tiket dukungan Anda berhasil dibuat! Tim teknis kami akan merespons dalam 24 jam.",
+    "text_225": "Buat Tiket Dukungan Baru",
+    "text_226": "Subjek Kendala",
+    "text_227": "Pilih Prioritas",
+    "text_228": "Detail Kronologi / Kendala",
+    "text_229": "Daftar Kasus Aktif",
+    "text_230": "Tidak ada tiket bantuan aktif.",
+    "text_231": "Prioritas:",
+    "text_232": "Semua log pelacakan kesalahan (bug reporting) dienkripsi secara lokal sebelum dikirimkan ke operator teknis kami demi kepatuhan privasi data.",
+    "text_233": "Tuliskan judul masalah secara singkat...",
+    "text_234": "Ceritakan kendala teknis atau kendala yang dihadapi (sebutkan tipe OS/browser jika relevan)..."
+  },
+  "loginPage": {
+    "text_235": "Kembali ke Beranda",
+    "text_236": "Selamat datang kembali",
+    "text_237": "Silakan masuk ke akun Anda untuk memantau progres pemulihan.",
+    "text_238": "Alamat Email",
+    "text_239": "Kata Sandi",
+    "text_240": "Lupa kata sandi?",
+    "text_241": "Belum memiliki akun?",
+    "text_242": "Daftar sekarang gratis",
+    "text_243": "© 2026 Gamblock AI. Hak Cipta Dilindungi.",
+    "text_244": "Gamblock AI",
+    "text_245": "name@example.com",
+    "text_246": "Kata sandi Anda"
+  },
+  "registerPage": {
+    "text_247": "Kembali ke Beranda",
+    "text_248": "Mulai pulihkan diri Anda",
+    "text_249": "Buat akun untuk mengaktifkan sistem proteksi dan modul edukasi.",
+    "text_250": "Saya mendaftar sebagai",
+    "text_251": "Dosen / Pendamping",
+    "text_252": "Nama Lengkap",
+    "text_253": "Alamat Email",
+    "text_254": "Kata Sandi",
+    "text_255": "Saya menyetujui",
+    "text_256": "Ketentuan Layanan",
+    "text_257": "Kebijakan Privasi",
+    "text_258": "Gamblock AI.",
+    "text_259": "Sudah memiliki akun?",
+    "text_260": "Masuk di sini",
+    "text_261": "© 2026 Gamblock AI. Hak Cipta Dilindungi.",
+    "text_262": "Gamblock AI",
+    "text_263": "Nama Lengkap Anda",
+    "text_264": "name@example.com",
+    "text_265": "Minimal 8 karakter"
+  },
+  "ApprovalErrorState": {
+    "text_266": "Gagal Memverifikasi"
+  },
+  "ApprovalProcessedState": {
+    "text_267": "Permohonan Sudah Diproses",
+    "text_268": "Permohonan ini sudah diselesaikan sebelumnya."
+  },
+  "ApprovalRequestForm": {
+    "text_269": "Permohonan Izin Pencopotan",
+    "text_270": "Seorang Member mengajukan permohonan untuk menonaktifkan perlindungan.",
+    "text_271": "Gamblock AI - Quick Approval via WhatsApp"
+  },
+  "create-groupPage": {
+    "text_272": "Grup Berhasil Dibuat!",
+    "text_273": "Bagikan kode grup ini ke mahasiswa Anda",
+    "text_274": "Kode Grup",
+    "text_275": "Bagikan WA",
+    "text_276": "Lanjut ke Dashboard",
+    "text_277": "Buat Grup Monitoring",
+    "text_278": "Sebagai Dosen/Pendamping, buat grup untuk mengawasi mahasiswa Anda.",
+    "text_279": "Nama Grup",
+    "text_280": "Contoh: &ldquo;Kelas TI-2024A&rdquo; atau &ldquo;Bimbingan Skripsi 2026&rdquo;",
+    "text_281": "Kode grup unik akan dibuat secara otomatis. Bagikan kode ini ke mahasiswa melalui WA.",
+    "text_282": "Nama grup monitoring"
+  },
+  "[id]Page": {
+    "text_283": "Kembali ke Psikoedukasi",
+    "text_284": "Est.",
+    "text_285": "Modul ini membahas tentang",
+    "text_286": "secara mendalam. Anda akan mempelajari konsep dasar, mekanisme psikologis yang mendasari, dan teknik praktis yang dapat segera Anda terapkan dalam kehidupan sehari-hari untuk menjaga stabilitas regulasi diri.",
+    "text_287": "1. Konsep Dasar & Pentingnya Regulasi Diri",
+    "text_288": "Self-Regulation Theory",
+    "text_289": ", kegagalan menolak dorongan judi sering kali disebabkan oleh berkurangnya kapasitas kontrol kognitif pada momen-momen kritis (misalnya saat lelah, cemas, atau di bawah tekanan finansial). Memahami situasi rentan ini adalah langkah awal yang sangat penting.",
+    "text_290": "2. Langkah Praktis Latihan Mandiri",
+    "text_291": "Mengenali Trigger:",
+    "text_292": "Catat emosi yang Anda rasakan sebelum keinginan mengakses situs judi muncul (apakah stres, bosan, atau kesepian?).",
+    "text_293": "Pattern Interrupt:",
+    "text_294": "Saat dorongan muncul, ambil jeda napas dalam-dalam selama 10 detik. Fokuskan pikiran pada konsekuensi jangka panjang.",
+    "text_295": "Hubungi Pendamping:",
+    "text_296": "Jangan ragu untuk mengirimkan pesan singkat ke pendamping terdaftar Anda untuk meminta bantuan pendampingan moral.",
+    "text_297": "Membangun kendali diri yang kokoh membutuhkan waktu dan latihan yang konsisten. Setiap keberhasilan menolak dorongan impulsif, sekecil apa pun, adalah langkah maju menuju pemulihan total.",
+    "text_298": "Anda telah menyelesaikan modul ini!",
+    "text_299": "Selesaikan membaca materi di atas untuk mencatat progres Anda.",
+    "text_300": "Tandai Belum Selesai",
+    "text_301": "Tandai Selesai & Simpan"
+  },
+  "[token]Page": {
+    "text_302": "Gamblock AI",
+    "text_303": "Masuk Sebagai Pendamping",
+    "text_304": "Undangan Diterima!",
+    "text_305": "Anda sekarang resmi terdaftar sebagai **Pendamping Akuntabilitas**. Anda akan menerima notifikasi jika pengguna terproteksi meminta izin penonaktifan atau pause proteksi.",
+    "text_306": "Buka Portal Mitra",
+    "text_307": "Protokol Akuntabilitas Sosial",
+    "text_308": "Undangan Pendamping",
+    "text_309": "Anda diundang untuk menjadi pendamping akuntabilitas pemulihan judi online. Tugas Anda adalah membantu memantau dan memberikan persetujuan saat diperlukan.",
+    "text_310": "© 2026 Gamblock AI. Program Akuntabilitas Sosial."
+  },
+  "MaskotSequence": {
+    "text_311": "memuat aset animasi"
+  },
+  "navbar": {
+    "text_312": "Jurnal Refleksi",
+    "text_313": "Perbarui Profil"
+  },
+  "sidebar": {
+    "text_314": "Gamblock AI",
+    "text_315": "On-Device Shield",
+    "text_316": "Sistem Aktif & Terproteksi"
+  },
+  "MarketingNav": {
+    "text_317": "gamblock ai",
+    "text_318": "mulai gratis",
+    "text_319": "Gamblock AI"
+  },
+  "ScrollFeatureShowcase": {
+    "text_320": "scroll untuk menjelajah",
+    "text_321": "bab 02 / 03"
+  },
+  "ScrollFrameSequence": {
+    "text_322": "memuat aset animasi"
+  },
+  "SiteFooter": {
+    "text_323": "gamblock ai",
+    "text_324": "Sistem pertahanan digital berbasis on-device AI untuk memutus siklus judi online di kalangan mahasiswa Indonesia.",
+    "text_325": "on-device ai",
+    "text_326": "patuh uu pdp",
+    "text_327": "hybrid ml",
+    "text_328": "© 2026 gamblock ai · program kreativitas mahasiswa karsa cipta · hak cipta dilindungi",
+    "text_329": "pkm kc 2026",
+    "text_330": "Gamblock AI"
+  },
+  "empty-state.test": {
+    "text_331": "Belum ada member"
+  }
+}

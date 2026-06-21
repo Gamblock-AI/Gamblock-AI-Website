@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BarChart2, Users, Handshake, GraduationCap, Heart, Settings } from 'lucide-react';
 import { SidebarItem } from './sidebar-item';
+import { useTranslations } from "next-intl";
 
 const sections = [
   {
@@ -32,6 +33,7 @@ const sections = [
 ];
 
 export function Sidebar() {
+    const t = useTranslations('sidebar');
   const pathname = usePathname();
 
   return (
@@ -43,11 +45,9 @@ export function Sidebar() {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-extrabold leading-none tracking-tight text-navy">
-            Gamblock AI
-          </span>
+            {t('text_314')}</span>
           <span className="mt-0.5 text-[9px] font-bold tracking-widest text-muted-foreground uppercase">
-            On-Device Shield
-          </span>
+            {t('text_315')}</span>
         </div>
       </Link>
 
@@ -82,8 +82,7 @@ export function Sidebar() {
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-1.5 rounded-full bg-sage" />
             <span className="text-[10px] font-semibold text-muted-foreground">
-              Sistem Aktif & Terproteksi
-            </span>
+              {t('text_316')}</span>
           </div>
         </div>
       </div>

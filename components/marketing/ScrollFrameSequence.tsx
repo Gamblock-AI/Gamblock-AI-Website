@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useTranslations } from "next-intl";
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -37,6 +38,7 @@ export function ScrollFrameSequence({
   className = 'h-[300dvh]',
   backgroundClassName = 'bg-black',
 }: ScrollFrameSequenceProps) {
+    const t = useTranslations('ScrollFrameSequence');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const frameObj = useRef({ frame: 0, x: alignX });
@@ -170,8 +172,7 @@ export function ScrollFrameSequence({
             <div className="flex items-center gap-3">
               <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-crimson" />
               <div className="text-xs font-bold tracking-widest text-white/60 uppercase">
-                memuat aset animasi
-              </div>
+                {t('text_322')}</div>
             </div>
           </div>
         )}

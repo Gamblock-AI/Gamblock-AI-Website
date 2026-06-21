@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslations } from "next-intl";
 
 const pathnameToTitle: Record<string, string> = {
   '/dashboard': 'Analitik Perlindungan',
@@ -21,6 +22,7 @@ const pathnameToTitle: Record<string, string> = {
 };
 
 export function Navbar() {
+    const t = useTranslations('navbar');
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<{ display_name: string; email: string } | null>(null);
@@ -74,7 +76,7 @@ export function Navbar() {
         localStorage.removeItem('gamblock_refresh_token');
         localStorage.removeItem('gamblock_user');
         document.cookie =
-          'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+          'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
         router.push(ROUTES.LOGIN);
       }
     });
@@ -92,8 +94,7 @@ export function Navbar() {
         <Link href={ROUTES.RECOVERY}>
           <Button variant="wellness" size="sm">
             <BookOpen className="h-3.5 w-3.5" />
-            Jurnal Refleksi
-          </Button>
+            {t('text_312')}</Button>
         </Link>
 
         {/* Icons */}
@@ -143,8 +144,7 @@ export function Navbar() {
                 className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <User className="h-4 w-4" />
-                Perbarui Profil
-              </Link>
+                {t('text_313')}</Link>
 
               <button
                 onClick={handleLogout}
