@@ -4,9 +4,7 @@
     "titleAccent": "Anda.",
     "subtitle": "Gamblock-AI bukan sekadar pemblokir biasa. Ini adalah ekosistem pertahanan digital berbasis kecerdasan buatan lokal (On-Device AI) dan intervensi psikologis otomatis untuk membantu mahasiswa lepas dari jeratan judi online.",
     "btnStart": "Mulai Pemulihan Anda",
-    "btnLearn": "Pelajari Teknologi Kami"
-  },
-  "[locale]Page": {
+    "btnLearn": "Pelajari Teknologi Kami",
     "text_0": "Nilai Perputaran Judi Online 2025.",
     "text_1": "Deteksi hibrida yang bekerja dalam keheningan, mengawasi tanpa melanggar privasi Anda.",
     "text_2": "Tiga Langkah Menuju Kebebasan Diri.",
@@ -423,7 +421,7 @@
     "text_329": "pkm kc 2026",
     "text_330": "Gamblock AI"
   },
-  "empty-state.test": {
+  "empty-state-test": {
     "text_331": "Belum ada member"
   }
 }

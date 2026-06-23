@@ -4,9 +4,7 @@
     "titleAccent": "Future.",
     "subtitle": "Gamblock-AI is not just a blocker. It's a digital defense ecosystem powered by On-Device AI and automatic psychological interventions to help students break free from online gambling.",
     "btnStart": "Start Your Recovery",
-    "btnLearn": "Learn Our Technology"
-  },
-  "[locale]Page": {
+    "btnLearn": "Learn Our Technology",
     "text_0": "Nilai Perputaran Judi Online 2025.",
     "text_1": "Deteksi hibrida yang bekerja dalam keheningan, mengawasi tanpa melanggar privasi Anda.",
     "text_2": "Tiga Langkah Menuju Kebebasan Diri.",
@@ -423,7 +421,7 @@
     "text_329": "pkm kc 2026",
     "text_330": "Gamblock AI"
   },
-  "empty-state.test": {
+  "empty-state-test": {
     "text_331": "Belum ada member"
   }
 }
