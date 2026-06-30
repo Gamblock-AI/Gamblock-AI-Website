@@ -12,9 +12,15 @@ export const ROUTES = {
   DATA_REQUESTS: '/data-requests',
   LOGIN: '/login',
   REGISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
   PROFILE: '/profile',
   CREATE_GROUP: '/onboarding/create-group',
   APPROVE: '/approve',
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
+  HELP: '/help',
+  CONTACT: '/contact',
+  DOWNLOAD: '/download',
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -32,4 +38,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.CREATE_GROUP,
 ] as const;
 
-export const GUEST_ROUTES = [ROUTES.LOGIN, ROUTES.REGISTER] as const;
+export const GUEST_ROUTES = [
+  ROUTES.LOGIN,
+  ROUTES.REGISTER,
+  ROUTES.FORGOT_PASSWORD,
+] as const;

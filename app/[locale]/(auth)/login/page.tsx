@@ -1,22 +1,23 @@
 'use client';
 
 import { ROUTES } from '@/routes';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { login } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from "next-intl";
+import { AuthShell } from '@/components/auth/AuthShell';
+import { AuthField, AuthDivider, GoogleButton } from '@/components/auth/AuthField';
+import { useTranslations } from 'next-intl';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 const loginSchema = z.object({
-  email: z.string().min(1, { message: "Email wajib diisi" }).email({ message: "Format email tidak valid" }),
-  password: z.string().min(6, { message: "Password minimal 6 karakter" }),
+  email: z.string().min(1, { message: 'Email wajib diisi' }).email({ message: 'Format email tidak valid' }),
+  password: z.string().min(6, { message: 'Password minimal 6 karakter' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -30,7 +31,7 @@ interface AuthResponse {
 }
 
 export default function LoginPage() {
-    const t = useTranslations('loginPage');
+  const t = useTranslations('loginPage');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,102 +66,67 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    alert('Fitur login dengan Google belum diimplementasikan.');
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md">
-        {/* Back link */}
-        <Link
-          href={ROUTES.HOME}
-          className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-navy"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t('text_235')}</Link>
-
-        {/* Card */}
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-          {/* Header */}
-          <div className="mb-8 space-y-3">
-            <Image
-              src="/images/logo.png"
-              alt={t('text_244')}
-              width={40}
-              height={40}
-              className="rounded-xl"
-            />
-            <h2 className="text-heading text-2xl text-navy">
-              {t('text_236')}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t('text_237')}</p>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="mb-6 rounded-xl border border-crimson/20 bg-crimson/5 px-4 py-3 text-xs font-semibold text-crimson">
-              {error}
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label className="text-label text-navy">{t('text_238')}</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="email"
-                  {...formRegister('email')}
-                  placeholder={t('text_245')}
-                  className={`w-full rounded-lg border bg-background py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-navy focus:ring-2 focus:ring-navy/15 focus:outline-none ${errors.email ? 'border-crimson' : 'border-input'}`}
-                />
-              </div>
-              {errors.email && <p className="text-xs text-crimson font-medium">{errors.email.message}</p>}
-            </div>
-
-            {/* Password */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-label text-navy">{t('text_239')}</label>
-                <Link href="#" className="text-xs font-semibold text-crimson hover:underline">
-                  {t('text_240')}</Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="password"
-                  {...formRegister('password')}
-                  placeholder={t('text_246')}
-                  className={`w-full rounded-lg border bg-background py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-navy focus:ring-2 focus:ring-navy/15 focus:outline-none ${errors.password ? 'border-crimson' : 'border-input'}`}
-                />
-              </div>
-              {errors.password && <p className="text-xs text-crimson font-medium">{errors.password.message}</p>}
-            </div>
-
-            {/* Submit */}
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'Memproses...' : 'Masuk ke Dashboard'}
-              <ArrowRight className="ml-1.5 h-4 w-4" />
-            </Button>
-          </form>
-
-          {/* Register link */}
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            {t('text_241')}{' '}
-            <Link href={ROUTES.REGISTER} className="font-bold text-crimson hover:underline">
-              {t('text_242')}</Link>
-          </p>
+    <AuthShell
+      heading={t('text_236')}
+      subheading={t('text_237')}
+      footer={
+        <p className="text-center text-sm text-muted-foreground">
+          {t('text_241')}{' '}
+          <Link href={ROUTES.REGISTER} className="font-semibold text-crimson hover:text-crimson/80">
+            {t('text_242')}
+          </Link>
+        </p>
+      }
+    >
+      {error && (
+        <div className="mb-6 rounded-xl border border-crimson/20 bg-crimson/5 px-4 py-3 text-xs font-semibold text-crimson">
+          {error}
         </div>
+      )}
 
-        {/* Footer */}
-        <p className="mt-8 text-center text-xs text-muted-foreground/50">
-          {t('text_243')}</p>
-      </div>
-    </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <AuthField
+          label={t('text_238')}
+          icon={Mail}
+          type="email"
+          placeholder={t('text_245')}
+          error={errors.email?.message}
+          {...formRegister('email')}
+        />
+
+        <AuthField
+          label={t('text_239')}
+          icon={Lock}
+          type="password"
+          placeholder={t('text_246')}
+          error={errors.password?.message}
+          labelAdornment={
+            <Link href={ROUTES.FORGOT_PASSWORD} className="text-xs font-semibold text-crimson hover:text-crimson/80">
+              {t('text_240')}
+            </Link>
+          }
+          {...formRegister('password')}
+        />
+
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          className="w-full rounded-xl py-6 font-semibold"
+          disabled={loading}
+        >
+          {loading ? t('processing') : t('submit')}
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </form>
+
+      <AuthDivider label={t('orDivider')} />
+      <GoogleButton label={t('googleContinue')} onClick={handleGoogleLogin} />
+    </AuthShell>
   );
 }

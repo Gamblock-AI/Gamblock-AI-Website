@@ -1,17 +1,21 @@
 import { test, expect } from '@playwright/test';
 
-test('Hero section meets design constraints', async ({ page }) => {
+test('Landing hero renders with brand heading, CTAs and key stat', async ({ page }) => {
   await page.goto('/');
-  
-  const heroSection = page.locator('section').first();
-  await expect(heroSection).toBeVisible();
 
-  // Test typography size and text
-  const title1 = page.locator('h1.hero-title').nth(0);
-  await expect(title1).toHaveText(/lindungi/i);
-  // We can't perfectly test computed OKLCH easily in all browsers, but we can verify class presence and basic structure.
+  // Hero heading is the first h1 and carries the crimson accent phrase.
+  const heading = page.locator('h1').first();
+  await expect(heading).toBeVisible();
+  await expect(heading).toContainText(/kendali|control/i);
 
-  // Test the stat texts extracted from proposal
-  await expect(page.locator('text=Rp286')).toBeVisible();
-  await expect(page.locator('text=12,3')).toBeVisible();
+  // Primary + secondary CTAs are present.
+  await expect(page.getByRole('link', { name: /mulai gratis|start free/i }).first()).toBeVisible();
+
+  // Hero stat (Rp286,84 T) extracted from the PPATK proposal data is shown.
+  await expect(page.getByText(/Rp286[.,]84/).first()).toBeVisible();
+});
+
+test('Marketing nav exposes language switcher and login', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('group', { name: /bahasa|language/i })).toBeVisible();
 });

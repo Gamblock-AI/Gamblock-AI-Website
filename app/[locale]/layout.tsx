@@ -22,9 +22,41 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Gamblock AI - Sistem Pemblokiran Judi Online Berbasis AI',
+  title: {
+    default: 'Gamblock-AI · Pemblokiran Judi Online Berbasis On-Device AI',
+    template: '%s · Gamblock-AI',
+  },
   description:
-    'Lindungi diri dari judi online dengan On-Device AI. Deteksi cerdas, intervensi psikologis otomatis, dan rehabilitasi mandiri untuk mahasiswa Indonesia.',
+    'Gamblock-AI memadukan deteksi On-Device AI, intervensi psikologis Pattern Interrupt, dan accountability partner untuk membantu mahasiswa Indonesia lepas dari judi online, tanpa mengorbankan privasi.',
+  keywords: [
+    'judi online',
+    'on-device AI',
+    'pattern interrupt',
+    'accountability partner',
+    'psikoedukasi',
+    'PKM-KC',
+  ],
+  openGraph: {
+    title: 'Gamblock-AI · Pertahanan Digital Berbasis On-Device AI',
+    description:
+      'Deteksi cerdas, intervensi psikologis otomatis, dan rehabilitasi mandiri untuk melawan darurat judi online.',
+    type: 'website',
+    images: [
+      {
+        url: '/images/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Gamblock-AI, pertahanan digital berbasis On-Device AI',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Gamblock-AI · Pertahanan Digital Berbasis On-Device AI',
+    description:
+      'Deteksi cerdas, intervensi psikologis otomatis, dan rehabilitasi mandiri untuk melawan darurat judi online.',
+    images: ['/images/og-image.png'],
+  },
 };
 
 import { NextIntlClientProvider } from 'next-intl';

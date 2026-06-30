@@ -5,27 +5,32 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   GAMBLOCK AI — Minimalist Clean Trust Design System
+   GAMBLOCK-AI — Light "Trust & Recovery" Design System
+   Brand: Navy #16294C (primary) · Crimson #C8102E (accent)
+   Mood:  Playful, optimistic, mascot-driven (tina.io-inspired)
+   Surface: pastel cyan→blue mesh on near-white
    ============================================================ */
 
 @theme inline {
   /* --- Font Stack --- */
-  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-plus-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  /* --- Brand Colors --- */
-  --color-navy: #0D2C54;
-  --color-navy-light: #1A3D6D;
-  --color-navy-dark: #081E3D;
-  --color-crimson: #C8102E;
-  --color-crimson-light: #E8354A;
-  --color-crimson-dark: #9A0C22;
-  --color-sage: #4A7C59;
-  --color-sage-light: #6B9E7A;
-  --color-amber: #D4A017;
-  --color-amber-light: #E8B830;
+  /* --- Brand Colors (raw hex, use sparingly via text-navy/bg-crimson) --- */
+  --color-navy: #16294c;
+  --color-navy-light: #24487f;
+  --color-navy-dark: #0d1b35;
+  --color-crimson: #c8102e;
+  --color-crimson-light: #e63b51;
+  --color-crimson-dark: #9d0c24;
+  --color-sky: #3dd6f5;
+  --color-sky-light: #bfe9f5;
+  --color-azure: #dcebfb;
+  --color-sage: #2f9e6f;
+  --color-amber: #e0a516;
 
-  /* --- Surface / Semantic Tokens (bound to CSS vars) --- */
+  /* --- Semantic Tokens (bound to CSS vars below) --- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -42,6 +47,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -63,125 +70,119 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* --- Radius Scale --- */
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  /* --- Radius Scale (large, friendly) --- */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 14px);
+  --radius-3xl: calc(var(--radius) + 26px);
+
+  /* --- Soft Shadows --- */
+  --shadow-soft: 0 1px 2px rgba(22, 41, 76, 0.04), 0 8px 24px -8px rgba(22, 41, 76, 0.10);
+  --shadow-card: 0 2px 6px rgba(22, 41, 76, 0.05), 0 18px 48px -16px rgba(22, 41, 76, 0.16);
+  --shadow-float: 0 30px 70px -28px rgba(22, 41, 76, 0.28);
 }
 
 /* ============================================================
    LIGHT MODE (Default)
    ============================================================ */
 :root {
-  --radius: 0.75rem;
+  --radius: 1rem;
 
-  /* Surfaces */
-  --background: oklch(0.985 0.002 90);
-  --foreground: oklch(0.18 0.03 260);
+  /* Surfaces — near-white, faintly cool */
+  --background: oklch(0.985 0.006 230);
+  --foreground: oklch(0.23 0.04 264);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 260);
+  --card-foreground: oklch(0.23 0.04 264);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 260);
+  --popover-foreground: oklch(0.23 0.04 264);
 
-  /* Navy as Primary */
-  --primary: oklch(0.22 0.07 258);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Navy = Primary (#16294C) */
+  --primary: oklch(0.30 0.08 264);
+  --primary-foreground: oklch(0.99 0.005 230);
 
-  /* Warm gray secondary */
-  --secondary: oklch(0.96 0.005 85);
-  --secondary-foreground: oklch(0.25 0.02 260);
+  /* Soft pastel-blue Secondary */
+  --secondary: oklch(0.95 0.025 235);
+  --secondary-foreground: oklch(0.30 0.06 264);
 
   /* Muted */
-  --muted: oklch(0.955 0.003 90);
-  --muted-foreground: oklch(0.45 0.02 260);
+  --muted: oklch(0.96 0.012 235);
+  --muted-foreground: oklch(0.50 0.03 260);
 
-  /* Crimson as Accent */
-  --accent: oklch(0.47 0.21 20);
-  --accent-foreground: oklch(0.99 0 0);
+  /* Crimson = Accent (#C8102E) */
+  --accent: oklch(0.55 0.21 22);
+  --accent-foreground: oklch(0.99 0.005 230);
 
-  /* Destructive */
-  --destructive: oklch(0.47 0.21 20);
-  --destructive-foreground: oklch(0.99 0 0);
+  /* Destructive (same crimson family, slightly deeper) */
+  --destructive: oklch(0.55 0.21 22);
+  --destructive-foreground: oklch(0.99 0.005 230);
+
+  /* Success (sage green) */
+  --success: oklch(0.60 0.12 158);
+  --success-foreground: oklch(0.99 0.005 230);
 
   /* Borders & Inputs */
-  --border: oklch(0.90 0.008 90);
-  --input: oklch(0.90 0.008 90);
-  --ring: oklch(0.22 0.07 258);
+  --border: oklch(0.90 0.012 235);
+  --input: oklch(0.92 0.012 235);
+  --ring: oklch(0.55 0.21 22);
 
-  /* Charts */
-  --chart-1: oklch(0.22 0.07 258);
-  --chart-2: oklch(0.47 0.21 20);
-  --chart-3: oklch(0.42 0.09 155);
-  --chart-4: oklch(0.65 0.08 90);
-  --chart-5: oklch(0.55 0.05 260);
+  /* Charts: navy, crimson, sky, sage, amber */
+  --chart-1: oklch(0.30 0.08 264);
+  --chart-2: oklch(0.55 0.21 22);
+  --chart-3: oklch(0.72 0.12 215);
+  --chart-4: oklch(0.60 0.12 158);
+  --chart-5: oklch(0.74 0.13 75);
 
-  /* Sidebar */
-  --sidebar: oklch(0.99 0.002 90);
-  --sidebar-foreground: oklch(0.18 0.03 260);
-  --sidebar-primary: oklch(0.22 0.07 258);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.95 0.005 85);
-  --sidebar-accent-foreground: oklch(0.22 0.07 258);
-  --sidebar-border: oklch(0.90 0.008 90);
-  --sidebar-ring: oklch(0.22 0.07 258);
+  /* Sidebar (light) */
+  --sidebar: oklch(0.99 0.004 230);
+  --sidebar-foreground: oklch(0.30 0.05 264);
+  --sidebar-primary: oklch(0.30 0.08 264);
+  --sidebar-primary-foreground: oklch(0.99 0.005 230);
+  --sidebar-accent: oklch(0.95 0.02 235);
+  --sidebar-accent-foreground: oklch(0.30 0.08 264);
+  --sidebar-border: oklch(0.91 0.012 235);
+  --sidebar-ring: oklch(0.55 0.21 22);
 }
 
 /* ============================================================
-   DARK MODE
+   DARK MODE (kept for safety; app is light-first)
    ============================================================ */
 .dark {
-  /* Surfaces */
-  --background: oklch(0.13 0.02 260);
-  --foreground: oklch(0.94 0.005 90);
-  --card: oklch(0.17 0.02 260);
-  --card-foreground: oklch(0.94 0.005 90);
-  --popover: oklch(0.17 0.02 260);
-  --popover-foreground: oklch(0.94 0.005 90);
-
-  /* Navy primary in dark */
-  --primary: oklch(0.55 0.10 240);
-  --primary-foreground: oklch(0.13 0.02 260);
-
-  /* Secondary */
-  --secondary: oklch(0.22 0.02 260);
-  --secondary-foreground: oklch(0.88 0.005 90);
-
-  /* Muted */
-  --muted: oklch(0.22 0.02 260);
-  --muted-foreground: oklch(0.62 0.01 260);
-
-  /* Crimson in dark */
-  --accent: oklch(0.52 0.18 20);
-  --accent-foreground: oklch(0.94 0.005 90);
-
-  /* Destructive */
-  --destructive: oklch(0.52 0.18 20);
-  --destructive-foreground: oklch(0.94 0.005 90);
-
-  /* Borders */
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.55 0.10 240);
-
-  /* Charts dark */
-  --chart-1: oklch(0.55 0.10 240);
-  --chart-2: oklch(0.52 0.18 20);
-  --chart-3: oklch(0.48 0.08 155);
-  --chart-4: oklch(0.68 0.07 90);
-  --chart-5: oklch(0.60 0.05 260);
-
-  /* Sidebar dark */
-  --sidebar: oklch(0.15 0.02 260);
-  --sidebar-foreground: oklch(0.94 0.005 90);
-  --sidebar-primary: oklch(0.55 0.10 240);
-  --sidebar-primary-foreground: oklch(0.15 0.02 260);
-  --sidebar-accent: oklch(0.22 0.02 260);
-  --sidebar-accent-foreground: oklch(0.55 0.10 240);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.55 0.10 240);
+  --background: oklch(0.18 0.03 264);
+  --foreground: oklch(0.95 0.01 230);
+  --card: oklch(0.22 0.03 264);
+  --card-foreground: oklch(0.95 0.01 230);
+  --popover: oklch(0.22 0.03 264);
+  --popover-foreground: oklch(0.95 0.01 230);
+  --primary: oklch(0.72 0.12 235);
+  --primary-foreground: oklch(0.16 0.03 264);
+  --secondary: oklch(0.28 0.03 264);
+  --secondary-foreground: oklch(0.92 0.01 230);
+  --muted: oklch(0.28 0.03 264);
+  --muted-foreground: oklch(0.68 0.02 250);
+  --accent: oklch(0.62 0.20 22);
+  --accent-foreground: oklch(0.98 0.005 230);
+  --destructive: oklch(0.62 0.20 22);
+  --destructive-foreground: oklch(0.98 0.005 230);
+  --success: oklch(0.65 0.12 158);
+  --success-foreground: oklch(0.16 0.03 264);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.62 0.20 22);
+  --chart-1: oklch(0.72 0.12 235);
+  --chart-2: oklch(0.62 0.20 22);
+  --chart-3: oklch(0.72 0.12 215);
+  --chart-4: oklch(0.65 0.12 158);
+  --chart-5: oklch(0.74 0.13 75);
+  --sidebar: oklch(0.20 0.03 264);
+  --sidebar-foreground: oklch(0.95 0.01 230);
+  --sidebar-primary: oklch(0.72 0.12 235);
+  --sidebar-primary-foreground: oklch(0.16 0.03 264);
+  --sidebar-accent: oklch(0.28 0.03 264);
+  --sidebar-accent-foreground: oklch(0.72 0.12 235);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.62 0.20 22);
 }
 
 /* ============================================================
@@ -192,10 +193,25 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
+    font-family: var(--font-sans);
+    background: transparent;
   }
   html {
-    @apply font-sans;
+    @apply bg-background;
+    scroll-behavior: smooth;
+  }
+  section[id] {
+    scroll-margin-top: 6rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--accent) 22%, transparent);
+    color: var(--navy-dark, #0d1b35);
   }
 }
 
@@ -203,47 +219,163 @@
    TYPOGRAPHY UTILITIES
    ============================================================ */
 @utility text-display {
-  font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
 }
-
 @utility text-heading {
-  font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.12;
 }
-
 @utility text-title {
-  font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.25;
 }
-
 @utility text-label {
   font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-
 @utility text-caption {
   font-size: 0.8125rem;
   line-height: 1.5;
 }
 
 /* ============================================================
-   SUBTLE BACKGROUND PATTERNS (replacing glass/blob)
+   BACKGROUND / SURFACE + ANIMATIONS
+   Defined in @layer components so they are always emitted (never
+   tree-shaken) and merge predictably with utility classes.
+   Vivid tina.io-style pastel cyan->blue mesh.
    ============================================================ */
-@utility bg-dot-subtle {
-  background-image: radial-gradient(oklch(0.22 0.07 258 / 4%) 1px, transparent 1px);
-  background-size: 20px 20px;
+@layer components {
+  /* Vivid full pastel mesh — used as the FIXED full-viewport page background
+     (tina.io style). Top-left cyan, top-right azure, gentle wash downward. */
+  .bg-mesh {
+    background-color: #eaf6fd;
+    background-image:
+      radial-gradient(70% 60% at 0% 0%, rgba(150, 222, 244, 0.95) 0%, transparent 60%),
+      radial-gradient(70% 60% at 100% 0%, rgba(190, 218, 251, 1) 0%, transparent 60%),
+      radial-gradient(60% 55% at 90% 75%, rgba(160, 224, 244, 0.6) 0%, transparent 65%),
+      radial-gradient(65% 60% at 0% 100%, rgba(200, 226, 250, 0.85) 0%, transparent 60%),
+      linear-gradient(175deg, #e1f3fb 0%, #ecf4fd 45%, #f5fafe 100%);
+  }
+
+  /* Soft pastel wash — kept for any non-fixed usage */
+  .bg-pastel {
+    background-color: #eef6fd;
+    background-image:
+      radial-gradient(55% 60% at 100% 0%, rgba(199, 224, 250, 0.85) 0%, transparent 60%),
+      radial-gradient(50% 55% at 0% 100%, rgba(176, 226, 244, 0.7) 0%, transparent 60%),
+      linear-gradient(180deg, #eef6fd 0%, #f3f9fe 100%);
+  }
+
+  /* Cyan-forward wash */
+  .bg-aqua {
+    background-color: #e6f6fc;
+    background-image:
+      radial-gradient(60% 70% at 50% -10%, rgba(160, 224, 244, 0.9) 0%, transparent 65%),
+      radial-gradient(50% 60% at 90% 100%, rgba(199, 224, 250, 0.85) 0%, transparent 60%),
+      linear-gradient(180deg, #e6f6fc 0%, #eff7fd 100%);
+  }
+
+  /* Transparent dotted texture overlay (lets the fixed background show through) */
+  .bg-texture-dots {
+    background-image: radial-gradient(rgba(36, 72, 127, 0.10) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+  }
+
+  /* Transparent faint grid overlay (lets the fixed background show through) */
+  .bg-texture-grid {
+    background-image:
+      linear-gradient(rgba(36, 72, 127, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(36, 72, 127, 0.06) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+
+  /* Deep "midnight" navy surface with a soft crimson aurora (top-right) and
+     azure glow (bottom-left). Premium, calm, trust-forward — navy is the
+     primary brand colour, crimson appears only as an accent glow. */
+  .bg-footer-navy {
+    background-color: #0b1730;
+    background-image:
+      radial-gradient(45% 70% at 88% -10%, rgba(200, 16, 46, 0.38) 0%, transparent 60%),
+      radial-gradient(55% 80% at 6% 110%, rgba(61, 120, 200, 0.40) 0%, transparent 60%),
+      radial-gradient(40% 60% at 50% 50%, rgba(36, 72, 127, 0.25) 0%, transparent 70%),
+      linear-gradient(155deg, #16294c 0%, #0d1d3d 45%, #0b1730 100%);
+  }
+
+  /* Crimson surface — tina.io-style smooth diagonal gradient
+     (lighter warm crimson top-left → deep crimson bottom-right). */
+  .bg-footer-crimson {
+    background-color: #c8102e;
+    background-image: linear-gradient(135deg, #e63b51 0%, #c8102e 48%, #9d0c24 100%);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-float {
+    box-shadow: var(--shadow-float);
+  }
+
+  .animate-float {
+    animation: gb-float 6s ease-in-out infinite;
+  }
+  .animate-float-slow {
+    animation: gb-float-slow 8s ease-in-out infinite;
+  }
+  .animate-blob {
+    animation: gb-blob 18s ease-in-out infinite;
+  }
+  .animate-marquee {
+    animation: gb-marquee 32s linear infinite;
+  }
+  .animate-wave {
+    animation: gb-wave 2.4s ease-in-out infinite;
+    transform-origin: 70% 70%;
+  }
 }
 
-@utility bg-dot-subtle-dark {
-  background-image: radial-gradient(oklch(1 0 0 / 5%) 1px, transparent 1px);
-  background-size: 20px 20px;
+@keyframes gb-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(-1.2deg); }
+}
+@keyframes gb-float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes gb-blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -16px) scale(1.06); }
+  66% { transform: translate(-14px, 12px) scale(0.96); }
+}
+@keyframes gb-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes gb-wave {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(14deg); }
+  40% { transform: rotate(-8deg); }
+  60% { transform: rotate(14deg); }
+  80% { transform: rotate(-4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-slow,
+  .animate-blob,
+  .animate-marquee,
+  .animate-wave {
+    animation: none !important;
+  }
 }
