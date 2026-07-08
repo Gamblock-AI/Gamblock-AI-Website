@@ -53,7 +53,7 @@ export function LanguageSwitcher({ tone = 'light', className }: LanguageSwitcher
             disabled={isPending}
             aria-pressed={active}
             className={cn(
-              'rounded-full px-2.5 py-1 text-xs font-bold transition-colors disabled:opacity-50',
+              'cursor-pointer rounded-full px-2.5 py-1 text-xs font-bold transition-colors disabled:opacity-50',
               active
                 ? tone === 'light'
                   ? 'bg-navy text-white'

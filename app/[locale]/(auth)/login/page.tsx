@@ -1,9 +1,9 @@
 'use client';
 
 import { ROUTES } from '@/routes';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { login } from '@/lib/auth';
 import { Button } from '@/components/ui/button';

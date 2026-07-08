@@ -1,7 +1,7 @@
 'use client';
 
 import { ROUTES } from '@/routes';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useState } from 'react';
 import { Mail, ArrowRight, ArrowLeft, MailCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';

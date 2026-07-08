@@ -153,7 +153,7 @@
     "teamMember3Role": "Member · Informatics (Intelligent Systems)",
     "teamMember3Task": "Core AI developer: training, optimising, and testing the hybrid detection model, and hunting secondary datasets for on-device accuracy.",
     "teamMember4Role": "Member · Psychology",
-    "teamMember4Task": "The mind behind the app's psychological intervention (Pattern Interrupt & psychoeducation), and guardian of Simbelmawa administration from finances to logbooks.",
+    "teamMember4Task": "The mind behind the app's psychological intervention (Pattern Interrupt & psychoeducation), and guardian of Belmawa administration from finances to logbooks.",
     "teamAdvisorRole": "Faculty Advisor",
     "teamStat1Value": "PKM-KC",
     "teamStat1Label": "PKM 2026 scheme",
@@ -767,5 +767,9 @@
     "s3Body": "Android 8.0+ or Windows 10/11. The AI model is under 5 MB, so it stays light on the device.\nAn internet connection isn't required since blocking works locally (offline).",
     "s4Title": "Release Status",
     "s4Body": "Gamblock-AI is currently a PKM-KC 2026 prototype. Sign up to get early release information.\nFollow our social media for availability updates."
+  },
+  "NotFound": {
+    "message": "The page you are looking for was not found.",
+    "backHome": "Back to Home"
   }
 }

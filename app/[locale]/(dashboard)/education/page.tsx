@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { BookOpen, Brain, Heart, AlertTriangle, Target, Clock, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api-client';

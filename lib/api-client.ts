@@ -1,6 +1,13 @@
 import { config } from './config';
 import { ApiError } from './api-error';
 
+/** Extract the current locale prefix from the browser URL. */
+function getCurrentLocalePrefix(): string {
+  if (typeof window === 'undefined') return '/id';
+  const match = window.location.pathname.match(/^\/(id|en)/);
+  return match ? `/${match[1]}` : '/id';
+}
+
 const API_URL = config.apiUrl;
 
 let isRefreshing = false;
@@ -86,7 +93,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
           localStorage.removeItem('gamblock_refresh_token');
           localStorage.removeItem('gamblock_user');
           document.cookie = 'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
-          window.location.href = '/login';
+          window.location.href = `${getCurrentLocalePrefix()}/login`;
           throw err instanceof ApiError ? err : new ApiError(401, 'invalid_refresh_token');
         }
       } else {
@@ -94,7 +101,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
         localStorage.removeItem('gamblock_refresh_token');
         localStorage.removeItem('gamblock_user');
         document.cookie = 'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
-        window.location.href = '/login';
+        window.location.href = `${getCurrentLocalePrefix()}/login`;
         throw new ApiError(401, 'refresh_token_required');
       }
     }

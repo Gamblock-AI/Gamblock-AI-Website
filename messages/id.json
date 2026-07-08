@@ -153,7 +153,7 @@
     "teamMember3Role": "Anggota · Informatika (Sistem Cerdas)",
     "teamMember3Task": "Pengembang AI inti: melatih, mengoptimasi, dan menguji model deteksi hibrida, serta berburu dataset sekunder demi akurasi pemblokiran on-device.",
     "teamMember4Role": "Anggota · Psikologi",
-    "teamMember4Task": "Otak intervensi psikologis aplikasi (Pattern Interrupt & psikoedukasi), sekaligus penjaga administrasi Simbelmawa mulai dari keuangan hingga logbook kegiatan.",
+    "teamMember4Task": "Otak intervensi psikologis aplikasi (Pattern Interrupt & psikoedukasi), sekaligus penjaga administrasi Belmawa mulai dari keuangan hingga logbook kegiatan.",
     "teamAdvisorRole": "Dosen Pendamping",
     "teamStat1Value": "PKM-KC",
     "teamStat1Label": "Skema PKM 2026",
@@ -767,5 +767,9 @@
     "s3Body": "Android 8.0+ atau Windows 10/11. Model AI berukuran di bawah 5 MB sehingga ringan di perangkat.\nKoneksi internet tidak wajib karena pemblokiran bekerja secara lokal (offline).",
     "s4Title": "Status Rilis",
     "s4Body": "Saat ini Gamblock-AI berstatus prototipe PKM-KC 2026. Daftar akun untuk mendapatkan informasi rilis lebih awal.\nIkuti media sosial kami untuk pembaruan ketersediaan."
+  },
+  "NotFound": {
+    "message": "Halaman yang Anda cari tidak ditemukan.",
+    "backHome": "Kembali ke Beranda"
   }
 }

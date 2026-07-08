@@ -6,17 +6,17 @@ import { Marquee } from '@/components/ui/marquee';
 
 // PKM-KC supporting / organizing institutions (verified):
 // - Kemdiktisaintek: ministry that organizes PKM
-// - Ditjen Dikti – Belmawa: organizing directorate
-// - Simbelmawa: official PKM service portal
+// - Ditjen Dikti: organizing directorate
+// - Belmawa: official PKM service portal
 // - Universitas Teknologi Yogyakarta: host campus
 // - PKM Corner UTY: UTY's PKM support unit
 // Logos are placeholders until official marks are supplied.
 const SUPPORTERS = [
-  { name: 'Kemdiktisaintek', src: '/images/supporters/kemdiktisaintek.png' },
-  { name: 'Ditjen Dikti · Belmawa', src: '/images/supporters/belmawa-dikti.png' },
-  { name: 'Simbelmawa', src: '/images/supporters/simbelmawa.png' },
-  { name: 'Universitas Teknologi Yogyakarta', src: '/images/supporters/uty.png' },
-  { name: 'PKM Corner UTY', src: '/images/supporters/pkmcorner-uty.png' },
+  { name: 'Kemdiktisaintek', src: '/images/supporters/kemdiktisaintek-new.png' },
+  { name: 'Ditjen Dikti', src: '/images/supporters/ditjen-dikti-new.png' },
+  { name: 'Belmawa', src: '/images/supporters/belmawa-new.png' },
+  { name: 'Universitas Teknologi Yogyakarta', src: '/images/supporters/uty-new.png' },
+  { name: 'PKM Corner UTY', src: '/images/supporters/pkmcorner-uty-new.png' },
 ] as const;
 
 /**

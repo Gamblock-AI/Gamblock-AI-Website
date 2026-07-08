@@ -1,9 +1,7 @@
 'use client';
 
 import { ROUTES } from '@/routes';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { usePathname } from '@/i18n/routing';
+import { Link, useRouter, usePathname } from '@/i18n/routing';
 import { Bell, User, LogOut } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';

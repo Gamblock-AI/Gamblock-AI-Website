@@ -1,7 +1,7 @@
 'use client';
 import { ROUTES } from '@/routes';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useState, use, useEffect } from 'react';
 import { ArrowLeft, BookOpen, CheckCircle, Clock, Check } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';

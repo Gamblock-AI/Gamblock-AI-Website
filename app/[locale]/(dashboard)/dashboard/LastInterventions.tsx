@@ -1,7 +1,7 @@
 'use client';
 
 import { ROUTES } from '@/routes';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { Ban, Settings } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useTranslations } from "next-intl";

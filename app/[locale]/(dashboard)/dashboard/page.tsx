@@ -238,18 +238,18 @@ export default function DashboardPage() {
     <div className="w-full space-y-6">
       {/* Hero header — light, navy primary */}
       <Reveal>
-        <div className="bg-dots relative overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-card">
+        <div className="bg-dots relative overflow-hidden rounded-3xl border border-border bg-card p-6 md:px-8 md:py-6 shadow-card">
           <div className="relative z-10 flex flex-wrap items-end justify-between gap-6">
             <div>
               <span className="inline-block rounded-full bg-crimson/10 px-3 py-1 text-[10px] font-bold tracking-widest text-crimson uppercase">
                 {t('text_116')}</span>
-              <h1 className="mt-4 text-3xl font-bold tracking-tighter text-navy md:text-4xl">
+              <h1 className="mt-2 text-3xl font-bold tracking-tighter text-navy md:text-4xl">
                 {greeting}, <span className="text-crimson">{userName.split(' ')[0]}</span>.
               </h1>
-              <p className="mt-2 max-w-xl text-sm text-muted-foreground md:text-base">
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground md:text-base">
                 {t('text_117')}</p>
             </div>
-            <div className="rounded-2xl border border-border bg-muted/40 px-5 py-4">
+            <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-amber" />
                 <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">

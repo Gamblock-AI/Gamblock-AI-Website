@@ -213,6 +213,11 @@
     background: color-mix(in oklch, var(--accent) 22%, transparent);
     color: var(--navy-dark, #0d1b35);
   }
+
+  /* Make all interactive elements have a pointer cursor globally */
+  a, button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"] {
+    @apply cursor-pointer;
+  }
 }
 
 /* ============================================================

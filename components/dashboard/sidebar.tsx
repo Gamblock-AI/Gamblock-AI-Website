@@ -1,9 +1,8 @@
 'use client';
 
 import { ROUTES } from '@/routes';
-import Link from 'next/link';
+import { Link, usePathname } from '@/i18n/routing';
 import Image from 'next/image';
-import { usePathname } from '@/i18n/routing';
 import {
   Home,
   BarChart2,
@@ -12,8 +11,6 @@ import {
   GraduationCap,
   Heart,
   Settings,
-  Sparkles,
-  ArrowRight,
 } from 'lucide-react';
 import { SidebarItem } from './sidebar-item';
 import { useTranslations } from 'next-intl';
@@ -89,31 +86,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Recovery CTA */}
-      <Link
-        href={ROUTES.RECOVERY}
-        className="group mt-4 block overflow-hidden rounded-2xl border border-border bg-pastel p-4 transition-shadow hover:shadow-soft"
-      >
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-crimson/10 text-crimson">
-          <Sparkles className="h-4.5 w-4.5" />
-        </div>
-        <p className="mt-3 text-sm font-bold text-navy">{t('ctaTitle')}</p>
-        <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-          {t('ctaDesc')}
-        </p>
-        <span className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-crimson">
-          {t('ctaOpen')} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-        </span>
-      </Link>
 
-      {/* Status */}
-      <div className="mt-3 flex items-center gap-2.5 rounded-2xl border border-sage/20 bg-sage/5 px-3.5 py-2.5">
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage opacity-70" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-sage" />
-        </span>
-        <span className="text-xs font-semibold text-sage">{t('text_316')}</span>
-      </div>
     </aside>
   );
 }

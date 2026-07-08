@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -16,14 +16,15 @@ export function SidebarItem({ href, label, icon: Icon, isActive }: SidebarItemPr
     <Link
       href={href}
       className={cn(
-        'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all',
+        'group relative flex items-center gap-3 rounded-r-full py-2.5 pr-4 text-sm font-semibold transition-all',
+        '-ml-5 pl-8',
         isActive
           ? 'bg-crimson/10 text-crimson'
           : 'text-muted-foreground hover:bg-navy/5 hover:text-navy',
       )}
     >
       {isActive && (
-        <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-crimson" />
+        <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-crimson" />
       )}
       <Icon
         className={cn(
