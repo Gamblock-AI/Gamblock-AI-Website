@@ -45,11 +45,11 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="bg-card/70 sticky top-0 hidden h-screen w-[268px] shrink-0 flex-col border-r border-border p-4 backdrop-blur-sm lg:flex">
+    <aside className="bg-navy sticky top-0 hidden h-screen w-[268px] shrink-0 flex-col py-6 pl-4 lg:flex">
       {/* Branding */}
       <Link
         href={ROUTES.DASHBOARD}
-        className="flex items-center gap-2.5 rounded-2xl px-2.5 py-2"
+        className="flex items-center gap-2.5 rounded-2xl px-2.5 py-2 mr-4"
       >
         <Image
           src="/images/gamblock-1.png"
@@ -58,8 +58,8 @@ export function Sidebar() {
           height={36}
           className="h-9 w-9 object-contain"
         />
-        <span className="text-base font-extrabold tracking-tight text-navy">
-          Gamblock<span className="text-crimson">-AI</span>
+        <span className="text-base font-extrabold tracking-tight text-white">
+          Gamblock<span className="text-sky-light">-AI</span>
         </span>
       </Link>
 
@@ -67,7 +67,7 @@ export function Sidebar() {
       <nav className="mt-6 flex-1 space-y-6 overflow-y-auto">
         {sections.map((sec) => (
           <div key={sec.titleKey} className="space-y-1">
-            <span className="text-label mb-1.5 block px-3 text-muted-foreground/60">{t(sec.titleKey)}</span>
+            <span className="text-label mb-1.5 block px-3 text-white/50 uppercase tracking-wider text-xs">{t(sec.titleKey)}</span>
             {sec.items.map(({ href, labelKey, icon: Icon }) => {
               const isActive =
                 pathname === href ||

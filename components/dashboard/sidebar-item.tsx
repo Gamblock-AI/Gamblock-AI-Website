@@ -16,20 +16,24 @@ export function SidebarItem({ href, label, icon: Icon, isActive }: SidebarItemPr
     <Link
       href={href}
       className={cn(
-        'group relative flex items-center gap-3 rounded-r-full py-2.5 pr-4 text-sm font-semibold transition-all',
-        '-ml-5 pl-8',
+        'group relative flex items-center gap-3 py-3 pl-4 pr-4 text-sm font-semibold transition-all duration-300',
         isActive
-          ? 'bg-crimson/10 text-crimson'
-          : 'text-muted-foreground hover:bg-navy/5 hover:text-navy',
+          ? 'bg-background text-crimson rounded-l-2xl ml-3'
+          : 'text-white/70 hover:bg-white/10 hover:text-white rounded-l-2xl ml-3'
       )}
     >
+      {/* Inverted Border Radius Pseudo-elements for Active State */}
       {isActive && (
-        <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-crimson" />
+        <>
+          <span className="absolute -top-5 right-0 h-5 w-5 bg-transparent rounded-br-2xl shadow-[10px_10px_0_10px_var(--color-background)]" />
+          <span className="absolute -bottom-5 right-0 h-5 w-5 bg-transparent rounded-tr-2xl shadow-[10px_-10px_0_10px_var(--color-background)]" />
+        </>
       )}
+
       <Icon
         className={cn(
-          'h-[18px] w-[18px] shrink-0 transition-colors',
-          isActive ? 'text-crimson' : 'text-muted-foreground/60 group-hover:text-navy',
+          'h-[20px] w-[20px] shrink-0 transition-colors',
+          isActive ? 'text-crimson' : 'text-white/70 group-hover:text-white',
         )}
       />
       {label}
