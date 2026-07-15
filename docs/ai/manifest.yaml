@@ -1,0 +1,62 @@
+schema_version: 1
+context_version: "2026-07-15.2"
+component: "gamblock-ai-website"
+
+shared_contracts:
+  proposal_authority: 1
+  proposal_traceability: 1
+  local_ai_lint_policy: 1
+  privacy_boundary: 1
+  api_error_catalog: 1
+
+canonical:
+  instructions: "AGENTS.md"
+  onboarding: "README.md"
+  ai_context: "docs/ai/README.md"
+
+package_manager:
+  name: "npm"
+  node_version_file: ".nvmrc"
+  manifest: "package.json"
+  lockfile: "package-lock.json"
+
+providers:
+  claude: "CLAUDE.md"
+  codex: "AGENTS.md"
+  cursor: ".cursor/rules/gamblock-ai.mdc"
+  gemini: "GEMINI.md"
+  github_copilot: ".github/copilot-instructions.md"
+  legacy_copilot: "COPILOT.md"
+  legacy_cursor: ".cursorrules"
+
+skills:
+  verify_change: ".agents/skills/verify-gamblock-change/SKILL.md"
+
+verification:
+  script: "scripts/verify-ai-context.sh"
+  command: "npm run verify:ai-context"
+  default_lint: "npm run lint -- <changed-source-files>"
+  strict_in_ci: true
+
+proposal_requirements:
+  - "PKM-INT-004"
+  - "PKM-WEB-001"
+  - "PKM-WEB-002"
+  - "PKM-WEB-003"
+  - "PKM-WEB-004"
+  - "PKM-WEB-005"
+  - "PKM-WEB-006"
+  - "PKM-WEB-007"
+  - "PKM-PRIV-002"
+
+required_paths:
+  - "app/[locale]/(auth)"
+  - "app/[locale]/(dashboard)"
+  - "app/[locale]/(landing)"
+  - "components/common/PageTransition.tsx"
+  - "components/dashboard"
+  - "components/landing"
+  - "hooks"
+  - "lib/api-client.ts"
+  - "middleware.ts"
+  - "routes.ts"

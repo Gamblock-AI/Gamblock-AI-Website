@@ -15,10 +15,17 @@ export const MESSAGES: Record<string, string> = {
   validation_failed: 'Email dan nama wajib diisi.',
   invalid_credentials: 'Email atau kata sandi salah. Silakan periksa kembali.',
   registration_failed: 'Pendaftaran gagal. Email mungkin sudah terdaftar.',
+  dev_login_failed: 'Gagal masuk sebagai pengguna demo.',
+  google_token_required: 'Token Google wajib diisi.',
   google_verification_failed: 'Verifikasi Google gagal. Silakan coba lagi.',
   invalid_refresh_token: 'Sesi tidak valid. Silakan masuk kembali.',
   refresh_token_required: 'Sesi telah berakhir. Silakan masuk kembali.',
   logout_failed: 'Gagal keluar. Silakan coba lagi.',
+
+  // devices
+  device_create_failed: 'Gagal mendaftarkan perangkat.',
+  device_update_failed: 'Gagal memperbarui perangkat.',
+  heartbeat_failed: 'Gagal mengirim sinyal aktif perangkat.',
 
   // partners / accountability
   partner_email_required: 'Email pendamping wajib diisi.',
@@ -27,6 +34,7 @@ export const MESSAGES: Record<string, string> = {
   partner_accept_failed: 'Gagal menerima undangan pendamping.',
   partner_revoke_failed: 'Gagal memutuskan hubungan pendamping.',
   fetch_approval_requests_failed: 'Gagal memuat daftar permohonan.',
+  action_required: 'Jenis tindakan wajib dipilih.',
   approval_request_failed: 'Gagal mengajukan permohonan.',
   approval_cancel_failed: 'Gagal membatalkan permohonan.',
   approval_approve_failed: 'Gagal menyetujui permohonan.',
@@ -45,6 +53,7 @@ export const MESSAGES: Record<string, string> = {
 
   // missions
   mission_fetch_failed: 'Gagal memuat misi harian.',
+  invalid_mission: 'Nomor misi harus 1-5.',
   mission_update_failed: 'Gagal memperbarui misi harian.',
 
   // reflections / psychoeducation
@@ -52,20 +61,32 @@ export const MESSAGES: Record<string, string> = {
   reflection_create_failed: 'Gagal menyimpan jurnal refleksi.',
   fetch_modules_failed: 'Gagal memuat modul psikoedukasi.',
   module_not_found: 'Modul tidak ditemukan.',
+  text_required: 'Teks refleksi wajib diisi.',
 
   // quick approval
+  token_required: 'Token validasi wajib diisi.',
   invalid_token: 'Token tidak valid atau sudah kadaluarsa.',
+  invalid_input: 'Token dan status (approved/denied) wajib diisi.',
   resolve_failed: 'Gagal memproses permohonan.',
 
   // support / data requests
   fetch_support_cases_failed: 'Gagal memuat tiket bantuan.',
   support_case_failed: 'Gagal mengirim tiket bantuan.',
+  summary_required: 'Ringkasan tiket wajib diisi.',
   fetch_data_requests_failed: 'Gagal memuat permintaan data.',
   data_request_failed: 'Gagal mengajukan permintaan data.',
+  type_required: 'Jenis permintaan wajib dipilih.',
 
-  // releases / emergency
+  // admin / releases / emergency
+  fetch_admin_modules_failed: 'Gagal memuat modul admin.',
+  fetch_admin_model_releases_failed: 'Gagal memuat rilis model.',
+  fetch_admin_support_cases_failed: 'Gagal memuat tiket admin.',
+  create_model_release_failed: 'Gagal merilis model.',
+  create_ruleset_release_failed: 'Gagal merilis ruleset.',
+  create_network_release_failed: 'Gagal merilis ruleset jaringan.',
   release_not_found: 'Rilis tidak ditemukan.',
   generate_key_failed: 'Gagal membuat kunci darurat.',
+  emergency_key_required: 'Kunci darurat wajib diisi.',
   invalid_key: 'Kunci darurat tidak valid.',
 };
 

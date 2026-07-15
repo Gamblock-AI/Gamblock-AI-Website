@@ -1,0 +1,13 @@
+---
+description: Canonical Gamblock-AI website architecture, privacy, and verification rules
+globs:
+alwaysApply: true
+---
+
+# Gamblock-AI Website
+
+Apply the canonical website instructions and context-routing guide below. npm
+and `package-lock.json` are the package-management source of truth.
+
+@AGENTS.md
+@docs/ai/README.md

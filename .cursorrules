@@ -1,0 +1,4 @@
+# Legacy Cursor pointer
+
+Use `.cursor/rules/gamblock-ai.mdc`. The canonical website instructions are in
+`AGENTS.md`; `.cursorrules` is retained only for older Cursor installations.

@@ -6,8 +6,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-See the root `AGENTS.md` (one level up) for the full architecture and PRD
-alignment. The rules below are specific to this Next.js app.
+**Context version:** `2026-07-15.2`
+
+This file is the canonical, clone-portable instruction source for this Next.js
+app. Start with `docs/ai/README.md` for the provider map and context-loading
+workflow. When a task is coordinated through the Gamblock-AI umbrella
+workspace, load its shared contract context explicitly. This file remains
+sufficient and authoritative for safe website work in a standalone clone.
 
 ## Next.js version
 
@@ -15,6 +20,18 @@ alignment. The rules below are specific to this Next.js app.
 non-standard Next.js version; read `node_modules/next/dist/docs/` before using
 any API, hook, or file convention. Do not assume App Router behavior from older
 Next.js versions.
+
+## Package manager and bootstrap
+
+- **npm is canonical.** Install reproducibly with `npm ci` and update
+  `package-lock.json` with npm when dependencies change.
+- `bun.lock` is retained for compatibility/history, but it is not the source of
+  truth for installs or CI. Do not delete or regenerate it unless a package
+  manager migration is explicitly requested.
+- Copy `.env.example` to `.env.local` for local development. Never commit an
+  `.env*` file containing local values or secrets.
+- After a fresh clone, run `npm run verify:ai-context` before implementation so
+  missing or stale instruction files fail early.
 
 ## Configuration & hooks
 
@@ -34,12 +51,18 @@ Next.js versions.
 
 ## Structure conventions
 
-- Authenticated screens live under `app/(app)/`; auth under `app/(auth)/`;
-  public marketing pages at the `app/` root (`page.tsx`, `dampak/`,
-  `technology/`).
+- All user-facing routes are locale-aware under `app/[locale]/`.
+- Authenticated screens live under `app/[locale]/(dashboard)/`; auth screens
+  live under `app/[locale]/(auth)/`; public marketing and legal pages live under
+  `app/[locale]/(landing)/`.
+- Token and onboarding flows live beside those route groups under
+  `app/[locale]/approve/`, `app/[locale]/partner/`, and
+  `app/[locale]/onboarding/`.
 - Shared UI primitives are shadcn-style under `components/ui/`. Compose them;
   do not duplicate styling.
-- Marketing scroll animations live under `components/marketing/`.
+- Marketing sections and scroll animations live under `components/landing/`.
+- Dashboard navigation lives under `components/dashboard/`; reusable app-wide
+  helpers, including `PageTransition`, live under `components/common/`.
 - Data fetching goes through the hooks in `hooks/` (`use-api`, `use-dashboard`,
   `use-progress`, `use-accountability`), which call `lib/api-client.ts`.
 
@@ -52,16 +75,37 @@ Next.js versions.
 - Route protection is in `middleware.ts`, keyed on the `gamblock_access_token`
   cookie (set by the client on login/refresh). Keep `routes.ts` as the source of
   truth for `PROTECTED_ROUTES` / `GUEST_ROUTES`.
-- Quick approval (`/approve/[token]`) is token-authenticated, not
-  session-authenticated (PRD §5.2). Keep it reachable without login.
+- Quick approval (`/approve/[token]`) is a supporting flow that is
+  token-authenticated, not session-authenticated. Keep it reachable without
+  login while preserving single-use/expiry checks.
 
-## Testing
+## Proposal-derived website core
 
-- `npm test` (vitest). Config in `vitest.config.ts`, setup `vitest.setup.ts`
+The PKM proposal requires a post-block psychoeducation experience based on
+Self-Regulation Theory: intention setting, impulse-awareness education, mood
+tracking, daily self-control missions, and skill-development recommendations.
+Requirements `PKM-WEB-001`, `PKM-WEB-002`, `PKM-WEB-003`, `PKM-WEB-004`,
+`PKM-WEB-005`, `PKM-WEB-006`, and `PKM-WEB-007` outrank supporting dashboards,
+journals, admin portals, and marketing polish. The website never receives
+browsing context and is not the real-time Pattern Interrupt/blocking surface.
+
+## Validation policy
+
+- `npm run verify:ai-context` validates the portable AI context. While creating
+  new, not-yet-tracked context files locally, use
+  `npm run verify:ai-context -- --allow-untracked`; CI always uses strict mode.
+- `npm run lint -- <changed-source-files>` is the default AI code check; use a
+  wider path only for a wide refactor. `npm run verify` runs context validation
+  plus the repository-wide lint only.
+- `npm run typecheck`, `npm test`, `npm run build`, and `npm run e2e` remain
+  available but run only when the user explicitly requests that category in
+  the current conversation.
+- Vitest config is in `vitest.config.ts`; setup is in `vitest.setup.ts`
   (jsdom + `@testing-library/jest-dom` + `chrome`/`matchMedia` stubs).
 - Tests are `*.test.ts(x)` and excluded from `tsconfig` (vitest owns them).
 - Fetch is mocked with MSW (`setupServer`) in hook tests; never hit the real API.
-- Keep the Playwright e2e in `e2e/` green; add flows for new critical paths.
+- Keep Playwright specifications aligned with critical paths when tests are in
+  scope, but do not run them by default.
 - `lib/config.ts` reads `NODE_ENV` live (getters) so tests can flip
   `config.isProduction` by setting `process.env.NODE_ENV`.
 
@@ -82,16 +126,16 @@ Next.js versions.
   - Button press scale lives in `components/ui/button.tsx` (framer-motion `whileTap`).
   - Loading uses `components/ui/skeleton.tsx`; empty lists use
     `components/ui/empty-state.tsx`.
-  - Route transitions wrap children in `components/feedback/PageTransition.tsx`
-    inside `(app)/layout.tsx`.
+  - Route transitions wrap children in `components/common/PageTransition.tsx`
+    inside `app/[locale]/(dashboard)/layout.tsx`.
 - Do not reintroduce `setTimeout(()=>fetch(),0/100)` deferral hacks — call fetches
   directly in `useEffect` (setState only after `await`).
 
-## Privacy (PRD §6.1)
+## Privacy
 
-- The supervision dashboard shows **aggregate** scores only — never raw URLs or
-  browsing history (PRD §3.4-C "Strict Privacy Analytics"). Do not add fields
-  that expose a Member's visited URLs.
+- The supervision dashboard shows **aggregate** status/counts only — never raw
+  URLs or browsing history. Do not add fields that expose a Member's visited
+  URLs or reconstruct a browsing timeline.
 - The browser extension redirects to `/pattern-interrupt` is NOT used by this
   app; Pattern Interrupt is rendered by the client app / Windows Service, not
   the website. Do not add a `/pattern-interrupt` route here unless the recovery
@@ -101,3 +145,13 @@ Next.js versions.
 
 Playwright specs live in `e2e/`. Do not break existing specs; add coverage for
 new authenticated flows under `e2e/`.
+
+## AI context maintenance
+
+- `AGENTS.md` is canonical. `CLAUDE.md`, `GEMINI.md`,
+  `.github/copilot-instructions.md`, and `.cursor/rules/gamblock-ai.mdc` are
+  provider adapters and must remain thin.
+- `docs/ai/manifest.yaml` inventories every required context surface. Keep its
+  `context_version` synchronized with this file and `docs/ai/README.md`.
+- When paths, commands, architecture, or invariants change, update the canonical
+  documentation in the same change and run `npm run verify:ai-context`.
