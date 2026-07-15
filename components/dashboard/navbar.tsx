@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import { notifyLocalUserChanged, useLocalUser } from '@/hooks/use-local-user';
 import { useRecoverySync } from '@/hooks/use-recovery-sync';
 import { GlobalSearch } from './global-search';
-import { LanguageToggle } from './language-toggle';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 const PROFILE_PANEL_ID = 'dashboard-profile-panel';
 
@@ -102,7 +102,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <LanguageToggle />
+          <LanguageSwitcher />
           <div className="relative" ref={profileAreaRef}>
             <button
             ref={profileTriggerRef}
