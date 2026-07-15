@@ -568,6 +568,9 @@
   },
   "dashboardNav": {
     "skipToContent": "Langsung ke konten",
+    "searchPlaceholder": "Cari atau lompat ke...",
+    "searchEmpty": "Tidak ada hasil.",
+    "languageToggle": "Ganti Bahasa",
     "sectionToday": "Hari ini",
     "sectionSupport": "Dukungan dan belajar",
     "sectionAccount": "Akun",

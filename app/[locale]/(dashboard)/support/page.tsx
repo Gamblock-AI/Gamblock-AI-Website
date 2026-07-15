@@ -84,7 +84,8 @@ export default function SupportPage() {
                   id="support-category"
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
-                  className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
+                  className="h-11 w-full appearance-none rounded-xl border border-input bg-background pl-3 pr-10 text-sm text-foreground outline-none focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
+                  style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2316294c%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1em 1em' }}
                 >
                   <option value="technical_support">{t('categories.technical')}</option>
                   <option value="device_recovery">{t('categories.device')}</option>
@@ -101,7 +102,8 @@ export default function SupportPage() {
                   id="support-priority"
                   value={priority}
                   onChange={(event) => setPriority(event.target.value)}
-                  className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
+                  className="h-11 w-full appearance-none rounded-xl border border-input bg-background pl-3 pr-10 text-sm text-foreground outline-none focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
+                  style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2316294c%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1em 1em' }}
                 >
                   <option value="low">{t('priorities.low')}</option>
                   <option value="normal">{t('priorities.normal')}</option>

@@ -568,6 +568,9 @@
   },
   "dashboardNav": {
     "skipToContent": "Skip to content",
+    "searchPlaceholder": "Search or jump to...",
+    "searchEmpty": "No results found.",
+    "languageToggle": "Switch Language",
     "sectionToday": "Today",
     "sectionSupport": "Support and learning",
     "sectionAccount": "Account",

@@ -116,11 +116,11 @@ export default function PostInterventionPage() {
             </div>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" className="h-12" render={<Link href={ROUTES.RECOVERY} />}>
+              <Button size="lg" nativeButton={false} className="h-12" render={<Link href={ROUTES.RECOVERY} />}>
                 {t('openRecovery')}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Button>
-              <Button variant="outline" size="lg" className="h-12" render={<Link href={ROUTES.HELP} />}>
+              <Button variant="outline" size="lg" nativeButton={false} className="h-12" render={<Link href={ROUTES.HELP} />}>
                 <CircleHelp className="size-4" aria-hidden="true" />
                 {t('openHelp')}
               </Button>

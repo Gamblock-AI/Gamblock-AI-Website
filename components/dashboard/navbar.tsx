@@ -17,6 +17,8 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { notifyLocalUserChanged, useLocalUser } from '@/hooks/use-local-user';
 import { useRecoverySync } from '@/hooks/use-recovery-sync';
+import { GlobalSearch } from './global-search';
+import { LanguageToggle } from './language-toggle';
 
 const PROFILE_PANEL_ID = 'dashboard-profile-panel';
 
@@ -85,16 +87,24 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-[76px] shrink-0 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-md sm:px-6 lg:justify-end">
-        <Link
-          href={ROUTES.DASHBOARD}
-          className="rounded-lg text-base font-extrabold tracking-tight text-navy outline-none focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2 lg:hidden"
-        >
-          Gamblock<span className="text-navy-light">-AI</span>
-        </Link>
+      <header className="sticky top-0 z-40 flex h-[76px] shrink-0 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-md sm:px-6 lg:justify-between">
+        <div className="flex flex-1 items-center justify-start lg:hidden">
+          <Link
+            href={ROUTES.DASHBOARD}
+            className="rounded-lg text-base font-extrabold tracking-tight text-navy outline-none focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2"
+          >
+            Gamblock<span className="text-navy-light">-AI</span>
+          </Link>
+        </div>
 
-        <div className="relative" ref={profileAreaRef}>
-          <button
+        <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-start">
+          <GlobalSearch />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <LanguageToggle />
+          <div className="relative" ref={profileAreaRef}>
+            <button
             ref={profileTriggerRef}
             type="button"
             aria-controls={PROFILE_PANEL_ID}
@@ -169,6 +179,7 @@ export function Navbar() {
               </div>
             </div>
           )}
+        </div>
         </div>
       </header>
 

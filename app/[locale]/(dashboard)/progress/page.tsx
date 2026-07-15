@@ -544,6 +544,7 @@ export default function ProgressPage() {
             </p>
             <Button
               size="lg"
+              nativeButton={false}
               className="mt-7 min-h-11 w-full sm:w-auto"
               render={<Link href={ROUTES.DASHBOARD} />}
             >
