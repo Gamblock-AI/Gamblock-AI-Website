@@ -1,11 +1,10 @@
 # Gamblock-AI Website
 
-Next.js web app: the public landing page, the Member recovery hub (mood tracker,
-journal, missions, psychoeducation), the Kepala supervision dashboard, and the
-Admin portal. The PKM core additionally requires intention setting,
-impulse-awareness education, and explainable skill recommendations as part of
-one Self-Regulation loop. Talks to the Go/Gin backend without receiving raw
-browsing context.
+Next.js web app for the public Gamblock-AI site, the student recovery journey,
+privacy-safe partner support, and operational surfaces. The student experience
+connects intention setting, structured mood/urge check-ins, daily missions,
+psychoeducation, explained skill suggestions, and a weekly Self-Regulation
+review. It talks to the Go/Gin backend without receiving raw browsing context.
 
 ## Fresh clone
 
@@ -33,18 +32,20 @@ app/
     (dashboard)/           # authenticated dashboard, recovery, progress,
                            # education, accountability, admin, and settings
     (auth)/                # login, register, forgot-password
-    (landing)/             # landing, dampak, technology, and legal pages
+    (landing)/             # landing, post-intervention, impact, technology,
+                           # and legal pages
     approve/[token]/       # supporting quick-approval deep link
     partner/invitations/   # partner invitation acceptance
     onboarding/            # authenticated onboarding flows
 components/
   landing/                 # marketing sections and scroll animations
-  dashboard/               # authenticated navbar and sidebar
+  dashboard/               # responsive shell, Today dashboard, and navigation
+  education/               # safe published-content rendering
   common/                  # PageTransition and reusable cross-surface helpers
   auth/                    # authentication composition
   ui/                      # shadcn-style primitives
-hooks/          # use-api, use-accountability, use-dashboard-data, use-progress-data
-lib/            # api-client.ts (envelope + refresh), config, messages, feedback
+hooks/          # authenticated API hooks and browser-local recovery hooks
+lib/            # api-client, config/messages, and versioned recovery domain
 middleware.ts   # route protection (cookie token)
 routes.ts       # route constants + PROTECTED/GUEST lists
 docs/ai/        # clone-portable AI context guide and manifest
@@ -53,6 +54,24 @@ docs/ai/        # clone-portable AI context guide and manifest
 Dashboard route transitions are implemented by
 `components/common/PageTransition.tsx` and mounted from
 `app/[locale]/(dashboard)/layout.tsx`.
+
+## Recovery prototype
+
+The redesigned student dashboard is action-first: intention, private check-in,
+one API-backed mission, an explained skill, then a weekly review. Sensitive
+prototype state uses the bounded, versioned `gamblock:recovery:v1` browser
+store. Its schema intentionally has no URL, domain, DOM, browsing-history, or
+free-text check-in field, and the recovery page provides an explicit local-data
+clear action.
+
+Mission completion uses `GET /v1/missions/today` and `PATCH /v1/missions`.
+Published psychoeducation comes from the backend and Markdown is rendered
+through a text-only allowlist. The public `/post-intervention` page provides a
+parameter-free grounding/help entry; native automatic handoff is not wired yet.
+
+Browser-local state is prototype persistence, not a claim of durable encrypted
+or cross-device storage. See the umbrella `context/progress-tracker.md` when
+working from the full workspace.
 
 ## API client
 

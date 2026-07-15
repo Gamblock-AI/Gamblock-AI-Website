@@ -21,6 +21,7 @@ export const ROUTES = {
   HELP: '/help',
   CONTACT: '/contact',
   DOWNLOAD: '/download',
+  POST_INTERVENTION: '/post-intervention',
 } as const;
 
 export const PROTECTED_ROUTES = [

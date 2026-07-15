@@ -15,28 +15,22 @@ export function SidebarItem({ href, label, icon: Icon, isActive }: SidebarItemPr
   return (
     <Link
       href={href}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'group relative flex items-center gap-3 py-3 pl-4 pr-4 text-sm font-semibold transition-all duration-300',
+        'group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2 focus-visible:ring-offset-card',
         isActive
-          ? 'bg-background text-crimson rounded-l-2xl ml-3'
-          : 'text-white/70 hover:bg-white/10 hover:text-white rounded-l-2xl ml-3'
+          ? 'bg-azure/75 text-navy'
+          : 'text-muted-foreground hover:bg-muted hover:text-navy'
       )}
     >
-      {/* Inverted Border Radius Pseudo-elements for Active State */}
-      {isActive && (
-        <>
-          <span className="absolute -top-5 right-0 h-5 w-5 bg-transparent rounded-br-2xl shadow-[10px_10px_0_10px_var(--color-background)]" />
-          <span className="absolute -bottom-5 right-0 h-5 w-5 bg-transparent rounded-tr-2xl shadow-[10px_-10px_0_10px_var(--color-background)]" />
-        </>
-      )}
-
       <Icon
         className={cn(
-          'h-[20px] w-[20px] shrink-0 transition-colors',
-          isActive ? 'text-crimson' : 'text-white/70 group-hover:text-white',
+          'size-5 shrink-0 transition-colors',
+          isActive ? 'text-navy' : 'text-muted-foreground group-hover:text-navy',
         )}
+        aria-hidden="true"
       />
-      {label}
+      <span>{label}</span>
     </Link>
   );
 }

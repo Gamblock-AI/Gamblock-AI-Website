@@ -1,18 +1,32 @@
 'use client';
 
-import React from 'react';
-import { Users, HeartHandshake, Trash2 } from 'lucide-react';
-import { useTranslations } from "next-intl";
+import { useState } from 'react';
+import { HeartHandshake, Mail, Trash2, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import {
+  DashboardPanel,
+  DashboardStatus,
+} from '@/components/dashboard/dashboard-page';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PartnerSetupCardProps {
   partnerEmail: string;
-  setPartnerEmail: (val: string) => void;
+  setPartnerEmail: (value: string) => void;
   partnerStatus: 'none' | 'invited' | 'active';
   loading: boolean;
-  onSubmitInvite: (e: React.FormEvent) => void;
-  onRevokePartner: () => void;
-  title?: string;
-  isSettingsPage?: boolean;
+  dataLoading?: boolean;
+  onInvite: () => void;
+  onRevokePartner: () => Promise<void> | void;
 }
 
 export function PartnerSetupCard({
@@ -20,84 +34,129 @@ export function PartnerSetupCard({
   setPartnerEmail,
   partnerStatus,
   loading,
-  onSubmitInvite,
+  dataLoading = false,
+  onInvite,
   onRevokePartner,
-  title = 'Akun Pendamping Akuntabilitas',
-  isSettingsPage = false,
 }: PartnerSetupCardProps) {
-    const t = useTranslations('PartnerSetupCard');
-  return (
-    <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-      <div className="flex items-center justify-between border-b border-border pb-1">
-        <div className="flex items-center gap-3.5">
-          <Users className="text-navy size-5" />
-          <h3 className="text-navy text-base font-black tracking-wider uppercase">
-            {title}
-          </h3>
-        </div>
-        <span
-          className={`rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${
-            partnerStatus === 'active'
-              ? 'border border-sage/20 bg-sage/10 text-sage'
-              : partnerStatus === 'invited'
-                ? 'animate-pulse border border-navy/20 bg-navy/5 text-navy'
-                : 'bg-muted text-muted-foreground'
-          }`}
-        >
-          {partnerStatus === 'active'
-            ? 'Aktif'
-            : partnerStatus === 'invited'
-              ? 'Menunggu Penerimaan'
-              : 'Belum Terhubung'}
-        </span>
-      </div>
+  const t = useTranslations('accountabilityWorkspace');
+  const [revokeOpen, setRevokeOpen] = useState(false);
 
-      {partnerStatus === 'none' ? (
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-              {t('text_58')}</label>
-            <p className="text-[11px] text-muted-foreground">
-              {t('text_59')}</p>
-            <input
-              type="email"
-              value={partnerEmail}
-              onChange={(e) => setPartnerEmail(e.target.value)}
-              placeholder={t('text_63')}
-              disabled={loading}
-              className="py-2.5 focus:ring-navy w-full rounded-xl border border-border bg-card px-4 text-xs font-semibold text-navy placeholder:text-muted-foreground/50 shadow-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none disabled:bg-muted/50 disabled:text-muted-foreground"
-              required
-            />
-          </div>
-          {!isSettingsPage && (
-            <button
-              onClick={onSubmitInvite}
-              disabled={loading}
-              className="bg-navy hover:bg-navy/90 py-2.5 flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-4 text-xs font-bold text-white shadow-soft transition-all disabled:opacity-50"
-            >
-              <HeartHandshake className="size-4" /> {t('text_60')}</button>
-          )}
+  const statusTone =
+    partnerStatus === 'active'
+      ? 'sage'
+      : partnerStatus === 'invited'
+        ? 'amber'
+        : 'muted';
+
+  return (
+    <DashboardPanel
+      icon={Users}
+      title={t('partnerTitle')}
+      description={t('partnerDescription')}
+      action={
+        dataLoading ? (
+          <Skeleton className="h-8 w-28 rounded-full" />
+        ) : (
+          <DashboardStatus tone={statusTone}>
+            {t(`partnerStatus.${partnerStatus}`)}
+          </DashboardStatus>
+        )
+      }
+    >
+      {dataLoading ? (
+        <div className="space-y-3" role="status">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-11 w-full rounded-xl" />
+          <Skeleton className="h-11 w-40 rounded-xl" />
+          <span className="sr-only">{t('loading')}</span>
         </div>
-      ) : (
-        <div className="space-y-3">
-          <div className="space-y-3 rounded-xl border border-border bg-muted/50 p-5">
-            <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
-              {t('text_61')}</span>
-            <p className="text-navy text-sm font-bold">{partnerEmail}</p>
-            <p className="text-[11px] leading-relaxed font-semibold text-muted-foreground">
-              {partnerStatus === 'active'
-                ? 'Pendamping Anda saat ini memegang kendali otorisasi untuk membuka proteksi aplikasi.'
-                : 'Menunggu pendamping menerima undangan Anda via tautan verifikasi email.'}
+      ) : partnerStatus === 'none' ? (
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onInvite();
+          }}
+        >
+          <div className="space-y-2">
+            <label htmlFor="partner-email" className="text-sm font-semibold text-navy">
+              {t('partnerEmailLabel')}
+            </label>
+            <p id="partner-email-help" className="text-xs leading-5 text-muted-foreground">
+              {t('partnerEmailHelp')}
             </p>
+            <div className="relative">
+              <Mail
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <input
+                id="partner-email"
+                type="email"
+                value={partnerEmail}
+                onChange={(event) => setPartnerEmail(event.target.value)}
+                aria-describedby="partner-email-help"
+                autoComplete="email"
+                placeholder={t('partnerEmailPlaceholder')}
+                disabled={loading}
+                className="h-11 w-full rounded-xl border border-input bg-background pr-4 pl-10 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20 disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              />
+            </div>
           </div>
-          <button
+          <Button type="submit" size="lg" disabled={loading} className="w-full sm:w-auto">
+            <HeartHandshake className="size-4" aria-hidden="true" />
+            {loading ? t('sendingInvite') : t('sendInvite')}
+          </Button>
+        </form>
+      ) : (
+        <div className="rounded-2xl border border-border bg-muted/45 p-4 sm:p-5">
+          <p className="text-xs font-semibold text-muted-foreground">
+            {t('connectedEmail')}
+          </p>
+          <p className="mt-1 break-all text-sm font-bold text-navy">{partnerEmail}</p>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            {partnerStatus === 'active'
+              ? t('activePartnerHelp')
+              : t('invitedPartnerHelp')}
+          </p>
+          <Button
             type="button"
-            onClick={onRevokePartner}
-            className="py-2.5 flex cursor-pointer items-center gap-1 rounded-xl border border-crimson/20 px-4 text-xs font-bold text-crimson transition-all hover:bg-crimson/5"
+            variant="outline"
+            size="lg"
+            className="mt-4 w-full border-crimson/25 text-crimson hover:bg-crimson/[0.04] sm:w-auto"
+            onClick={() => setRevokeOpen(true)}
           >
-            <Trash2 className="size-3.5" /> {t('text_62')}</button>
+            <Trash2 className="size-4" aria-hidden="true" />
+            {t('revokePartner')}
+          </Button>
         </div>
       )}
-    </div>
+
+      <Dialog open={revokeOpen} onOpenChange={setRevokeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('revokeDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('revokeDialogBody')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>
+              {t('cancel')}
+            </DialogClose>
+            <Button
+              variant="destructive"
+              disabled={loading}
+              onClick={() => {
+                void Promise.resolve(onRevokePartner()).then(() =>
+                  setRevokeOpen(false),
+                );
+              }}
+            >
+              {loading ? t('revoking') : t('confirmRevoke')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </DashboardPanel>
   );
 }

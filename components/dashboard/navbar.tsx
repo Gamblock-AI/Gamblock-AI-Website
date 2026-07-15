@@ -1,160 +1,200 @@
 'use client';
 
+import { Link, useRouter } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
-import { Link, useRouter, usePathname } from '@/i18n/routing';
-import { Bell, User, LogOut } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
-import Swal from 'sweetalert2';
-import { useTranslations } from "next-intl";
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ChevronDown, FileLock2, LogOut, Settings, UserRound } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
+import { notifyLocalUserChanged, useLocalUser } from '@/hooks/use-local-user';
+import { useRecoverySync } from '@/hooks/use-recovery-sync';
 
-const pathnameToMeta: Record<string, { titleKey: string; subKey: string }> = {
-  '/dashboard': { titleKey: 'titleDashboard', subKey: 'subDashboard' },
-  '/progress': { titleKey: 'titleProgress', subKey: 'subProgress' },
-  '/accountability': { titleKey: 'titleAccountability', subKey: 'subAccountability' },
-  '/settings': { titleKey: 'titleSettings', subKey: 'subSettings' },
-  '/partners': { titleKey: 'titlePartners', subKey: 'subPartners' },
-  '/education': { titleKey: 'titleEducation', subKey: 'subEducation' },
-  '/recovery': { titleKey: 'titleRecovery', subKey: 'subRecovery' },
-  '/profile': { titleKey: 'titleProfile', subKey: 'subProfile' },
-};
+const PROFILE_PANEL_ID = 'dashboard-profile-panel';
 
 export function Navbar() {
-    const t = useTranslations('navbar');
-  const pathname = usePathname();
+  const t = useTranslations('dashboardNav');
   const router = useRouter();
-  const [user, setUser] = useState<{ display_name: string; email: string } | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const user = useLocalUser();
+  useRecoverySync();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const profileAreaRef = useRef<HTMLDivElement>(null);
+  const profileTriggerRef = useRef<HTMLButtonElement>(null);
 
-  const loadUser = () => {
-    const saved = localStorage.getItem('gamblock_user');
-    if (saved) {
-      try {
-        setUser(JSON.parse(saved));
-      } catch {
-        /* ignore */
+  useEffect(() => {
+    if (!profileOpen) return;
+
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (
+        profileAreaRef.current &&
+        !profileAreaRef.current.contains(event.target as Node)
+      ) {
+        setProfileOpen(false);
       }
-    } else {
-      setUser(null);
-    }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setProfileOpen(false);
+        profileTriggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePress);
+    document.addEventListener('keydown', closeOnEscape);
+
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePress);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [profileOpen]);
+
+  const initials = user.display_name
+    ? user.display_name
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((name) => name[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : null;
+
+  const openLogoutConfirmation = () => {
+    setProfileOpen(false);
+    setLogoutOpen(true);
   };
-
-  useEffect(() => {
-    setTimeout(() => loadUser(), 0);
-    const handleStorageChange = () => loadUser();
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleLogout = () => {
-    setDropdownOpen(false);
-    Swal.fire({
-      title: t('logoutTitle'),
-      text: t('logoutText'),
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#C8102E',
-      cancelButtonColor: '#888',
-      confirmButtonText: t('logoutConfirm'),
-      cancelButtonText: t('logoutCancel'),
-    }).then((result) => {
-      if (result.isConfirmed) {
-        localStorage.removeItem('gamblock_access_token');
-        localStorage.removeItem('gamblock_refresh_token');
-        localStorage.removeItem('gamblock_user');
-        document.cookie =
-          'gamblock_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
-        router.push(ROUTES.LOGIN);
-      }
-    });
-  };
-
-  const meta = pathnameToMeta[pathname] || {
-    titleKey: 'titleDashboard',
-    subKey: 'subDashboard',
+    localStorage.removeItem('gamblock_access_token');
+    localStorage.removeItem('gamblock_refresh_token');
+    localStorage.removeItem('gamblock_user');
+    notifyLocalUserChanged();
+    document.cookie =
+      'gamblock_access_token=; path=/; max-age=0; SameSite=Lax';
+    setLogoutOpen(false);
+    router.push(ROUTES.LOGIN);
   };
 
   return (
-    <nav className="sticky top-0 z-40 flex shrink-0 items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-xl sm:px-6">
-      {/* Title */}
-      <div className="min-w-0">
-        <h1 className="text-title truncate text-base text-navy sm:text-lg">{t(meta.titleKey)}</h1>
-        <p className="hidden truncate text-xs text-muted-foreground sm:block">{t(meta.subKey)}</p>
-      </div>
-
-      {/* Right actions */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Icons */}
-        <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-navy/5 hover:text-navy"
-          aria-label={t('notifications')}
+    <>
+      <header className="sticky top-0 z-40 flex h-[76px] shrink-0 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-md sm:px-6 lg:justify-end">
+        <Link
+          href={ROUTES.DASHBOARD}
+          className="rounded-lg text-base font-extrabold tracking-tight text-navy outline-none focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2 lg:hidden"
         >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-crimson" />
-        </button>
+          Gamblock<span className="text-navy-light">-AI</span>
+        </Link>
 
-        <div className="mx-0.5 hidden h-6 w-px bg-border sm:block" />
-
-        {/* Profile */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative" ref={profileAreaRef}>
           <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-navy text-xs font-bold text-white shadow-soft transition-transform hover:scale-105"
-            title={user?.display_name || 'Profil'}
+            ref={profileTriggerRef}
+            type="button"
+            aria-controls={PROFILE_PANEL_ID}
+            aria-expanded={profileOpen}
+            aria-label={t('openProfileMenu')}
+            onClick={() => setProfileOpen((open) => !open)}
+            className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-2 text-sm font-semibold text-navy shadow-soft outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2"
           >
-            {user?.display_name
-              ? user.display_name
-                  .split(' ')
-                  .map((n) => n[0])
-                  .join('')
-                  .toUpperCase()
-                  .slice(0, 2)
-              : <User className="h-4 w-4" />}
+            <span className="flex size-8 items-center justify-center rounded-lg bg-azure text-xs font-bold text-navy">
+              {initials ?? <UserRound className="size-4" aria-hidden="true" />}
+            </span>
+            <span className="hidden max-w-36 truncate sm:block">
+              {user?.display_name || t('profileFallback')}
+            </span>
+            <ChevronDown
+              className={`hidden size-4 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none sm:block ${
+                profileOpen ? 'rotate-180' : ''
+              }`}
+              aria-hidden="true"
+            />
           </button>
 
-          {dropdownOpen && (
-            <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-border bg-card py-1.5 shadow-card">
-              {user && (
-                <div className="border-b border-border px-4 py-3">
-                  <p className="truncate text-sm font-bold text-navy">
-                    {user.display_name}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
+          {profileOpen && (
+            <div
+              id={PROFILE_PANEL_ID}
+              className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-card"
+            >
+              <div className="border-b border-border px-3 py-3">
+                <p className="truncate text-sm font-bold text-navy">
+                  {user?.display_name || t('profileFallback')}
+                </p>
+                {user?.email && (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
                     {user.email}
                   </p>
-                </div>
-              )}
+                )}
+              </div>
 
-              <Link
-                href={ROUTES.PROFILE}
-                onClick={() => setDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-navy/5 hover:text-navy"
-              >
-                <User className="h-4 w-4" />
-                {t('text_313')}
-              </Link>
-
-              <button
-                onClick={handleLogout}
-                className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-sm font-semibold text-crimson transition-colors hover:bg-crimson/5"
-              >
-                <LogOut className="h-4 w-4" />
-                {t('logout')}
-              </button>
+              <div className="py-1">
+                <Link
+                  href={ROUTES.PROFILE}
+                  onClick={() => setProfileOpen(false)}
+                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-navy/30"
+                >
+                  <UserRound className="size-4" aria-hidden="true" />
+                  {t('profile')}
+                </Link>
+                <Link
+                  href={ROUTES.SETTINGS}
+                  onClick={() => setProfileOpen(false)}
+                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-navy/30"
+                >
+                  <Settings className="size-4" aria-hidden="true" />
+                  {t('settings')}
+                </Link>
+                <Link
+                  href={ROUTES.DATA_REQUESTS}
+                  onClick={() => setProfileOpen(false)}
+                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-navy/30"
+                >
+                  <FileLock2 className="size-4" aria-hidden="true" />
+                  {t('dataRequests')}
+                </Link>
+                <button
+                  type="button"
+                  onClick={openLogoutConfirmation}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-crimson outline-none transition-colors hover:bg-crimson/5 focus-visible:ring-2 focus-visible:ring-crimson/30"
+                >
+                  <LogOut className="size-4" aria-hidden="true" />
+                  {t('logout')}
+                </button>
+              </div>
             </div>
           )}
         </div>
-      </div>
-    </nav>
+      </header>
+
+      <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <DialogContent
+          className="rounded-2xl p-5 sm:max-w-md"
+          showCloseButton={false}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-navy">
+              {t('logoutTitle')}
+            </DialogTitle>
+            <DialogDescription className="leading-6">
+              {t('logoutDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="-mx-5 -mb-5 mt-1 rounded-b-2xl px-5 py-4">
+            <DialogClose render={<Button variant="outline" size="lg" />}>
+              {t('logoutCancel')}
+            </DialogClose>
+            <Button variant="destructive" size="lg" onClick={handleLogout}>
+              {t('logoutConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

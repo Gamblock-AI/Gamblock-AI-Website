@@ -1,94 +1,140 @@
 'use client';
 
-import { Clock } from 'lucide-react';
-import { ApprovalRequest } from '@/hooks/use-accountability';
-import { useTranslations } from "next-intl";
+import { useState } from 'react';
+import { ClipboardList, X } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import {
+  DashboardPanel,
+  DashboardStatus,
+} from '@/components/dashboard/dashboard-page';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
+import type { ApprovalRequest } from '@/hooks/use-accountability';
 
 interface RequestsHistoryTableProps {
   requests: ApprovalRequest[];
-  onCancelRequest: (id: string) => void;
+  onCancelRequest: (id: string) => Promise<void> | void;
+}
+
+function statusTone(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('approved')) return 'sage' as const;
+  if (normalized.includes('denied')) return 'crimson' as const;
+  if (normalized.includes('pending')) return 'amber' as const;
+  return 'muted' as const;
+}
+
+function statusKey(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('approved')) return 'approved';
+  if (normalized.includes('denied')) return 'denied';
+  if (normalized.includes('pending')) return 'pending';
+  if (normalized.includes('expired')) return 'expired';
+  return 'cancelled';
 }
 
 export function RequestsHistoryTable({
   requests,
   onCancelRequest,
 }: RequestsHistoryTableProps) {
-    const t = useTranslations('RequestsHistoryTable');
-  if (requests.length === 0) return null;
+  const t = useTranslations('accountabilityWorkspace');
+  const locale = useLocale();
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
 
   return (
-    <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-      <div className="flex items-center gap-3">
-        <Clock className="text-navy size-5.5" />
-        <h3 className="text-navy text-base font-black tracking-wider uppercase">
-          {t('text_70')}</h3>
-      </div>
+    <DashboardPanel
+      icon={ClipboardList}
+      title={t('historyTitle')}
+      description={t('historyDescription')}
+    >
+      {requests.length === 0 ? (
+        <EmptyState
+          icon={ClipboardList}
+          title={t('historyEmptyTitle')}
+          hint={t('historyEmptyBody')}
+          className="min-h-48 bg-muted/20"
+        />
+      ) : (
+        <div className="space-y-3">
+          {requests.map((request) => {
+            const isPending = request.status.toLowerCase().includes('pending');
+            const parsedDate = request.created_at
+              ? new Date(request.created_at)
+              : null;
+            const date =
+              parsedDate && !Number.isNaN(parsedDate.getTime())
+                ? formatter.format(parsedDate)
+                : t('dateUnavailable');
 
-      <div className="overflow-x-auto">
-        <table className="text-navy w-full border-collapse text-left text-xs">
-          <thead>
-            <tr className="border-b border-border font-bold tracking-wider text-muted-foreground uppercase">
-              <th className="px-1 pb-3">ID</th>
-              <th className="px-2 pb-3">Alasan</th>
-              <th className="px-2 pb-3">Tanggal</th>
-              <th className="px-2 pb-3">Status</th>
-              <th className="px-2 pb-3 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="font-semibold text-navy">
-            {requests.map((r) => (
-              <tr
-                key={r.id}
-                className="border-b border-border transition-colors hover:bg-muted/50/40"
+            return (
+              <article
+                key={request.id}
+                className="grid gap-3 rounded-2xl border border-border bg-muted/25 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
               >
-                <td className="px-1 py-2.5 font-mono text-[10px] text-muted-foreground">
-                  {r.id}
-                </td>
-                <td className="px-2 py-2.5 font-medium text-muted-foreground">
-                  {r.reason || 'Tidak ada alasan'}
-                </td>
-                <td className="px-2 py-2.5 text-muted-foreground">
-                  {r.created_at
-                    ? new Date(r.created_at).toLocaleDateString('id-ID')
-                    : '-'}
-                </td>
-                <td className="px-2 py-2.5">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase ${
-                      r.status.toLowerCase().includes('approved')
-                        ? 'border border-sage/20 bg-sage/10 text-sage'
-                        : r.status.toLowerCase().includes('denied')
-                          ? 'border border-crimson/20 bg-crimson/5 text-crimson'
-                          : r.status.toLowerCase().includes('pending')
-                            ? 'animate-pulse border border-amber-100 bg-amber-50 text-amber-600'
-                            : 'bg-muted text-muted-foreground'
-                    }`}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DashboardStatus tone={statusTone(request.status)}>
+                      {t(`requestStatus.${statusKey(request.status)}`)}
+                    </DashboardStatus>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {request.id}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-foreground">
+                    {request.reason || t('reasonNotProvided')}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{date}</p>
+                </div>
+                {isPending ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 w-full border-crimson/20 text-crimson hover:bg-crimson/[0.04] md:w-auto"
+                    onClick={() => setCancelId(request.id)}
                   >
-                    {r.status.toLowerCase().includes('approved')
-                      ? 'Disetujui'
-                      : r.status.toLowerCase().includes('denied')
-                        ? 'Ditolak'
-                        : r.status.toLowerCase().includes('pending')
-                          ? 'Tertunda'
-                          : 'Dibatalkan'}
-                  </span>
-                </td>
-                <td className="px-2 py-2.5 text-right">
-                  {r.status.toLowerCase().includes('pending') && (
-                    <button
-                      type="button"
-                      onClick={() => onCancelRequest(r.id)}
-                      className="text-crimson text-xs font-bold hover:underline"
-                    >
-                      Batalkan
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                    <X className="size-4" aria-hidden="true" />
+                    {t('cancelRequest')}
+                  </Button>
+                ) : null}
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      <Dialog open={cancelId !== null} onOpenChange={(open) => !open && setCancelId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('cancelDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('cancelDialogBody')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>
+              {t('keepRequest')}
+            </DialogClose>
+            <Button
+              onClick={() => {
+                if (!cancelId) return;
+                void Promise.resolve(onCancelRequest(cancelId)).then(() =>
+                  setCancelId(null),
+                );
+              }}
+            >
+              {t('confirmCancelRequest')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </DashboardPanel>
   );
 }

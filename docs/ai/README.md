@@ -43,8 +43,16 @@ and must preserve the on-device browsing-data boundary.
   `routes.ts`, `middleware.ts`, and relevant e2e specs.
 - API data: inspect `lib/api-client.ts`, `lib/config.ts`, the relevant
   `hooks/use-*.ts`, and their Vitest tests.
-- Dashboard UI: inspect `app/[locale]/(dashboard)/`, `components/dashboard/`,
-  and `components/common/PageTransition.tsx`.
+- Dashboard/recovery UI: inspect `app/[locale]/(dashboard)/`,
+  `components/dashboard/`, `lib/recovery/`, the relevant recovery hooks, and
+  `design-system/gamblock-ai-recovery-dashboard/`.
+- Post-intervention handoff: inspect
+  `app/[locale]/(landing)/post-intervention/`, `routes.ts`, and the umbrella
+  privacy/architecture contract when available. Never add browsing context to
+  its URL or client state.
+- Psychoeducation: inspect the education routes, `hooks/use-education.ts`, and
+  `components/education/safe-markdown.tsx`; user views must not expose
+  draft/archived content or render raw HTML.
 - Landing UI: inspect `app/[locale]/(landing)/` and `components/landing/`.
 - Messages or feedback: inspect `lib/messages.ts`, `lib/feedback.ts`, and the
   backend/Flutter catalogs when the wider monorepo is available.

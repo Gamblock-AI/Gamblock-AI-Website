@@ -1,211 +1,159 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { User, Lock, Mail, Save } from 'lucide-react';
-import { useTranslations } from "next-intl";
+import { FormEvent } from 'react';
+import {
+  BadgeCheck,
+  KeyRound,
+  LockKeyhole,
+  Mail,
+  Save,
+  UserRound,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import {
+  DashboardNotice,
+  DashboardPage,
+  DashboardPageHeader,
+  DashboardPanel,
+  DashboardStatus,
+} from '@/components/dashboard/dashboard-page';
+import { Button } from '@/components/ui/button';
+import { toastSuccess } from '@/lib/feedback';
+import { Link } from '@/i18n/routing';
+import {
+  updateLocalUser,
+  useLocalUser,
+} from '@/hooks/use-local-user';
+import { ROUTES } from '@/routes';
 
 export default function ProfilePage() {
-    const t = useTranslations('profilePage');
-  const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const t = useTranslations('profileWorkspace');
+  const user = useLocalUser();
 
-  useEffect(() => {
-    const saved = localStorage.getItem('gamblock_user');
-    if (saved) {
-      try {
-        const u = JSON.parse(saved);
-        setTimeout(() => {
-          setDisplayName(u.display_name || '');
-          setEmail(u.email || '');
-        }, 0);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }, []);
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const saved = localStorage.getItem('gamblock_user');
-      if (saved) {
-        const u = JSON.parse(saved);
-        u.display_name = displayName;
-        u.email = email;
-        localStorage.setItem('gamblock_user', JSON.stringify(u));
-        // Dispatch storage event so layout header/avatar updates instantly
-        window.dispatchEvent(new Event('storage'));
-      }
-      toast.success('Profil berhasil diperbarui!');
-    } catch (err) {
-      toast.error('Gagal memperbarui profil.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      toast.error('Password baru dan konfirmasi password tidak cocok!');
-      return;
-    }
-    setLoading(true);
-    try {
-      toast.success('Password berhasil diperbarui!');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
-      toast.error('Gagal memperbarui password.');
-    } finally {
-      setLoading(false);
-    }
+  const saveDisplayName = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const displayName = String(formData.get('displayName') ?? '').trim();
+    if (!displayName) return;
+    updateLocalUser({ display_name: displayName });
+    toastSuccess(t('saved'));
   };
 
   return (
-    <div className="text-navy w-full space-y-4">
-      {/* Header */}
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <div className="space-y-1">
-          <span className="bg-navy/5 text-navy rounded-full px-3 py-1 text-xs font-semibold tracking-wider uppercase">
-            {t('text_160')}</span>
-          <h1 className="text-navy mt-2 text-xl font-bold tracking-tight">
-            {t('text_161')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('text_162')}</p>
-        </div>
-      </div>
+    <DashboardPage>
+      <DashboardPageHeader
+        icon={UserRound}
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
+        aside={
+          <DashboardNotice
+            icon={LockKeyhole}
+            title={t('sessionTitle')}
+            tone="sage"
+          >
+            {t('sessionBody')}
+          </DashboardNotice>
+        }
+      />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Update Data Diri */}
-        <div className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-soft">
-          <div className="flex items-center gap-3 border-b border-border pb-3">
-            <User className="text-navy size-5" />
-            <h3 className="text-navy text-base font-black tracking-wider uppercase">
-              {t('text_163')}</h3>
-          </div>
-
-          <form onSubmit={handleUpdateProfile} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {t('text_164')}</label>
+      <div className="grid gap-5 lg:grid-cols-12 lg:items-start">
+        <DashboardPanel
+          icon={UserRound}
+          title={t('identityTitle')}
+          description={t('identityBody')}
+          className="lg:col-span-7"
+          action={
+            <DashboardStatus tone="navy">
+              {user.role || t('roleUnavailable')}
+            </DashboardStatus>
+          }
+        >
+          <form
+            key={user.display_name ?? 'empty-profile'}
+            onSubmit={saveDisplayName}
+            className="space-y-5"
+          >
+            <div className="space-y-2">
+              <label htmlFor="display-name" className="text-sm font-semibold text-navy">
+                {t('displayNameLabel')}
+              </label>
+              <p id="display-name-help" className="text-xs leading-5 text-muted-foreground">
+                {t('displayNameHelp')}
+              </p>
               <div className="relative">
-                <User className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <UserRound
+                  className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <input
+                  id="display-name"
+                  name="displayName"
                   type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="focus:ring-navy w-full rounded-xl border border-border bg-card py-2.5 pr-4 pl-12 text-xs font-semibold text-navy placeholder:text-muted-foreground/50 shadow-sm focus:border-transparent focus:ring-2 focus:outline-none"
-                  placeholder={t('text_172')}
+                  defaultValue={user.display_name ?? ''}
+                  aria-describedby="display-name-help"
+                  autoComplete="name"
+                  className="h-11 w-full rounded-xl border border-input bg-background pr-4 pl-10 text-sm text-foreground outline-none transition-colors focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {t('text_165')}</label>
+            <div className="space-y-2">
+              <label htmlFor="account-email" className="text-sm font-semibold text-navy">
+                {t('emailLabel')}
+              </label>
               <div className="relative">
-                <Mail className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Mail
+                  className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <input
+                  id="account-email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="focus:ring-navy w-full rounded-xl border border-border bg-card py-2.5 pr-4 pl-12 text-xs font-semibold text-navy placeholder:text-muted-foreground/50 shadow-sm focus:border-transparent focus:ring-2 focus:outline-none"
-                  placeholder="Email"
-                  required
+                  value={user.email ?? ''}
+                  readOnly
+                  aria-readonly="true"
+                  className="h-11 w-full rounded-xl border border-border bg-muted/60 pr-4 pl-10 text-sm text-muted-foreground outline-none"
                 />
               </div>
+              <p className="text-xs leading-5 text-muted-foreground">
+                {t('emailReadonly')}
+              </p>
             </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-navy hover:bg-navy/90 flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-6 py-2.5 text-xs font-bold text-white shadow-soft transition-all disabled:opacity-50"
-              >
-                {t('text_166')}<Save className="size-4" />
-              </button>
-            </div>
+            <Button type="submit" size="lg" className="w-full sm:w-auto">
+              <Save className="size-4" aria-hidden="true" />
+              {t('saveDisplayName')}
+            </Button>
           </form>
-        </div>
+        </DashboardPanel>
 
-        {/* Update Password */}
-        <div className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-soft">
-          <div className="flex items-center gap-3 border-b border-border pb-3">
-            <Lock className="text-navy size-5" />
-            <h3 className="text-navy text-base font-black tracking-wider uppercase">
-              {t('text_167')}</h3>
-          </div>
+        <div className="space-y-5 lg:col-span-5">
+          <DashboardPanel
+            icon={KeyRound}
+            title={t('securityTitle')}
+            description={t('securityBody')}
+            accent="amber"
+          >
+            <Link
+              href={ROUTES.FORGOT_PASSWORD}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-navy/15 px-4 text-sm font-semibold text-navy outline-none transition-colors hover:bg-navy/[0.04] focus-visible:ring-2 focus-visible:ring-navy/30"
+            >
+              <KeyRound className="size-4" aria-hidden="true" />
+              {t('resetPassword')}
+            </Link>
+          </DashboardPanel>
 
-          <form onSubmit={handleUpdatePassword} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {t('text_168')}</label>
-              <div className="relative">
-                <Lock className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="focus:ring-navy w-full rounded-xl border border-border bg-card py-2.5 pr-4 pl-12 text-xs font-semibold text-navy placeholder:text-muted-foreground/50 shadow-sm focus:border-transparent focus:ring-2 focus:outline-none"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {t('text_169')}</label>
-              <div className="relative">
-                <Lock className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="focus:ring-navy w-full rounded-xl border border-border bg-card py-2.5 pr-4 pl-12 text-xs font-semibold text-navy placeholder:text-muted-foreground/50 shadow-sm focus:border-transparent focus:ring-2 focus:outline-none"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {t('text_170')}</label>
-              <div className="relative">
-                <Lock className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="focus:ring-navy w-full rounded-xl border border-border bg-card py-2.5 pr-4 pl-12 text-xs font-semibold text-navy placeholder:text-muted-foreground/50 shadow-sm focus:border-transparent focus:ring-2 focus:outline-none"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-navy hover:bg-navy/90 flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-6 py-2.5 text-xs font-bold text-white shadow-soft transition-all disabled:opacity-50"
-              >
-                {t('text_171')}<Save className="size-4" />
-              </button>
-            </div>
-          </form>
+          <DashboardNotice
+            icon={BadgeCheck}
+            title={t('accountTruthTitle')}
+            tone="navy"
+          >
+            {t('accountTruthBody')}
+          </DashboardNotice>
         </div>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

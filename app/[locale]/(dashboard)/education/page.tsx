@@ -1,105 +1,132 @@
 'use client';
 
-import { Link } from '@/i18n/routing';
-import { BookOpen, Brain, Heart, AlertTriangle, Target, Clock, ArrowRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api-client';
+import { ArrowRight, BookOpen, Brain, Clock3, Leaf, LockKeyhole, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useTranslations } from "next-intl";
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useEducationModules } from '@/hooks/use-education';
+import { Link } from '@/i18n/routing';
+import { cn } from '@/lib/utils';
 
-const modules = [
-  { slug: 'kesadaran-impulsif', title: 'Kesadaran Impulsif', desc: 'Memahami dorongan impulsif dan cara mengenalinya sejak dini.', icon: BookOpen, duration: '4 Menit Baca', progress: 70, color: 'text-navy', bg: 'bg-navy/10' },
-  { slug: 'pengendalian-diri', title: 'Pengendalian Diri', desc: 'Teknik praktis untuk menahan diri dari perilaku destruktif.', icon: Brain, duration: '6 Menit Baca', progress: 0, color: 'text-amber', bg: 'bg-amber/10' },
-  { slug: 'regulasi-emosi', title: 'Regulasi Emosi', desc: 'Mengelola emosi negatif yang memicu keinginan berjudi.', icon: Heart, duration: '5 Menit Baca', progress: 35, color: 'text-crimson', bg: 'bg-crimson/10' },
-  { slug: 'bahaya-judi-online', title: 'Bahaya Judi Online', desc: 'Dampak finansial, sosial, dan psikologis dari judi online.', icon: AlertTriangle, duration: '8 Menit Baca', progress: 100, color: 'text-sage', bg: 'bg-sage/10' },
-  { slug: 'membangun-kebiasaan-baru', title: 'Membangun Kebiasaan Baru', desc: 'Strategi membentuk rutinitas positif pengganti.', icon: Target, duration: '7 Menit Baca', progress: 0, color: 'text-navy', bg: 'bg-navy/10' },
-];
+const moduleIcons = [BookOpen, Brain, Leaf] as const;
 
-interface BackendModule {
-  id: string; slug: string; title: string; summary: string; estimated_minutes: number; progress: number;
+function toPercent(progress: number) {
+  if (!Number.isFinite(progress)) return 0;
+  const normalized = progress <= 1 ? progress * 100 : progress;
+  return Math.min(100, Math.max(0, Math.round(normalized)));
 }
 
 export default function EducationPage() {
-    const t = useTranslations('educationPage');
-  const [modulesList, setModulesList] = useState<typeof modules>(modules);
-
-  useEffect(() => {
-    const fetchModules = async () => {
-      try {
-        const data = await apiClient<BackendModule[]>('/psychoeducation/modules');
-        if (data && data.length > 0) {
-          const icons = [BookOpen, Brain, Heart, AlertTriangle, Target];
-          const colors = ['text-navy', 'text-amber', 'text-crimson', 'text-sage', 'text-navy'];
-          const bgs = ['bg-navy/10', 'bg-amber/10', 'bg-crimson/10', 'bg-sage/10', 'bg-navy/10'];
-          const mapped = data.map((m, idx) => ({
-            slug: m.slug, title: m.title, desc: m.summary,
-            icon: icons[idx % icons.length],
-            duration: `${m.estimated_minutes} Menit Baca`,
-            progress: Math.round(m.progress * 100) || 0,
-            color: colors[idx % colors.length],
-            bg: bgs[idx % bgs.length],
-          }));
-          setModulesList(mapped);
-        }
-      } catch { /* ignore */ }
-    };
-    setTimeout(() => { fetchModules(); }, 0);
-  }, []);
+  const t = useTranslations('educationLibrary');
+  const { modules, loading, error, refetch } = useEducationModules();
 
   return (
-    <div className="w-full space-y-4">
-      {/* Header */}
-      <Card className="border-navy/10 bg-navy/[0.02] p-5">
-        <span className="inline-block rounded-full bg-navy/10 px-3 py-1 text-label text-navy">
-          {t('text_137')}</span>
-        <h1 className="mt-2 text-xl font-extrabold tracking-tight text-navy">
-          {t('text_138')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('text_139')}</p>
-      </Card>
+    <div className="mx-auto w-full max-w-6xl space-y-7 pb-8">
+      <header className="grid gap-5 border-b border-border pb-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+        <div>
+          <p className="text-xs font-bold tracking-[0.12em] text-sage uppercase">{t('eyebrow')}</p>
+          <h1 className="mt-2 max-w-3xl text-3xl leading-tight font-extrabold tracking-tight text-navy sm:text-4xl">
+            {t('title')}
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+            {t('description')}
+          </p>
+        </div>
+        <p className="flex items-start gap-3 rounded-2xl border border-sage/20 bg-sage/[0.055] p-4 text-sm leading-6 text-muted-foreground">
+          <LockKeyhole className="mt-0.5 size-5 shrink-0 text-sage" aria-hidden="true" />
+          {t('privacyNote')}
+        </p>
+      </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {modulesList.map((m) => (
-          <Link key={m.slug} href={`/education/${m.slug}`} className="group block">
-            <Card className="h-full transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-card">
-              <div className="p-5 flex flex-col h-full gap-4">
-                <div className="flex items-center justify-between">
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${m.bg} ${m.color}`}>
-                    <m.icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{m.duration}</span>
-                  </div>
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Card key={index} className="p-5">
+              <div className="flex items-center justify-between">
+                <Skeleton className="size-11 rounded-xl" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="mt-5 h-5 w-2/3" />
+              <Skeleton className="mt-3 h-16 w-full" />
+              <Skeleton className="mt-6 h-11 w-full" />
+            </Card>
+          ))}
+          <span className="sr-only">{t('loading')}</span>
+        </div>
+      ) : error ? (
+        <Card className="mx-auto max-w-xl p-6 text-center sm:p-8" role="alert">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-amber/10 text-amber">
+            <RefreshCw className="size-5" aria-hidden="true" />
+          </span>
+          <h2 className="mt-4 text-xl font-bold text-navy">{t('errorTitle')}</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('errorBody')}</p>
+          <Button className="mt-5 h-11" onClick={() => void refetch()}>
+            <RefreshCw className="size-4" aria-hidden="true" />
+            {t('retry')}
+          </Button>
+        </Card>
+      ) : modules.length === 0 ? (
+        <EmptyState
+          icon={BookOpen}
+          title={t('emptyTitle')}
+          hint={t('emptyBody')}
+          className="min-h-64 bg-card"
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {modules.map((module, index) => {
+            const Icon = moduleIcons[index % moduleIcons.length];
+            const progress = toPercent(module.progress);
+            const progressLabel =
+              progress === 0
+                ? t('notStarted')
+                : progress === 100
+                  ? t('completed')
+                  : t('inProgress');
+
+            return (
+              <article key={module.id || module.slug} className="group flex h-full flex-col rounded-[1.5rem] border border-border bg-card p-5 shadow-soft transition-colors hover:border-navy/25">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-azure text-navy">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Clock3 className="size-3.5" aria-hidden="true" />
+                    {t('readTime', { count: module.estimated_minutes })}
+                  </span>
                 </div>
-                <div className="flex-1 space-y-1">
-                  <h3 className="text-base font-extrabold text-navy transition-colors group-hover:text-navy-dark">
-                    {m.title}
-                  </h3>
-                  <p className="text-xs leading-relaxed text-muted-foreground">{m.desc}</p>
-                </div>
-                <div className="space-y-2 border-t border-border pt-3">
-                  <div className="flex items-center justify-between text-[10px] font-bold tracking-wider text-muted-foreground/60 uppercase">
-                    <span>{t('text_140')}</span>
-                    <span className={m.progress === 100 ? 'text-sage font-extrabold' : 'text-navy'}>{m.progress}%</span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${m.progress === 100 ? 'bg-sage' : 'bg-navy'}`}
-                      style={{ width: `${m.progress}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-end">
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-navy group-hover:underline">
-                      {t('text_141')}<ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+
+                <h2 className="mt-5 text-lg leading-7 font-bold text-navy">{module.title}</h2>
+                <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">{module.summary}</p>
+
+                <div className="mt-5 border-t border-border pt-4">
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <span className="font-medium text-muted-foreground">{t('progress')}</span>
+                    <span className={cn('font-semibold', progress === 100 ? 'text-sage' : 'text-navy')}>
+                      {progressLabel}{progress > 0 && progress < 100 ? `, ${progress}%` : ''}
                     </span>
                   </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+                    <div
+                      className={cn('h-full rounded-full', progress === 100 ? 'bg-sage' : 'bg-navy')}
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <Link
+                    href={`/education/${module.slug}`}
+                    className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-navy/15 text-sm font-semibold text-navy outline-none transition-colors hover:bg-navy/[0.04] focus-visible:ring-2 focus-visible:ring-navy/30"
+                  >
+                    {t('open')}
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                  </Link>
                 </div>
-              </div>
-            </Card>
-          </Link>
-        ))}
-      </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

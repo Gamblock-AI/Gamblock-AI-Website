@@ -3,90 +3,70 @@
 import { ROUTES } from '@/routes';
 import { Link, usePathname } from '@/i18n/routing';
 import Image from 'next/image';
-import {
-  Home,
-  BarChart2,
-  Users,
-  Handshake,
-  GraduationCap,
-  Heart,
-  Settings,
-} from 'lucide-react';
 import { SidebarItem } from './sidebar-item';
 import { useTranslations } from 'next-intl';
-
-const sections = [
-  {
-    titleKey: 'secMonitoring',
-    items: [
-      { href: ROUTES.DASHBOARD, labelKey: 'navHome', icon: Home },
-      { href: ROUTES.PROGRESS, labelKey: 'navAnalytics', icon: BarChart2 },
-    ],
-  },
-  {
-    titleKey: 'secAccountability',
-    items: [
-      { href: ROUTES.ACCOUNTABILITY, labelKey: 'navSocial', icon: Users },
-      { href: ROUTES.SETTINGS, labelKey: 'navSettings', icon: Settings },
-      { href: ROUTES.PARTNERS, labelKey: 'navPartners', icon: Handshake },
-    ],
-  },
-  {
-    titleKey: 'secResources',
-    items: [
-      { href: ROUTES.EDUCATION, labelKey: 'navEducation', icon: GraduationCap },
-      { href: ROUTES.RECOVERY, labelKey: 'navRecovery', icon: Heart },
-    ],
-  },
-];
+import {
+  canShowNavigationItem,
+  dashboardNavigationGroups,
+  isNavigationItemActive,
+} from './navigation-config';
+import { useLocalUser } from '@/hooks/use-local-user';
 
 export function Sidebar() {
-  const t = useTranslations('sidebar');
+  const t = useTranslations('dashboardNav');
   const pathname = usePathname();
+  const user = useLocalUser();
 
   return (
-    <aside className="bg-navy sticky top-0 hidden h-screen w-[268px] shrink-0 flex-col py-6 pl-4 lg:flex">
-      {/* Branding */}
-      <Link
-        href={ROUTES.DASHBOARD}
-        className="flex items-center gap-2.5 rounded-2xl px-2.5 py-2 mr-4"
-      >
-        <Image
-          src="/images/gamblock-1.png"
-          alt="Logo Gamblock-AI"
-          width={36}
-          height={36}
-          className="h-9 w-9 object-contain"
-        />
-        <span className="text-base font-extrabold tracking-tight text-white">
-          Gamblock<span className="text-sky-light">-AI</span>
-        </span>
-      </Link>
+    <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-sidebar-border bg-card lg:flex">
+      <div className="flex h-[76px] shrink-0 items-center border-b border-sidebar-border px-5">
+        <Link
+          href={ROUTES.DASHBOARD}
+          className="flex min-h-11 items-center gap-3 rounded-xl px-1 outline-none focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2"
+        >
+          <Image
+            src="/images/gamblock-1.png"
+            alt=""
+            width={38}
+            height={38}
+            className="size-[38px] object-contain"
+            priority
+          />
+          <span className="text-base font-extrabold tracking-tight text-navy">
+            Gamblock<span className="text-navy-light">-AI</span>
+          </span>
+        </Link>
+      </div>
 
-      {/* Navigation */}
-      <nav className="mt-6 flex-1 space-y-6 overflow-y-auto">
-        {sections.map((sec) => (
-          <div key={sec.titleKey} className="space-y-1">
-            <span className="text-label mb-1.5 block px-3 text-white/50 uppercase tracking-wider text-xs">{t(sec.titleKey)}</span>
-            {sec.items.map(({ href, labelKey, icon: Icon }) => {
-              const isActive =
-                pathname === href ||
-                (href !== '/dashboard' && pathname.startsWith(href + '/'));
-              return (
+      <nav
+        className="flex-1 space-y-6 overflow-y-auto px-4 py-5"
+        aria-label={t('dashboard')}
+      >
+        {dashboardNavigationGroups.map((section) => {
+          const visibleItems = section.items.filter((item) =>
+            canShowNavigationItem(item, user?.role),
+          );
+
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <div key={section.titleKey} className="space-y-1">
+              <p className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
+                {t(section.titleKey)}
+              </p>
+              {visibleItems.map(({ href, labelKey, icon }) => (
                 <SidebarItem
                   key={href}
                   href={href}
                   label={t(labelKey)}
-                  icon={Icon}
-                  isActive={isActive}
+                  icon={icon}
+                  isActive={isNavigationItemActive(pathname, href)}
                 />
-              );
-            })}
-          </div>
-        ))}
+              ))}
+            </div>
+          );
+        })}
       </nav>
-
-
     </aside>
   );
 }

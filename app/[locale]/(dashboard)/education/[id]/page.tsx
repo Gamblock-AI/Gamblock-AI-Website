@@ -1,37 +1,20 @@
 'use client';
+
+import { use } from 'react';
+import { ArrowLeft, BookOpen, CheckCircle2, Clock3, LockKeyhole, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { SafeMarkdown } from '@/components/education/safe-markdown';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useEducationModule } from '@/hooks/use-education';
+import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
 
-import { Link } from '@/i18n/routing';
-import { useState, use, useEffect } from 'react';
-import { ArrowLeft, BookOpen, CheckCircle, Clock, Check } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
-import { useTranslations } from "next-intl";
-
-const titles: Record<string, string> = {
-  'kesadaran-impulsif': 'Kesadaran Impulsif',
-  'pengendalian-diri': 'Pengendalian Diri',
-  'regulasi-emosi': 'Regulasi Emosi',
-  'bahaya-judi-online': 'Bahaya Judi Online',
-  'membangun-kebiasaan-baru': 'Membangun Kebiasaan Baru',
-};
-
-const readTimes: Record<string, string> = {
-  'kesadaran-impulsif': '4 Menit',
-  'pengendalian-diri': '6 Menit',
-  'regulasi-emosi': '5 Menit',
-  'bahaya-judi-online': '8 Menit',
-  'membangun-kebiasaan-baru': '7 Menit',
-};
-
-interface ModuleDetail {
-  id: string;
-  slug: string;
-  title: string;
-  summary: string;
-  body_markdown: string;
-  estimated_minutes: number;
-  progress: number;
-  status: string;
+function toPercent(progress: number) {
+  if (!Number.isFinite(progress)) return 0;
+  const normalized = progress <= 1 ? progress * 100 : progress;
+  return Math.min(100, Math.max(0, Math.round(normalized)));
 }
 
 export default function EducationDetailPage({
@@ -39,124 +22,120 @@ export default function EducationDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-    const t = useTranslations('[id]Page');
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
-  const [completed, setCompleted] = useState(false);
-  const [moduleData, setModuleData] = useState<ModuleDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const t = useTranslations('educationLibrary');
+  const { id } = use(params);
+  const { module, loading, error, refetch } = useEducationModule(id);
 
-  useEffect(() => {
-    const fetchModuleDetail = async () => {
-      try {
-        const data = await apiClient<ModuleDetail>(
-          `/psychoeducation/modules/${id}`
-        );
-        setModuleData(data);
-        setCompleted(data.progress >= 1);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) {
-      setTimeout(() => {
-        fetchModuleDetail();
-      }, 0);
-    }
-  }, [id]);
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-4xl space-y-5" role="status">
+        <Skeleton className="h-11 w-44" />
+        <Card className="p-6 sm:p-8">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="mt-4 h-10 w-3/4" />
+          <Skeleton className="mt-3 h-5 w-1/2" />
+          <div className="mt-8 space-y-3">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton key={index} className="h-5 w-full" />
+            ))}
+          </div>
+        </Card>
+        <span className="sr-only">{t('loading')}</span>
+      </div>
+    );
+  }
 
-  const title = moduleData?.title || titles[id] || id;
-  const readTime = moduleData?.estimated_minutes
-    ? `${moduleData.estimated_minutes} Menit`
-    : readTimes[id] || '5 Menit';
-
-  return (
-    <div className="w-full space-y-3">
-      {/* Back button */}
-      <div>
+  if (error || !module) {
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-5">
         <Link
           href={ROUTES.EDUCATION}
-          className="hover:text-navy group inline-flex items-center gap-3 text-sm font-semibold text-muted-foreground transition-colors"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-navy outline-none hover:bg-navy/[0.04] focus-visible:ring-2 focus-visible:ring-navy/30"
         >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />{' '}
-          {t('text_283')}</Link>
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          {t('back')}
+        </Link>
+        <Card className="p-6 text-center sm:p-10" role="alert">
+          <BookOpen className="mx-auto size-10 text-muted-foreground" aria-hidden="true" />
+          <h1 className="mt-5 text-2xl font-bold text-navy">{t('moduleUnavailableTitle')}</h1>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
+            {t('moduleUnavailableBody')}
+          </p>
+          <Button className="mt-6 h-11" onClick={() => void refetch()}>
+            <RefreshCw className="size-4" aria-hidden="true" />
+            {t('retry')}
+          </Button>
+        </Card>
       </div>
+    );
+  }
 
-      {/* Main content wrapper */}
-      <div className="space-y-3 rounded-2xl border border-border bg-card p-8 shadow-soft md:p-10">
-        {/* Module Meta Header */}
-        <div className="space-y-3 border-b border-border pb-6">
-          <div className="flex flex-wrap items-center gap-3 text-xs font-bold tracking-wider text-muted-foreground uppercase">
-            <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
-              Modul
+  const progress = toPercent(module.progress);
+
+  return (
+    <article className="mx-auto w-full max-w-4xl space-y-5 pb-8">
+      <Link
+        href={ROUTES.EDUCATION}
+        className="inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-navy outline-none hover:bg-navy/[0.04] focus-visible:ring-2 focus-visible:ring-navy/30"
+      >
+        <ArrowLeft className="size-4" aria-hidden="true" />
+        {t('back')}
+      </Link>
+
+      <Card className="overflow-hidden">
+        <header className="border-b border-border bg-azure/40 px-5 py-6 sm:px-8 sm:py-8">
+          <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold text-muted-foreground">
+            <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-sage/20 bg-white px-3 text-sage">
+              <CheckCircle2 className="size-3.5" aria-hidden="true" />
+              {t('publishedContent')}
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="size-3.5" /> {t('text_284')}{readTime} Baca
+            <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border bg-white px-3">
+              <Clock3 className="size-3.5" aria-hidden="true" />
+              {t('readTime', { count: module.estimated_minutes })}
             </span>
           </div>
-          <h1 className="text-navy text-3xl font-black tracking-tight md:text-2xl">
-            {title}
+          <p className="mt-5 text-xs font-bold tracking-[0.12em] text-sage uppercase">
+            {t('moduleEyebrow')}
+          </p>
+          <h1 className="mt-2 text-3xl leading-tight font-extrabold tracking-tight text-navy sm:text-4xl">
+            {module.title}
           </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+            {module.summary}
+          </p>
+        </header>
+
+        <div className="px-5 py-7 sm:px-8 sm:py-10">
+          {module.body_markdown.trim() ? (
+            <SafeMarkdown markdown={module.body_markdown} />
+          ) : (
+            <p className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">
+              {t('contentEmpty')}
+            </p>
+          )}
         </div>
 
-        {/* Text body */}
-        <div className="prose max-w-none space-y-3 text-base leading-relaxed text-muted-foreground">
-          <p>
-            {t('text_285')}<strong>{title.toLowerCase()}</strong>{' '}
-            {t('text_286')}</p>
-
-          <h3 className="text-navy pt-2 text-xl font-bold">
-            {t('text_287')}</h3>
-          <p>
-            Berdasarkan <em>{t('text_288')}</em>{t('text_289')}</p>
-
-          <h3 className="text-navy pt-2 text-xl font-bold">
-            {t('text_290')}</h3>
-          <ul className="list-disc space-y-3 pl-6">
-            <li>
-              <strong>{t('text_291')}</strong> {t('text_292')}</li>
-            <li>
-              <strong>{t('text_293')}</strong> {t('text_294')}</li>
-            <li>
-              <strong>{t('text_295')}</strong> {t('text_296')}</li>
-          </ul>
-
-          <p>
-            {t('text_297')}</p>
-        </div>
-
-        {/* Module Completion Widget */}
-        <div className="mt-2 flex flex-col items-center justify-between gap-3 border-t border-border pt-2 sm:flex-row">
-          <div className="text-center text-sm text-muted-foreground sm:text-left">
-            {completed ? (
-              <span className="flex items-center justify-center gap-1.5 font-semibold text-sage sm:justify-start">
-                <CheckCircle className="size-5" /> {t('text_298')}</span>
-            ) : (
-              <span>
-                {t('text_299')}</span>
-            )}
+        <footer className="border-t border-border bg-muted/20 px-5 py-5 sm:px-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
+              <LockKeyhole className="mt-0.5 size-4 shrink-0 text-sage" aria-hidden="true" />
+              {t('privacyNote')}
+            </p>
+            <div className="min-w-56">
+              <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+                <span className="text-muted-foreground">{t('progress')}</span>
+                <span className="text-navy">{progress}%</span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+                <div className="h-full rounded-full bg-navy" style={{ width: `${progress}%` }} />
+              </div>
+              {progress === 0 ? (
+                <p className="mt-2 text-xs text-muted-foreground">{t('progressUnavailable')}</p>
+              ) : null}
+            </div>
           </div>
-
-          <button
-            onClick={() => setCompleted((prev) => !prev)}
-            className={`py-2.5 flex cursor-pointer items-center gap-3 rounded-xl px-4 text-xs font-bold shadow-soft transition-all ${
-              completed
-                ? 'bg-muted text-navy hover:bg-muted/70'
-                : 'bg-navy hover:bg-navy/90 text-white shadow-soft'
-            }`}
-          >
-            {completed ? (
-              <>
-                <Check className="size-4" /> {t('text_300')}</>
-            ) : (
-              <>
-                <CheckCircle className="size-4" /> {t('text_301')}</>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
+        </footer>
+      </Card>
+    </article>
   );
 }

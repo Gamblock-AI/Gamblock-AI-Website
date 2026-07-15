@@ -1,19 +1,40 @@
-'use client';
-
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Navbar } from '@/components/dashboard/navbar';
+import { MobileNavigation } from '@/components/dashboard/mobile-navigation';
 import { PageTransition } from '@/components/common/PageTransition';
+import { getTranslations } from 'next-intl/server';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const t = await getTranslations('dashboardNav');
+
   return (
-    <div className="flex min-h-screen bg-aqua">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
-          <PageTransition>{children}</PageTransition>
-        </main>
+    <div className="min-h-dvh bg-background">
+      <a
+        href="#dashboard-content"
+        className="fixed left-4 top-4 z-[70] -translate-y-24 rounded-xl bg-navy px-4 py-3 text-sm font-semibold text-white shadow-card outline-none transition-transform focus:translate-y-0 focus:ring-2 focus:ring-sky focus:ring-offset-2 motion-reduce:transition-none"
+      >
+        {t('skipToContent')}
+      </a>
+
+      <div className="flex min-h-dvh">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Navbar />
+          <main
+            id="dashboard-content"
+            tabIndex={-1}
+            className="mx-auto w-full max-w-[1280px] flex-1 px-5 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] outline-none sm:px-7 sm:pt-7 lg:px-8 lg:pb-10"
+          >
+            <PageTransition>{children}</PageTransition>
+          </main>
+        </div>
       </div>
+
+      <MobileNavigation />
     </div>
   );
 }

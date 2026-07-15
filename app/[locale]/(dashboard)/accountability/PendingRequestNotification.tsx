@@ -1,42 +1,78 @@
 'use client';
 
-import { Clock } from 'lucide-react';
-import { ApprovalRequest } from '@/hooks/use-accountability';
-import { useTranslations } from "next-intl";
+import { useState } from 'react';
+import { Clock3 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { DashboardNotice } from '@/components/dashboard/dashboard-page';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import type { ApprovalRequest } from '@/hooks/use-accountability';
 
 interface PendingRequestNotificationProps {
   pendingRequest: ApprovalRequest | undefined;
-  onCancelRequest: (id: string) => void;
+  onCancelRequest: (id: string) => Promise<void> | void;
 }
 
 export function PendingRequestNotification({
   pendingRequest,
   onCancelRequest,
 }: PendingRequestNotificationProps) {
-    const t = useTranslations('PendingRequestNotification');
+  const t = useTranslations('accountabilityWorkspace');
+  const [cancelOpen, setCancelOpen] = useState(false);
+
   if (!pendingRequest) return null;
 
   return (
-    <div className="animate-fade-in flex flex-col items-start justify-between gap-3 rounded-lg border border-amber-100 bg-amber-50 p-5 text-amber-900 shadow-sm md:flex-row md:items-center">
-      <div className="flex gap-3">
-        <Clock className="mt-0.5 size-5.5 shrink-0 text-amber-600" />
-        <div className="space-y-1">
-          <h4 className="text-sm font-extrabold text-amber-950">
-            {t('text_64')}</h4>
-          <p className="text-xs leading-relaxed font-semibold text-amber-800">
-            {t('text_65')}{pendingRequest.id}{t('text_66')}{' '}
-            <span className="font-bold italic">
-              {t('text_67')}{pendingRequest.reason}{t('text_68')}</span>
-            .
-          </p>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={() => onCancelRequest(pendingRequest.id)}
-        className="flex shrink-0 cursor-pointer items-center gap-1 rounded-xl border border-amber-200 px-4 py-2.5 text-xs font-bold text-amber-900 transition-all hover:bg-amber-100/50"
+    <>
+      <DashboardNotice
+        icon={Clock3}
+        title={t('pendingTitle')}
+        tone="amber"
+        role="status"
+        action={
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-amber/30 bg-transparent text-navy sm:w-auto"
+            onClick={() => setCancelOpen(true)}
+          >
+            {t('cancelRequest')}
+          </Button>
+        }
       >
-        {t('text_69')}</button>
-    </div>
+        <p>{t('pendingBody')}</p>
+      </DashboardNotice>
+
+      <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('cancelDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('cancelDialogBody')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>
+              {t('keepRequest')}
+            </DialogClose>
+            <Button
+              onClick={() => {
+                void Promise.resolve(onCancelRequest(pendingRequest.id)).then(
+                  () => setCancelOpen(false),
+                );
+              }}
+            >
+              {t('confirmCancelRequest')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

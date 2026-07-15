@@ -1,252 +1,184 @@
 'use client';
 
-import { toast } from 'sonner';
-
-import { useState, useEffect } from 'react';
-import { HelpCircle, Send, CheckCircle, Clock, Info } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
-import { useTranslations } from "next-intl";
-
-interface Ticket {
-  id: string;
-  subject: string;
-  priority: string;
-  status: string;
-  date: string;
-}
-
-interface BackendSupportCase {
-  id: string;
-  title?: string;
-  summary?: string;
-  priority: string;
-  status: string;
-  created_at?: string;
-}
+import { FormEvent, useState } from 'react';
+import {
+  CircleHelp,
+  FileWarning,
+  LifeBuoy,
+  LockKeyhole,
+  Send,
+  ShieldCheck,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import {
+  DashboardNotice,
+  DashboardPage,
+  DashboardPageHeader,
+  DashboardPanel,
+} from '@/components/dashboard/dashboard-page';
+import { Button } from '@/components/ui/button';
+import { toastError, toastSuccess } from '@/lib/feedback';
+import { useSupportRequest } from '@/hooks/use-support-request';
 
 export default function SupportPage() {
-    const t = useTranslations('supportPage');
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const t = useTranslations('supportWorkspace');
+  const [category, setCategory] = useState('technical_support');
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState('Normal');
-  const [loading, setLoading] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
+  const [priority, setPriority] = useState('normal');
+  const { submitting, createCase } = useSupportRequest();
 
-  const fetchTickets = async () => {
+  const submitCase = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const cleanSubject = subject.trim();
+    const cleanDescription = description.trim();
+    if (!cleanSubject || !cleanDescription) return;
+
     try {
-      const data = await apiClient<BackendSupportCase[]>('/support-cases');
-      const mapped = (data || []).map((c) => ({
-        id: c.id || 'CASE-MOCK',
-        subject: c.title || c.summary || 'Bantuan Teknis',
-        priority:
-          c.priority === 'high'
-            ? 'Tinggi'
-            : c.priority === 'normal'
-              ? 'Normal'
-              : c.priority === 'low'
-                ? 'Rendah'
-                : 'Mendesak',
-        status:
-          c.status === 'open'
-            ? 'Terbuka'
-            : c.status === 'waiting_user'
-              ? 'Menunggu Jawaban'
-              : c.status === 'resolved'
-                ? 'Selesai'
-                : c.status,
-        date: c.created_at
-          ? new Date(c.created_at).toLocaleDateString('id-ID')
-          : '6 Juni 2026',
-      }));
-      setTickets(mapped);
-    } catch (err) {
-      console.error('Failed to load tickets', err);
-    }
-  };
-
-  useEffect(() => {
-    setTimeout(() => {
-      fetchTickets();
-    }, 0);
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!subject.trim() || !description.trim()) return;
-
-    setLoading(true);
-    try {
-      // Map priority
-      let pKey = 'normal';
-      if (priority === 'Rendah') pKey = 'low';
-      if (priority === 'Tinggi') pKey = 'high';
-      if (priority === 'Mendesak') pKey = 'urgent';
-
-      await apiClient('/support-cases', {
-        method: 'POST',
-        body: JSON.stringify({
-          type: 'device_recovery',
-          summary: `${subject} - ${description}`,
-          priority: pKey,
-        }),
+      await createCase({
+        type: category,
+        priority,
+        summary: `${cleanSubject}: ${cleanDescription}`,
       });
-
       setSubject('');
       setDescription('');
-      toast.success(
-        'Tiket dukungan Anda berhasil dibuat! Tim teknis kami akan merespons dalam 24 jam.'
-      );
-      fetchTickets();
-    } catch (err) {
-      toast.error(t('toastError'));
-    } finally {
-      setLoading(false);
+      setPriority('normal');
+      toastSuccess(t('success'));
+    } catch (requestError) {
+      toastError(requestError, t('error'));
     }
   };
 
   return (
-    <div className="text-navy w-full space-y-3">
-      {/* Header Banner */}
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <div className="space-y-1">
-          <span className="bg-navy/5 text-navy rounded-full px-3 py-1 text-xs font-semibold tracking-wider uppercase">
-            {t('text_221')}</span>
-          <h1 className="text-navy mt-2 text-xl font-bold tracking-tight">
-            {t('text_222')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('text_223')}</p>
-        </div>
-      </div>
+    <DashboardPage>
+      <DashboardPageHeader
+        icon={LifeBuoy}
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
+        aside={
+          <DashboardNotice
+            icon={LockKeyhole}
+            title={t('privacyTitle')}
+            tone="sage"
+          >
+            {t('privacyBody')}
+          </DashboardNotice>
+        }
+      />
 
-      {/* Ticket Success Toast */}
-      {showNotification && (
-        <div className="animate-fade-in flex items-center gap-3.5 rounded-xl border border-sage/20 bg-sage/10 p-4 text-xs font-bold text-sage shadow-sm">
-          <CheckCircle className="size-5 shrink-0 text-sage" />
-          <span>
-            {t('text_224')}</span>
-        </div>
-      )}
+      <div className="grid gap-5 xl:grid-cols-12 xl:items-start">
+        <DashboardPanel
+          icon={Send}
+          title={t('formTitle')}
+          description={t('formBody')}
+          className="xl:col-span-8"
+        >
+          <form onSubmit={submitCase} className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="support-category" className="text-sm font-semibold text-navy">
+                  {t('categoryLabel')}
+                </label>
+                <select
+                  id="support-category"
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
+                >
+                  <option value="technical_support">{t('categories.technical')}</option>
+                  <option value="device_recovery">{t('categories.device')}</option>
+                  <option value="accountability">{t('categories.accountability')}</option>
+                  <option value="privacy_request">{t('categories.privacy')}</option>
+                </select>
+              </div>
 
-      {/* Grid: Create Ticket & Active Tickets */}
-      <div className="grid gap-3 lg:grid-cols-3">
-        {/* Create Ticket Form (2/3) */}
-        <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft lg:col-span-2">
-          <h3 className="text-navy text-sm font-semibold">
-            {t('text_225')}</h3>
+              <div className="space-y-2">
+                <label htmlFor="support-priority" className="text-sm font-semibold text-navy">
+                  {t('priorityLabel')}
+                </label>
+                <select
+                  id="support-priority"
+                  value={priority}
+                  onChange={(event) => setPriority(event.target.value)}
+                  className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
+                >
+                  <option value="low">{t('priorities.low')}</option>
+                  <option value="normal">{t('priorities.normal')}</option>
+                  <option value="high">{t('priorities.high')}</option>
+                  <option value="urgent">{t('priorities.urgent')}</option>
+                </select>
+              </div>
+            </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {t('text_226')}</label>
+            <div className="space-y-2">
+              <label htmlFor="support-subject" className="text-sm font-semibold text-navy">
+                {t('subjectLabel')}
+              </label>
               <input
+                id="support-subject"
                 type="text"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder={t('text_233')}
-                className="py-2.5 focus:ring-navy w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold text-navy placeholder:text-muted-foreground/50 shadow-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none"
+                onChange={(event) => setSubject(event.target.value)}
+                placeholder={t('subjectPlaceholder')}
+                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
                 required
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {t('text_227')}</label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="focus:ring-navy w-full rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-bold text-navy shadow-sm focus:border-transparent focus:ring-2 focus:outline-none"
-              >
-                <option>Rendah</option>
-                <option>Normal</option>
-                <option>Tinggi</option>
-                <option>Mendesak</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {t('text_228')}</label>
+            <div className="space-y-2">
+              <label htmlFor="support-description" className="text-sm font-semibold text-navy">
+                {t('descriptionLabel')}
+              </label>
               <textarea
+                id="support-description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t('text_234')}
-                rows={5}
-                className="focus:ring-navy w-full rounded-xl border border-border bg-card p-4 text-sm leading-relaxed text-navy placeholder:text-muted-foreground/50 shadow-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none"
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder={t('descriptionPlaceholder')}
+                rows={6}
+                aria-describedby="support-privacy-help"
+                className="w-full resize-y rounded-xl border border-input bg-background p-3 text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20"
                 required
               />
+              <p id="support-privacy-help" className="text-xs leading-5 text-muted-foreground">
+                {t('descriptionHelp')}
+              </p>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-navy hover:bg-navy/90 py-2.5 flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-4 text-xs font-bold text-white shadow-soft transition-all disabled:opacity-50"
-            >
-              {loading ? t('sending') : t('submitTicket')}{' '}
-              <Send className="size-3.5" />
-            </button>
+            <Button type="submit" size="lg" disabled={submitting} className="w-full sm:w-auto">
+              <Send className="size-4" aria-hidden="true" />
+              {submitting ? t('submitting') : t('submit')}
+            </Button>
           </form>
-        </div>
+        </DashboardPanel>
 
-        {/* Support cases history (1/3) */}
-        <div className="flex flex-col justify-between space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-          <div className="space-y-3">
-            <h3 className="text-navy text-sm font-semibold">
-              {t('text_229')}</h3>
+        <aside className="space-y-5 xl:col-span-4">
+          <DashboardNotice
+            icon={ShieldCheck}
+            title={t('safeReportTitle')}
+            tone="sage"
+          >
+            {t('safeReportBody')}
+          </DashboardNotice>
 
-            <div className="space-y-3">
-              {tickets.length === 0 ? (
-                <p className="py-2.5 text-center text-xs font-semibold text-muted-foreground">
-                  {t('text_230')}</p>
-              ) : (
-                tickets.map((ticket, idx) => (
-                  <div
-                    key={idx}
-                    className="space-y-3 rounded-xl border border-border bg-muted/50/20 p-4"
-                  >
-                    <div className="flex items-center justify-between text-[10px] font-bold tracking-wider uppercase">
-                      <span className="font-mono text-muted-foreground">{ticket.id}</span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 ${
-                          ticket.status === 'Terbuka' || ticket.status === 'open'
-                            ? 'bg-crimson/5 text-crimson'
-                            : 'bg-amber-50 text-amber-600'
-                        }`}
-                      >
-                        {ticket.status}
-                      </span>
-                    </div>
-                    <h4 className="text-navy text-xs leading-snug font-bold">
-                      {ticket.subject}
-                    </h4>
-                    <div className="flex items-center justify-between border-t border-border pt-1 text-[10px] font-bold text-muted-foreground">
-                      <span>
-                        {t('text_231')}{' '}
-                        <strong
-                          className={
-                            ticket.priority === 'Tinggi'
-                              ? 'text-crimson'
-                              : 'text-muted-foreground'
-                          }
-                        >
-                          {ticket.priority}
-                        </strong>
-                      </span>
-                      <span>{ticket.date}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <DashboardPanel
+            icon={FileWarning}
+            title={t('historyTitle')}
+            description={t('historyBody')}
+            accent="amber"
+          >
+            <p className="text-sm leading-6 text-muted-foreground">
+              {t('historyBoundary')}
+            </p>
+          </DashboardPanel>
 
-          <div className="mt-2 flex gap-3.5 rounded-xl border border-navy/20/50 bg-navy/5/50 p-4 text-[11px] leading-relaxed text-muted-foreground">
-            <Info className="text-navy mt-0.5 size-5 shrink-0" />
-            <span>
-              {t('text_232')}</span>
-          </div>
-        </div>
+          <DashboardPanel
+            icon={CircleHelp}
+            title={t('urgentTitle')}
+            description={t('urgentBody')}
+          />
+        </aside>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

@@ -1,247 +1,239 @@
 'use client';
 
-import { toast } from 'sonner';
-import Swal from 'sweetalert2';
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
-  ShieldAlert,
-  Download,
-  Trash2,
-  CheckCircle,
-  Clock,
+  CircleAlert,
   Database,
+  Download,
+  FileClock,
+  LockKeyhole,
+  RefreshCw,
+  Trash2,
 } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from 'next-intl';
+import {
+  DashboardNotice,
+  DashboardPage,
+  DashboardPageHeader,
+  DashboardPanel,
+  DashboardStatus,
+} from '@/components/dashboard/dashboard-page';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toastError, toastSuccess } from '@/lib/feedback';
+import { useDataRequests } from '@/hooks/use-data-requests';
 
-interface DataRequest {
-  id: string;
-  date: string;
-  type: string;
-  status: string;
-  result: string;
-}
-
-interface BackendDataRequest {
-  id: string;
-  type: string;
-  status: string;
-  requested_at?: string;
-  result_path?: string;
+function requestStatus(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('complete')) {
+    return { key: 'completed', tone: 'sage' as const };
+  }
+  if (normalized.includes('reject') || normalized.includes('fail')) {
+    return { key: 'failed', tone: 'crimson' as const };
+  }
+  if (normalized.includes('process')) {
+    return { key: 'processing', tone: 'amber' as const };
+  }
+  return { key: 'pending', tone: 'navy' as const };
 }
 
 export default function DataRequestsPage() {
-    const t = useTranslations('data-requestsPage');
-  const [requests, setRequests] = useState<DataRequest[]>([]);
-  const [showNotification, setShowNotification] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const t = useTranslations('dataRequestsWorkspace');
+  const locale = useLocale();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const { requests, loading, submitting, error, refetch, createRequest } =
+    useDataRequests();
+  const dateFormatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
 
-  const fetchRequests = async () => {
+  const submitRequest = async (type: 'export' | 'delete') => {
     try {
-      const data = await apiClient<BackendDataRequest[]>('/data-requests');
-      const mapped = (data || []).map((r) => ({
-        id: r.id || 'REQ-MOCK',
-        date: r.requested_at
-          ? new Date(r.requested_at).toLocaleDateString('id-ID')
-          : '6 Juni 2026',
-        type:
-          r.type === 'export'
-            ? 'Ekspor Data'
-            : r.type === 'delete'
-              ? 'Hapus Akun'
-              : r.type,
-        status:
-          r.status === 'completed'
-            ? 'Selesai'
-            : r.status === 'pending'
-              ? 'Diproses'
-              : r.status,
-        result: r.result_path ? 'Siap Unduh' : 'Menunggu',
-      }));
-      setRequests(mapped);
-    } catch (err) {
-      console.error('Failed to fetch requests', err);
-    }
-  };
-
-  useEffect(() => {
-    setTimeout(() => {
-      fetchRequests();
-    }, 0);
-  }, []);
-
-  const handleAction = async (type: string) => {
-    if (type === 'Hapus Akun') {
-      Swal.fire({
-        title: 'Hapus Akun Permanen?',
-        text: 'Semua data pertahanan lokal dan akun Anda akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#C41E3A',
-        cancelButtonColor: '#ccc',
-        confirmButtonText: 'Ya, Hapus Akun!',
-        cancelButtonText: 'Batal',
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          executeRequest(type);
-        }
-      });
-    } else {
-      executeRequest(type);
-    }
-  };
-
-  const executeRequest = async (type: string) => {
-    setLoading(true);
-    try {
-      const typeKey = type === 'Ekspor Data' ? 'export' : 'delete';
-      await apiClient('/data-requests', {
-        method: 'POST',
-        body: JSON.stringify({ type: typeKey }),
-      });
-      toast.success(`Permintaan ${type.toLowerCase()} Anda berhasil diajukan!`);
-      fetchRequests();
-    } catch (err) {
-      toast.error('Gagal mengajukan permintaan data.');
-    } finally {
-      setLoading(false);
+      await createRequest(type);
+      toastSuccess(t(type === 'export' ? 'exportSuccess' : 'deleteSuccess'));
+      if (type === 'delete') setDeleteOpen(false);
+    } catch (requestError) {
+      toastError(requestError, t('requestError'));
     }
   };
 
   return (
-    <div className="text-navy w-full space-y-3">
-      {/* Header Banner */}
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <div className="space-y-1">
-          <span className="bg-navy/5 text-navy rounded-full px-3 py-1 text-xs font-semibold tracking-wider uppercase">
-            {t('text_122')}</span>
-          <h1 className="text-navy mt-2 text-xl font-bold tracking-tight">
-            {t('text_123')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('text_124')}</p>
-        </div>
-      </div>
-
-      {/* Notification Toast */}
-      {showNotification && (
-        <div className="animate-fade-in flex items-center gap-3.5 rounded-xl border border-sage/20 bg-sage/10 p-4 text-xs font-bold text-sage shadow-sm">
-          <CheckCircle className="size-5 shrink-0 text-sage" />
-          <span>{showNotification}</span>
-        </div>
-      )}
-
-      {/* Core Actions Grid */}
-      <div className="grid gap-3 md:grid-cols-2">
-        {/* Export Card */}
-        <div className="flex flex-col justify-between space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-          <div className="space-y-3">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-navy/5 text-navy">
-              <Database className="size-5.5" />
-            </div>
-            <h3 className="text-navy text-sm font-semibold">
-              {t('text_125')}</h3>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              {t('text_126')}</p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => handleAction('Ekspor Data')}
-            disabled={loading}
-            className="bg-navy hover:bg-navy/90 py-2.5 flex w-full cursor-pointer items-center justify-center gap-1.5 self-start rounded-full px-4 text-xs font-bold text-white shadow-soft transition-all disabled:opacity-50 sm:w-auto"
+    <DashboardPage>
+      <DashboardPageHeader
+        icon={Database}
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
+        aside={
+          <DashboardNotice
+            icon={LockKeyhole}
+            title={t('privacyTitle')}
+            tone="sage"
           >
-            {t('text_127')}<Download className="size-3.5" />
-          </button>
-        </div>
+            {t('privacyBody')}
+          </DashboardNotice>
+        }
+      />
 
-        {/* Delete Card */}
-        <div className="flex flex-col justify-between space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-          <div className="space-y-3">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-crimson/5 text-crimson">
-              <ShieldAlert className="size-5.5" />
-            </div>
-            <h3 className="text-navy text-sm font-semibold">
-              {t('text_128')}</h3>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              {t('text_129')}</p>
-          </div>
+      <DashboardNotice
+        icon={CircleAlert}
+        title={t('localDataTitle')}
+        tone="navy"
+      >
+        {t('localDataBody')}
+      </DashboardNotice>
 
-          <button
-            type="button"
-            onClick={() => handleAction('Hapus Akun')}
-            disabled={loading}
-            className="bg-crimson hover:bg-crimson/90 py-2.5 flex w-full cursor-pointer items-center justify-center gap-1.5 self-start rounded-full px-4 text-xs font-bold text-white shadow-soft transition-all disabled:opacity-50 sm:w-auto"
+      <div className="grid gap-5 md:grid-cols-2">
+        <DashboardPanel
+          icon={Download}
+          title={t('exportTitle')}
+          description={t('exportBody')}
+          className="flex h-full flex-col"
+        >
+          <Button
+            size="lg"
+            className="w-full sm:w-auto"
+            disabled={submitting !== null}
+            onClick={() => void submitRequest('export')}
           >
-            {t('text_130')}<Trash2 className="size-3.5" />
-          </button>
-        </div>
+            <Download className="size-4" aria-hidden="true" />
+            {submitting === 'export' ? t('submitting') : t('exportAction')}
+          </Button>
+        </DashboardPanel>
+
+        <DashboardPanel
+          icon={Trash2}
+          title={t('deleteTitle')}
+          description={t('deleteBody')}
+          accent="crimson"
+          className="flex h-full flex-col"
+        >
+          <Button
+            variant="destructive"
+            size="lg"
+            className="w-full sm:w-auto"
+            disabled={submitting !== null}
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 className="size-4" aria-hidden="true" />
+            {t('deleteAction')}
+          </Button>
+        </DashboardPanel>
       </div>
 
-      {/* History table */}
-      <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <h3 className="text-navy text-sm font-semibold">
-          {t('text_131')}</h3>
+      <DashboardPanel
+        icon={FileClock}
+        title={t('historyTitle')}
+        description={t('historyBody')}
+        action={
+          error ? (
+            <Button variant="outline" onClick={() => void refetch()}>
+              <RefreshCw className="size-4" aria-hidden="true" />
+              {t('retry')}
+            </Button>
+          ) : undefined
+        }
+      >
+        {loading ? (
+          <div className="space-y-3" role="status">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+            ))}
+            <span className="sr-only">{t('loading')}</span>
+          </div>
+        ) : error ? (
+          <DashboardNotice
+            icon={CircleAlert}
+            title={t('errorTitle')}
+            tone="amber"
+            role="alert"
+          >
+            {t('errorBody')}
+          </DashboardNotice>
+        ) : requests.length === 0 ? (
+          <EmptyState
+            icon={FileClock}
+            title={t('emptyTitle')}
+            hint={t('emptyBody')}
+            className="min-h-48 bg-muted/20"
+          />
+        ) : (
+          <div className="space-y-3">
+            {requests.map((request) => {
+              const status = requestStatus(request.status);
+              const parsedDate = request.created_at
+                ? new Date(request.created_at)
+                : null;
+              const date =
+                parsedDate && !Number.isNaN(parsedDate.getTime())
+                  ? dateFormatter.format(parsedDate)
+                  : t('dateUnavailable');
+              const type = request.type.toLowerCase().includes('delete')
+                ? t('typeDelete')
+                : t('typeExport');
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-border text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                <th className="px-3 py-2.5">ID</th>
-                <th className="px-3 py-2.5">{t('text_132')}</th>
-                <th className="px-3 py-2.5">{t('text_133')}</th>
-                <th className="px-3 py-2.5">Status</th>
-                <th className="px-3 py-2.5">{t('text_134')}</th>
-              </tr>
-            </thead>
-            <tbody className="font-semibold text-navy">
-              {requests.length === 0 ? (
-                <tr className="border-b border-border">
-                  <td
-                    colSpan={5}
-                    className="py-2.5 text-center text-xs font-semibold text-muted-foreground"
-                  >
-                    {t('text_135')}</td>
-                </tr>
-              ) : (
-                requests.map((r, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-border transition-colors hover:bg-muted/50/40"
-                  >
-                    <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">
-                      {r.id}
-                    </td>
-                    <td className="px-3 py-2.5 text-xs">{r.date}</td>
-                    <td className="px-3 py-2.5 text-xs">{r.type}</td>
-                    <td className="px-3 py-2.5">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${
-                          r.status === 'Selesai' || r.status === 'completed'
-                            ? 'bg-sage/10 text-sage'
-                            : 'animate-pulse bg-navy/5 text-navy'
-                        }`}
-                      >
-                        {r.status === 'completed' ? 'Selesai' : r.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-xs">
-                      {r.result === 'Siap Unduh' ? (
-                        <span className="text-crimson flex cursor-pointer items-center gap-1 font-bold hover:underline">
-                          <Download className="size-3.5" /> {t('text_136')}</span>
-                      ) : (
-                        <span className="flex items-center gap-1 font-bold text-muted-foreground">
-                          <Clock className="size-3.5" /> {r.result}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+              return (
+                <article
+                  key={request.id}
+                  className="grid gap-3 rounded-2xl border border-border bg-muted/25 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-navy">{type}</p>
+                    <p className="mt-1 font-mono text-xs text-muted-foreground">
+                      {request.id}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">{date}</p>
+                  </div>
+                  <DashboardStatus tone={status.tone}>
+                    {t(`status.${status.key}`)}
+                  </DashboardStatus>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </DashboardPanel>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-crimson/10 text-crimson">
+              <Trash2 className="size-5" aria-hidden="true" />
+            </span>
+            <DialogTitle>{t('deleteDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('deleteDialogBody')}</DialogDescription>
+          </DialogHeader>
+          <DashboardNotice
+            icon={CircleAlert}
+            title={t('deleteScopeTitle')}
+            tone="amber"
+          >
+            {t('deleteScopeBody')}
+          </DashboardNotice>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>
+              {t('cancel')}
+            </DialogClose>
+            <Button
+              variant="destructive"
+              disabled={submitting !== null}
+              onClick={() => void submitRequest('delete')}
+            >
+              {submitting === 'delete'
+                ? t('submitting')
+                : t('confirmDelete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </DashboardPage>
   );
 }

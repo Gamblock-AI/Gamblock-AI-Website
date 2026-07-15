@@ -1,337 +1,109 @@
-'use client';
-
-import { toast } from 'sonner';
-
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { apiClient } from '@/lib/api-client';
-import {
-  Users,
-  Check,
-  X,
-  ShieldAlert,
-  Activity,
-  Heart,
-  LifeBuoy,
-  Terminal,
+  ArrowRight,
+  CircleHelp,
+  Clock3,
+  Handshake,
+  KeyRound,
+  LockKeyhole,
+  ShieldCheck,
 } from 'lucide-react';
-import { useTranslations } from "next-intl";
+import { getTranslations } from 'next-intl/server';
+import { Card } from '@/components/ui/card';
+import { Link } from '@/i18n/routing';
+import { ROUTES } from '@/routes';
 
-const staticPartners = [
-  { name: 'RS Jiwa Jakarta', status: 'Aktif', date: '12 Jan 2026' },
-  { name: 'Yayasan Anti Judi', status: 'Aktif', date: '5 Mar 2026' },
-  { name: 'Klinik Psikologi Bandung', status: 'Pending', date: '1 Jun 2026' },
-];
-
-interface ApprovalRequest {
-  id: string;
-  action: string;
-  status: string;
-  reason: string;
-  created_at: string;
-}
-
-interface PortalOverview {
-  protected_users: number;
-  partner_approvals: number;
-  healthy_devices_percent: number;
-  open_support: number;
-  model_release: string;
-  ruleset_release: string;
-}
-
-export default function PartnersPage() {
-    const t = useTranslations('partnersPage');
-  const [requests, setRequests] = useState<ApprovalRequest[]>([]);
-  const [overview, setOverview] = useState<PortalOverview | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const fetchPortalData = async () => {
-    try {
-      // Fetch overview metrics
-      const overviewData = await apiClient<PortalOverview>('/portal/overview');
-      setOverview(overviewData);
-
-      // Fetch requests
-      const data = await apiClient<ApprovalRequest[]>('/approval-requests');
-      setRequests(data || []);
-    } catch (err) {
-      console.error('Failed to fetch portal data', err);
-    }
-  };
-
-  useEffect(() => {
-    setTimeout(() => {
-      fetchPortalData();
-    }, 0);
-  }, []);
-
-  const handleResolve = async (id: string, action: 'approve' | 'deny') => {
-    setLoading(true);
-    try {
-      await apiClient(`/approval-requests/${id}/${action}`, {
-        method: 'POST',
-      });
-      setToastMessage(
-        `Permohonan ${id} berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}.`
-      );
-      setTimeout(() => setToastMessage(null), 4000);
-      fetchPortalData();
-    } catch (err) {
-      toast.error(t('toastError'));
-    } finally {
-      setLoading(false);
-    }
-  };
+export default async function PartnersPage() {
+  const t = await getTranslations('partnerWorkspace');
 
   return (
-    <div className="text-navy w-full space-y-3">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="flex items-center gap-3.5 rounded-xl border border-sage/20 bg-sage/10 p-4 text-xs font-bold text-sage shadow-sm">
-          <Check className="size-5 shrink-0 text-sage" />
-          <span>{toastMessage}</span>
+    <div className="mx-auto w-full max-w-6xl space-y-6 pb-8">
+      <header className="grid gap-5 border-b border-border pb-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+        <div>
+          <p className="text-xs font-bold tracking-[0.12em] text-sage uppercase">
+            {t('eyebrow')}
+          </p>
+          <h1 className="mt-2 max-w-3xl text-3xl leading-tight font-extrabold tracking-tight text-navy sm:text-4xl">
+            {t('title')}
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+            {t('description')}
+          </p>
         </div>
-      )}
-
-      {/* Portal Overview Stats Cards */}
-      {overview && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft transition-all hover:-translate-y-0.5">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-navy/5 text-navy">
-                <Users className="size-6" />
-              </div>
-              <div>
-                <p className="text-navy text-sm font-semibold tracking-tight">
-                  {overview.protected_users}
-                </p>
-                <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                  {t('text_142')}</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft transition-all hover:-translate-y-0.5">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-sage/10 text-sage">
-                <Activity className="size-6" />
-              </div>
-              <div>
-                <p className="text-navy text-sm font-semibold tracking-tight">
-                  {overview.healthy_devices_percent}%
-                </p>
-                <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                  {t('text_143')}</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft transition-all hover:-translate-y-0.5">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-crimson/5 text-crimson">
-                <LifeBuoy className="size-6" />
-              </div>
-              <div>
-                <p className="text-navy text-sm font-semibold tracking-tight">
-                  {overview.open_support}
-                </p>
-                <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                  {t('text_144')}</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft transition-all hover:-translate-y-0.5">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
-                <Terminal className="size-6" />
-              </div>
-              <div>
-                <p className="text-navy text-sm font-black tracking-tight">
-                  {overview.model_release}
-                </p>
-                <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
-                  {t('text_145')}</p>
-              </div>
-            </div>
-          </div>
+        <div className="flex min-h-11 items-center gap-3 rounded-2xl border border-amber/25 bg-amber/[0.06] p-4 text-sm font-semibold text-foreground">
+          <Clock3 className="size-5 shrink-0 text-amber" aria-hidden="true" />
+          {t('prototypeStatus')}
         </div>
-      )}
+      </header>
 
-      {/* Social Accountability Requests Panel */}
-      <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <div className="flex items-center gap-3.5 border-b border-border pb-1">
-          <ShieldAlert className="text-crimson size-6" />
+      <section className="rounded-[1.5rem] border border-sage/20 bg-sage/[0.055] p-5 sm:p-6" aria-labelledby="partner-privacy-boundary">
+        <div className="flex items-start gap-4">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white text-sage shadow-soft">
+            <LockKeyhole className="size-5" aria-hidden="true" />
+          </span>
           <div>
-            <h2 className="text-navy text-sm font-semibold">
-              {t('text_146')}</h2>
-            <p className="text-xs text-muted-foreground">
-              {t('text_147')}</p>
+            <h2 id="partner-privacy-boundary" className="text-lg font-bold text-navy">
+              {t('privacyTitle')}
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+              {t('privacyBody')}
+            </p>
           </div>
         </div>
+      </section>
 
-        {requests.length === 0 ? (
-          <p className="py-2.5 text-center text-xs font-semibold text-muted-foreground">
-            {t('text_148')}</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>{t('text_149')}</TableHead>
-                  <TableHead>{t('text_150')}</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">{t('text_151')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="text-xs font-semibold text-navy">
-                {requests.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-mono text-[10px] text-muted-foreground">
-                      {r.id}
-                    </TableCell>
-                    <TableCell className="text-navy font-bold">
-                      {r.action === 'disable_protection'
-                        ? 'Nonaktifkan Proteksi'
-                        : r.action === 'pause_protection'
-                          ? 'Jeda Proteksi'
-                          : r.action}
-                    </TableCell>
-                    <TableCell className="leading-relaxed font-medium font-semibold text-muted-foreground italic">
-                      {t('text_152')}{r.reason || 'Tidak ada alasan'}{t('text_153')}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          r.status.toLowerCase().includes('approved')
-                            ? 'default'
-                            : r.status.toLowerCase().includes('pending')
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                      >
-                        {r.status.toLowerCase().includes('approved')
-                          ? 'Disetujui'
-                          : r.status.toLowerCase().includes('pending')
-                            ? 'Tertunda'
-                            : r.status.toLowerCase().includes('denied')
-                              ? 'Ditolak'
-                              : 'Dibatalkan'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {r.status.toLowerCase().includes('pending') ? (
-                        <div className="flex justify-end gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handleResolve(r.id, 'approve')}
-                            disabled={loading}
-                            className="flex cursor-pointer items-center gap-1 rounded-xl bg-sage/100 px-3 py-1.5 text-[10px] font-bold text-white shadow-sm transition-all hover:bg-sage/90 disabled:opacity-50"
-                          >
-                            <Check className="size-3" /> Setujui
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleResolve(r.id, 'deny')}
-                            disabled={loading}
-                            className="flex cursor-pointer items-center gap-1 rounded-xl bg-crimson px-3 py-1.5 text-[10px] font-bold text-white shadow-sm transition-all hover:bg-crimson/90 disabled:opacity-50"
-                          >
-                            <X className="size-3" /> Tolak
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground">
-                          Terselesaikan
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="flex flex-col p-5 sm:p-6">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-azure text-navy">
+            <Handshake className="size-5" aria-hidden="true" />
+          </span>
+          <h2 className="mt-4 text-lg font-bold text-navy">{t('relationshipTitle')}</h2>
+          <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
+            {t('relationshipBody')}
+          </p>
+          <Link
+            href={ROUTES.ACCOUNTABILITY}
+            className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-xl text-sm font-semibold text-navy outline-none hover:underline focus-visible:ring-2 focus-visible:ring-navy/30"
+          >
+            {t('relationshipAction')}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </Card>
+
+        <Card className="flex flex-col p-5 sm:p-6">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-navy/[0.07] text-navy">
+            <KeyRound className="size-5" aria-hidden="true" />
+          </span>
+          <h2 className="mt-4 text-lg font-bold text-navy">{t('approvalTitle')}</h2>
+          <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
+            {t('approvalBody')}
+          </p>
+          <p className="mt-5 flex min-h-11 items-center gap-2 text-xs font-semibold text-sage">
+            <ShieldCheck className="size-4" aria-hidden="true" />
+            {t('privacyTitle')}
+          </p>
+        </Card>
       </div>
 
-      {/* Organization Partners Section */}
-      <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <div className="flex items-center justify-between border-b border-border pb-1">
-          <div className="flex items-center gap-3.5">
-            <Users className="text-navy size-6" />
-            <div>
-              <h2 className="text-navy text-sm font-semibold">
-                {t('text_154')}</h2>
-              <p className="text-xs text-muted-foreground">
-                {t('text_155')}</p>
-            </div>
+      <section className="rounded-[1.5rem] border border-navy/15 bg-azure/40 p-5 sm:p-6" aria-labelledby="partner-support-guidance">
+        <div className="flex items-start gap-4">
+          <CircleHelp className="mt-0.5 size-6 shrink-0 text-navy" aria-hidden="true" />
+          <div>
+            <h2 id="partner-support-guidance" className="text-lg font-bold text-navy">
+              {t('supportTitle')}
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+              {t('supportBody')}
+            </p>
+            <Link
+              href={ROUTES.SUPPORT}
+              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-semibold text-navy outline-none hover:underline focus-visible:ring-2 focus-visible:ring-navy/30"
+            >
+              {t('supportAction')}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
           </div>
-          <Dialog>
-            <DialogTrigger
-              render={
-                <Button className="py-2.5 bg-navy hover:bg-navy/90 cursor-pointer rounded-xl px-4 text-xs font-bold text-white transition-all">
-                  {t('text_156')}</Button>
-              }
-            />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t('text_157')}</DialogTitle>
-              </DialogHeader>
-              <p className="text-xs leading-relaxed font-semibold text-muted-foreground">
-                {t('text_158')}</p>
-            </DialogContent>
-          </Dialog>
         </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>{t('text_159')}</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody className="text-xs font-semibold text-navy">
-            {staticPartners.map((p) => (
-              <TableRow key={p.name}>
-                <TableCell className="text-navy font-bold">{p.name}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={p.status === 'Aktif' ? 'default' : 'secondary'}
-                  >
-                    {p.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{p.date}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="cursor-pointer rounded-xl border border-border text-xs font-bold hover:bg-muted/50"
-                  >
-                    Detail
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      </section>
     </div>
   );
 }

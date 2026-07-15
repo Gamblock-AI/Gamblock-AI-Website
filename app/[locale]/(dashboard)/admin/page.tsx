@@ -1,61 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { BookOpen, Terminal, LifeBuoy, Shield, Clock, Key, Copy, CheckCircle, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { toastError, toastSuccess } from '@/lib/feedback';
+import { useAdminOperations } from '@/hooks/use-admin-operations';
 import { apiClient } from '@/lib/api-client';
-import { BookOpen, Terminal, LifeBuoy, Shield, Check, Clock, Key, Copy, CheckCircle } from 'lucide-react';
-import { useTranslations } from "next-intl";
-
-interface EducationModule {
-  id: string; slug: string; title: string; summary: string; estimated_minutes: number; status: string;
-}
-interface ModelRelease {
-  id: string; version: string; platform: string; sha256: string; status: string; published_at_text: string;
-}
-interface SupportCase {
-  id: string; title: string; type: string; status: string; priority: string; owner: string;
-}
 
 export default function AdminPage() {
-    const t = useTranslations('adminPage');
-  const [modules, setModules] = useState<EducationModule[]>([]);
-  const [releases, setReleases] = useState<ModelRelease[]>([]);
-  const [cases, setCases] = useState<SupportCase[]>([]);
-  const [emergencyKey, setEmergencyKey] = useState<string | null>(null);
+  const t = useTranslations('adminPage');
+  const {
+    modules, releases, cases, loading, refetch,
+    emergencyKey, keyLoading, generateEmergencyKey,
+  } = useAdminOperations();
   const [keyCopied, setKeyCopied] = useState(false);
-  const [keyLoading, setKeyLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchAdminData = async () => {
-    setLoading(true);
+  const handleGenerateKey = async () => {
     try {
-      const [mod, rel, cas] = await Promise.all([
-        apiClient<EducationModule[]>('/admin/content/modules'),
-        apiClient<ModelRelease[]>('/admin/model-releases'),
-        apiClient<SupportCase[]>('/admin/support-cases'),
-      ]);
-      setModules(mod || []);
-      setReleases(rel || []);
-      setCases(cas || []);
-    } catch { /* ignore */ } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { setTimeout(() => fetchAdminData(), 0); }, []);
-
-  const generateKey = async () => {
-    setKeyLoading(true);
-    try {
-      const res = await apiClient<{ emergency_key: string }>('/admin/emergency-key', { method: 'POST' });
-      setEmergencyKey(res?.emergency_key || null);
+      await generateEmergencyKey();
       setKeyCopied(false);
-    } catch { /* ignore */ } finally {
-      setKeyLoading(false);
+    } catch (error) {
+      toastError(error, t('keyError'));
     }
   };
 
@@ -64,6 +35,49 @@ export default function AdminPage() {
       navigator.clipboard.writeText(emergencyKey);
       setKeyCopied(true);
       setTimeout(() => setKeyCopied(false), 3000);
+    }
+  };
+
+  const createDummyModule = async () => {
+    setIsSubmitting(true);
+    try {
+      await apiClient('/admin/content/modules', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: `New Module ${Date.now()}`,
+          slug: `new-module-${Date.now()}`,
+          summary: "A new auto-generated module for recovery",
+          estimated_minutes: 5,
+          status: "published",
+        })
+      });
+      toastSuccess("Module created successfully");
+      await refetch();
+    } catch (err) {
+      toastError(err, "Failed to create module");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const createDummyRelease = async () => {
+    setIsSubmitting(true);
+    try {
+      await apiClient('/releases/model', {
+        method: 'POST',
+        body: JSON.stringify({
+          platform: "all",
+          version: `artifact-v0.${Date.now() % 100}.0`,
+          artifact_path: "artifacts/model/new.onnx",
+          sha256: "dummyhash",
+        })
+      });
+      toastSuccess("Model release created successfully");
+      await refetch();
+    } catch (err) {
+      toastError(err, "Failed to create model release");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -80,15 +94,15 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="konten" className="w-full">
+      <Tabs defaultValue="content" className="w-full">
         <TabsList className="mb-2 flex w-fit gap-1 rounded-xl border border-border bg-muted/60 p-1">
-          <TabsTrigger value="konten" className="flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold">
-            <BookOpen className="size-4" /> Konten
+          <TabsTrigger value="content" className="flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold">
+            <BookOpen className="size-4" /> {t('tabContent')}
           </TabsTrigger>
           <TabsTrigger value="releases" className="flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold">
             <Terminal className="size-4" /> {t('text_85')}</TabsTrigger>
           <TabsTrigger value="support" className="flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold">
-            <LifeBuoy className="size-4" /> Tiket
+            <LifeBuoy className="size-4" /> {t('tabTickets')}
           </TabsTrigger>
           <TabsTrigger value="emergency" className="flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold">
             <Key className="size-4" /> {t('text_86')}</TabsTrigger>
@@ -99,16 +113,21 @@ export default function AdminPage() {
             <Clock className="size-4 animate-spin" /> {t('text_87')}</div>
         ) : (
           <>
-            <TabsContent value="konten" className="space-y-3 rounded-2xl border border-border bg-card p-4">
-              <h3 className="text-base font-black text-navy">{t('text_88')}</h3>
+            <TabsContent value="content" className="space-y-3 rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black text-navy">{t('text_88')}</h3>
+                <Button size="sm" onClick={createDummyModule} disabled={isSubmitting}>
+                  <Plus className="mr-1.5 size-4" /> New Module
+                </Button>
+              </div>
               <Table>
-                <TableHeader><TableRow><TableHead>Judul</TableHead><TableHead>Slug</TableHead><TableHead>Durasi</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t('thTitle')}</TableHead><TableHead>{t('thSlug')}</TableHead><TableHead>{t('thDuration')}</TableHead><TableHead>{t('thStatus')}</TableHead></TableRow></TableHeader>
                 <TableBody className="text-xs font-semibold">
                   {modules.map((m) => (
                     <TableRow key={m.id} className="hover:bg-muted/30">
                       <TableCell className="font-bold text-navy">{m.title}</TableCell>
                       <TableCell className="text-muted-foreground">{m.slug}</TableCell>
-                      <TableCell>{m.estimated_minutes} mnt</TableCell>
+                      <TableCell>{m.estimated_minutes} {t('minutesSuffix')}</TableCell>
                       <TableCell><Badge variant={m.status === 'published' ? 'default' : 'secondary'}>{m.status}</Badge></TableCell>
                     </TableRow>
                   ))}
@@ -117,16 +136,21 @@ export default function AdminPage() {
             </TabsContent>
 
             <TabsContent value="releases" className="space-y-3 rounded-2xl border border-border bg-card p-4">
-              <h3 className="text-base font-black text-navy">{t('text_89')}</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black text-navy">{t('text_89')}</h3>
+                <Button size="sm" onClick={createDummyRelease} disabled={isSubmitting}>
+                  <Plus className="mr-1.5 size-4" /> Release Model
+                </Button>
+              </div>
               <Table>
-                <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Versi</TableHead><TableHead>Platform</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>{t('thVersion')}</TableHead><TableHead>Platform</TableHead><TableHead>{t('thStatus')}</TableHead></TableRow></TableHeader>
                 <TableBody className="text-xs font-semibold">
                   {releases.map((r) => (
                     <TableRow key={r.id} className="hover:bg-muted/30">
                       <TableCell className="font-mono text-[10px] text-muted-foreground">{r.id}</TableCell>
                       <TableCell className="font-bold text-navy">{r.version}</TableCell>
                       <TableCell>{r.platform}</TableCell>
-                      <TableCell><Badge variant={r.status === 'published' ? 'default' : 'secondary'}>{r.status === 'published' ? 'Aktif' : r.status}</Badge></TableCell>
+                      <TableCell><Badge variant={r.status === 'published' ? 'default' : 'secondary'}>{r.status === 'published' ? t('statusActive') : r.status}</Badge></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -136,7 +160,7 @@ export default function AdminPage() {
             <TabsContent value="support" className="space-y-3 rounded-2xl border border-border bg-card p-4">
               <h3 className="text-base font-black text-navy">{t('text_90')}</h3>
               <Table>
-                <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Subjek</TableHead><TableHead>Tipe</TableHead><TableHead>Prioritas</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>{t('thSubject')}</TableHead><TableHead>{t('thType')}</TableHead><TableHead>{t('thPriority')}</TableHead><TableHead>{t('thStatus')}</TableHead></TableRow></TableHeader>
                 <TableBody className="text-xs font-semibold">
                   {cases.map((c) => (
                     <TableRow key={c.id} className="hover:bg-muted/30">
@@ -151,7 +175,6 @@ export default function AdminPage() {
               </Table>
             </TabsContent>
 
-            {/* Emergency Key Tab */}
             <TabsContent value="emergency" className="space-y-4 rounded-2xl border border-border bg-card p-4">
               <h3 className="text-base font-black text-navy">{t('text_91')}</h3>
               <p className="text-xs text-muted-foreground">
@@ -170,7 +193,7 @@ export default function AdminPage() {
                       </code>
                       <Button variant="ghost" size="sm" onClick={copyKey}>
                         {keyCopied ? <CheckCircle className="h-4 w-4 text-sage" /> : <Copy className="h-4 w-4" />}
-                        {keyCopied ? 'Tersalin' : 'Salin'}
+                        {keyCopied ? t('copied') : t('copy')}
                       </Button>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -179,7 +202,7 @@ export default function AdminPage() {
                   </div>
                 </Card>
               ) : (
-                <Button variant="accent" onClick={generateKey} disabled={keyLoading}>
+                <Button variant="accent" onClick={handleGenerateKey} disabled={keyLoading}>
                   {keyLoading ? <Clock className="mr-1.5 h-4 w-4 animate-spin" /> : <Key className="mr-1.5 h-4 w-4" />}
                   {t('text_95')}</Button>
               )}
