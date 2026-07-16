@@ -22,7 +22,7 @@ npm run dev                  # http://localhost:3000
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-16.3`.
+`2026-07-16.5`.
 
 ## Structure
 
@@ -114,9 +114,12 @@ requiring the Kepala to log in on mobile.
 Partner invitations are email-bound, expire after seven days, and show their
 share link only after creation. The accountability workspace supports multiple
 relationships, owner cancellation, and relationship-authorized partner
-approve/deny actions. The operations panel is role-aware; content saves as
-draft, release submissions require a real server artifact plus SHA-256, and
-emergency access requires two distinct platform administrators.
+approve/deny actions. Students initiate protection pause/disable/removal
+requests in the native client; the website remains the partner decision and
+history surface. The operations panel is role-aware; content saves as draft,
+release submissions require a real server artifact plus SHA-256, and a
+device-bound emergency request is reviewed and issued by two distinct platform
+administrators.
 
 Google Identity Services renders only when
 `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is configured to match the backend. Self-service

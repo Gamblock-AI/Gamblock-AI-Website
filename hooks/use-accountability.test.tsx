@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 
@@ -40,12 +40,11 @@ describe('useAccountability', () => {
     expect(result.current.requests[0].id).toBe('APR-1');
   });
 
-  it('exposes modal/invite controls', async () => {
+  it('exposes partner controls without a student web request modal', async () => {
     const { result } = renderHook(() => useAccountability());
     await waitFor(() => expect(result.current.partnerStatus).toBe('active'));
-    expect(typeof result.current.setIsModalOpen).toBe('function');
     expect(typeof result.current.handleInvitePartner).toBe('function');
-    act(() => result.current.setIsModalOpen(true));
-    expect(result.current.isModalOpen).toBe(true);
+    expect(result.current).not.toHaveProperty('setIsModalOpen');
+    expect(result.current).not.toHaveProperty('isModalOpen');
   });
 });

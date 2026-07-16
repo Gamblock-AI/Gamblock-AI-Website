@@ -31,10 +31,7 @@ export default function ApprovePage() {
     return <ApprovalResolvedState status={resolved} />;
   }
 
-  if (
-    details.status !== 'pending' &&
-    details.status !== 'Pending partner approval'
-  ) {
+  if (details.status !== 'pending') {
     return <ApprovalProcessedState />;
   }
 

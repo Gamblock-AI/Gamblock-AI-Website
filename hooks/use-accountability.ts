@@ -11,11 +11,19 @@ export interface PartnerLink {
 
 export interface ApprovalRequest {
   id: string;
+  device_id: string;
+  partner_link_id: string;
   action: string;
+  action_label: string;
   status: string;
+  status_label: string;
   reason: string;
+  requested_duration_minutes: number;
   created_at: string;
   expires_at?: string;
+  resolved_at?: string;
+  applied_at?: string;
+  grant_expires_at?: string;
 }
 
 function resolvePartnerState(data: {
@@ -61,10 +69,7 @@ export function useAccountability() {
   >(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
 
-  const [antiUninstall, setAntiUninstall] = useState(true);
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [approvalReason, setApprovalReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState<unknown>(null);
@@ -194,48 +199,6 @@ export function useAccountability() {
     }
   }, [partnerLinkId, fetchData]);
 
-  const handleAntiUninstallToggle = useCallback(
-    (checked: boolean) => {
-      if (!checked && partnerStatus === 'active') {
-        setIsModalOpen(true);
-      } else {
-        setAntiUninstall(checked);
-      }
-    },
-    [partnerStatus]
-  );
-
-  const handleRequestApproval = useCallback(
-    async (reason: string) => {
-      if (!reason.trim()) return;
-
-      setLoading(true);
-      try {
-        await apiClient('/approval-requests', {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'disable_protection',
-            reason,
-            partner_link_id: partnerLinkId,
-          }),
-        });
-
-        toast.success(
-          'Permohonan berhasil disimpan. Pendamping dapat meninjaunya dari ruang persetujuan.'
-        );
-        setIsModalOpen(false);
-        setApprovalReason('');
-        fetchData();
-      } catch (err) {
-        toast.error('Gagal mengirim permohonan persetujuan.');
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [partnerLinkId, fetchData]
-  );
-
   const handleCancelRequest = useCallback(
     async (id: string) => {
       try {
@@ -275,9 +238,7 @@ export function useAccountability() {
     [fetchData]
   );
 
-  const pendingRequest = requests.find((r) =>
-    r.status.toLowerCase().includes('pending')
-  );
+  const pendingRequest = requests.find((request) => request.status === 'pending');
 
   return {
     partnerEmail,
@@ -287,13 +248,7 @@ export function useAccountability() {
     partnerLinks,
     relationshipRole,
     inviteUrl,
-    antiUninstall,
-    setAntiUninstall,
     requests,
-    isModalOpen,
-    setIsModalOpen,
-    approvalReason,
-    setApprovalReason,
     loading,
     dataLoading,
     dataError,
@@ -301,8 +256,6 @@ export function useAccountability() {
     handleInvitePartner,
     selectPartner,
     handleRevokePartner,
-    handleAntiUninstallToggle,
-    handleRequestApproval,
     handleCancelRequest,
     handleResolveRequest,
     pendingRequest,

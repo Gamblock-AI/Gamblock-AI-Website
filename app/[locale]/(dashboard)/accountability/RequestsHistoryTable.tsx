@@ -31,19 +31,17 @@ interface RequestsHistoryTableProps {
 }
 
 function statusTone(status: string) {
-  const normalized = status.toLowerCase();
-  if (normalized.includes('approved')) return 'sage' as const;
-  if (normalized.includes('denied')) return 'crimson' as const;
-  if (normalized.includes('pending')) return 'amber' as const;
+  if (status === 'approved') return 'sage' as const;
+  if (status === 'denied') return 'crimson' as const;
+  if (status === 'pending') return 'amber' as const;
   return 'muted' as const;
 }
 
 function statusKey(status: string) {
-  const normalized = status.toLowerCase();
-  if (normalized.includes('approved')) return 'approved';
-  if (normalized.includes('denied')) return 'denied';
-  if (normalized.includes('pending')) return 'pending';
-  if (normalized.includes('expired')) return 'expired';
+  if (status === 'approved') return 'approved';
+  if (status === 'denied') return 'denied';
+  if (status === 'pending') return 'pending';
+  if (status === 'expired') return 'expired';
   return 'cancelled';
 }
 
@@ -78,7 +76,7 @@ export function RequestsHistoryTable({
       ) : (
         <div className="space-y-3">
           {requests.map((request) => {
-            const isPending = request.status.toLowerCase().includes('pending');
+            const isPending = request.status === 'pending';
             const parsedDate = request.created_at
               ? new Date(request.created_at)
               : null;
@@ -103,6 +101,9 @@ export function RequestsHistoryTable({
                   </div>
                   <p className="text-foreground mt-3 text-sm leading-6">
                     {request.reason || t('reasonNotProvided')}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {request.action_label}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">{date}</p>
                 </div>

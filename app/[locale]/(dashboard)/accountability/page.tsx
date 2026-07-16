@@ -18,7 +18,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAccountability } from '@/hooks/use-accountability';
 import { useLocalUser } from '@/hooks/use-local-user';
-import { ApprovalRequestModal } from './ApprovalRequestModal';
+import { Link } from '@/i18n/routing';
+import { ROUTES } from '@/routes';
 import { PartnerSetupCard } from './PartnerSetupCard';
 import { PendingRequestNotification } from './PendingRequestNotification';
 import { RequestsHistoryTable } from './RequestsHistoryTable';
@@ -35,10 +36,6 @@ export default function AccountabilityPage() {
     relationshipRole,
     inviteUrl,
     requests,
-    isModalOpen,
-    setIsModalOpen,
-    approvalReason,
-    setApprovalReason,
     loading,
     dataLoading,
     dataError,
@@ -46,7 +43,6 @@ export default function AccountabilityPage() {
     handleInvitePartner,
     selectPartner,
     handleRevokePartner,
-    handleRequestApproval,
     handleCancelRequest,
     handleResolveRequest,
     pendingRequest,
@@ -140,13 +136,10 @@ export default function AccountabilityPage() {
               <Button
                 size="lg"
                 className="w-full"
-                disabled={partnerStatus !== 'active' || Boolean(pendingRequest)}
-                onClick={() => setIsModalOpen(true)}
+                render={<Link href={ROUTES.DOWNLOAD} />}
               >
                 <LockKeyhole className="size-4" aria-hidden="true" />
-                {pendingRequest
-                  ? t('requestAlreadyPending')
-                  : t('requestDisable')}
+                {t('openNativeApp')}
               </Button>
             </div>
           </DashboardPanel>
@@ -168,20 +161,6 @@ export default function AccountabilityPage() {
         onResolveRequest={handleResolveRequest}
         viewerRole={isPartner ? 'partner' : user.role}
       />
-
-      {!isPartner && (
-        <ApprovalRequestModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleRequestApproval(approvalReason);
-          }}
-          reason={approvalReason}
-          setReason={setApprovalReason}
-          loading={loading}
-        />
-      )}
     </DashboardPage>
   );
 }

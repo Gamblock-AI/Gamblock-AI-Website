@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-16.4`
+**Context version:** `2026-07-16.5`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -48,10 +48,13 @@ and must preserve the on-device browsing-data boundary.
   `design-system/gamblock-ai-recovery-dashboard/`.
 - Accountability: invitations are seven-day, email-bound consent links;
   approval authority comes from an active relationship, not a client-side role
-  label. Quick tokens are secrets and must not enter logs or analytics.
+  label. Student protection-change requests start in the native client;
+  website accountability is partner decision/history. Quick tokens are secrets
+  and must not enter logs or analytics.
 - Operations: tabs and fetches are role-specific. Content creation is draft
   only, artifact validation requires a real server-side file/checksum, and
-  emergency keys use two distinct platform administrators.
+  user/device emergency requests require review and issuance by two distinct
+  platform administrators.
 - Research sandbox: all fixtures are deterministic and explicitly synthetic;
   real enrollment/export stays locked until an approved protocol exists.
 - Post-intervention handoff: inspect

@@ -37,6 +37,9 @@ export interface AdminModelRelease {
 export interface EmergencyKeyRequest {
   id: string;
   requested_by: string;
+  device_id: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
   approved_by?: string;
   status: string;
   request_expires_at: string;
@@ -49,6 +52,23 @@ export interface AdminCapabilities {
   releases: boolean;
   support: boolean;
   emergency: boolean;
+}
+
+export interface AdminModuleDraft {
+  title: string;
+  slug: string;
+  summary: string;
+  body_markdown: string;
+  estimated_minutes: number;
+}
+
+export interface AdminModelReleaseDraft {
+  version: string;
+  platform: string;
+  artifact_path: string;
+  sha256: string;
+  contract_version: string;
+  threshold: string;
 }
 
 interface AdminOperationsState {
@@ -148,20 +168,6 @@ export function useAdminOperations(role?: string) {
     };
   }, [capabilities, role]);
 
-  const requestEmergencyKey = useCallback(async () => {
-    setKeyLoading(true);
-    try {
-      const request = await apiClient<EmergencyKeyRequest>(
-        '/admin/emergency-key-requests',
-        { method: 'POST' }
-      );
-      await load();
-      return request;
-    } finally {
-      setKeyLoading(false);
-    }
-  }, [load]);
-
   const approveEmergencyKey = useCallback(
     async (requestID: string) => {
       setKeyLoading(true);
@@ -184,6 +190,48 @@ export function useAdminOperations(role?: string) {
     [load]
   );
 
+  const reviewEmergencyKey = useCallback(
+    async (requestID: string) => {
+      setKeyLoading(true);
+      try {
+        await apiClient<EmergencyKeyRequest>(
+          `/admin/emergency-key-requests/${requestID}/review`,
+          { method: 'POST' }
+        );
+        await load();
+      } finally {
+        setKeyLoading(false);
+      }
+    },
+    [load]
+  );
+
+  const createModule = useCallback(
+    async (module: AdminModuleDraft) => {
+      await apiClient('/admin/content/modules', {
+        method: 'POST',
+        body: JSON.stringify(module),
+      });
+      await load();
+    },
+    [load]
+  );
+
+  const createModelRelease = useCallback(
+    async (release: AdminModelReleaseDraft) => {
+      await apiClient('/releases/model', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...release,
+          threshold: Number(release.threshold),
+          metrics: {},
+        }),
+      });
+      await load();
+    },
+    [load]
+  );
+
   return {
     ...data,
     capabilities,
@@ -193,7 +241,9 @@ export function useAdminOperations(role?: string) {
     keyLoading,
     emergencyKey,
     clearEmergencyKey: () => setEmergencyKey(null),
-    requestEmergencyKey,
+    reviewEmergencyKey,
     approveEmergencyKey,
+    createModule,
+    createModelRelease,
   };
 }
