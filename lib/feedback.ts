@@ -2,22 +2,23 @@
 
 import { toast } from 'sonner';
 import { ApiError } from './api-error';
+import { reportDevelopmentError } from './diagnostics';
 import { friendlyMessage } from './messages';
 
 // Centralized user-facing feedback. Wraps sonner toasts with brand-consistent
 // styling and ensures errors always show a friendly (production-safe) message.
-// In development the technical ApiError message is shown for debugging.
+// Technical context is sent only to the development console.
 
 export function toastSuccess(message: string) {
   toast.success(message);
 }
 
 export function toastError(error: unknown, fallback?: string) {
-  const msg =
-    error instanceof ApiError
-      ? error.friendly()
-      : friendlyMessage(error) ?? fallback ?? 'Terjadi kendala, silakan coba lagi.';
-  toast.error(fallback ?? msg);
+  reportDevelopmentError('UI action failed', error);
+  const message =
+    fallback ??
+    (error instanceof ApiError ? error.friendly() : friendlyMessage(error));
+  toast.error(message);
 }
 
 // Convenience for mutation flows: shows a success toast on resolve, a friendly

@@ -36,8 +36,10 @@ export function LanguageSwitcher({ tone = 'light', className }: LanguageSwitcher
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-full p-0.5',
-        tone === 'light' ? 'bg-navy/5' : 'bg-white/10',
+        'inline-grid grid-cols-2 items-center rounded-[0.75rem] border p-0.5',
+        tone === 'light'
+          ? 'border-border bg-card'
+          : 'border-white/20 bg-white/10',
         className,
       )}
       role="group"
@@ -53,14 +55,14 @@ export function LanguageSwitcher({ tone = 'light', className }: LanguageSwitcher
             disabled={isPending}
             aria-pressed={active}
             className={cn(
-              'cursor-pointer rounded-full px-2.5 py-1 text-xs font-bold transition-colors disabled:opacity-50',
+              'flex size-8 cursor-pointer items-center justify-center rounded-[0.625rem] text-[0.625rem] font-bold transition-[background-color,color,box-shadow] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-sky/70 focus-visible:ring-offset-1 disabled:cursor-wait disabled:opacity-50 motion-reduce:transition-none',
               active
                 ? tone === 'light'
-                  ? 'bg-navy text-white'
-                  : 'bg-white text-navy'
+                  ? 'bg-navy text-white shadow-sm'
+                  : 'bg-white text-navy shadow-sm'
                 : tone === 'light'
-                  ? 'text-navy/60 hover:text-navy'
-                  : 'text-white/70 hover:text-white',
+                  ? 'text-muted-foreground hover:bg-muted hover:text-navy'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white',
             )}
           >
             {label}

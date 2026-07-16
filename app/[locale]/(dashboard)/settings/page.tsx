@@ -16,6 +16,7 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
+import { RecoverySyncSettings } from '@/components/dashboard/recovery-sync-settings';
 
 const linkClass =
   'mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-navy/15 px-4 text-sm font-semibold text-navy outline-none transition-colors hover:bg-navy/[0.04] focus-visible:ring-2 focus-visible:ring-navy/30 sm:w-auto';
@@ -34,20 +35,17 @@ export default async function SettingsPage() {
           <DashboardNotice
             icon={LockKeyhole}
             title={t('boundaryTitle')}
-            tone="sage"
           >
             {t('boundaryBody')}
           </DashboardNotice>
         }
       />
 
-      <DashboardNotice
-        icon={ShieldCheck}
-        title={t('deviceTitle')}
-        tone="navy"
-      >
+      <DashboardNotice icon={ShieldCheck} title={t('deviceTitle')} tone="navy">
         {t('deviceBody')}
       </DashboardNotice>
+
+      <RecoverySyncSettings />
 
       <div className="grid gap-5 md:grid-cols-2">
         <DashboardPanel
@@ -66,7 +64,6 @@ export default async function SettingsPage() {
           icon={Database}
           title={t('privacyTitle')}
           description={t('privacyBody')}
-          accent="sage"
           className="flex h-full flex-col"
         >
           <Link href={ROUTES.DATA_REQUESTS} className={linkClass}>
@@ -79,7 +76,6 @@ export default async function SettingsPage() {
           icon={HelpCircle}
           title={t('helpTitle')}
           description={t('helpBody')}
-          accent="amber"
           className="flex h-full flex-col md:col-span-2"
         >
           <div className="flex flex-col gap-3 sm:flex-row">

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build for the Gamblock-AI Next.js website.
-# NEXT_PUBLIC_API_URL is inlined at build time (Next.js bakes NEXT_PUBLIC_ vars),
-# so it is passed as a build arg. Runtime env handles non-public vars only.
+# NEXT_PUBLIC_* values are inlined at build time, so public website settings
+# are passed as build args. Runtime env handles non-public vars only.
 
 # ---- Dependencies stage ----
 FROM node:20-alpine AS deps
@@ -15,12 +15,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# NEXT_PUBLIC_API_URL is baked into the client bundle at build time.
-ARG NEXT_PUBLIC_API_URL=http://localhost:8080
+# Public website settings are baked into the client bundle at build time.
+# A production image must never silently fall back to a browser-local backend.
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN test -n "$NEXT_PUBLIC_API_URL" \
+  && case "$NEXT_PUBLIC_API_URL" in http://*|https://*) ;; *) exit 1 ;; esac \
+  && npm run build
 
 # ---- Runtime stage ----
 FROM node:20-alpine AS runtime

@@ -23,18 +23,20 @@ export interface UseApprovalVerificationResult {
 
 // Verifies a quick-approval token (PRD §5.2) and returns the pending request
 // details. Token-authenticated, not session-authenticated.
-export function useApprovalVerification(token: string | null): UseApprovalVerificationResult {
+export function useApprovalVerification(
+  token: string | null
+): UseApprovalVerificationResult {
   const [details, setDetails] = useState<ApprovalDetails | null>(null);
   // Loading starts true only when a token is present; without a token there is
   // nothing to verify, so we surface the missing-token error immediately.
   const [loading, setLoading] = useState<boolean>(Boolean(token));
   const [error, setError] = useState<string | null>(
-    token ? null : 'Token validasi tidak ditemukan.'
+    token ? null : 'Tautan persetujuan tidak lengkap.'
   );
 
   const verify = useCallback(async () => {
     if (!token) {
-      setError('Token validasi tidak ditemukan.');
+      setError('Tautan persetujuan tidak lengkap.');
       setLoading(false);
       return;
     }
@@ -46,7 +48,7 @@ export function useApprovalVerification(token: string | null): UseApprovalVerifi
       );
       setDetails(data);
     } catch {
-      setError('Token tidak valid atau sudah kadaluarsa.');
+      setError('Tautan persetujuan tidak valid atau sudah kedaluwarsa.');
     } finally {
       setLoading(false);
     }
@@ -67,7 +69,7 @@ export function useApprovalVerification(token: string | null): UseApprovalVerifi
         setDetails(data);
       } catch {
         if (!active) return;
-        setError('Token tidak valid atau sudah kadaluarsa.');
+        setError('Tautan persetujuan tidak valid atau sudah kedaluwarsa.');
       } finally {
         if (active) setLoading(false);
       }
@@ -106,7 +108,7 @@ export function useResolveApproval(
         });
         return true;
       } catch {
-        setError('Gagal memproses permohonan. Silakan coba lagi.');
+        setError('Keputusan belum dapat disimpan. Silakan coba lagi.');
         return false;
       } finally {
         setSubmitting(false);

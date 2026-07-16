@@ -13,7 +13,11 @@ import { useLocalUser } from '@/hooks/use-local-user';
 import { dashboardNavigationGroups, canShowNavigationItem, type DashboardNavGroup } from './navigation-config';
 import type { LucideIcon } from 'lucide-react';
 
-export function GlobalSearch() {
+interface GlobalSearchProps {
+  variant?: 'field' | 'icon';
+}
+
+export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
   const t = useTranslations('dashboardNav');
   const router = useRouter();
   const user = useLocalUser();
@@ -60,29 +64,53 @@ export function GlobalSearch() {
     router.push(href);
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) setQuery('');
+  };
+
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-9 w-full max-w-[240px] items-center gap-2 rounded-lg border border-input bg-muted/40 px-3 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/30 lg:max-w-none lg:w-64"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={t('searchPlaceholder')}
+        className={
+          variant === 'icon'
+            ? 'flex size-11 items-center justify-center rounded-xl border border-navy/15 bg-card text-navy shadow-soft outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/30 hover:bg-azure/75 focus-visible:ring-2 focus-visible:ring-navy/35 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none'
+            : 'group flex h-11 w-72 items-center gap-2.5 rounded-xl border border-navy/20 bg-card px-2.5 text-sm text-muted-foreground shadow-soft outline-none transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-navy/40 hover:bg-card hover:shadow-card focus-visible:ring-2 focus-visible:ring-navy/35 active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none'
+        }
       >
-        <Search className="size-4" />
-        <span className="flex-1 text-left">{t('searchPlaceholder')}</span>
-        <kbd className="pointer-events-none hidden h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-          <span className="text-xs">⌘</span>K
-        </kbd>
+        {variant === 'icon' ? (
+          <Search className="size-5" aria-hidden="true" />
+        ) : (
+          <>
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-azure text-navy transition-colors duration-200 group-hover:bg-sky-light motion-reduce:transition-none">
+              <Search className="size-4" aria-hidden="true" />
+            </span>
+            <span className="flex-1 truncate text-left font-medium">
+              {t('searchPlaceholder')}
+            </span>
+            <kbd className="pointer-events-none hidden h-6 items-center rounded-md border border-navy/10 bg-muted px-2 font-mono text-[10px] font-semibold text-navy/70 xl:flex">
+              Ctrl K
+            </kbd>
+          </>
+        )}
       </button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="overflow-hidden p-0 shadow-lg sm:max-w-[500px]" showCloseButton={false}>
           <div className="sr-only">
-             <DialogTitle>Search</DialogTitle>
+             <DialogTitle>{t('searchPlaceholder')}</DialogTitle>
           </div>
           <div className="flex items-center border-b border-border px-3">
             <Search className="mr-2 size-4 shrink-0 opacity-50" />
             <input
               autoFocus
+              type="search"
+              aria-label={t('searchPlaceholder')}
               className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               placeholder={t('searchPlaceholder')}
               value={query}
@@ -100,7 +128,7 @@ export function GlobalSearch() {
                   <button
                     key={item.href}
                     onClick={() => handleSelect(item.href)}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-muted hover:text-navy focus:bg-muted focus:text-navy"
+                    className="flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm outline-none transition-colors hover:bg-muted hover:text-navy focus:bg-muted focus:text-navy"
                   >
                     <item.icon className="size-4 opacity-70" />
                     <span>{item.label}</span>

@@ -102,8 +102,8 @@ export function PrivateCheckIn({
                 className={cn(
                   'flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border px-2 py-3 text-center text-xs font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-navy/30',
                   selected
-                    ? 'border-navy bg-navy/[0.06] text-navy'
-                    : 'border-border bg-white text-muted-foreground hover:border-navy/30 hover:text-navy',
+                    ? 'border-navy bg-azure/80 text-navy shadow-soft'
+                    : 'border-border bg-card text-muted-foreground hover:border-navy/45 hover:bg-azure/35 hover:text-navy',
                 )}
               >
                 <Icon className="size-6" strokeWidth={1.7} aria-hidden="true" />
@@ -130,8 +130,8 @@ export function PrivateCheckIn({
                   index === 0 && 'sm:ml-0 sm:rounded-l-xl',
                   index === urgeOptions.length - 1 && 'sm:rounded-r-xl',
                   selected
-                    ? 'relative z-[1] border-navy bg-navy/[0.06] text-navy'
-                    : 'border-border bg-white text-muted-foreground hover:border-navy/30 hover:text-navy',
+                    ? 'relative z-[1] border-navy bg-azure/80 text-navy shadow-soft'
+                    : 'border-border bg-card text-muted-foreground hover:border-navy/45 hover:bg-azure/35 hover:text-navy',
                 )}
               >
                 <span className="block text-sm font-bold">{value}</span>

@@ -3,21 +3,28 @@ import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Accent = 'navy' | 'sage' | 'amber' | 'crimson';
+type DashboardDensity = 'comfortable' | 'compact';
+type DashboardSurface = 'default' | 'tinted' | 'muted' | 'flat';
 
 const accentClasses: Record<Accent, string> = {
-  navy: 'bg-azure text-navy',
-  sage: 'bg-sage/10 text-sage',
-  amber: 'bg-amber/10 text-amber',
-  crimson: 'bg-crimson/10 text-crimson',
+  navy: 'bg-navy text-white shadow-sm',
+  sage: 'bg-sage text-white shadow-sm',
+  amber: 'bg-amber/20 text-navy',
+  crimson: 'bg-crimson text-white shadow-sm',
 };
 
 export function DashboardPage({
   className,
+  density = 'comfortable',
   ...props
-}: HTMLAttributes<HTMLDivElement>) {
+}: HTMLAttributes<HTMLDivElement> & { density?: DashboardDensity }) {
   return (
     <div
-      className={cn('mx-auto w-full max-w-6xl space-y-7 pb-8', className)}
+      className={cn(
+        'mx-auto w-full max-w-6xl pb-8',
+        density === 'compact' ? 'space-y-5' : 'space-y-6 sm:space-y-7',
+        className,
+      )}
       {...props}
     />
   );
@@ -37,13 +44,13 @@ export function DashboardPageHeader({
   aside?: ReactNode;
 }) {
   return (
-    <header className="grid gap-5 border-b border-border pb-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+    <header className="grid gap-4 border-b border-navy/15 pb-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
       <div>
         <div className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-sage uppercase">
           <Icon className="size-4" aria-hidden="true" />
           <p>{eyebrow}</p>
         </div>
-        <h1 className="mt-2 max-w-3xl text-3xl leading-tight font-extrabold tracking-tight text-navy sm:text-4xl">
+        <h1 className="mt-2 max-w-3xl text-[1.75rem] leading-tight font-extrabold tracking-tight text-navy sm:text-[2rem]">
           {title}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
@@ -61,6 +68,8 @@ export function DashboardPanel({
   description,
   action,
   accent = 'navy',
+  density = 'comfortable',
+  surface = 'default',
   children,
   className,
   ...props
@@ -70,39 +79,58 @@ export function DashboardPanel({
   description?: string;
   action?: ReactNode;
   accent?: Accent;
+  density?: DashboardDensity;
+  surface?: DashboardSurface;
 }) {
+  const surfaceClasses: Record<DashboardSurface, string> = {
+    default: 'border-border bg-card shadow-soft',
+    tinted: 'border-navy/20 bg-card shadow-soft',
+    muted: 'border-border bg-muted/45 shadow-none',
+    flat: 'border-transparent bg-transparent shadow-none',
+  };
+
   return (
     <section
       className={cn(
-        'rounded-[1.5rem] border border-border bg-card p-5 shadow-soft sm:p-6',
+        'rounded-2xl border',
+        surfaceClasses[surface],
+        density === 'compact' ? 'p-4 sm:p-5' : 'p-5 sm:p-6',
         className,
       )}
       {...props}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+        <div className="flex min-w-0 items-center gap-3">
           {Icon ? (
             <span
               className={cn(
-                'flex size-11 shrink-0 items-center justify-center rounded-xl',
+                'flex size-10 shrink-0 items-center justify-center rounded-xl',
                 accentClasses[accent],
               )}
             >
-              <Icon className="size-5" aria-hidden="true" />
+              <Icon className="size-[1.125rem]" aria-hidden="true" />
             </span>
           ) : null}
-          <div className="min-w-0">
-            <h2 className="text-lg leading-7 font-bold text-navy">{title}</h2>
-            {description ? (
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-                {description}
-              </p>
-            ) : null}
-          </div>
+          <h2 className="min-w-0 text-lg leading-7 font-bold text-navy">
+            {title}
+          </h2>
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {action ? (
+          <div className="w-full min-w-0 justify-self-start sm:w-auto sm:justify-self-end">
+            {action}
+          </div>
+        ) : null}
       </div>
-      {children ? <div className="mt-5">{children}</div> : null}
+      {description ? (
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
+      {children ? (
+        <div className={density === 'compact' ? 'mt-4' : 'mt-5'}>
+          {children}
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -121,40 +149,39 @@ export function DashboardNotice({
   action?: ReactNode;
   tone?: Accent;
 }) {
-  const toneClasses: Record<Accent, string> = {
-    navy: 'border-navy/15 bg-navy/[0.035]',
-    sage: 'border-sage/20 bg-sage/[0.055]',
-    amber: 'border-amber/25 bg-amber/[0.06]',
-    crimson: 'border-crimson/20 bg-crimson/[0.045]',
-  };
-
   return (
     <div
       className={cn(
-        'flex flex-col gap-4 rounded-2xl border p-4 sm:flex-row sm:items-start sm:justify-between',
-        toneClasses[tone],
+        'rounded-2xl border border-border bg-card p-4 shadow-soft',
         className,
       )}
       {...props}
     >
-      <div className="flex items-start gap-3 min-w-0">
-        <Icon
-          className={cn('mt-0.5 size-5 shrink-0', {
-            'text-navy': tone === 'navy',
-            'text-sage': tone === 'sage',
-            'text-amber': tone === 'amber',
-            'text-crimson': tone === 'crimson',
-          })}
-          aria-hidden="true"
-        />
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-navy">{title}</p>
-          <div className="mt-1 text-xs leading-5 text-muted-foreground">
-            {children}
-          </div>
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            className={cn(
+              'flex size-10 shrink-0 items-center justify-center rounded-xl',
+              accentClasses[tone],
+            )}
+          >
+            <Icon className="size-[1.125rem]" aria-hidden="true" />
+          </span>
+          <p className="min-w-0 text-[0.9375rem] leading-6 font-bold text-navy">
+            {title}
+          </p>
         </div>
+        {action ? (
+          <div className="w-full min-w-0 justify-self-start sm:w-auto sm:justify-self-end">
+            {action}
+          </div>
+        ) : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {children ? (
+        <div className="mt-3 text-sm leading-6 text-muted-foreground">
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -167,10 +194,10 @@ export function DashboardStatus({
   tone?: Accent | 'muted';
 }) {
   const classes = {
-    navy: 'border-navy/15 bg-navy/[0.05] text-navy',
-    sage: 'border-sage/20 bg-sage/[0.08] text-sage',
-    amber: 'border-amber/25 bg-amber/[0.08] text-amber',
-    crimson: 'border-crimson/20 bg-crimson/[0.06] text-crimson',
+    navy: 'border-navy/25 bg-azure/75 text-navy',
+    sage: 'border-sage/35 bg-sage/[0.12] text-sage',
+    amber: 'border-amber/40 bg-amber/[0.12] text-amber',
+    crimson: 'border-crimson/30 bg-crimson/[0.09] text-crimson',
     muted: 'border-border bg-muted text-muted-foreground',
   };
 

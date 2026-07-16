@@ -5,10 +5,12 @@ import { Link } from '@/i18n/routing';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-import { login } from '@/lib/auth';
+import { login, loginWithGoogle, persistAuthSession } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/AuthShell';
-import { AuthField, AuthDivider, GoogleButton } from '@/components/auth/AuthField';
+import { AuthField, AuthDivider } from '@/components/auth/AuthField';
+import { GoogleIdentityButton } from '@/components/auth/google-identity-button';
+import { reportDevelopmentError } from '@/lib/diagnostics';
 import { useTranslations } from 'next-intl';
 
 import { useForm } from 'react-hook-form';
@@ -16,7 +18,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 const loginSchema = z.object({
-  email: z.string().min(1, { message: 'Email wajib diisi' }).email({ message: 'Format email tidak valid' }),
+  email: z
+    .string()
+    .min(1, { message: 'Email wajib diisi' })
+    .email({ message: 'Format email tidak valid' }),
   password: z.string().min(6, { message: 'Password minimal 6 karakter' }),
 });
 
@@ -45,29 +50,58 @@ export default function LoginPage() {
     defaultValues: { email: '', password: '' },
   });
 
+  const completeLogin = (res: AuthResponse) => {
+    persistAuthSession(res);
+    const requestedNext = new URLSearchParams(window.location.search).get(
+      'next'
+    );
+    const nextPath =
+      requestedNext?.startsWith('/') && !requestedNext.startsWith('//')
+        ? requestedNext
+        : ROUTES.DASHBOARD;
+    router.push(nextPath);
+  };
+
   const onSubmit = async (data: LoginFormValues) => {
     setError(null);
     setLoading(true);
     try {
       const res = (await login(data.email, data.password)) as AuthResponse;
       if (res?.access_token) {
-        localStorage.setItem('gamblock_access_token', res.access_token);
-        localStorage.setItem('gamblock_refresh_token', res.refresh_token);
-        document.cookie = `gamblock_access_token=${res.access_token}; path=/; max-age=${res.expires_in || 3600}; SameSite=Lax; Secure`;
-        localStorage.setItem('gamblock_user', JSON.stringify(res.user));
-        router.push(ROUTES.DASHBOARD);
+        completeLogin(res);
       } else {
-        setError('Respon server tidak valid.');
+        reportDevelopmentError(
+          'Password sign-in returned an invalid response',
+          new Error('Authentication response did not include an access token.')
+        );
+        setError(t('loginError'));
       }
     } catch {
-      setError('Login gagal. Email tidak ditemukan atau server offline.');
+      setError(t('loginError'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    alert('Fitur login dengan Google belum diimplementasikan.');
+  const handleGoogleCredential = async (credential: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = (await loginWithGoogle(credential)) as AuthResponse;
+      if (!res?.access_token) {
+        reportDevelopmentError(
+          'Google sign-in returned an invalid response',
+          new Error('Authentication response did not include an access token.')
+        );
+        setError(t('googleError'));
+        return;
+      }
+      completeLogin(res);
+    } catch {
+      setError(t('googleError'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,16 +109,19 @@ export default function LoginPage() {
       heading={t('text_236')}
       subheading={t('text_237')}
       footer={
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-center text-sm">
           {t('text_241')}{' '}
-          <Link href={ROUTES.REGISTER} className="font-semibold text-crimson hover:text-crimson/80">
+          <Link
+            href={ROUTES.REGISTER}
+            className="text-crimson hover:text-crimson/80 font-semibold"
+          >
             {t('text_242')}
           </Link>
         </p>
       }
     >
       {error && (
-        <div className="mb-6 rounded-xl border border-crimson/20 bg-crimson/5 px-4 py-3 text-xs font-semibold text-crimson">
+        <div className="border-crimson/20 bg-crimson/5 text-crimson mb-6 rounded-xl border px-4 py-3 text-xs font-semibold">
           {error}
         </div>
       )}
@@ -106,7 +143,10 @@ export default function LoginPage() {
           placeholder={t('text_246')}
           error={errors.password?.message}
           labelAdornment={
-            <Link href={ROUTES.FORGOT_PASSWORD} className="text-xs font-semibold text-crimson hover:text-crimson/80">
+            <Link
+              href={ROUTES.FORGOT_PASSWORD}
+              className="text-crimson hover:text-crimson/80 text-xs font-semibold"
+            >
               {t('text_240')}
             </Link>
           }
@@ -126,7 +166,10 @@ export default function LoginPage() {
       </form>
 
       <AuthDivider label={t('orDivider')} />
-      <GoogleButton label={t('googleContinue')} onClick={handleGoogleLogin} />
+      <GoogleIdentityButton
+        onCredential={handleGoogleCredential}
+        unavailableLabel={t('googleUnavailable')}
+      />
     </AuthShell>
   );
 }

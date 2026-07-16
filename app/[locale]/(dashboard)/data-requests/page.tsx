@@ -76,7 +76,6 @@ export default function DataRequestsPage() {
           <DashboardNotice
             icon={LockKeyhole}
             title={t('privacyTitle')}
-            tone="sage"
           >
             {t('privacyBody')}
           </DashboardNotice>
@@ -163,7 +162,7 @@ export default function DataRequestsPage() {
             icon={FileClock}
             title={t('emptyTitle')}
             hint={t('emptyBody')}
-            className="min-h-48 bg-muted/20"
+            className="min-h-48 bg-muted/55"
           />
         ) : (
           <div className="space-y-3">

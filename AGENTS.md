@@ -1,12 +1,14 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
 <!-- END:nextjs-agent-rules -->
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-07-15.2`
+**Context version:** `2026-07-16.4`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading
@@ -44,7 +46,7 @@ Next.js versions.
   `app/` or `components/` — always go through a custom hook in `hooks/`.
 - Custom hooks (`hooks/use-*.ts`) own all data fetching. When adding an endpoint,
   add/extend a hook; pages and components consume the hook's `{ data, loading,
-  error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
+error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
   (non-session) pattern used by the quick-approval flow.
 - Do not use `setTimeout(()=>..., 0)` to defer fetches in `useEffect` — call the
   fetch callback directly. `useCallback` keeps the dependency stable.
@@ -65,6 +67,10 @@ Next.js versions.
   helpers, including `PageTransition`, live under `components/common/`.
 - Data fetching goes through the hooks in `hooks/` (`use-api`, `use-dashboard`,
   `use-progress`, `use-accountability`), which call `lib/api-client.ts`.
+- Translation catalogs live in domain modules under `messages/<locale>/`.
+  Keep each top-level next-intl namespace in exactly one module, mirror module
+  names and nested keys across locales, register modules through the explicit
+  server loader in `i18n/messages.ts`, and run `npm run i18n:check`.
 
 ## API & auth
 
@@ -94,6 +100,8 @@ browsing context and is not the real-time Pattern Interrupt/blocking surface.
 - `npm run verify:ai-context` validates the portable AI context. While creating
   new, not-yet-tracked context files locally, use
   `npm run verify:ai-context -- --allow-untracked`; CI always uses strict mode.
+- `npm run i18n:check` validates locale/module parity, unique namespaces, valid
+  JSON, string leaves, and identical nested message paths across languages.
 - `npm run lint -- <changed-source-files>` is the default AI code check; use a
   wider path only for a wide refactor. `npm run verify` runs context validation
   plus the repository-wide lint only.
@@ -108,6 +116,9 @@ browsing context and is not the real-time Pattern Interrupt/blocking surface.
   scope, but do not run them by default.
 - `lib/config.ts` reads `NODE_ENV` live (getters) so tests can flip
   `config.isProduction` by setting `process.env.NODE_ENV`.
+- Google Identity Services is optional and uses public
+  `NEXT_PUBLIC_GOOGLE_CLIENT_ID`; it must match backend `GOOGLE_CLIENT_ID`.
+  Do not add OAuth client secrets to `NEXT_PUBLIC_*` variables.
 
 ## Micro-interactions & messaging
 
@@ -115,9 +126,11 @@ browsing context and is not the real-time Pattern Interrupt/blocking surface.
   `internal/i18n/messages.go` catalog. Resolve any thrown error to a
   production-safe string via `friendlyMessage(err)`; throw `ApiError` (never
   generic `Error`) from `lib/api-client.ts` so `code`/`status` propagate.
-- **Env gate**: `config.isProduction` (from `NODE_ENV`) decides whether users see
-  friendly text (production) or technical detail (dev). The backend does the same
-  with `APP_ENV`.
+- **Environment gate**: user-facing errors are concise and non-technical in
+  every environment. `config.isProduction` allows sanitized code/status context
+  only through `lib/diagnostics.ts` in the development console; production
+  emits no browser-console diagnostic. Never pass form values, tokens, URLs, or
+  recovery/browsing content to that logger.
 - **Feedback**: use `lib/feedback.ts` (`toastSuccess`/`toastError`/`withFeedback`)
   for consistent sonner toasts. Do not swallow errors with `console.error` only —
   surface a toast where the user took an action.
@@ -140,6 +153,11 @@ browsing context and is not the real-time Pattern Interrupt/blocking surface.
   app; Pattern Interrupt is rendered by the client app / Windows Service, not
   the website. Do not add a `/pattern-interrupt` route here unless the recovery
   hub explicitly needs it.
+- Partner invitation routes are protected and retain a validated relative
+  `next` path through login. Approval authority comes from an active backend
+  relationship, not from hiding/showing a navigation item.
+- Recovery sync is local-first and independently opt-in for intention and
+  structured check-in categories. Never silently enable or broaden it.
 
 ## E2E
 

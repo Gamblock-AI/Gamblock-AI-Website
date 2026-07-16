@@ -6,6 +6,7 @@ export interface PartnerLink {
   id: string;
   partner_email: string;
   status: string;
+  relationship_role?: 'owner' | 'partner';
 }
 
 export interface ApprovalRequest {
@@ -14,6 +15,7 @@ export interface ApprovalRequest {
   status: string;
   reason: string;
   created_at: string;
+  expires_at?: string;
 }
 
 function resolvePartnerState(data: {
@@ -25,6 +27,7 @@ function resolvePartnerState(data: {
       email: data.active_partner.partner_email,
       status: 'active' as const,
       id: data.active_partner.id,
+      relationshipRole: data.active_partner.relationship_role ?? 'owner',
     };
   }
 
@@ -34,10 +37,16 @@ function resolvePartnerState(data: {
       email: invited.partner_email,
       status: 'invited' as const,
       id: invited.id,
+      relationshipRole: invited.relationship_role ?? 'owner',
     };
   }
 
-  return { email: '', status: 'none' as const, id: null };
+  return {
+    email: '',
+    status: 'none' as const,
+    id: null,
+    relationshipRole: null,
+  };
 }
 
 export function useAccountability() {
@@ -46,6 +55,11 @@ export function useAccountability() {
     'none' | 'invited' | 'active'
   >('none');
   const [partnerLinkId, setPartnerLinkId] = useState<string | null>(null);
+  const [partnerLinks, setPartnerLinks] = useState<PartnerLink[]>([]);
+  const [relationshipRole, setRelationshipRole] = useState<
+    'owner' | 'partner' | null
+  >(null);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
 
   const [antiUninstall, setAntiUninstall] = useState(true);
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
@@ -70,6 +84,8 @@ export function useAccountability() {
       setPartnerEmail(nextPartner.email);
       setPartnerStatus(nextPartner.status);
       setPartnerLinkId(nextPartner.id);
+      setPartnerLinks(partnersData.items ?? []);
+      setRelationshipRole(nextPartner.relationshipRole);
       setRequests(approvalData || []);
     } catch (err) {
       setDataError(err);
@@ -94,6 +110,8 @@ export function useAccountability() {
         setPartnerEmail(nextPartner.email);
         setPartnerStatus(nextPartner.status);
         setPartnerLinkId(nextPartner.id);
+        setPartnerLinks(partnersData.items ?? []);
+        setRelationshipRole(nextPartner.relationshipRole);
         setRequests(approvalData || []);
       })
       .catch((err: unknown) => {
@@ -112,16 +130,21 @@ export function useAccountability() {
       if (!email.trim()) return;
       setLoading(true);
       try {
-        const inviteRes = await apiClient<{ id: string; status: string }>(
-          '/partners/invitations',
-          {
-            method: 'POST',
-            body: JSON.stringify({ email }),
-          }
+        const inviteRes = await apiClient<{
+          id: string;
+          status: string;
+          invite_url: string;
+          expires_in: string;
+        }>('/partners/invitations', {
+          method: 'POST',
+          body: JSON.stringify({ email }),
+        });
+        toast.success(
+          `Undangan untuk ${email} berhasil dibuat. Bagikan tautan persetujuannya secara aman.`
         );
-        toast.success(`Undangan berhasil dikirim ke ${email}`);
         setPartnerStatus('invited');
         setPartnerLinkId(inviteRes.id);
+        setInviteUrl(inviteRes.invite_url);
         fetchData();
         return inviteRes;
       } catch (err) {
@@ -134,6 +157,24 @@ export function useAccountability() {
     [fetchData]
   );
 
+  const selectPartner = useCallback(
+    (id: string) => {
+      const selected = partnerLinks.find((partner) => partner.id === id);
+      if (!selected) return;
+      setPartnerLinkId(selected.id);
+      setPartnerEmail(selected.partner_email);
+      setPartnerStatus(
+        selected.status === 'active'
+          ? 'active'
+          : selected.status === 'invited'
+            ? 'invited'
+            : 'none'
+      );
+      setRelationshipRole(selected.relationship_role ?? 'owner');
+    },
+    [partnerLinks]
+  );
+
   const handleRevokePartner = useCallback(async () => {
     if (!partnerLinkId) return;
     try {
@@ -144,6 +185,8 @@ export function useAccountability() {
       setPartnerEmail('');
       setPartnerStatus('none');
       setPartnerLinkId(null);
+      setRelationshipRole(null);
+      setInviteUrl(null);
       await fetchData();
     } catch (err) {
       toast.error('Gagal memutuskan hubungan pendamping.');
@@ -173,12 +216,12 @@ export function useAccountability() {
           body: JSON.stringify({
             action: 'disable_protection',
             reason,
-            partner_link_id: partnerLinkId || 'pl_active',
+            partner_link_id: partnerLinkId,
           }),
         });
 
         toast.success(
-          'Permohonan penonaktifan berhasil dikirim ke pendamping!'
+          'Permohonan berhasil disimpan. Pendamping dapat meninjaunya dari ruang persetujuan.'
         );
         setIsModalOpen(false);
         setApprovalReason('');
@@ -209,6 +252,29 @@ export function useAccountability() {
     [fetchData]
   );
 
+  const handleResolveRequest = useCallback(
+    async (id: string, decision: 'approve' | 'deny') => {
+      setLoading(true);
+      try {
+        await apiClient(`/approval-requests/${id}/${decision}`, {
+          method: 'POST',
+        });
+        toast.success(
+          decision === 'approve'
+            ? 'Permohonan berhasil disetujui.'
+            : 'Permohonan berhasil ditolak.'
+        );
+        await fetchData();
+      } catch (err) {
+        toast.error('Keputusan belum dapat disimpan.');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchData]
+  );
+
   const pendingRequest = requests.find((r) =>
     r.status.toLowerCase().includes('pending')
   );
@@ -218,6 +284,9 @@ export function useAccountability() {
     setPartnerEmail,
     partnerStatus,
     partnerLinkId,
+    partnerLinks,
+    relationshipRole,
+    inviteUrl,
     antiUninstall,
     setAntiUninstall,
     requests,
@@ -230,10 +299,12 @@ export function useAccountability() {
     dataError,
     fetchData,
     handleInvitePartner,
+    selectPartner,
     handleRevokePartner,
     handleAntiUninstallToggle,
     handleRequestApproval,
     handleCancelRequest,
+    handleResolveRequest,
     pendingRequest,
   };
 }

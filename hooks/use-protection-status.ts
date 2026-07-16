@@ -8,11 +8,14 @@ export interface ProtectionStatus {
   runtime_status: string;
   ruleset_version: string;
   model_version: string;
-  last_sync: string;
+  last_sync?: string;
+  device_count: number;
 }
 
 function toError(error: unknown) {
-  return error instanceof Error ? error : new Error('Protection status request failed');
+  return error instanceof Error
+    ? error
+    : new Error('Protection status request failed');
 }
 
 export function useProtectionStatus() {
@@ -27,14 +30,17 @@ export function useProtectionStatus() {
     setLoading(true);
     setError(null);
     try {
-      const nextStatus = await apiClient<ProtectionStatus>('/client/protection-status');
+      const nextStatus = await apiClient<ProtectionStatus>(
+        '/client/protection-status'
+      );
       if (!mountedRef.current || requestId !== requestRef.current) return;
       setStatus(nextStatus);
     } catch (requestError) {
       if (!mountedRef.current || requestId !== requestRef.current) return;
       setError(toError(requestError));
     } finally {
-      if (mountedRef.current && requestId === requestRef.current) setLoading(false);
+      if (mountedRef.current && requestId === requestRef.current)
+        setLoading(false);
     }
   }, []);
 
@@ -52,7 +58,7 @@ export function useProtectionStatus() {
         if (!mountedRef.current || requestId !== requestRef.current) return;
         setError(toError(requestError));
         setLoading(false);
-      },
+      }
     );
     return () => {
       mountedRef.current = false;

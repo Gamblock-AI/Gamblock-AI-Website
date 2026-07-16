@@ -16,7 +16,7 @@ export const MESSAGES: Record<string, string> = {
   invalid_credentials: 'Email atau kata sandi salah. Silakan periksa kembali.',
   registration_failed: 'Pendaftaran gagal. Email mungkin sudah terdaftar.',
   dev_login_failed: 'Gagal masuk sebagai pengguna demo.',
-  google_token_required: 'Token Google wajib diisi.',
+  google_token_required: 'Sesi Google belum tersedia. Silakan coba lagi.',
   google_verification_failed: 'Verifikasi Google gagal. Silakan coba lagi.',
   invalid_refresh_token: 'Sesi tidak valid. Silakan masuk kembali.',
   refresh_token_required: 'Sesi telah berakhir. Silakan masuk kembali.',
@@ -26,6 +26,12 @@ export const MESSAGES: Record<string, string> = {
   device_create_failed: 'Gagal mendaftarkan perangkat.',
   device_update_failed: 'Gagal memperbarui perangkat.',
   heartbeat_failed: 'Gagal mengirim sinyal aktif perangkat.',
+  dashboard_summary_failed: 'Gagal memuat ringkasan dashboard.',
+  protection_status_failed: 'Gagal memuat status perlindungan.',
+  progress_snapshot_failed: 'Gagal memuat ringkasan progres.',
+  aggregate_event_rejected: 'Data perangkat belum dapat disinkronkan.',
+  profile_not_found: 'Profil tidak ditemukan.',
+  profile_update_failed: 'Gagal memperbarui profil.',
 
   // partners / accountability
   partner_email_required: 'Email pendamping wajib diisi.',
@@ -64,9 +70,9 @@ export const MESSAGES: Record<string, string> = {
   text_required: 'Teks refleksi wajib diisi.',
 
   // quick approval
-  token_required: 'Token validasi wajib diisi.',
-  invalid_token: 'Token tidak valid atau sudah kadaluarsa.',
-  invalid_input: 'Token dan status (approved/denied) wajib diisi.',
+  token_required: 'Tautan persetujuan tidak lengkap.',
+  invalid_token: 'Tautan persetujuan tidak valid atau sudah kedaluwarsa.',
+  invalid_input: 'Pilihan persetujuan belum lengkap.',
   resolve_failed: 'Gagal memproses permohonan.',
 
   // support / data requests
@@ -85,6 +91,10 @@ export const MESSAGES: Record<string, string> = {
   create_ruleset_release_failed: 'Gagal merilis ruleset.',
   create_network_release_failed: 'Gagal merilis ruleset jaringan.',
   release_not_found: 'Rilis tidak ditemukan.',
+  release_validation_failed:
+    'Artefak rilis belum lengkap atau checksum tidak cocok.',
+  artifact_unavailable: 'Artefak rilis belum tersedia atau gagal diverifikasi.',
+  portal_overview_failed: 'Gagal memuat ringkasan operasional.',
   generate_key_failed: 'Gagal membuat kunci darurat.',
   emergency_key_required: 'Kunci darurat wajib diisi.',
   invalid_key: 'Kunci darurat tidak valid.',
@@ -101,7 +111,7 @@ const STATUS_MESSAGES: Record<number, string> = {
   409: 'Konflik data. Silakan muat ulang dan coba lagi.',
   422: 'Beberapa isian perlu diperbaiki.',
   429: 'Terlalu banyak permintaan. Coba lagi sebentar lagi.',
-  500: 'Server sedang sibuk. Silakan coba beberapa saat lagi.',
+  500: 'Layanan sedang mengalami kendala. Silakan coba beberapa saat lagi.',
   502: 'Layanan sedang tidak tersedia. Coba lagi nanti.',
   503: 'Layanan sedang dalam pemeliharaan.',
 };

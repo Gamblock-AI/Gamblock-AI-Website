@@ -20,14 +20,21 @@ export default function ApprovePage() {
   }
 
   if (error || !details) {
-    return <ApprovalErrorState message={error ?? 'Token tidak valid.'} />;
+    return (
+      <ApprovalErrorState
+        message={error ?? 'Tautan persetujuan tidak dapat digunakan.'}
+      />
+    );
   }
 
   if (resolved) {
     return <ApprovalResolvedState status={resolved} />;
   }
 
-  if (details.status !== 'pending' && details.status !== 'Pending partner approval') {
+  if (
+    details.status !== 'pending' &&
+    details.status !== 'Pending partner approval'
+  ) {
     return <ApprovalProcessedState />;
   }
 

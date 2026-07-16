@@ -1,128 +1,127 @@
 'use client';
-import { ROUTES } from '@/routes';
 
-import { useState, use } from 'react';
-import { useRouter } from '@/i18n/routing';
+import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
-  ShieldCheck,
-  Users,
-  CheckCircle,
   AlertCircle,
   ArrowRight,
+  CheckCircle2,
+  HeartHandshake,
+  LockKeyhole,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Link } from '@/i18n/routing';
 import { apiClient } from '@/lib/api-client';
-import { useTranslations } from "next-intl";
+import { ROUTES } from '@/routes';
 
-export default function PartnerInvitationPage({
-  params,
-}: {
-  params: Promise<{ token: string }>;
-}) {
-    const t = useTranslations('[token]Page');
-  const resolvedParams = use(params);
-  const token = resolvedParams.token;
-  const router = useRouter();
-
+export default function PartnerInvitationPage() {
+  const t = useTranslations('partnerInvitationPage');
+  const params = useParams<{ token: string }>();
+  const token = params?.token;
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
+  const [error, setError] = useState(false);
 
-  const handleAccept = async () => {
+  const acceptInvitation = async () => {
+    if (!token) return;
     setLoading(true);
-    setError(null);
+    setError(false);
     try {
       await apiClient(`/partners/invitations/${token}/accept`, {
         method: 'POST',
       });
-      setSuccess(true);
-    } catch (err) {
-      console.error(err);
-      setError(
-        'Gagal menerima undangan. Pastikan Anda telah masuk (login) sebagai Akun Pendamping terlebih dahulu.'
-      );
+      setAccepted(true);
+    } catch {
+      setError(true);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-surface text-navy relative flex min-h-screen flex-col justify-between overflow-hidden p-6 md:p-12">
-      {/* Background patterns */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-20 -bottom-20 h-[600px] w-[600px] rounded-full bg-blue-500/5 blur-3xl" />
-        <div className="absolute -top-20 -left-20 h-[500px] w-[500px] rounded-full bg-red-500/5 blur-3xl" />
-      </div>
-
-      {/* Top Branding Header */}
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="bg-navy flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold text-white shadow-md">
-            G
+    <main className="bg-background flex min-h-screen items-center justify-center px-4 py-10">
+      <Card className="border-border w-full max-w-lg overflow-hidden">
+        <div className="border-border bg-azure/45 border-b p-6 sm:p-8">
+          <div className="bg-navy flex size-12 items-center justify-center rounded-2xl text-white">
+            <HeartHandshake className="size-6" aria-hidden="true" />
           </div>
-          <span className="text-navy text-lg font-extrabold tracking-tight">
-            {t('text_302')}</span>
-        </div>
-        <button
-          onClick={() => router.push(ROUTES.LOGIN)}
-          className="text-navy cursor-pointer text-xs font-bold hover:underline"
-        >
-          {t('text_303')}</button>
-      </div>
-
-      {/* Main Container Card */}
-      <div className="relative z-10 mx-auto my-auto w-full max-w-md space-y-6 rounded-[40px] border border-slate-100 bg-white p-8 text-center shadow-[0_15px_50px_rgba(27,43,94,0.04)] md:p-10">
-        <div className="text-navy mx-auto flex size-16 items-center justify-center rounded-3xl bg-blue-50 shadow-sm">
-          <Users className="size-8" />
+          <p className="text-sage mt-5 text-xs font-bold tracking-[0.12em] uppercase">
+            {t('eyebrow')}
+          </p>
+          <h1 className="text-navy mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+            {accepted ? t('successTitle') : t('title')}
+          </h1>
+          <p className="text-muted-foreground mt-3 text-sm leading-6">
+            {accepted ? t('successBody') : t('description')}
+          </p>
         </div>
 
-        {success ? (
-          <div className="space-y-4">
-            <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-              <CheckCircle className="size-6" />
-            </div>
-            <h2 className="text-navy text-2xl font-black tracking-tight">
-              {t('text_304')}</h2>
-            <p className="text-xs leading-relaxed font-semibold text-slate-500">
-              {t('text_305')}</p>
-            <button
-              onClick={() => router.push(ROUTES.PARTNERS)}
-              className="bg-navy hover:bg-navy/90 mt-4 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-2xl py-4 text-xs font-bold text-white shadow-md transition-all"
-            >
-              {t('text_306')}<ArrowRight className="size-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <span className="text-crimson rounded-full bg-red-50 px-3 py-1 text-[10px] font-black tracking-wider uppercase">
-                {t('text_307')}</span>
-              <h2 className="text-navy pt-2 text-2xl font-black tracking-tight">
-                {t('text_308')}</h2>
-              <p className="text-xs leading-relaxed font-semibold text-slate-500">
-                {t('text_309')}</p>
-            </div>
-
-            {error && (
-              <div className="flex items-start gap-2.5 rounded-2xl border border-red-100 bg-red-50 p-4 text-left text-xs font-semibold text-red-700">
-                <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
-                <span>{error}</span>
+        <div className="space-y-5 p-6 sm:p-8">
+          {accepted ? (
+            <>
+              <div className="border-sage/25 bg-sage/[0.05] flex items-start gap-3 rounded-2xl border p-4">
+                <CheckCircle2 className="text-sage mt-0.5 size-5 shrink-0" />
+                <p className="text-foreground text-sm leading-6">
+                  {t('successNotice')}
+                </p>
               </div>
-            )}
+              <Button
+                render={<Link href={ROUTES.ACCOUNTABILITY} />}
+                size="lg"
+                className="w-full"
+              >
+                {t('openInbox')}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="border-border bg-muted/30 flex items-start gap-3 rounded-2xl border p-4">
+                <LockKeyhole className="text-navy mt-0.5 size-5 shrink-0" />
+                <div>
+                  <h2 className="text-navy text-sm font-bold">
+                    {t('privacyTitle')}
+                  </h2>
+                  <p className="text-muted-foreground mt-1 text-sm leading-6">
+                    {t('privacyBody')}
+                  </p>
+                </div>
+              </div>
 
-            <button
-              onClick={handleAccept}
-              disabled={loading}
-              className="bg-crimson hover:bg-crimson/90 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-2xl py-4 text-xs font-bold text-white shadow-md shadow-red-500/10 transition-all disabled:opacity-50"
-            >
-              {loading ? 'Memproses...' : 'Terima Undangan & Mulai Lindungi'}
-            </button>
-          </div>
-        )}
-      </div>
+              {error && (
+                <div
+                  role="alert"
+                  className="border-crimson/20 bg-crimson/[0.04] flex items-start gap-3 rounded-2xl border p-4"
+                >
+                  <AlertCircle className="text-crimson mt-0.5 size-5 shrink-0" />
+                  <p className="text-crimson text-sm leading-6">
+                    {t('errorBody')}
+                  </p>
+                </div>
+              )}
 
-      {/* Bottom Footer Info */}
-      <div className="relative z-10 text-center text-xs text-slate-400">
-        {t('text_310')}</div>
-    </div>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  render={<Link href={ROUTES.DASHBOARD} />}
+                  variant="outline"
+                  size="lg"
+                >
+                  {t('decline')}
+                </Button>
+                <Button
+                  size="lg"
+                  disabled={loading || !token}
+                  onClick={() => void acceptInvitation()}
+                >
+                  {loading ? t('accepting') : t('accept')}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </Card>
+    </main>
   );
 }

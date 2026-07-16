@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ClipboardList, X } from 'lucide-react';
+import { Check, ClipboardList, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   DashboardPanel,
@@ -23,6 +23,11 @@ import type { ApprovalRequest } from '@/hooks/use-accountability';
 interface RequestsHistoryTableProps {
   requests: ApprovalRequest[];
   onCancelRequest: (id: string) => Promise<void> | void;
+  onResolveRequest?: (
+    id: string,
+    decision: 'approve' | 'deny'
+  ) => Promise<void> | void;
+  viewerRole?: string;
 }
 
 function statusTone(status: string) {
@@ -45,10 +50,16 @@ function statusKey(status: string) {
 export function RequestsHistoryTable({
   requests,
   onCancelRequest,
+  onResolveRequest,
+  viewerRole,
 }: RequestsHistoryTableProps) {
   const t = useTranslations('accountabilityWorkspace');
   const locale = useLocale();
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const [resolution, setResolution] = useState<{
+    id: string;
+    decision: 'approve' | 'deny';
+  } | null>(null);
   const formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
 
   return (
@@ -62,7 +73,7 @@ export function RequestsHistoryTable({
           icon={ClipboardList}
           title={t('historyEmptyTitle')}
           hint={t('historyEmptyBody')}
-          className="min-h-48 bg-muted/20"
+          className="min-h-48 bg-muted/55"
         />
       ) : (
         <div className="space-y-3">
@@ -79,27 +90,51 @@ export function RequestsHistoryTable({
             return (
               <article
                 key={request.id}
-                className="grid gap-3 rounded-2xl border border-border bg-muted/25 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
+                className="border-border bg-muted/25 grid gap-3 rounded-2xl border p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <DashboardStatus tone={statusTone(request.status)}>
                       {t(`requestStatus.${statusKey(request.status)}`)}
                     </DashboardStatus>
-                    <span className="font-mono text-xs text-muted-foreground">
+                    <span className="text-muted-foreground font-mono text-xs">
                       {request.id}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-foreground">
+                  <p className="text-foreground mt-3 text-sm leading-6">
                     {request.reason || t('reasonNotProvided')}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{date}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">{date}</p>
                 </div>
-                {isPending ? (
+                {isPending && viewerRole === 'partner' && onResolveRequest ? (
+                  <div className="grid grid-cols-2 gap-2 md:flex">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-crimson/20 text-crimson hover:bg-crimson/[0.04] h-11"
+                      onClick={() =>
+                        setResolution({ id: request.id, decision: 'deny' })
+                      }
+                    >
+                      <X className="size-4" aria-hidden="true" />
+                      {t('denyRequest')}
+                    </Button>
+                    <Button
+                      type="button"
+                      className="h-11"
+                      onClick={() =>
+                        setResolution({ id: request.id, decision: 'approve' })
+                      }
+                    >
+                      <Check className="size-4" aria-hidden="true" />
+                      {t('approveRequest')}
+                    </Button>
+                  </div>
+                ) : isPending && viewerRole !== 'partner' ? (
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 w-full border-crimson/20 text-crimson hover:bg-crimson/[0.04] md:w-auto"
+                    className="border-crimson/20 text-crimson hover:bg-crimson/[0.04] h-11 w-full md:w-auto"
                     onClick={() => setCancelId(request.id)}
                   >
                     <X className="size-4" aria-hidden="true" />
@@ -112,7 +147,10 @@ export function RequestsHistoryTable({
         </div>
       )}
 
-      <Dialog open={cancelId !== null} onOpenChange={(open) => !open && setCancelId(null)}>
+      <Dialog
+        open={cancelId !== null}
+        onOpenChange={(open) => !open && setCancelId(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('cancelDialogTitle')}</DialogTitle>
@@ -126,11 +164,51 @@ export function RequestsHistoryTable({
               onClick={() => {
                 if (!cancelId) return;
                 void Promise.resolve(onCancelRequest(cancelId)).then(() =>
-                  setCancelId(null),
+                  setCancelId(null)
                 );
               }}
             >
               {t('confirmCancelRequest')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={resolution !== null}
+        onOpenChange={(open) => !open && setResolution(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {resolution?.decision === 'approve'
+                ? t('approveDialogTitle')
+                : t('denyDialogTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {resolution?.decision === 'approve'
+                ? t('approveDialogBody')
+                : t('denyDialogBody')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>
+              {t('keepRequest')}
+            </DialogClose>
+            <Button
+              variant={
+                resolution?.decision === 'deny' ? 'destructive' : 'primary'
+              }
+              onClick={() => {
+                if (!resolution || !onResolveRequest) return;
+                void Promise.resolve(
+                  onResolveRequest(resolution.id, resolution.decision)
+                ).then(() => setResolution(null));
+              }}
+            >
+              {resolution?.decision === 'approve'
+                ? t('confirmApproveRequest')
+                : t('confirmDenyRequest')}
             </Button>
           </DialogFooter>
         </DialogContent>

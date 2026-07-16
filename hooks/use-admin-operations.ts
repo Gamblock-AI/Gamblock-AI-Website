@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 
 export interface AdminSupportCase {
@@ -28,111 +28,172 @@ export interface AdminModelRelease {
   version: string;
   platform: string;
   sha256?: string;
+  contract_version?: string;
+  threshold?: number;
   status: string;
   published_at_text?: string;
+}
+
+export interface EmergencyKeyRequest {
+  id: string;
+  requested_by: string;
+  approved_by?: string;
+  status: string;
+  request_expires_at: string;
+  key_expires_at?: string;
+  created_at: string;
+}
+
+export interface AdminCapabilities {
+  content: boolean;
+  releases: boolean;
+  support: boolean;
+  emergency: boolean;
 }
 
 interface AdminOperationsState {
   modules: AdminEducationModule[];
   releases: AdminModelRelease[];
   cases: AdminSupportCase[];
+  emergencyRequests: EmergencyKeyRequest[];
 }
 
 const EMPTY_STATE: AdminOperationsState = {
   modules: [],
   releases: [],
   cases: [],
+  emergencyRequests: [],
 };
 
-export function useAdminOperations() {
+async function fetchAdminOperations(
+  capabilities: AdminCapabilities
+): Promise<AdminOperationsState> {
+  const [modules, releases, cases, emergencyRequests] = await Promise.all([
+    capabilities.content
+      ? apiClient<AdminEducationModule[]>('/admin/content/modules')
+      : Promise.resolve([]),
+    capabilities.releases
+      ? apiClient<AdminModelRelease[]>('/admin/model-releases')
+      : Promise.resolve([]),
+    capabilities.support
+      ? apiClient<AdminSupportCase[]>('/admin/support-cases')
+      : Promise.resolve([]),
+    capabilities.emergency
+      ? apiClient<EmergencyKeyRequest[]>('/admin/emergency-key-requests')
+      : Promise.resolve([]),
+  ]);
+
+  return {
+    modules: modules ?? [],
+    releases: releases ?? [],
+    cases: cases ?? [],
+    emergencyRequests: emergencyRequests ?? [],
+  };
+}
+
+export function getAdminCapabilities(role?: string): AdminCapabilities {
+  return {
+    content: role === 'content_admin' || role === 'platform_admin',
+    releases: role === 'model_release_operator' || role === 'platform_admin',
+    support: role === 'support_operator' || role === 'platform_admin',
+    emergency: role === 'platform_admin',
+  };
+}
+
+export function useAdminOperations(role?: string) {
+  const capabilities = useMemo(() => getAdminCapabilities(role), [role]);
   const [data, setData] = useState<AdminOperationsState>(EMPTY_STATE);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(role));
   const [error, setError] = useState<unknown>(null);
   const [keyLoading, setKeyLoading] = useState(false);
   const [emergencyKey, setEmergencyKey] = useState<string | null>(null);
-  const [emergencyKeyMeta, setEmergencyKeyMeta] = useState<{
-    expiresIn?: string;
-    singleUse?: boolean;
-  } | null>(null);
 
   const load = useCallback(async () => {
+    if (!role) {
+      setData(EMPTY_STATE);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const [modules, releases, cases] = await Promise.all([
-        apiClient<AdminEducationModule[]>('/admin/content/modules'),
-        apiClient<AdminModelRelease[]>('/admin/model-releases'),
-        apiClient<AdminSupportCase[]>('/admin/support-cases'),
-      ]);
-      setData({
-        modules: modules ?? [],
-        releases: releases ?? [],
-        cases: cases ?? [],
-      });
+      setData(await fetchAdminOperations(capabilities));
     } catch (requestError) {
       setError(requestError);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [capabilities, role]);
 
   useEffect(() => {
+    if (!role) return;
+
     let active = true;
-    Promise.all([
-      apiClient<AdminEducationModule[]>('/admin/content/modules'),
-      apiClient<AdminModelRelease[]>('/admin/model-releases'),
-      apiClient<AdminSupportCase[]>('/admin/support-cases'),
-    ])
-      .then(([modules, releases, cases]) => {
+    void fetchAdminOperations(capabilities)
+      .then((nextData) => {
         if (!active) return;
-        setData({
-          modules: modules ?? [],
-          releases: releases ?? [],
-          cases: cases ?? [],
-        });
+        setData(nextData);
+        setError(null);
       })
       .catch((requestError: unknown) => {
-        if (!active) return;
-        setError(requestError);
+        if (active) setError(requestError);
       })
       .finally(() => {
         if (active) setLoading(false);
       });
+
     return () => {
       active = false;
     };
-  }, []);
+  }, [capabilities, role]);
 
-  const generateEmergencyKey = useCallback(async () => {
+  const requestEmergencyKey = useCallback(async () => {
     setKeyLoading(true);
     try {
-      const result = await apiClient<{
-        emergency_key: string;
-        expires_in?: string;
-        single_use?: boolean;
-      }>(
-        '/admin/emergency-key',
-        { method: 'POST' },
+      const request = await apiClient<EmergencyKeyRequest>(
+        '/admin/emergency-key-requests',
+        { method: 'POST' }
       );
-      setEmergencyKey(result.emergency_key);
-      setEmergencyKeyMeta({
-        expiresIn: result.expires_in,
-        singleUse: result.single_use,
-      });
-      return result.emergency_key;
+      await load();
+      return request;
     } finally {
       setKeyLoading(false);
     }
-  }, []);
+  }, [load]);
+
+  const approveEmergencyKey = useCallback(
+    async (requestID: string) => {
+      setKeyLoading(true);
+      try {
+        const result = await apiClient<{
+          request: EmergencyKeyRequest;
+          emergency_key: string;
+          expires_in: string;
+          single_use: boolean;
+        }>(`/admin/emergency-key-requests/${requestID}/approve`, {
+          method: 'POST',
+        });
+        setEmergencyKey(result.emergency_key);
+        await load();
+        return result.emergency_key;
+      } finally {
+        setKeyLoading(false);
+      }
+    },
+    [load]
+  );
 
   return {
     ...data,
+    capabilities,
     loading,
     error,
     refetch: load,
     keyLoading,
     emergencyKey,
-    emergencyKeyMeta,
-    generateEmergencyKey,
+    clearEmergencyKey: () => setEmergencyKey(null),
+    requestEmergencyKey,
+    approveEmergencyKey,
   };
 }

@@ -29,14 +29,20 @@ browsing details, or inferred risk.
 
 ## Layout
 
+- The authenticated shell uses the canonical mesh page background, a 64px
+  sticky header, a 248px desktop navigation rail, and a maximum 1280px content
+  container.
 - Desktop student view uses a 12-column grid. The “Hari ini” workspace occupies
   eight columns and the supporting rail occupies four.
-- The primary workspace may use a subtle cool-blue wash to establish hierarchy;
-  all nested controls remain flat.
+- The primary workspace and routine cards use white or near-white surfaces.
+  Cool-blue and sage fills are limited to compact informational regions,
+  selected states, and status vocabulary; all nested controls remain flat.
 - At tablet width the grid becomes one column with today, recommendation, and
   review in that order.
 - At mobile width use edge-to-edge sections inside 20px page padding, full-width
   primary actions, and a fixed safe-area-aware bottom navigation.
+- Use comfortable panel density for recovery and account pages. Operational
+  admin and synthetic research surfaces use the same tokens at compact density.
 
 ## Primary components
 
@@ -46,6 +52,8 @@ browsing details, or inferred risk.
   confirmation, and no free-text browsing detail prompt.
 - `DailyMission`: one primary mission, completion, skip/replace with a reason,
   and non-punitive language.
+- `ReflectionJournal`: a labeled writing form beside recent entries on desktop,
+  stacked on mobile, with honest loading, empty, retry, saving, and saved states.
 - `SkillRecommendation`: skill title, short practice, “why this fits”, evidence
   or review status, and another-option control.
 - `WeeklyReview`: sufficient-data summary, calm micro-chart when warranted, and
@@ -68,8 +76,12 @@ browsing details, or inferred risk.
   block counts.
 - Use navy for primary actions, sage for completed states, cyan for informational
   context, amber for gentle caution, and crimson only for destructive actions.
+- Use a 40px navy or semantic-color icon tile for card-leading icons. Supporting
+  copy is 14px minimum with a 1.5 line height; reserve 12px for metadata only.
 - Charts use direct labels and no legends when a single series is shown.
 - Keep the dashboard to three surface levels: page, primary panel, control row.
+- Use 24px panel corners, 16px secondary surfaces, 12-14px controls, and pills
+  only for compact status vocabulary.
 
 ## Acceptance criteria
 

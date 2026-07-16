@@ -7,27 +7,27 @@ import { ROUTES } from '@/routes';
 
 export function BiteSizedLearning() {
   const t = useTranslations('recoveryDashboard');
-  
+
   return (
-    <section className="rounded-[1.5rem] border border-sage/20 bg-sage/[0.055] p-5 shadow-soft">
-      <div className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sage/10 text-sage">
-          <Lightbulb className="size-4" aria-hidden="true" />
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-sm">
+          <Lightbulb className="size-[1.125rem]" aria-hidden="true" />
         </span>
-        <div>
-          <h3 className="text-sm font-bold text-navy">{t('biteSizedLearningTitle')}</h3>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {t('biteSizedLearningDesc')}
-          </p>
-          <Link
-            href={ROUTES.EDUCATION}
-            className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-sage hover:underline"
-          >
-            {t('biteSizedLearningLink')}
-            <ArrowRight className="size-3" />
-          </Link>
-        </div>
+        <h3 className="min-w-0 text-[0.9375rem] leading-6 font-bold text-navy">
+          {t('biteSizedLearningTitle')}
+        </h3>
       </div>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        {t('biteSizedLearningDesc')}
+      </p>
+      <Link
+        href={ROUTES.EDUCATION}
+        className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-bold text-sage outline-none hover:text-navy focus-visible:ring-2 focus-visible:ring-navy/30"
+      >
+        {t('biteSizedLearningLink')}
+        <ArrowRight className="size-4" aria-hidden="true" />
+      </Link>
     </section>
   );
 }

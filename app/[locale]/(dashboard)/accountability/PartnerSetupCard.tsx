@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { HeartHandshake, Mail, Trash2, Users } from 'lucide-react';
+import { Check, Copy, HeartHandshake, Mail, Trash2, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
   DashboardPanel,
@@ -18,14 +18,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { PartnerLink } from '@/hooks/use-accountability';
 
 interface PartnerSetupCardProps {
   partnerEmail: string;
   setPartnerEmail: (value: string) => void;
   partnerStatus: 'none' | 'invited' | 'active';
+  partnerLinkId?: string | null;
+  partnerLinks?: PartnerLink[];
+  inviteUrl?: string | null;
   loading: boolean;
   dataLoading?: boolean;
-  onInvite: () => void;
+  onInvite: (email: string) => void;
+  onSelectPartner?: (id: string) => void;
   onRevokePartner: () => Promise<void> | void;
 }
 
@@ -33,13 +38,23 @@ export function PartnerSetupCard({
   partnerEmail,
   setPartnerEmail,
   partnerStatus,
+  partnerLinkId,
+  partnerLinks = [],
+  inviteUrl,
   loading,
   dataLoading = false,
   onInvite,
+  onSelectPartner,
   onRevokePartner,
 }: PartnerSetupCardProps) {
   const t = useTranslations('accountabilityWorkspace');
   const [revokeOpen, setRevokeOpen] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [inviteAnotherOpen, setInviteAnotherOpen] = useState(false);
+  const [newPartnerEmail, setNewPartnerEmail] = useState('');
+  const visibleLinks = partnerLinks.filter(
+    (partner) => partner.status === 'active' || partner.status === 'invited'
+  );
 
   const statusTone =
     partnerStatus === 'active'
@@ -53,6 +68,7 @@ export function PartnerSetupCard({
       icon={Users}
       title={t('partnerTitle')}
       description={t('partnerDescription')}
+      className="h-full"
       action={
         dataLoading ? (
           <Skeleton className="h-8 w-28 rounded-full" />
@@ -63,6 +79,37 @@ export function PartnerSetupCard({
         )
       }
     >
+      {visibleLinks.length > 1 && !dataLoading ? (
+        <div className="mb-4 space-y-2">
+          <p className="text-muted-foreground text-xs font-semibold">
+            {t('relationshipListLabel')}
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {visibleLinks.map((partner) => (
+              <button
+                key={partner.id}
+                type="button"
+                onClick={() => onSelectPartner?.(partner.id)}
+                className={`focus-visible:ring-navy/25 min-h-11 rounded-xl border p-3 text-left text-sm transition-colors focus-visible:ring-2 ${
+                  partner.id === partnerLinkId
+                    ? 'border-navy bg-azure/45 text-navy'
+                    : 'border-border bg-background text-muted-foreground hover:border-navy/30'
+                }`}
+              >
+                <span className="block truncate font-semibold">
+                  {partner.partner_email}
+                </span>
+                <span className="mt-1 block text-xs">
+                  {partner.status === 'active'
+                    ? t('partnerStatus.active')
+                    : t('partnerStatus.invited')}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {dataLoading ? (
         <div className="space-y-3" role="status">
           <Skeleton className="h-5 w-40" />
@@ -75,19 +122,25 @@ export function PartnerSetupCard({
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
-            onInvite();
+            onInvite(partnerEmail);
           }}
         >
           <div className="space-y-2">
-            <label htmlFor="partner-email" className="text-sm font-semibold text-navy">
+            <label
+              htmlFor="partner-email"
+              className="text-navy text-sm font-semibold"
+            >
               {t('partnerEmailLabel')}
             </label>
-            <p id="partner-email-help" className="text-xs leading-5 text-muted-foreground">
+            <p
+              id="partner-email-help"
+              className="text-muted-foreground text-xs leading-5"
+            >
               {t('partnerEmailHelp')}
             </p>
             <div className="relative">
               <Mail
-                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2"
                 aria-hidden="true"
               />
               <input
@@ -99,37 +152,106 @@ export function PartnerSetupCard({
                 autoComplete="email"
                 placeholder={t('partnerEmailPlaceholder')}
                 disabled={loading}
-                className="h-11 w-full rounded-xl border border-input bg-background pr-4 pl-10 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-11 w-full rounded-xl border pr-4 pl-10 text-sm transition-colors outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
                 required
               />
             </div>
           </div>
-          <Button type="submit" size="lg" disabled={loading} className="w-full sm:w-auto">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
             <HeartHandshake className="size-4" aria-hidden="true" />
             {loading ? t('sendingInvite') : t('sendInvite')}
           </Button>
         </form>
       ) : (
-        <div className="rounded-2xl border border-border bg-muted/45 p-4 sm:p-5">
-          <p className="text-xs font-semibold text-muted-foreground">
+        <div className="border-border bg-muted/45 rounded-2xl border p-4 sm:p-5">
+          <p className="text-muted-foreground text-xs font-semibold">
             {t('connectedEmail')}
           </p>
-          <p className="mt-1 break-all text-sm font-bold text-navy">{partnerEmail}</p>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          <p className="text-navy mt-1 text-sm font-bold break-all">
+            {partnerEmail}
+          </p>
+          <p className="text-muted-foreground mt-3 text-sm leading-6">
             {partnerStatus === 'active'
               ? t('activePartnerHelp')
               : t('invitedPartnerHelp')}
           </p>
+          {inviteUrl ? (
+            <div className="border-amber/25 bg-amber/[0.05] mt-4 rounded-xl border p-3">
+              <p className="text-navy text-xs font-semibold">
+                {t('inviteLinkLabel')}
+              </p>
+              <p className="text-muted-foreground mt-1 font-mono text-xs break-all">
+                {inviteUrl}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => {
+                  void navigator.clipboard.writeText(inviteUrl).then(() => {
+                    setInviteCopied(true);
+                    window.setTimeout(() => setInviteCopied(false), 2400);
+                  });
+                }}
+              >
+                {inviteCopied ? (
+                  <Check className="text-sage size-4" aria-hidden="true" />
+                ) : (
+                  <Copy className="size-4" aria-hidden="true" />
+                )}
+                {inviteCopied ? t('inviteLinkCopied') : t('copyInviteLink')}
+              </Button>
+            </div>
+          ) : null}
           <Button
             type="button"
             variant="outline"
             size="lg"
-            className="mt-4 w-full border-crimson/25 text-crimson hover:bg-crimson/[0.04] sm:w-auto"
+            className="border-crimson/25 text-crimson hover:bg-crimson/[0.04] mt-4 w-full sm:w-auto"
             onClick={() => setRevokeOpen(true)}
           >
             <Trash2 className="size-4" aria-hidden="true" />
             {t('revokePartner')}
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            className="mt-4 w-full sm:ml-2 sm:w-auto"
+            onClick={() => setInviteAnotherOpen((open) => !open)}
+          >
+            <Mail className="size-4" aria-hidden="true" />
+            {t('inviteAnother')}
+          </Button>
+          {inviteAnotherOpen ? (
+            <form
+              className="border-border bg-background mt-4 flex flex-col gap-2 rounded-xl border p-3 sm:flex-row"
+              onSubmit={(event) => {
+                event.preventDefault();
+                onInvite(newPartnerEmail);
+                setInviteAnotherOpen(false);
+                setNewPartnerEmail('');
+              }}
+            >
+              <input
+                type="email"
+                value={newPartnerEmail}
+                onChange={(event) => setNewPartnerEmail(event.target.value)}
+                placeholder={t('partnerEmailPlaceholder')}
+                className="border-input bg-background focus-visible:border-navy focus-visible:ring-navy/20 h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+                required
+              />
+              <Button type="submit" disabled={loading}>
+                {loading ? t('sendingInvite') : t('sendInvite')}
+              </Button>
+            </form>
+          ) : null}
         </div>
       )}
 
@@ -148,7 +270,7 @@ export function PartnerSetupCard({
               disabled={loading}
               onClick={() => {
                 void Promise.resolve(onRevokePartner()).then(() =>
-                  setRevokeOpen(false),
+                  setRevokeOpen(false)
                 );
               }}
             >

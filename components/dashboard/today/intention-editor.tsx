@@ -40,7 +40,7 @@ export function IntentionEditor({ value, onSave }: IntentionEditorProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <div className="flex items-start gap-3 border-y border-navy/10 bg-white/70 px-4 py-4 sm:px-5">
+      <div className="flex items-start gap-3 border-y border-navy/20 bg-card/90 px-4 py-4 sm:px-5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy/8 text-navy">
           <Target className="size-5" aria-hidden="true" />
         </span>

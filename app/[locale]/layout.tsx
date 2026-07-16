@@ -62,6 +62,8 @@ export const metadata: Metadata = {
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
+import { LegacyServiceWorkerCleanup } from '@/components/common/legacy-service-worker-cleanup';
+
 export default async function RootLayout({
   children,
   params
@@ -80,6 +82,7 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider messages={messages}>
+          <LegacyServiceWorkerCleanup />
           {children}
         </NextIntlClientProvider>
         <Toaster richColors position="top-right" />

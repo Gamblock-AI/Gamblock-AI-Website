@@ -12,13 +12,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ChevronDown, FileLock2, LogOut, Settings, UserRound } from 'lucide-react';
+import {
+  ChevronDown,
+  FileLock2,
+  LogOut,
+  Settings,
+  UserRound,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { notifyLocalUserChanged, useLocalUser } from '@/hooks/use-local-user';
 import { useRecoverySync } from '@/hooks/use-recovery-sync';
 import { GlobalSearch } from './global-search';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+import { logout } from '@/lib/auth';
 
 const PROFILE_PANEL_ID = 'dashboard-profile-panel';
 
@@ -74,24 +81,31 @@ export function Navbar() {
     setLogoutOpen(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('gamblock_refresh_token');
+    if (refreshToken) {
+      try {
+        await logout(refreshToken);
+      } catch {
+        // Local removal still closes the session if the API is unavailable.
+      }
+    }
     localStorage.removeItem('gamblock_access_token');
     localStorage.removeItem('gamblock_refresh_token');
     localStorage.removeItem('gamblock_user');
     notifyLocalUserChanged();
-    document.cookie =
-      'gamblock_access_token=; path=/; max-age=0; SameSite=Lax';
+    document.cookie = 'gamblock_access_token=; path=/; max-age=0; SameSite=Lax';
     setLogoutOpen(false);
     router.push(ROUTES.LOGIN);
   };
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-[76px] shrink-0 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-md sm:px-6 lg:justify-between">
+      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card/90 px-4 shadow-[0_12px_34px_-30px_rgba(22,41,76,0.7)] backdrop-blur-md sm:px-6 lg:justify-between">
         <div className="flex flex-1 items-center justify-start lg:hidden">
           <Link
             href={ROUTES.DASHBOARD}
-            className="rounded-lg text-base font-extrabold tracking-tight text-navy outline-none focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2"
+            className="text-navy focus-visible:ring-navy/30 rounded-lg text-base font-extrabold tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           >
             Gamblock<span className="text-navy-light">-AI</span>
           </Link>
@@ -101,85 +115,90 @@ export function Navbar() {
           <GlobalSearch />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="lg:hidden">
+            <GlobalSearch variant="icon" />
+          </div>
           <LanguageSwitcher />
           <div className="relative" ref={profileAreaRef}>
             <button
-            ref={profileTriggerRef}
-            type="button"
-            aria-controls={PROFILE_PANEL_ID}
-            aria-expanded={profileOpen}
-            aria-label={t('openProfileMenu')}
-            onClick={() => setProfileOpen((open) => !open)}
-            className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-2 text-sm font-semibold text-navy shadow-soft outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2"
-          >
-            <span className="flex size-8 items-center justify-center rounded-lg bg-azure text-xs font-bold text-navy">
-              {initials ?? <UserRound className="size-4" aria-hidden="true" />}
-            </span>
-            <span className="hidden max-w-36 truncate sm:block">
-              {user?.display_name || t('profileFallback')}
-            </span>
-            <ChevronDown
-              className={`hidden size-4 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none sm:block ${
-                profileOpen ? 'rotate-180' : ''
-              }`}
-              aria-hidden="true"
-            />
-          </button>
-
-          {profileOpen && (
-            <div
-              id={PROFILE_PANEL_ID}
-              className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-card"
+              ref={profileTriggerRef}
+              type="button"
+              aria-controls={PROFILE_PANEL_ID}
+              aria-expanded={profileOpen}
+              aria-label={t('openProfileMenu')}
+              onClick={() => setProfileOpen((open) => !open)}
+              className="flex min-h-11 items-center gap-2 rounded-xl border border-navy/15 bg-card px-1.5 text-sm font-semibold text-navy shadow-soft outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/30 hover:bg-azure/60 focus-visible:ring-2 focus-visible:ring-navy/35 focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none sm:px-2"
             >
-              <div className="border-b border-border px-3 py-3">
-                <p className="truncate text-sm font-bold text-navy">
-                  {user?.display_name || t('profileFallback')}
-                </p>
-                {user?.email && (
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {user.email}
-                  </p>
-                )}
-              </div>
-
-              <div className="py-1">
-                <Link
-                  href={ROUTES.PROFILE}
-                  onClick={() => setProfileOpen(false)}
-                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-navy/30"
-                >
+              <span className="bg-azure text-navy flex size-8 items-center justify-center rounded-lg text-xs font-bold">
+                {initials ?? (
                   <UserRound className="size-4" aria-hidden="true" />
-                  {t('profile')}
-                </Link>
-                <Link
-                  href={ROUTES.SETTINGS}
-                  onClick={() => setProfileOpen(false)}
-                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-navy/30"
-                >
-                  <Settings className="size-4" aria-hidden="true" />
-                  {t('settings')}
-                </Link>
-                <Link
-                  href={ROUTES.DATA_REQUESTS}
-                  onClick={() => setProfileOpen(false)}
-                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-navy/30"
-                >
-                  <FileLock2 className="size-4" aria-hidden="true" />
-                  {t('dataRequests')}
-                </Link>
-                <button
-                  type="button"
-                  onClick={openLogoutConfirmation}
-                  className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-crimson outline-none transition-colors hover:bg-crimson/5 focus-visible:ring-2 focus-visible:ring-crimson/30"
-                >
-                  <LogOut className="size-4" aria-hidden="true" />
-                  {t('logout')}
-                </button>
+                )}
+              </span>
+              <span className="hidden max-w-36 truncate sm:block">
+                {user?.display_name || t('profileFallback')}
+              </span>
+              <ChevronDown
+                className={`text-muted-foreground hidden size-4 transition-transform duration-200 motion-reduce:transition-none sm:block ${
+                  profileOpen ? 'rotate-180' : ''
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {profileOpen && (
+              <div
+                id={PROFILE_PANEL_ID}
+                className="absolute right-0 mt-2 w-64 animate-in overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-card fade-in slide-in-from-top-1 duration-150 motion-reduce:animate-none"
+              >
+                <div className="border-border border-b px-3 py-3">
+                  <p className="text-navy truncate text-sm font-bold">
+                    {user?.display_name || t('profileFallback')}
+                  </p>
+                  {user?.email && (
+                    <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                      {user.email}
+                    </p>
+                  )}
+                </div>
+
+                <div className="py-1">
+                  <Link
+                    href={ROUTES.PROFILE}
+                    onClick={() => setProfileOpen(false)}
+                    className="text-foreground hover:bg-muted focus-visible:ring-navy/30 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+                  >
+                    <UserRound className="size-4" aria-hidden="true" />
+                    {t('profile')}
+                  </Link>
+                  <Link
+                    href={ROUTES.SETTINGS}
+                    onClick={() => setProfileOpen(false)}
+                    className="text-foreground hover:bg-muted focus-visible:ring-navy/30 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+                  >
+                    <Settings className="size-4" aria-hidden="true" />
+                    {t('settings')}
+                  </Link>
+                  <Link
+                    href={ROUTES.DATA_REQUESTS}
+                    onClick={() => setProfileOpen(false)}
+                    className="text-foreground hover:bg-muted focus-visible:ring-navy/30 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+                  >
+                    <FileLock2 className="size-4" aria-hidden="true" />
+                    {t('dataRequests')}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={openLogoutConfirmation}
+                    className="text-crimson hover:bg-crimson/5 focus-visible:ring-crimson/30 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+                  >
+                    <LogOut className="size-4" aria-hidden="true" />
+                    {t('logout')}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -189,18 +208,22 @@ export function Navbar() {
           showCloseButton={false}
         >
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-navy">
+            <DialogTitle className="text-navy text-lg font-bold">
               {t('logoutTitle')}
             </DialogTitle>
             <DialogDescription className="leading-6">
               {t('logoutDescription')}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="-mx-5 -mb-5 mt-1 rounded-b-2xl px-5 py-4">
+          <DialogFooter className="-mx-5 mt-1 -mb-5 rounded-b-2xl px-5 py-4">
             <DialogClose render={<Button variant="outline" size="lg" />}>
               {t('logoutCancel')}
             </DialogClose>
-            <Button variant="destructive" size="lg" onClick={handleLogout}>
+            <Button
+              variant="destructive"
+              size="lg"
+              onClick={() => void handleLogout()}
+            >
               {t('logoutConfirm')}
             </Button>
           </DialogFooter>

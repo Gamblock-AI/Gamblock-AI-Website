@@ -9,6 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useEducationModules } from '@/hooks/use-education';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
+import {
+  DashboardNotice,
+  DashboardPage,
+  DashboardPageHeader,
+} from '@/components/dashboard/dashboard-page';
 
 const moduleIcons = [BookOpen, Brain, Leaf] as const;
 
@@ -23,22 +28,16 @@ export default function EducationPage() {
   const { modules, loading, error, refetch } = useEducationModules();
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-7 pb-8">
-      <header className="grid gap-5 border-b border-border pb-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
-        <div>
-          <p className="text-xs font-bold tracking-[0.12em] text-sage uppercase">{t('eyebrow')}</p>
-          <h1 className="mt-2 max-w-3xl text-3xl leading-tight font-extrabold tracking-tight text-navy sm:text-4xl">
-            {t('title')}
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-            {t('description')}
-          </p>
-        </div>
-        <p className="flex items-start gap-3 rounded-2xl border border-sage/20 bg-sage/[0.055] p-4 text-sm leading-6 text-muted-foreground">
-          <LockKeyhole className="mt-0.5 size-5 shrink-0 text-sage" aria-hidden="true" />
-          {t('privacyNote')}
-        </p>
-      </header>
+    <DashboardPage>
+      <DashboardPageHeader
+        icon={BookOpen}
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
+        aside={
+          <DashboardNotice icon={LockKeyhole} title={t('privacyNote')} />
+        }
+      />
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status">
@@ -87,7 +86,7 @@ export default function EducationPage() {
                   : t('inProgress');
 
             return (
-              <article key={module.id || module.slug} className="group flex h-full flex-col rounded-[1.5rem] border border-border bg-card p-5 shadow-soft transition-colors hover:border-navy/25">
+              <article key={module.id || module.slug} className="group flex h-full flex-col rounded-3xl border border-border bg-card p-5 shadow-soft transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-px hover:border-navy/35 hover:shadow-card motion-reduce:transform-none motion-reduce:transition-none">
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex size-11 items-center justify-center rounded-xl bg-azure text-navy">
                     <Icon className="size-5" aria-hidden="true" />
@@ -116,7 +115,7 @@ export default function EducationPage() {
                   </div>
                   <Link
                     href={`/education/${module.slug}`}
-                    className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-navy/15 text-sm font-semibold text-navy outline-none transition-colors hover:bg-navy/[0.04] focus-visible:ring-2 focus-visible:ring-navy/30"
+                    className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-navy/25 bg-azure/35 text-sm font-semibold text-navy outline-none transition-colors duration-200 hover:bg-azure/80 focus-visible:ring-2 focus-visible:ring-navy/35 motion-reduce:transition-none"
                   >
                     {t('open')}
                     <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
@@ -127,6 +126,6 @@ export default function EducationPage() {
           })}
         </div>
       )}
-    </div>
+    </DashboardPage>
   );
 }

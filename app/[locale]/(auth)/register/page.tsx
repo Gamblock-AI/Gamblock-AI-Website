@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthField } from '@/components/auth/AuthField';
 import { cn } from '@/lib/utils';
+import { reportDevelopmentError } from '@/lib/diagnostics';
 import { useTranslations } from 'next-intl';
 
 import { useForm } from 'react-hook-form';
@@ -19,7 +20,10 @@ import * as z from 'zod';
 const registerSchema = z.object({
   role: z.enum(['user', 'partner']),
   name: z.string().min(3, { message: 'Nama minimal 3 karakter' }),
-  email: z.string().min(1, { message: 'Email wajib diisi' }).email({ message: 'Format email tidak valid' }),
+  email: z
+    .string()
+    .min(1, { message: 'Email wajib diisi' })
+    .email({ message: 'Format email tidak valid' }),
   password: z.string().min(8, { message: 'Password minimal 8 karakter' }),
   terms: z.literal(true, { error: 'Anda harus menyetujui syarat & ketentuan' }),
 });
@@ -57,26 +61,49 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = (await register(data.email, data.password, data.name)) as AuthResponse;
+      const res = (await register(
+        data.email,
+        data.password,
+        data.name
+      )) as AuthResponse;
       if (res?.access_token) {
         localStorage.setItem('gamblock_access_token', res.access_token);
         localStorage.setItem('gamblock_refresh_token', res.refresh_token);
         document.cookie = `gamblock_access_token=${res.access_token}; path=/; max-age=${res.expires_in || 3600}; SameSite=Lax; Secure`;
-        localStorage.setItem('gamblock_user', JSON.stringify({ ...res.user, role: data.role }));
-        router.push(data.role === 'partner' ? ROUTES.CREATE_GROUP : ROUTES.DASHBOARD);
+        localStorage.setItem(
+          'gamblock_user',
+          JSON.stringify({ ...res.user, role: data.role })
+        );
+        router.push(
+          data.role === 'partner' ? ROUTES.CREATE_GROUP : ROUTES.DASHBOARD
+        );
       } else {
-        setError('Format respon pendaftaran tidak valid.');
+        reportDevelopmentError(
+          'Registration returned an invalid response',
+          new Error('Registration response did not include an access token.')
+        );
+        setError(t('registrationError'));
       }
     } catch {
-      setError('Pendaftaran gagal. Email mungkin sudah terdaftar.');
+      setError(t('registrationError'));
     } finally {
       setLoading(false);
     }
   };
 
   const roles = [
-    { value: 'user' as const, icon: User, title: t('roleMember'), sub: t('roleMemberSub') },
-    { value: 'partner' as const, icon: Shield, title: t('rolePartner'), sub: t('rolePartnerSub') },
+    {
+      value: 'user' as const,
+      icon: User,
+      title: t('roleMember'),
+      sub: t('roleMemberSub'),
+    },
+    {
+      value: 'partner' as const,
+      icon: Shield,
+      title: t('rolePartner'),
+      sub: t('rolePartnerSub'),
+    },
   ];
 
   return (
@@ -84,23 +111,28 @@ export default function RegisterPage() {
       heading={t('text_248')}
       subheading={t('text_249')}
       footer={
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-center text-sm">
           {t('text_259')}{' '}
-          <Link href={ROUTES.LOGIN} className="font-semibold text-crimson hover:text-crimson/80">
+          <Link
+            href={ROUTES.LOGIN}
+            className="text-crimson hover:text-crimson/80 font-semibold"
+          >
             {t('text_260')}
           </Link>
         </p>
       }
     >
       {error && (
-        <div className="mb-6 rounded-xl border border-crimson/20 bg-crimson/5 px-4 py-3 text-xs font-semibold text-crimson">
+        <div className="border-crimson/20 bg-crimson/5 text-crimson mb-6 rounded-xl border px-4 py-3 text-xs font-semibold">
           {error}
         </div>
       )}
 
       {/* Role selector */}
       <div className="mb-5 space-y-2">
-        <label className="text-sm font-semibold text-navy">{t('text_250')}</label>
+        <label className="text-navy text-sm font-semibold">
+          {t('text_250')}
+        </label>
         <div className="grid grid-cols-2 gap-3">
           {roles.map(({ value, icon: Icon, title, sub }) => (
             <button
@@ -110,13 +142,13 @@ export default function RegisterPage() {
               className={cn(
                 'flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border p-4 transition-all',
                 role === value
-                  ? 'border-navy bg-navy/5 text-navy ring-2 ring-navy/15'
-                  : 'border-border text-muted-foreground hover:border-navy/30',
+                  ? 'border-navy bg-navy/5 text-navy ring-navy/15 ring-2'
+                  : 'border-border text-muted-foreground hover:border-navy/30'
               )}
             >
               <Icon className="h-6 w-6" />
               <span className="text-xs font-bold">{title}</span>
-              <span className="text-[10px] text-muted-foreground">{sub}</span>
+              <span className="text-muted-foreground text-[10px]">{sub}</span>
             </button>
           ))}
         </div>
@@ -154,17 +186,34 @@ export default function RegisterPage() {
               type="checkbox"
               id="terms"
               {...formRegister('terms')}
-              className="mt-0.5 h-4 w-4 rounded border-input accent-navy"
+              className="border-input accent-navy mt-0.5 h-4 w-4 rounded"
             />
-            <label htmlFor="terms" className="text-xs font-medium leading-relaxed text-muted-foreground">
+            <label
+              htmlFor="terms"
+              className="text-muted-foreground text-xs leading-relaxed font-medium"
+            >
               {t('text_255')}{' '}
-              <Link href={ROUTES.TERMS} className="font-semibold text-navy hover:underline">{t('text_256')}</Link>{' '}
+              <Link
+                href={ROUTES.TERMS}
+                className="text-navy font-semibold hover:underline"
+              >
+                {t('text_256')}
+              </Link>{' '}
               {t('termsAnd')}{' '}
-              <Link href={ROUTES.PRIVACY} className="font-semibold text-navy hover:underline">{t('text_257')}</Link>{' '}
+              <Link
+                href={ROUTES.PRIVACY}
+                className="text-navy font-semibold hover:underline"
+              >
+                {t('text_257')}
+              </Link>{' '}
               {t('text_258')}
             </label>
           </div>
-          {errors.terms && <p className="text-xs font-medium text-crimson">{errors.terms.message}</p>}
+          {errors.terms && (
+            <p className="text-crimson text-xs font-medium">
+              {errors.terms.message}
+            </p>
+          )}
         </div>
 
         <Button
@@ -174,7 +223,11 @@ export default function RegisterPage() {
           className="w-full rounded-xl py-6 font-semibold"
           disabled={loading}
         >
-          {loading ? t('processing') : role === 'partner' ? t('submitPartner') : t('submitMember')}
+          {loading
+            ? t('processing')
+            : role === 'partner'
+              ? t('submitPartner')
+              : t('submitMember')}
           <ArrowRight className="ml-1.5 h-4 w-4" />
         </Button>
       </form>

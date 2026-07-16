@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api-client';
+import { isRecoverySyncEnabled } from './sync-preferences';
 import {
   RECOVERY_STORAGE_VERSION,
   type CreateIntentionInput,
@@ -88,6 +89,13 @@ const SERVER_SNAPSHOT: RecoveryState = createEmptyRecoveryState();
 const listeners = new Set<() => void>();
 
 let persistence: RecoveryPersistence = 'memory';
+
+function reportSyncFailure(category: 'intentions' | 'checkIns') {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent('gamblock:recovery-sync-error', { detail: { category } })
+  );
+}
 let currentState =
   typeof window === 'undefined' ? SERVER_SNAPSHOT : loadInitialClientState();
 let listeningForStorage = false;
@@ -197,11 +205,12 @@ export function createIntention(
     };
   });
 
-  // Background sync
-  apiClient('/intentions', {
-    method: 'POST',
-    body: JSON.stringify({ intention_text: title, status: 'active' })
-  }).catch(() => {});
+  if (isRecoverySyncEnabled('intentions')) {
+    void apiClient('/intentions', {
+      method: 'POST',
+      body: JSON.stringify({ intention_text: title, status: 'active' }),
+    }).catch(() => reportSyncFailure('intentions'));
+  }
 
   return intention;
 }
@@ -263,12 +272,12 @@ export function updateIntention(
     };
   });
 
-  if (updatedIntention) {
+  if (updatedIntention && isRecoverySyncEnabled('intentions')) {
     const intn = updatedIntention as RecoveryIntention;
-    apiClient('/intentions', {
+    void apiClient('/intentions', {
       method: 'POST',
-      body: JSON.stringify({ intention_text: intn.title, status: intn.status })
-    }).catch(() => {});
+      body: JSON.stringify({ intention_text: intn.title, status: intn.status }),
+    }).catch(() => reportSyncFailure('intentions'));
   }
 
   return updatedIntention;
@@ -320,12 +329,12 @@ export function setIntentionStatus(
     };
   });
 
-  if (updatedIntention) {
+  if (updatedIntention && isRecoverySyncEnabled('intentions')) {
     const intn = updatedIntention as RecoveryIntention;
-    apiClient('/intentions', {
+    void apiClient('/intentions', {
       method: 'POST',
-      body: JSON.stringify({ intention_text: intn.title, status: intn.status })
-    }).catch(() => {});
+      body: JSON.stringify({ intention_text: intn.title, status: intn.status }),
+    }).catch(() => reportSyncFailure('intentions'));
   }
 
   return updatedIntention;
@@ -367,16 +376,16 @@ export function recordDailyCheckIn(
     };
   });
 
-  if (savedCheckIn) {
+  if (savedCheckIn && isRecoverySyncEnabled('checkIns')) {
     const chk = savedCheckIn as DailyCheckIn;
-    apiClient('/check-ins', {
+    void apiClient('/check-ins', {
       method: 'POST',
       body: JSON.stringify({
         mood_score: chk.mood,
         urge_score: chk.urge ?? 0,
-        context_text: ''
-      })
-    }).catch(() => {});
+        context_text: '',
+      }),
+    }).catch(() => reportSyncFailure('checkIns'));
   }
 
   return savedCheckIn;
@@ -503,24 +512,29 @@ export function clearRecoveryData(): void {
   emitChange();
 }
 
-export function hydrateFromServer(intentions: RecoveryIntention[], checkIns: DailyCheckIn[]): void {
+export function hydrateFromServer(
+  intentions: RecoveryIntention[],
+  checkIns: DailyCheckIn[]
+): void {
   updateState((state) => {
     // Only hydrate if local state is empty to prevent overwriting un-synced local changes
     // A robust conflict resolution is needed for true multi-device sync, but for prototype,
     // this covers the "cross-device persistence on fresh login" gap.
-    
+
     let nextIntentions = state.intentions;
     let nextHistory = state.intentionHistory;
     if (state.intentions.length === 0 && intentions.length > 0) {
       nextIntentions = intentions;
-      nextHistory = intentions.map((i) => createHistoryEvent(i.id, 'created', i.createdAt));
+      nextHistory = intentions.map((i) =>
+        createHistoryEvent(i.id, 'created', i.createdAt)
+      );
     }
-    
+
     let nextCheckIns = state.checkIns;
     if (state.checkIns.length === 0 && checkIns.length > 0) {
       nextCheckIns = checkIns;
     }
-    
+
     return {
       ...state,
       intentions: nextIntentions,
@@ -860,7 +874,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isDateString(value: unknown): value is string {
   if (typeof value !== 'string' || !DATE_PATTERN.test(value)) return false;
   const parsed = new Date(`${value}T00:00:00`);
-  return !Number.isNaN(parsed.getTime()) && getLocalDateString(parsed) === value;
+  return (
+    !Number.isNaN(parsed.getTime()) && getLocalDateString(parsed) === value
+  );
 }
 
 function isTimestamp(value: unknown): value is string {

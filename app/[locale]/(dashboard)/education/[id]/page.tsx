@@ -30,7 +30,7 @@ export default function EducationDetailPage({
     return (
       <div className="mx-auto w-full max-w-4xl space-y-5" role="status">
         <Skeleton className="h-11 w-44" />
-        <Card className="p-6 sm:p-8">
+        <Card className="rounded-3xl p-6 sm:p-8">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="mt-4 h-10 w-3/4" />
           <Skeleton className="mt-3 h-5 w-1/2" />
@@ -55,7 +55,7 @@ export default function EducationDetailPage({
           <ArrowLeft className="size-4" aria-hidden="true" />
           {t('back')}
         </Link>
-        <Card className="p-6 text-center sm:p-10" role="alert">
+        <Card className="rounded-3xl p-6 text-center sm:p-10" role="alert">
           <BookOpen className="mx-auto size-10 text-muted-foreground" aria-hidden="true" />
           <h1 className="mt-5 text-2xl font-bold text-navy">{t('moduleUnavailableTitle')}</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
@@ -82,14 +82,14 @@ export default function EducationDetailPage({
         {t('back')}
       </Link>
 
-      <Card className="overflow-hidden">
-        <header className="border-b border-border bg-azure/40 px-5 py-6 sm:px-8 sm:py-8">
+      <Card className="overflow-hidden rounded-3xl">
+        <header className="border-b border-border bg-azure/65 px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold text-muted-foreground">
-            <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-sage/20 bg-white px-3 text-sage">
+            <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-sage/35 bg-card px-3 text-sage">
               <CheckCircle2 className="size-3.5" aria-hidden="true" />
               {t('publishedContent')}
             </span>
-            <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border bg-white px-3">
+            <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3">
               <Clock3 className="size-3.5" aria-hidden="true" />
               {t('readTime', { count: module.estimated_minutes })}
             </span>
@@ -97,7 +97,7 @@ export default function EducationDetailPage({
           <p className="mt-5 text-xs font-bold tracking-[0.12em] text-sage uppercase">
             {t('moduleEyebrow')}
           </p>
-          <h1 className="mt-2 text-3xl leading-tight font-extrabold tracking-tight text-navy sm:text-4xl">
+          <h1 className="mt-2 text-[1.75rem] leading-tight font-extrabold tracking-tight text-navy sm:text-[2rem]">
             {module.title}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
@@ -115,7 +115,7 @@ export default function EducationDetailPage({
           )}
         </div>
 
-        <footer className="border-t border-border bg-muted/20 px-5 py-5 sm:px-8">
+        <footer className="border-t border-border bg-muted/55 px-5 py-5 sm:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
               <LockKeyhole className="mt-0.5 size-4 shrink-0 text-sage" aria-hidden="true" />

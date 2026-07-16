@@ -32,7 +32,7 @@ export function DailyMission({
   const t = useTranslations('recoveryDashboard');
 
   return (
-    <section className="border-t border-navy/10 px-4 py-5 sm:px-5" aria-labelledby="daily-mission-title">
+    <section className="border-t border-navy/15 px-4 py-4 sm:px-5" aria-labelledby="daily-mission-title">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 id="daily-mission-title" className="text-base font-bold text-navy">
@@ -56,8 +56,8 @@ export function DailyMission({
       </div>
 
       {loading ? (
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-white p-4" role="status">
-          <Skeleton className="size-11 shrink-0 rounded-full" />
+        <div className="mt-3 flex min-h-[4.5rem] items-center gap-3 rounded-2xl border border-border bg-card p-3" role="status">
+          <Skeleton className="size-8 shrink-0 rounded-full" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-3 w-24" />
@@ -65,7 +65,7 @@ export function DailyMission({
           <span className="sr-only">{t('missionLoading')}</span>
         </div>
       ) : error ? (
-        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-amber/30 bg-amber/[0.06] p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
+        <div className="mt-3 flex min-h-[4.5rem] flex-col gap-3 rounded-2xl border border-amber/40 bg-amber/[0.10] p-3 sm:flex-row sm:items-center sm:justify-between" role="alert">
           <p className="text-sm font-medium text-foreground">{t('missionError')}</p>
           <Button type="button" variant="outline" className="h-11" onClick={onRetry}>
             <RefreshCw className="size-4" aria-hidden="true" />
@@ -73,35 +73,46 @@ export function DailyMission({
           </Button>
         </div>
       ) : (
-        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-border bg-white p-3 sm:flex-row sm:items-center sm:p-4">
+        <div
+          className={cn(
+            'mt-3 flex min-h-[4.5rem] flex-col gap-2 rounded-2xl border p-2.5 transition-[background-color,border-color,box-shadow] duration-200 sm:flex-row sm:items-center motion-reduce:transition-none',
+            completed
+              ? 'border-sage/35 bg-sage/[0.09]'
+              : 'border-border bg-card shadow-soft',
+          )}
+        >
           <button
             type="button"
             aria-pressed={completed}
             disabled={updating}
             onClick={onToggle}
-            className="group flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-navy/30 disabled:cursor-wait disabled:opacity-60"
+            className="group flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl px-1 text-left outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-navy/35 active:scale-[0.99] disabled:cursor-wait disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none"
           >
             <span
               className={cn(
-                'flex size-11 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-[background-color,border-color,transform] duration-200 group-active:scale-95 motion-reduce:transform-none motion-reduce:transition-none',
                 completed
                   ? 'border-sage bg-sage text-white'
-                  : 'border-navy/25 bg-white text-transparent group-hover:border-navy/50',
+                  : 'border-navy/35 bg-card text-transparent group-hover:border-navy/65',
               )}
               aria-hidden="true"
             >
-              <Check className="size-5" />
+              {updating ? (
+                <RefreshCw className="size-4 animate-spin text-navy motion-reduce:animate-none" />
+              ) : (
+                <Check className="size-4" />
+              )}
             </span>
             <span className="min-w-0 flex-1">
               <span
                 className={cn(
-                  'block text-sm leading-6 font-semibold',
+                  'block text-sm leading-5 font-semibold sm:text-[0.9375rem]',
                   completed ? 'text-muted-foreground line-through' : 'text-foreground',
                 )}
               >
                 {label}
               </span>
-              <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="mt-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <Clock3 className="size-3.5" aria-hidden="true" />
                 {t('minutes', { count: minutes })}
               </span>

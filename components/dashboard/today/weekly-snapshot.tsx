@@ -50,28 +50,34 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
       mood: checkIn.mood,
     };
   });
-  const enoughData = points.length >= 3;
-  const needMore = Math.max(0, 3 - points.length);
+  const enoughData = points.length >= 4;
+  const needMore = Math.max(0, 4 - points.length);
 
   return (
     <section
-      className="rounded-[1.5rem] border border-border bg-card p-5 shadow-soft"
+      className="rounded-3xl border border-border bg-card p-5 shadow-soft"
       aria-labelledby="weekly-snapshot-title"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 id="weekly-snapshot-title" className="text-lg font-bold text-navy">
+          <h2
+            id="weekly-snapshot-title"
+            className="text-navy text-lg font-bold"
+          >
             {t('weeklyTitle')}
           </h2>
-          <p className="mt-1 flex items-start gap-2 text-sm leading-6 text-muted-foreground">
-            <LockKeyhole className="mt-1 size-3.5 shrink-0" aria-hidden="true" />
+          <p className="text-muted-foreground mt-1 flex items-start gap-2 text-sm leading-6">
+            <LockKeyhole
+              className="mt-1 size-3.5 shrink-0"
+              aria-hidden="true"
+            />
             {t('weeklyPrivate')}
           </p>
         </div>
         {enoughData ? (
           <Link
             href={ROUTES.PROGRESS}
-            className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl px-3 text-sm font-semibold text-navy outline-none transition-colors hover:bg-navy/[0.05] focus-visible:ring-2 focus-visible:ring-navy/30"
+            className="text-navy hover:bg-navy/[0.05] focus-visible:ring-navy/30 inline-flex min-h-11 items-center gap-2 self-start rounded-xl px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
           >
             {t('weeklyOpen')}
             <ArrowRight className="size-4" aria-hidden="true" />
@@ -80,23 +86,25 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
       </div>
 
       {!enoughData ? (
-        <div className="mt-4 flex flex-col items-start gap-3 rounded-2xl border border-dashed border-navy/20 bg-navy/[0.025] p-4 sm:flex-row sm:items-center">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy/[0.07] text-navy">
-            <BarChart3 className="size-5" aria-hidden="true" />
+        <div className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-dashed border-border bg-muted/35 p-4 sm:flex-row sm:items-center">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-sm">
+            <BarChart3 className="size-[1.125rem]" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-foreground">{t('weeklyInsufficient')}</p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            <p className="text-foreground text-sm font-semibold">
+              {t('weeklyInsufficient')}
+            </p>
+            <p className="text-muted-foreground mt-1 text-sm leading-6">
               {t('weeklyNeedMore', { count: needMore })}
             </p>
           </div>
         </div>
       ) : (
         <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
-          <div className="overflow-x-auto rounded-2xl border border-border bg-muted/20 px-2 py-3">
+          <div className="overflow-x-auto rounded-2xl border border-border bg-muted/55 px-2 py-3">
             <svg
               viewBox="0 0 520 140"
-              className="h-36 min-w-[500px] w-full"
+              className="h-36 w-full min-w-[500px]"
               role="img"
               aria-label={t('weeklyAccessibleSummary')}
             >
@@ -114,7 +122,9 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
                 />
               ))}
               <polyline
-                points={points.map((point) => `${point.x},${point.y}`).join(' ')}
+                points={points
+                  .map((point) => `${point.x},${point.y}`)
+                  .join(' ')}
                 fill="none"
                 stroke="currentColor"
                 className="text-navy"
@@ -143,13 +153,13 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
               ))}
             </svg>
           </div>
-          <div className="rounded-2xl bg-azure/60 p-4">
-            <p className="text-sm leading-6 font-semibold text-navy">
+          <div className="rounded-xl border border-border bg-muted/35 p-4">
+            <p className="text-navy text-sm leading-6 font-semibold">
               {t('weeklyRecorded', { count: points.length })}
             </p>
             <Link
               href={ROUTES.PROGRESS}
-              className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-semibold text-navy outline-none hover:underline focus-visible:ring-2 focus-visible:ring-navy/30"
+              className="text-navy focus-visible:ring-navy/30 mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
             >
               {t('weeklyOpen')}
               <ArrowRight className="size-4" aria-hidden="true" />

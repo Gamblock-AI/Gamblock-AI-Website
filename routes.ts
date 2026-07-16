@@ -16,12 +16,14 @@ export const ROUTES = {
   PROFILE: '/profile',
   CREATE_GROUP: '/onboarding/create-group',
   APPROVE: '/approve',
+  PARTNER_INVITATIONS: '/partner/invitations',
   TERMS: '/terms',
   PRIVACY: '/privacy',
   HELP: '/help',
   CONTACT: '/contact',
   DOWNLOAD: '/download',
   POST_INTERVENTION: '/post-intervention',
+  RESEARCH_SANDBOX: '/research-sandbox',
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -37,6 +39,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.DATA_REQUESTS,
   ROUTES.PROFILE,
   ROUTES.CREATE_GROUP,
+  ROUTES.PARTNER_INVITATIONS,
+  ROUTES.RESEARCH_SANDBOX,
 ] as const;
 
 export const GUEST_ROUTES = [

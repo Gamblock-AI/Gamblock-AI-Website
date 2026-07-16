@@ -14,9 +14,13 @@ export const config = {
   get apiUrl() {
     return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   },
+  /** Public OAuth client identifier used by Google Identity Services. */
+  get googleClientId() {
+    return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+  },
   /**
-   * Whether the app runs in production. Gates user-facing messages: production
-   * shows friendly, non-leaking text; development shows technical detail.
+   * Whether the app runs in production. User-facing messages remain friendly
+   * in every environment; this flag gates development-only console diagnostics.
    * NODE_ENV is set by Next.js at build time; read live so tests can flip it.
    */
   get isProduction() {

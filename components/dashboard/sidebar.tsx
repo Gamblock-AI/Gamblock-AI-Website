@@ -18,8 +18,8 @@ export function Sidebar() {
   const user = useLocalUser();
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-sidebar-border bg-card lg:flex">
-      <div className="flex h-[76px] shrink-0 items-center border-b border-sidebar-border px-5">
+    <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-sidebar-border bg-card/95 shadow-[12px_0_40px_-34px_rgba(22,41,76,0.55)] lg:flex">
+      <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-5">
         <Link
           href={ROUTES.DASHBOARD}
           className="flex min-h-11 items-center gap-3 rounded-xl px-1 outline-none focus-visible:ring-2 focus-visible:ring-navy/30 focus-visible:ring-offset-2"
@@ -27,9 +27,9 @@ export function Sidebar() {
           <Image
             src="/images/gamblock-1.png"
             alt=""
-            width={38}
-            height={38}
-            className="size-[38px] object-contain"
+            width={34}
+            height={34}
+            className="size-[34px] object-contain"
             priority
           />
           <span className="text-base font-extrabold tracking-tight text-navy">
@@ -39,7 +39,7 @@ export function Sidebar() {
       </div>
 
       <nav
-        className="flex-1 space-y-6 overflow-y-auto px-4 py-5"
+        className="flex-1 space-y-5 overflow-y-auto px-3 py-4"
         aria-label={t('dashboard')}
       >
         {dashboardNavigationGroups.map((section) => {
@@ -51,7 +51,7 @@ export function Sidebar() {
 
           return (
             <div key={section.titleKey} className="space-y-1">
-              <p className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
+              <p className="mb-2 px-3 text-[0.6875rem] font-bold tracking-wide text-muted-foreground">
                 {t(section.titleKey)}
               </p>
               {visibleItems.map(({ href, labelKey, icon }) => (

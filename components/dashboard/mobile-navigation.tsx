@@ -63,8 +63,8 @@ export function MobileNavigation() {
               className={cn(
                 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.6875rem] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-navy/30',
                 isActive
-                  ? 'bg-azure/75 text-navy'
-                  : 'text-muted-foreground hover:bg-muted hover:text-navy',
+                  ? 'bg-navy text-white shadow-soft'
+                  : 'text-muted-foreground hover:bg-azure/75 hover:text-navy',
               )}
             >
               <Icon className="size-5" aria-hidden="true" />
@@ -81,8 +81,8 @@ export function MobileNavigation() {
           className={cn(
             'flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.6875rem] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-navy/30',
             moreIsActive || moreOpen
-              ? 'bg-azure/75 text-navy'
-              : 'text-muted-foreground hover:bg-muted hover:text-navy',
+              ? 'bg-navy text-white shadow-soft'
+              : 'text-muted-foreground hover:bg-azure/75 hover:text-navy',
           )}
         >
           <Ellipsis className="size-5" aria-hidden="true" />
@@ -134,8 +134,8 @@ export function MobileNavigation() {
                     className={cn(
                       'flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-navy/30',
                       isActive
-                        ? 'bg-azure/75 text-navy'
-                        : 'text-foreground hover:bg-muted',
+                        ? 'bg-navy text-white shadow-soft'
+                        : 'text-foreground hover:bg-azure/75',
                     )}
                   >
                     <Icon className="size-5" aria-hidden="true" />

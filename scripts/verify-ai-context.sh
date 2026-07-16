@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-context_version="2026-07-15.2"
+context_version="2026-07-16.4"
 allow_untracked=false
 
 usage() {
@@ -72,11 +72,13 @@ required_files=(
   "COPILOT.md"
   "GEMINI.md"
   "README.md"
+  "messages/README.md"
   "docs/ai/README.md"
   "docs/ai/manifest.yaml"
   "package-lock.json"
   "package.json"
   "scripts/verify-ai-context.sh"
+  "scripts/validate-messages.mjs"
 )
 
 required_paths=(
@@ -87,9 +89,14 @@ required_paths=(
   "components/dashboard"
   "components/landing"
   "hooks"
+  "i18n/messages.ts"
   "lib/api-client.ts"
+  "messages/README.md"
+  "messages/en"
+  "messages/id"
   "middleware.ts"
   "routes.ts"
+  "scripts/validate-messages.mjs"
 )
 
 for file in "${required_files[@]}"; do
@@ -156,6 +163,8 @@ stale_paths=(
   "app/(app)/"
   "components/marketing/"
   "components/feedback/PageTransition.tsx"
+  "messages/en.json"
+  "messages/id.json"
 )
 
 for stale_path in "${stale_paths[@]}"; do
@@ -167,6 +176,7 @@ for stale_path in "${stale_paths[@]}"; do
 done
 
 assert_contains ".github/workflows/ci.yml" "npm run verify:ai-context" "CI runs the context verifier"
+assert_contains ".github/workflows/ci.yml" "npm run i18n:check" "CI validates modular message catalogs"
 assert_contains ".github/workflows/ci.yml" "npm run typecheck" "CI uses the package typecheck script"
 assert_contains ".github/workflows/ci.yml" "npm run e2e" "CI uses the package e2e script"
 
@@ -175,6 +185,7 @@ const pkg = require('./package.json');
 
 const expectedScripts = {
   e2e: 'playwright test',
+  'i18n:check': 'node scripts/validate-messages.mjs',
   typecheck: 'tsc --noEmit',
   'verify:ai-context': 'bash scripts/verify-ai-context.sh',
   verify: 'npm run verify:ai-context && npm run lint',

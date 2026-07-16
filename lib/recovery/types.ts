@@ -143,7 +143,8 @@ export interface SaveWeeklyReviewInput {
 }
 
 /**
- * Private recovery state stored only in this browser. It intentionally has no
+ * Private recovery state stored local-first in this browser. Optional sync is
+ * disabled per category by default. The shape intentionally has no
  * URL, domain, browsing-history, device, partner, or free-form check-in field.
  */
 export interface RecoveryState {

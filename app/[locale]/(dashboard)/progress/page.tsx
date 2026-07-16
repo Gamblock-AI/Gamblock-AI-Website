@@ -29,6 +29,11 @@ import type {
   WeeklyReview,
 } from '@/lib/recovery/types';
 import { ROUTES } from '@/routes';
+import {
+  DashboardNotice,
+  DashboardPage,
+  DashboardPageHeader,
+} from '@/components/dashboard/dashboard-page';
 
 import {
   WeeklyPatternChart,
@@ -146,7 +151,7 @@ function RadioOption<T extends string>({
         onChange={() => onSelect(value)}
         className="peer sr-only"
       />
-      <span className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-semibold text-foreground transition-colors peer-checked:border-navy peer-checked:bg-navy/[0.04] peer-focus-visible:ring-2 peer-focus-visible:ring-ring/40 peer-focus-visible:ring-offset-2 hover:border-navy/35">
+      <span className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm font-semibold text-foreground transition-colors peer-checked:border-navy peer-checked:bg-azure/75 peer-focus-visible:ring-2 peer-focus-visible:ring-ring/40 peer-focus-visible:ring-offset-2 hover:border-navy/45 hover:bg-azure/35">
         {Icon ? (
           <Icon
             className={`size-4 shrink-0 ${
@@ -469,29 +474,26 @@ export default function ProgressPage() {
   const chartSummary = summaryParts.join(' ');
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-7 pb-8 sm:space-y-8">
-      <header className="flex flex-col gap-5 border-b border-border pb-7 sm:flex-row sm:items-end sm:justify-between">
-        <div className="max-w-2xl">
-          <p className="text-xs font-bold tracking-[0.14em] text-sage uppercase">
-            {t('eyebrow')}
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">
-            {t('title')}
-          </h1>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
-            {t('description')}
-          </p>
-        </div>
-        <div className="inline-flex min-h-11 w-fit items-center gap-2 rounded-full border border-sage/20 bg-sage/[0.07] px-4 text-sm font-semibold text-sage">
-          <LockKeyhole className="size-4" />
-          {t('privateStatus')}
-        </div>
-      </header>
+    <DashboardPage>
+      <DashboardPageHeader
+        icon={ShieldCheck}
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
+        aside={
+          <DashboardNotice
+            icon={LockKeyhole}
+            title={t('privateStatus')}
+          >
+            {t('basedOnPrivate')}
+          </DashboardNotice>
+        }
+      />
 
       {hasEnoughData ? (
         <>
           <section aria-labelledby="weekly-pattern-title">
-            <Card className="p-5 sm:p-7">
+            <Card className="rounded-3xl p-5 sm:p-7">
               <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h2
@@ -528,7 +530,7 @@ export default function ProgressPage() {
           />
         </>
       ) : (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden rounded-3xl">
           <div className="mx-auto flex max-w-xl flex-col items-center px-5 py-12 text-center sm:px-8 sm:py-16">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-navy/[0.06] text-navy">
               <ShieldCheck className="size-6" />
@@ -558,6 +560,6 @@ export default function ProgressPage() {
         <LockKeyhole className="mt-0.5 size-4 shrink-0 text-sage" />
         <p>{t('privacyFooter')}</p>
       </footer>
-    </div>
+    </DashboardPage>
   );
 }

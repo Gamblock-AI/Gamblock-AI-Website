@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-15.2`
+**Context version:** `2026-07-16.4`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -46,6 +46,14 @@ and must preserve the on-device browsing-data boundary.
 - Dashboard/recovery UI: inspect `app/[locale]/(dashboard)/`,
   `components/dashboard/`, `lib/recovery/`, the relevant recovery hooks, and
   `design-system/gamblock-ai-recovery-dashboard/`.
+- Accountability: invitations are seven-day, email-bound consent links;
+  approval authority comes from an active relationship, not a client-side role
+  label. Quick tokens are secrets and must not enter logs or analytics.
+- Operations: tabs and fetches are role-specific. Content creation is draft
+  only, artifact validation requires a real server-side file/checksum, and
+  emergency keys use two distinct platform administrators.
+- Research sandbox: all fixtures are deterministic and explicitly synthetic;
+  real enrollment/export stays locked until an approved protocol exists.
 - Post-intervention handoff: inspect
   `app/[locale]/(landing)/post-intervention/`, `routes.ts`, and the umbrella
   privacy/architecture contract when available. Never add browsing context to
@@ -54,8 +62,12 @@ and must preserve the on-device browsing-data boundary.
   `components/education/safe-markdown.tsx`; user views must not expose
   draft/archived content or render raw HTML.
 - Landing UI: inspect `app/[locale]/(landing)/` and `components/landing/`.
-- Messages or feedback: inspect `lib/messages.ts`, `lib/feedback.ts`, and the
-  backend/Flutter catalogs when the wider monorepo is available.
+- Messages or feedback: inspect `lib/messages.ts`, `lib/feedback.ts`,
+  `lib/diagnostics.ts`, `i18n/messages.ts`, the relevant domain JSON under
+  `messages/<locale>/`, and the backend/Flutter catalogs when the wider
+  monorepo is available. Locale module names and nested keys must stay aligned;
+  run `npm run i18n:check`. UI copy stays non-technical in development and
+  production; sanitized diagnostics are console-only in development.
 - AI-context maintenance: inspect every file listed in `manifest.yaml` and run
   the verifier before and after editing.
 
@@ -67,8 +79,9 @@ context set, while always retaining the privacy and API-boundary rules from
 
 ```sh
 npm ci
-cp .env.example .env.local
+cp .env.example .env.local # configure API and optional Google public client ID
 npm run verify:ai-context
+npm run i18n:check
 npm run lint
 ```
 

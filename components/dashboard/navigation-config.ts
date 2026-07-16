@@ -7,6 +7,7 @@ import {
   Handshake,
   HeartHandshake,
   LayoutDashboard,
+  Microscope,
   ShieldCheck,
   UsersRound,
 } from 'lucide-react';
@@ -22,7 +23,8 @@ export type DashboardNavKey =
   | 'profile'
   | 'settings'
   | 'dataRequests'
-  | 'admin';
+  | 'admin'
+  | 'researchSandbox';
 
 export interface DashboardNavItem {
   href: string;
@@ -91,10 +93,21 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
     titleKey: 'sectionOperations',
     items: [
       {
+        href: ROUTES.RESEARCH_SANDBOX,
+        labelKey: 'researchSandbox',
+        icon: Microscope,
+        roles: ['research_evaluator', 'platform_admin'],
+      },
+      {
         href: ROUTES.ADMIN,
         labelKey: 'admin',
         icon: ShieldCheck,
-        roles: ['platform_admin'],
+        roles: [
+          'content_admin',
+          'model_release_operator',
+          'support_operator',
+          'platform_admin',
+        ],
       },
     ],
   },
@@ -107,10 +120,7 @@ export const mobilePrimaryNavigation = [
   dashboardNavigationGroups[1].items[3],
 ] as const;
 
-export function canShowNavigationItem(
-  item: DashboardNavItem,
-  role?: string,
-) {
+export function canShowNavigationItem(item: DashboardNavItem, role?: string) {
   return !item.roles || (role ? item.roles.includes(role) : false);
 }
 

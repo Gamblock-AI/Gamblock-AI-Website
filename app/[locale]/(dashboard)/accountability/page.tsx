@@ -17,6 +17,7 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
 import { useAccountability } from '@/hooks/use-accountability';
+import { useLocalUser } from '@/hooks/use-local-user';
 import { ApprovalRequestModal } from './ApprovalRequestModal';
 import { PartnerSetupCard } from './PartnerSetupCard';
 import { PendingRequestNotification } from './PendingRequestNotification';
@@ -24,10 +25,15 @@ import { RequestsHistoryTable } from './RequestsHistoryTable';
 
 export default function AccountabilityPage() {
   const t = useTranslations('accountabilityWorkspace');
+  const user = useLocalUser();
   const {
     partnerEmail,
     setPartnerEmail,
     partnerStatus,
+    partnerLinkId,
+    partnerLinks,
+    relationshipRole,
+    inviteUrl,
     requests,
     isModalOpen,
     setIsModalOpen,
@@ -38,11 +44,14 @@ export default function AccountabilityPage() {
     dataError,
     fetchData,
     handleInvitePartner,
+    selectPartner,
     handleRevokePartner,
     handleRequestApproval,
     handleCancelRequest,
+    handleResolveRequest,
     pendingRequest,
   } = useAccountability();
+  const isPartner = relationshipRole === 'partner';
 
   return (
     <DashboardPage>
@@ -55,7 +64,6 @@ export default function AccountabilityPage() {
           <DashboardNotice
             icon={LockKeyhole}
             title={t('privacyTitle')}
-            tone="sage"
           >
             {t('privacyBody')}
           </DashboardNotice>
@@ -83,75 +91,97 @@ export default function AccountabilityPage() {
         </DashboardNotice>
       ) : null}
 
-      <PendingRequestNotification
-        pendingRequest={pendingRequest}
-        onCancelRequest={handleCancelRequest}
-      />
+      {!isPartner && (
+        <PendingRequestNotification
+          pendingRequest={pendingRequest}
+          onCancelRequest={handleCancelRequest}
+        />
+      )}
 
-      <div className="grid gap-5 xl:grid-cols-12 xl:items-start">
-        <div className="xl:col-span-7">
-          <PartnerSetupCard
-            partnerEmail={partnerEmail}
-            setPartnerEmail={setPartnerEmail}
-            partnerStatus={partnerStatus}
-            loading={loading}
-            dataLoading={dataLoading}
-            onInvite={() => void handleInvitePartner(partnerEmail)}
-            onRevokePartner={handleRevokePartner}
-          />
-        </div>
-
-        <DashboardPanel
-          icon={ShieldCheck}
-          title={t('approvalTitle')}
-          description={t('approvalDescription')}
-          accent={partnerStatus === 'active' ? 'sage' : 'navy'}
-          className="xl:col-span-5"
-          action={
-            <DashboardStatus
-              tone={partnerStatus === 'active' ? 'sage' : 'muted'}
-            >
-              {partnerStatus === 'active'
-                ? t('approvalReady')
-                : t('approvalUnavailable')}
-            </DashboardStatus>
-          }
-        >
-          <div className="space-y-4">
-            <p className="text-sm leading-6 text-muted-foreground">
-              {partnerStatus === 'active'
-                ? t('approvalActiveBody')
-                : t('approvalInactiveBody')}
-            </p>
-            <Button
-              size="lg"
-              className="w-full"
-              disabled={partnerStatus !== 'active' || Boolean(pendingRequest)}
-              onClick={() => setIsModalOpen(true)}
-            >
-              <LockKeyhole className="size-4" aria-hidden="true" />
-              {pendingRequest ? t('requestAlreadyPending') : t('requestDisable')}
-            </Button>
+      {!isPartner && (
+        <div className="grid gap-5 xl:grid-cols-2">
+          <div className="h-full">
+            <PartnerSetupCard
+              partnerEmail={partnerEmail}
+              setPartnerEmail={setPartnerEmail}
+              partnerStatus={partnerStatus}
+              partnerLinkId={partnerLinkId}
+              partnerLinks={partnerLinks}
+              inviteUrl={inviteUrl}
+              loading={loading}
+              dataLoading={dataLoading}
+              onInvite={(email) => void handleInvitePartner(email)}
+              onSelectPartner={selectPartner}
+              onRevokePartner={handleRevokePartner}
+            />
           </div>
-        </DashboardPanel>
-      </div>
+
+          <DashboardPanel
+            icon={ShieldCheck}
+            title={t('approvalTitle')}
+            description={t('approvalDescription')}
+            className="h-full"
+            action={
+              <DashboardStatus
+                tone={partnerStatus === 'active' ? 'sage' : 'muted'}
+              >
+                {partnerStatus === 'active'
+                  ? t('approvalReady')
+                  : t('approvalUnavailable')}
+              </DashboardStatus>
+            }
+          >
+            <div className="space-y-4">
+              <p className="text-muted-foreground text-sm leading-6">
+                {partnerStatus === 'active'
+                  ? t('approvalActiveBody')
+                  : t('approvalInactiveBody')}
+              </p>
+              <Button
+                size="lg"
+                className="w-full"
+                disabled={partnerStatus !== 'active' || Boolean(pendingRequest)}
+                onClick={() => setIsModalOpen(true)}
+              >
+                <LockKeyhole className="size-4" aria-hidden="true" />
+                {pendingRequest
+                  ? t('requestAlreadyPending')
+                  : t('requestDisable')}
+              </Button>
+            </div>
+          </DashboardPanel>
+        </div>
+      )}
+
+      {isPartner && (
+        <DashboardNotice
+          icon={ShieldCheck}
+          title={t('partnerInboxTitle')}
+        >
+          {t('partnerInboxBody')}
+        </DashboardNotice>
+      )}
 
       <RequestsHistoryTable
         requests={requests}
         onCancelRequest={handleCancelRequest}
+        onResolveRequest={handleResolveRequest}
+        viewerRole={isPartner ? 'partner' : user.role}
       />
 
-      <ApprovalRequestModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={(event) => {
-          event.preventDefault();
-          void handleRequestApproval(approvalReason);
-        }}
-        reason={approvalReason}
-        setReason={setApprovalReason}
-        loading={loading}
-      />
+      {!isPartner && (
+        <ApprovalRequestModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleRequestApproval(approvalReason);
+          }}
+          reason={approvalReason}
+          setReason={setApprovalReason}
+          loading={loading}
+        />
+      )}
     </DashboardPage>
   );
 }

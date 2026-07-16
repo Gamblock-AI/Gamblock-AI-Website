@@ -19,7 +19,7 @@ describe('messages catalog', () => {
 
   it('maps known HTTP statuses', () => {
     expect(messageForStatus(401)).toContain('masuk kembali');
-    expect(messageForStatus(500)).toContain('Server sedang sibuk');
+    expect(messageForStatus(500)).toContain('Layanan sedang mengalami kendala');
   });
 
   it('falls back to generic for unknown status', () => {

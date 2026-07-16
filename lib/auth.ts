@@ -13,3 +13,30 @@ export async function register(email: string, password: string, name: string) {
     body: JSON.stringify({ email, password, name }),
   });
 }
+
+export async function loginWithGoogle(idToken: string) {
+  return apiClient('/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ id_token: idToken }),
+  });
+}
+
+export function persistAuthSession(response: {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  user: unknown;
+}) {
+  localStorage.setItem('gamblock_access_token', response.access_token);
+  localStorage.setItem('gamblock_refresh_token', response.refresh_token);
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `gamblock_access_token=${response.access_token}; path=/; max-age=${response.expires_in || 3600}; SameSite=Lax${secure}`;
+  localStorage.setItem('gamblock_user', JSON.stringify(response.user));
+}
+
+export async function logout(refreshToken: string) {
+  return apiClient('/auth/logout', {
+    method: 'POST',
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+}
