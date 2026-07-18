@@ -1,5 +1,10 @@
 import { ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useTranslations } from 'next-intl';
+import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
 
 interface AdminHeaderProps {
   title: string;
@@ -8,6 +13,7 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ title, description, role }: AdminHeaderProps) {
+  const t = useTranslations('dynamicLabels');
   return (
     <header className="border-border bg-card shadow-soft flex flex-col gap-3 rounded-3xl border p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
@@ -25,7 +31,9 @@ export function AdminHeader({ title, description, role }: AdminHeaderProps) {
       </div>
       {role ? (
         <Badge variant="secondary" className="w-fit px-3 py-1.5">
-          {role.replaceAll('_', ' ')}
+          {t(dynamicLabelKey('role', role), {
+            value: dynamicLabelFallback(role),
+          })}
         </Badge>
       ) : null}
     </header>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { hydrateFromServer } from '@/lib/recovery/store';
+import { getLocalDateString, hydrateFromServer } from '@/lib/recovery/store';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { getRecoverySyncPreferences } from '@/lib/recovery/sync-preferences';
 
@@ -45,15 +45,23 @@ export function useRecoverySync() {
     let active = true;
 
     const preferences = getRecoverySyncPreferences();
-    if (!preferences.intentions && !preferences.checkIns) return;
+    if (!preferences.intentions) {
+      apiClient<SyncCheckIn[]>('/check-ins')
+        .then((checkInsRes) => {
+          if (!active) return;
+          hydrateFromServer([], toRecoveryCheckIns(checkInsRes));
+        })
+        .catch(() => null);
+      return () => {
+        active = false;
+      };
+    }
 
     Promise.all([
       preferences.intentions
         ? apiClient<SyncIntention>('/intentions').catch(() => null)
         : Promise.resolve(null),
-      preferences.checkIns
-        ? apiClient<SyncCheckIn[]>('/check-ins').catch(() => null)
-        : Promise.resolve(null),
+      apiClient<SyncCheckIn[]>('/check-ins').catch(() => null),
     ]).then(([intentionRes, checkInsRes]) => {
       if (!active) return;
 
@@ -70,25 +78,7 @@ export function useRecoverySync() {
         });
       }
 
-      const checkIns: DailyCheckIn[] = [];
-      if (checkInsRes && Array.isArray(checkInsRes)) {
-        checkInsRes.forEach((chk) => {
-          // Parse string date to local format if needed. Server gives full ISO time.
-          // Store expects YYYY-MM-DD for date
-          const dateObj = new Date(chk.created_at);
-          const year = dateObj.getFullYear();
-          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const day = String(dateObj.getDate()).padStart(2, '0');
-
-          checkIns.push({
-            id: chk.id,
-            date: `${year}-${month}-${day}`,
-            mood: chk.mood_score as MoodLevel,
-            urge: chk.urge_score as UrgeLevel,
-            recordedAt: chk.created_at,
-          });
-        });
-      }
+      const checkIns = checkInsRes ? toRecoveryCheckIns(checkInsRes) : [];
 
       if (intentions.length > 0 || checkIns.length > 0) {
         hydrateFromServer(intentions, checkIns);
@@ -99,4 +89,17 @@ export function useRecoverySync() {
       active = false;
     };
   }, [syncRevision, user]);
+}
+
+function toRecoveryCheckIns(checkIns: SyncCheckIn[]): DailyCheckIn[] {
+  return checkIns.map((checkIn) => ({
+    id: checkIn.id,
+    date: getLocalDateString(new Date(checkIn.created_at)),
+    mood: checkIn.mood_score as MoodLevel,
+    urge:
+      checkIn.urge_score === 0
+        ? null
+        : (checkIn.urge_score as UrgeLevel),
+    recordedAt: checkIn.created_at,
+  }));
 }

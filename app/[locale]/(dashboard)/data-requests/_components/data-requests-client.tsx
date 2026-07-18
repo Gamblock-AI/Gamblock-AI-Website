@@ -38,11 +38,6 @@ export function DataRequestsClient() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice icon={LockKeyhole} title={t('privacyTitle')}>
-            {t('privacyBody')}
-          </DashboardNotice>
-        }
       />
       <DashboardNotice
         icon={CircleAlert}

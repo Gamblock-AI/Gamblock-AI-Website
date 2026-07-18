@@ -2,7 +2,6 @@ import { apiClient } from '@/lib/api-client';
 import { recoveryLimits } from './constants';
 import { createId, getLocalDateString } from './date';
 import { reportSyncFailure, updateRecoveryState } from './runtime';
-import { isRecoverySyncEnabled } from './sync-preferences';
 import type {
   DailyCheckIn,
   DailyCheckInInput,
@@ -18,53 +17,48 @@ import {
 
 export function recordDailyCheckIn(
   input: DailyCheckInInput
-): DailyCheckIn | null {
-  if (!isMoodLevel(input.mood)) return null;
+): Promise<DailyCheckIn | null> {
+  if (!isMoodLevel(input.mood)) return Promise.resolve(null);
   if (
     input.urge !== undefined &&
     input.urge !== null &&
     !isUrgeLevel(input.urge)
   ) {
-    return null;
+    return Promise.resolve(null);
   }
 
   const date = isDateString(input.date) ? input.date : getLocalDateString();
   const now = new Date().toISOString();
-  let savedCheckIn: DailyCheckIn | null = null;
+  const nextCheckIn: DailyCheckIn = {
+    id: createId('checkin'),
+    date,
+    mood: input.mood,
+    urge: input.urge ?? null,
+    recordedAt: now,
+  };
 
-  updateRecoveryState((state) => {
-    const existing = state.checkIns.find((checkIn) => checkIn.date === date);
-    const nextCheckIn: DailyCheckIn = {
-      id: existing?.id ?? createId('checkin'),
-      date,
-      mood: input.mood,
-      urge: input.urge ?? null,
-      recordedAt: now,
-    };
-    savedCheckIn = nextCheckIn;
-
-    return {
-      ...state,
-      checkIns: [
-        nextCheckIn,
-        ...state.checkIns.filter((checkIn) => checkIn.date !== date),
-      ].slice(0, recoveryLimits.checkIns),
-    };
-  });
-
-  if (savedCheckIn && isRecoverySyncEnabled('checkIns')) {
-    const checkIn = savedCheckIn;
-    void apiClient('/check-ins', {
-      method: 'POST',
-      body: JSON.stringify({
-        mood_score: checkIn.mood,
-        urge_score: checkIn.urge ?? 0,
-        context_text: '',
-      }),
-    }).catch(() => reportSyncFailure('checkIns'));
-  }
-
-  return savedCheckIn;
+  return apiClient('/check-ins', {
+    method: 'POST',
+    body: JSON.stringify({
+      mood_score: nextCheckIn.mood,
+      urge_score: nextCheckIn.urge ?? 0,
+      context_text: '',
+    }),
+  })
+    .then(() => {
+      updateRecoveryState((state) => ({
+        ...state,
+        checkIns: [
+          nextCheckIn,
+          ...state.checkIns.filter((checkIn) => checkIn.date !== date),
+        ].slice(0, recoveryLimits.checkIns),
+      }));
+      return nextCheckIn;
+    })
+    .catch(() => {
+      reportSyncFailure('checkIns');
+      return null;
+    });
 }
 
 export function selectMissionAlternative(

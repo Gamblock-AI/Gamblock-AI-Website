@@ -17,6 +17,10 @@ import type {
 } from '@/hooks/use-admin-operations';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
+import {
   AdminEmptyTable,
   AdminFormField,
   AdminSectionHeader,
@@ -43,6 +47,7 @@ interface ReleaseTabProps {
 
 export function ReleaseTab({ releases, createModelRelease }: ReleaseTabProps) {
   const t = useTranslations('adminPage');
+  const tDynamic = useTranslations('dynamicLabels');
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_RELEASE);
   const [submitting, setSubmitting] = useState(false);
@@ -119,7 +124,11 @@ export function ReleaseTab({ releases, createModelRelease }: ReleaseTabProps) {
               }
             >
               {platforms.map((platform) => (
-                <option key={platform}>{platform}</option>
+                <option key={platform} value={platform}>
+                  {tDynamic(dynamicLabelKey('platform', platform), {
+                    value: dynamicLabelFallback(platform),
+                  })}
+                </option>
               ))}
             </select>
           </AdminFormField>
@@ -216,7 +225,11 @@ export function ReleaseTab({ releases, createModelRelease }: ReleaseTabProps) {
                   <TableCell className="text-navy font-semibold">
                     {release.version}
                   </TableCell>
-                  <TableCell>{release.platform}</TableCell>
+                  <TableCell>
+                    {tDynamic(dynamicLabelKey('platform', release.platform), {
+                      value: dynamicLabelFallback(release.platform),
+                    })}
+                  </TableCell>
                   <TableCell>{release.contract_version || '—'}</TableCell>
                   <TableCell>
                     <AdminStatusBadge status={release.status} />

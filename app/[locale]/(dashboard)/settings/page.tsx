@@ -31,14 +31,6 @@ export default async function SettingsPage() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice
-            icon={LockKeyhole}
-            title={t('boundaryTitle')}
-          >
-            {t('boundaryBody')}
-          </DashboardNotice>
-        }
       />
 
       <DashboardNotice icon={ShieldCheck} title={t('deviceTitle')} tone="navy">

@@ -2,6 +2,64 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import type {
+  EducationSource,
+  EducationThumbnail,
+  RichTextDocument,
+} from '@/hooks/use-education';
+
+export interface AdminEducationCheck {
+  id: string;
+  question: string;
+  choices: Array<{ id: string; text: string }>;
+  correct_choice_id: string;
+  explanation: string;
+  required: boolean;
+}
+
+export interface AdminEducationDocument {
+  category: string;
+  estimated_minutes: number;
+  reviewer_name: string;
+  reviewer_role: string;
+  reviewed_at: string;
+  translations: Record<
+    'id' | 'en',
+    {
+      title: string;
+      summary: string;
+      learning_objective: string;
+      disclaimer: string;
+      reviewer_role: string;
+    }
+  >;
+  sections: Array<{
+    id: string;
+    sort_order: number;
+    required: boolean;
+    translations: Record<
+      'id' | 'en',
+      {
+        title: string;
+        content: RichTextDocument;
+        knowledge_check: AdminEducationCheck;
+      }
+    >;
+  }>;
+  thumbnails: EducationThumbnail[];
+  sources: EducationSource[];
+}
+
+export interface AdminEducationMedia {
+  id: string;
+  kind: 'upload' | 'external';
+  purpose: 'thumbnail' | 'content';
+  media_type: 'image' | 'video' | 'pdf';
+  mime_type: string;
+  external_url?: string;
+  width?: number;
+  height?: number;
+}
 
 export interface AdminSupportCase {
   id: string;
@@ -21,6 +79,10 @@ export interface AdminEducationModule {
   summary: string;
   estimated_minutes: number;
   status: string;
+  draft_document: AdminEducationDocument;
+  published_document?: AdminEducationDocument;
+  draft_revision: number;
+  published_revision: number;
 }
 
 export interface AdminModelRelease {
@@ -55,11 +117,8 @@ export interface AdminCapabilities {
 }
 
 export interface AdminModuleDraft {
-  title: string;
   slug: string;
-  summary: string;
-  body_markdown: string;
-  estimated_minutes: number;
+  document: AdminEducationDocument;
 }
 
 export interface AdminModelReleaseDraft {
@@ -208,13 +267,84 @@ export function useAdminOperations(role?: string) {
 
   const createModule = useCallback(
     async (module: AdminModuleDraft) => {
-      await apiClient('/admin/content/modules', {
-        method: 'POST',
-        body: JSON.stringify(module),
-      });
+      const created = await apiClient<AdminEducationModule>(
+        '/admin/content/modules',
+        {
+          method: 'POST',
+          body: JSON.stringify(module),
+        }
+      );
       await load();
+      return created;
     },
     [load]
+  );
+
+  const getModule = useCallback(
+    (id: string) =>
+      apiClient<AdminEducationModule>(`/admin/content/modules/${id}`),
+    []
+  );
+
+  const saveModule = useCallback(
+    async (
+      module: AdminEducationModule,
+      slug: string,
+      document: AdminEducationDocument
+    ) => {
+      const result = await apiClient<AdminEducationModule>(
+        `/admin/content/modules/${module.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            slug,
+            expected_revision: module.draft_revision,
+            document,
+          }),
+        }
+      );
+      await load();
+      return result;
+    },
+    [load]
+  );
+
+  const transitionModule = useCallback(
+    async (id: string, action: 'submit-review' | 'publish' | 'archive') => {
+      const result = await apiClient<AdminEducationModule>(
+        `/admin/content/modules/${id}/${action}`,
+        { method: 'POST' }
+      );
+      await load();
+      return result;
+    },
+    [load]
+  );
+
+  const uploadEducationMedia = useCallback(
+    async (file: File, purpose: 'thumbnail' | 'content') => {
+      const body = new FormData();
+      body.append('file', file);
+      body.append('purpose', purpose);
+      return apiClient<AdminEducationMedia>('/admin/content/media', {
+        method: 'POST',
+        body,
+      });
+    },
+    []
+  );
+
+  const registerExternalEducationMedia = useCallback(
+    (url: string, mediaType: 'image' | 'video' | 'pdf') =>
+      apiClient<AdminEducationMedia>('/admin/content/media/external', {
+        method: 'POST',
+        body: JSON.stringify({
+          purpose: 'content',
+          media_type: mediaType,
+          url,
+        }),
+      }),
+    []
   );
 
   const createModelRelease = useCallback(
@@ -244,6 +374,11 @@ export function useAdminOperations(role?: string) {
     reviewEmergencyKey,
     approveEmergencyKey,
     createModule,
+    getModule,
+    saveModule,
+    transitionModule,
+    uploadEducationMedia,
+    registerExternalEducationMedia,
     createModelRelease,
   };
 }

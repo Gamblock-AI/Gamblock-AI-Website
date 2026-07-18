@@ -22,11 +22,6 @@ export function SupportWorkspaceClient() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice icon={LockKeyhole} title={t('privacyTitle')}>
-            {t('privacyBody')}
-          </DashboardNotice>
-        }
       />
       <div className="grid gap-5 xl:grid-cols-12 xl:items-start">
         <SupportRequestForm

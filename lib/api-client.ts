@@ -91,12 +91,12 @@ async function performApiRequest<T>(
     typeof window !== 'undefined'
       ? localStorage.getItem('gamblock_access_token')
       : null;
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...options?.headers,
-  };
+  const headers = new Headers(options?.headers);
+  if (!(options?.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
   if (token) {
-    (headers as Record<string, string>).Authorization = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
   const cleanPath =
     path.startsWith('/v1/') || path === '/healthz' || path === '/readyz'
@@ -120,7 +120,10 @@ async function performApiRequest<T>(
     const newToken = await refreshAccessToken();
     const retriedResponse = await fetch(`${API_URL}${cleanPath}`, {
       ...options,
-      headers: { ...headers, Authorization: `Bearer ${newToken}` },
+      headers: new Headers([
+        ...headers.entries(),
+        ['Authorization', `Bearer ${newToken}`],
+      ]),
       credentials: 'include',
     });
     return await unwrapResponse<T>(retriedResponse);

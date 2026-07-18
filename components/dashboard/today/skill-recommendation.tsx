@@ -26,7 +26,7 @@ export function SkillRecommendation({
 
   return (
     <section
-      className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft"
+      className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
       aria-labelledby="skill-recommendation-title"
     >
       <div className="flex items-start justify-between gap-4 px-5 pt-5">
@@ -53,7 +53,7 @@ export function SkillRecommendation({
         </div>
       </div>
 
-      <div className="mx-5 mt-4 rounded-xl border border-border bg-muted/35 p-4">
+      <div className="mx-5 mt-4 border-t border-border pt-4">
         <div className="flex items-center gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-sm">
             <Leaf className="size-[1.125rem]" aria-hidden="true" />
@@ -64,7 +64,7 @@ export function SkillRecommendation({
       </div>
 
       {practising ? (
-        <div className="mx-5 mt-4 rounded-xl border border-border bg-muted/35 p-4" role="region" aria-live="polite">
+        <div className="mx-5 mt-4 border-t border-border pt-4" role="region" aria-live="polite">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-navy" aria-hidden="true" />
             <p className="text-sm leading-7 text-foreground">{practice}</p>

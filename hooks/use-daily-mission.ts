@@ -6,9 +6,26 @@ import { apiClient } from '@/lib/api-client';
 import {
   DAILY_MISSION_CATALOG,
   type MissionCatalogItem,
-  type MissionId,
 } from '@/lib/recovery/mission-catalog';
 import type { MissionNumber } from '@/lib/recovery/types';
+
+export interface DailyMissionTask {
+  number: MissionNumber;
+  key: string;
+  role: 'primary' | 'bonus';
+  completed: boolean;
+  claimable: boolean;
+  status: 'locked' | 'claimable' | 'claimed';
+  verification_key: string;
+  exp_reward: number;
+}
+
+export interface ExperienceProgress {
+  total_exp: number;
+  level: number;
+  level_progress: number;
+  level_target: number;
+}
 
 export interface DailyMission {
   id: string;
@@ -19,12 +36,21 @@ export interface DailyMission {
   mission_3: boolean;
   mission_4: boolean;
   mission_5: boolean;
+  tasks: DailyMissionTask[];
+  experience: ExperienceProgress;
+  completed_count: number;
+  total_count: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface DailyMissionItem extends MissionCatalogItem {
+  role: DailyMissionTask['role'];
   completed: boolean;
+  claimable: boolean;
+  status: DailyMissionTask['status'];
+  verificationKey: string;
+  expReward: number;
 }
 
 export interface UseDailyMissionResult {
@@ -34,19 +60,8 @@ export interface UseDailyMissionResult {
   error: Error | null;
   updatingMissionNumber: MissionNumber | null;
   refetch: () => Promise<void>;
-  setMissionCompleted: (
-    missionNumber: MissionNumber,
-    completed: boolean
-  ) => Promise<boolean>;
+  claimMission: (missionNumber: MissionNumber) => Promise<boolean>;
 }
-
-const MISSION_FIELD_BY_NUMBER: Record<MissionNumber, MissionId> = {
-  1: 'mission_1',
-  2: 'mission_2',
-  3: 'mission_3',
-  4: 'mission_4',
-  5: 'mission_5',
-};
 
 function requestTodayMission(): Promise<DailyMission> {
   return apiClient<DailyMission>('/missions/today');
@@ -72,10 +87,7 @@ export function useDailyMission(): UseDailyMissionResult {
 
     void requestTodayMission().then(
       (data) => {
-        if (
-          !mountedRef.current ||
-          requestSequence !== loadSequenceRef.current
-        ) {
+        if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
           return;
         }
         setMission(data);
@@ -83,10 +95,7 @@ export function useDailyMission(): UseDailyMissionResult {
         setLoading(false);
       },
       (requestError: unknown) => {
-        if (
-          !mountedRef.current ||
-          requestSequence !== loadSequenceRef.current
-        ) {
+        if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
           return;
         }
         setError(toError(requestError));
@@ -109,50 +118,38 @@ export function useDailyMission(): UseDailyMissionResult {
 
     try {
       const data = await requestTodayMission();
-      if (
-        !mountedRef.current ||
-        requestSequence !== loadSequenceRef.current
-      ) {
+      if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
         return;
       }
       setMission(data);
     } catch (requestError) {
-      if (
-        !mountedRef.current ||
-        requestSequence !== loadSequenceRef.current
-      ) {
+      if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
         return;
       }
       setError(toError(requestError));
     } finally {
-      if (
-        mountedRef.current &&
-        requestSequence === loadSequenceRef.current
-      ) {
+      if (mountedRef.current && requestSequence === loadSequenceRef.current) {
         setLoading(false);
       }
     }
   }, []);
 
-  const setMissionCompleted = useCallback(
-    async (missionNumber: MissionNumber, completed: boolean) => {
+  const claimMission = useCallback(
+    async (missionNumber: MissionNumber) => {
       if (mutationInFlightRef.current || loading || !mission) return false;
 
       mutationInFlightRef.current = true;
       loadSequenceRef.current += 1;
       const previousMission = mission;
-      const field = MISSION_FIELD_BY_NUMBER[missionNumber];
 
       setUpdatingMissionNumber(missionNumber);
       setError(null);
-      setMission({ ...mission, [field]: completed });
 
       try {
-        const updatedMission = await apiClient<DailyMission>('/missions', {
-          method: 'PATCH',
+        const updatedMission = await apiClient<DailyMission>('/missions/claim', {
+          method: 'POST',
           body: JSON.stringify({
             mission_number: missionNumber,
-            completed,
           }),
         });
         if (mountedRef.current) setMission(updatedMission);
@@ -171,10 +168,23 @@ export function useDailyMission(): UseDailyMissionResult {
     [loading, mission]
   );
 
-  const items = DAILY_MISSION_CATALOG.map((catalogItem) => ({
-    ...catalogItem,
-    completed: mission?.[catalogItem.id] ?? false,
-  }));
+  const items = (mission?.tasks ?? []).flatMap((task) => {
+    const catalogItem = DAILY_MISSION_CATALOG.find(
+      (item) => item.number === task.number
+    );
+    if (!catalogItem) return [];
+    return [
+      {
+        ...catalogItem,
+        role: task.role,
+        completed: task.completed,
+        claimable: task.claimable,
+        status: task.status,
+        verificationKey: task.verification_key,
+        expReward: task.exp_reward,
+      },
+    ];
+  });
 
   return {
     mission,
@@ -183,6 +193,6 @@ export function useDailyMission(): UseDailyMissionResult {
     error,
     updatingMissionNumber,
     refetch,
-    setMissionCompleted,
+    claimMission,
   };
 }

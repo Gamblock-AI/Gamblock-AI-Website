@@ -70,14 +70,6 @@ export default function ResearchSandboxPage() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice
-            icon={LockKeyhole}
-            title={t('inviteTitle')}
-          >
-            {t('inviteBody')}
-          </DashboardNotice>
-        }
       />
 
       <DashboardNotice

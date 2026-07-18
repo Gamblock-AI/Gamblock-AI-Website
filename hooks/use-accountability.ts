@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 export interface PartnerLink {
   id: string;
@@ -14,9 +15,7 @@ export interface ApprovalRequest {
   device_id: string;
   partner_link_id: string;
   action: string;
-  action_label: string;
   status: string;
-  status_label: string;
   reason: string;
   requested_duration_minutes: number;
   created_at: string;
@@ -58,6 +57,7 @@ function resolvePartnerState(data: {
 }
 
 export function useAccountability() {
+  const t = useTranslations('accountabilityWorkspace');
   const [partnerEmail, setPartnerEmail] = useState('');
   const [partnerStatus, setPartnerStatus] = useState<
     'none' | 'invited' | 'active'
@@ -144,22 +144,20 @@ export function useAccountability() {
           method: 'POST',
           body: JSON.stringify({ email }),
         });
-        toast.success(
-          `Undangan untuk ${email} berhasil dibuat. Bagikan tautan persetujuannya secara aman.`
-        );
+        toast.success(t('inviteSuccess', { email }));
         setPartnerStatus('invited');
         setPartnerLinkId(inviteRes.id);
         setInviteUrl(inviteRes.invite_url);
         fetchData();
         return inviteRes;
       } catch (err) {
-        toast.error('Gagal mengirim undangan pendamping.');
+        toast.error(t('inviteError'));
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [fetchData]
+    [fetchData, t]
   );
 
   const selectPartner = useCallback(
@@ -186,7 +184,7 @@ export function useAccountability() {
       await apiClient(`/partners/${partnerLinkId}/revoke`, {
         method: 'POST',
       });
-      toast.success('Hubungan pendamping berhasil diputuskan.');
+      toast.success(t('revokeSuccess'));
       setPartnerEmail('');
       setPartnerStatus('none');
       setPartnerLinkId(null);
@@ -194,10 +192,10 @@ export function useAccountability() {
       setInviteUrl(null);
       await fetchData();
     } catch (err) {
-      toast.error('Gagal memutuskan hubungan pendamping.');
+      toast.error(t('revokeError'));
       throw err;
     }
-  }, [partnerLinkId, fetchData]);
+  }, [partnerLinkId, fetchData, t]);
 
   const handleCancelRequest = useCallback(
     async (id: string) => {
@@ -205,14 +203,14 @@ export function useAccountability() {
         await apiClient(`/approval-requests/${id}/cancel`, {
           method: 'POST',
         });
-        toast.success('Permohonan berhasil dibatalkan.');
+        toast.success(t('requestCancelSuccess'));
         await fetchData();
       } catch (err) {
-        toast.error('Gagal membatalkan permohonan.');
+        toast.error(t('requestCancelError'));
         throw err;
       }
     },
-    [fetchData]
+    [fetchData, t]
   );
 
   const handleResolveRequest = useCallback(
@@ -224,21 +222,23 @@ export function useAccountability() {
         });
         toast.success(
           decision === 'approve'
-            ? 'Permohonan berhasil disetujui.'
-            : 'Permohonan berhasil ditolak.'
+            ? t('requestApproveSuccess')
+            : t('requestDenySuccess')
         );
         await fetchData();
       } catch (err) {
-        toast.error('Keputusan belum dapat disimpan.');
+        toast.error(t('requestDecisionError'));
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [fetchData]
+    [fetchData, t]
   );
 
-  const pendingRequest = requests.find((request) => request.status === 'pending');
+  const pendingRequest = requests.find(
+    (request) => request.status === 'pending'
+  );
 
   return {
     partnerEmail,

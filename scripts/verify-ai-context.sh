@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-context_version="2026-07-16.5"
+context_version="2026-07-18.3"
 allow_untracked=false
 
 usage() {
@@ -94,7 +94,7 @@ required_paths=(
   "messages/README.md"
   "messages/en"
   "messages/id"
-  "middleware.ts"
+  "proxy.ts"
   "routes.ts"
   "scripts/validate-messages.mjs"
 )

@@ -68,7 +68,104 @@
     "logoutTitle": "Log out of your account?",
     "logoutDescription": "You will need to sign in again to access the dashboard.",
     "logoutConfirm": "Yes, log out",
-    "logoutCancel": "Cancel"
+    "logoutCancel": "Cancel",
+    "gamiSupportTitle": "Gami is here for you",
+    "gamiSupportBody": "Find support when the next step feels difficult.",
+    "gamiSupportAction": "Open support"
+  },
+  "dynamicLabels": {
+    "approvalAction": {
+      "pause_protection": "Pause protection for {minutes} minutes",
+      "disable_protection": "Disable protection",
+      "remove_partner": "Remove accountability partner",
+      "uninstall_detected": "Protection permission recovery",
+      "reset_settings": "Reset protection settings",
+      "emergency_access": "Emergency recovery access",
+      "unknown": "Other action ({value})"
+    },
+    "supportStatus": {
+      "open": "Open",
+      "waiting_user": "Waiting for user",
+      "waiting_internal": "With support team",
+      "resolved": "Resolved",
+      "closed": "Closed",
+      "unknown": "Other status ({value})"
+    },
+    "supportType": {
+      "technical_support": "Technical support",
+      "account_recovery": "Account recovery",
+      "partner_abuse": "Accountability safety",
+      "stuck_approval": "Approval issue",
+      "device_recovery": "Device recovery",
+      "notification_failure": "Notification issue",
+      "organization_dispute": "Organization issue",
+      "accountability_guidance": "Accountability guidance",
+      "privacy_request": "Privacy request",
+      "unknown": "Other category ({value})"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent",
+      "unknown": "Other priority ({value})"
+    },
+    "role": {
+      "user": "Student",
+      "partner": "Accountability partner",
+      "content_admin": "Content administrator",
+      "platform_admin": "Platform administrator",
+      "model_release_operator": "Model release operator",
+      "support_operator": "Support operator",
+      "research_evaluator": "Research evaluator",
+      "organization_owner": "Organization owner",
+      "organization_admin": "Organization administrator",
+      "unknown": "Other role ({value})"
+    },
+    "status": {
+      "draft": "Draft",
+      "in_review": "In review",
+      "published": "Published",
+      "archived": "Archived",
+      "validated": "Validated",
+      "staged": "Staged",
+      "active": "Active",
+      "paused": "Paused",
+      "rolled_back": "Rolled back",
+      "completed": "Completed",
+      "open": "Open",
+      "waiting_user": "Waiting for user",
+      "waiting_internal": "With support team",
+      "resolved": "Resolved",
+      "closed": "Closed",
+      "pending": "Pending",
+      "reviewed": "Reviewed",
+      "approved": "Approved",
+      "used": "Used",
+      "expired": "Expired",
+      "queued": "Queued",
+      "sent": "Sent",
+      "failed": "Failed",
+      "unknown": "Other status ({value})"
+    },
+    "platform": {
+      "android": "Android",
+      "windows": "Windows",
+      "linux": "Linux",
+      "macos": "macOS",
+      "web": "Web",
+      "all": "All platforms",
+      "unknown": "Other platform ({value})"
+    },
+    "educationCategory": {
+      "impulse-awareness": "Urge awareness",
+      "digital-literacy": "Digital literacy",
+      "coping-skill": "Coping skill",
+      "financial-literacy": "Financial literacy",
+      "environment-change": "Environment change",
+      "help-seeking": "Seeking support",
+      "unknown": "Other topic ({value})"
+    }
   },
   "NotFound": {
     "message": "The page you are looking for was not found.",

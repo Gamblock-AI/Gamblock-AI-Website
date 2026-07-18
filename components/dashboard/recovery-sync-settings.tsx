@@ -13,18 +13,13 @@ import { cn } from '@/lib/utils';
 
 const options: Array<{
   category: RecoverySyncCategory;
-  labelKey: 'syncIntentions' | 'syncCheckIns';
-  bodyKey: 'syncIntentionsBody' | 'syncCheckInsBody';
+  labelKey: 'syncIntentions';
+  bodyKey: 'syncIntentionsBody';
 }> = [
   {
     category: 'intentions',
     labelKey: 'syncIntentions',
     bodyKey: 'syncIntentionsBody',
-  },
-  {
-    category: 'checkIns',
-    labelKey: 'syncCheckIns',
-    bodyKey: 'syncCheckInsBody',
   },
 ];
 
@@ -32,7 +27,6 @@ export function RecoverySyncSettings() {
   const t = useTranslations('settingsWorkspace');
   const [preferences, setPreferences] = useState<RecoverySyncPreferences>({
     intentions: false,
-    checkIns: false,
   });
 
   useEffect(() => {

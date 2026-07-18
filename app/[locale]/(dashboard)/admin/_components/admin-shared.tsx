@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useTranslations } from 'next-intl';
+import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
 
 export const adminFieldClassName =
   'min-h-11 w-full rounded-xl border border-input bg-card px-3 text-base outline-none transition-[border-color,box-shadow] duration-200 focus:border-navy/40 focus:ring-2 focus:ring-navy/30 motion-reduce:transition-none sm:text-sm';
@@ -72,10 +77,13 @@ export function AdminEmptyTable({
 }
 
 export function AdminStatusBadge({ status }: { status: string }) {
+  const t = useTranslations('dynamicLabels');
   const active = status === 'published' || status === 'resolved';
   return (
     <Badge variant={active ? 'default' : 'secondary'}>
-      {status.replaceAll('_', ' ')}
+      {t(dynamicLabelKey('status', status), {
+        value: dynamicLabelFallback(status),
+      })}
     </Badge>
   );
 }

@@ -69,6 +69,13 @@ export function AdminTabs({ role, userId, operations }: AdminTabsProps) {
               <ContentTab
                 modules={operations.modules}
                 createModule={operations.createModule}
+                getModule={operations.getModule}
+                saveModule={operations.saveModule}
+                transitionModule={operations.transitionModule}
+                uploadEducationMedia={operations.uploadEducationMedia}
+                registerExternalEducationMedia={
+                  operations.registerExternalEducationMedia
+                }
               />
             </TabsContent>
           ) : null}

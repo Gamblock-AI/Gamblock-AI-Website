@@ -62,11 +62,6 @@ export function ProgressClient() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice icon={LockKeyhole} title={t('privateStatus')}>
-            {t('basedOnPrivate')}
-          </DashboardNotice>
-        }
       />
       {hasEnoughData ? (
         <>

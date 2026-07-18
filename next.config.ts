@@ -39,22 +39,36 @@ if (!isProd) scriptSources.add("'unsafe-eval'");
 const googleIdentityEnabled = Boolean(config.googleClientId.trim());
 if (googleIdentityEnabled) scriptSources.add('https://accounts.google.com');
 
-const csp = [
-  "default-src 'self'",
-  `script-src ${Array.from(scriptSources).join(' ')}`,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
-  "font-src 'self' data:",
-  `connect-src ${Array.from(connectSources).join(' ')}`,
-  googleIdentityEnabled
-    ? "frame-src 'self' https://accounts.google.com"
-    : "frame-src 'self'",
-  "worker-src 'self' blob:",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-].join('; ') + ';';
+const frameSources = new Set(["'self'"]);
+if (configuredApiOrigin) frameSources.add(configuredApiOrigin);
+for (const value of config.educationEmbedOrigins.split(/[\s,]+/)) {
+  const origin = getHttpOrigin(value);
+  if (origin?.startsWith('https://')) frameSources.add(origin);
+}
+if (googleIdentityEnabled) frameSources.add('https://accounts.google.com');
+
+const mediaSources = new Set(["'self'", 'https:', 'blob:']);
+if (configuredApiOrigin) mediaSources.add(configuredApiOrigin);
+
+const imageSources = new Set(["'self'", 'data:', 'https:', 'blob:']);
+if (configuredApiOrigin) imageSources.add(configuredApiOrigin);
+
+const csp =
+  [
+    "default-src 'self'",
+    `script-src ${Array.from(scriptSources).join(' ')}`,
+    "style-src 'self' 'unsafe-inline'",
+    `img-src ${Array.from(imageSources).join(' ')}`,
+    "font-src 'self' data:",
+    `connect-src ${Array.from(connectSources).join(' ')}`,
+    `frame-src ${Array.from(frameSources).join(' ')}`,
+    `media-src ${Array.from(mediaSources).join(' ')}`,
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; ') + ';';
 
 const nextConfig: NextConfig = {
   output: 'standalone',

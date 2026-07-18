@@ -79,6 +79,12 @@ export const MESSAGES: Record<string, string> = {
   reflection_create_failed: 'Gagal menyimpan jurnal refleksi.',
   fetch_modules_failed: 'Gagal memuat modul psikoedukasi.',
   module_not_found: 'Modul tidak ditemukan.',
+  education_conflict:
+    'Draf berubah di sesi lain. Muat ulang sebelum melanjutkan.',
+  education_validation_failed:
+    'Modul belum lengkap. Periksa kembali konten dan metadata.',
+  education_media_invalid: 'Format, ukuran, atau sumber media tidak didukung.',
+  education_media_not_found: 'Media pembelajaran tidak ditemukan.',
   text_required: 'Teks refleksi wajib diisi.',
 
   // quick approval
@@ -109,8 +115,7 @@ export const MESSAGES: Record<string, string> = {
   portal_overview_failed: 'Gagal memuat ringkasan operasional.',
   generate_key_failed: 'Gagal membuat kunci darurat.',
   emergency_request_failed: 'Gagal meminta pemulihan darurat.',
-  emergency_request_not_found:
-    'Permintaan pemulihan darurat tidak ditemukan.',
+  emergency_request_not_found: 'Permintaan pemulihan darurat tidak ditemukan.',
   emergency_review_failed: 'Peninjauan pemulihan darurat gagal.',
   emergency_key_required: 'Kunci darurat wajib diisi.',
   invalid_key: 'Kunci darurat tidak valid.',

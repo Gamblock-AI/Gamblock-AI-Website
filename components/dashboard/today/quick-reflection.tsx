@@ -25,7 +25,7 @@ export function QuickReflection() {
   };
 
   return (
-    <section className="border-t border-navy/15 bg-card/80 px-5 py-4 sm:px-6">
+    <section className="h-full bg-card/80 px-5 py-4">
       <div className="flex items-center gap-2">
         <PenTool className="size-4 text-navy" />
         <h3 id="quick-journal-title" className="text-sm font-bold text-navy">{t('quickJournalTitle')}</h3>

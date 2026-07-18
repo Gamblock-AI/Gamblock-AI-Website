@@ -8,9 +8,11 @@ import { ApprovalErrorState } from './ApprovalErrorState';
 import { ApprovalResolvedState } from './ApprovalResolvedState';
 import { ApprovalProcessedState } from './ApprovalProcessedState';
 import { ApprovalRequestForm } from './ApprovalRequestForm';
+import { useTranslations } from 'next-intl';
 
 export default function ApprovePage() {
   const params = useParams();
+  const t = useTranslations('approvalFlow');
   const token = params?.token as string;
   const { details, loading, error } = useApprovalVerification(token);
   const [resolved, setResolved] = useState<'approved' | 'denied' | null>(null);
@@ -22,7 +24,7 @@ export default function ApprovePage() {
   if (error || !details) {
     return (
       <ApprovalErrorState
-        message={error ?? 'Tautan persetujuan tidak dapat digunakan.'}
+        message={error ? t(`errors.${error}`) : t('errors.unavailable')}
       />
     );
   }

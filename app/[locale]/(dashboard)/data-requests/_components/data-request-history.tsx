@@ -104,9 +104,12 @@ function DataRequestHistoryContent({
           parsedDate && !Number.isNaN(parsedDate.getTime())
             ? dateFormatter.format(parsedDate)
             : t('dateUnavailable');
-        const type = request.type.toLowerCase().includes('delete')
-          ? t('typeDelete')
-          : t('typeExport');
+        const type =
+          request.type === 'delete'
+            ? t('typeDelete')
+            : request.type === 'retention_review'
+              ? t('typeRetentionReview')
+              : t('typeExport');
 
         return (
           <article

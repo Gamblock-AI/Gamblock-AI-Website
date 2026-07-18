@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-07-16.5`
+**Context version:** `2026-07-18.3`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading
@@ -78,7 +78,7 @@ error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
   envelope `{ data, error, request_id }`, auto-refreshes on 401, and fans out
   the new token to in-flight requests. Do not bypass it with raw `fetch` for
   authenticated calls.
-- Route protection is in `middleware.ts`, keyed on the `gamblock_access_token`
+- Route protection is in `proxy.ts`, keyed on the `gamblock_access_token`
   cookie (set by the client on login/refresh). Keep `routes.ts` as the source of
   truth for `PROTECTED_ROUTES` / `GUEST_ROUTES`.
 - Quick approval (`/approve/[token]`) is a supporting flow that is
@@ -156,8 +156,9 @@ browsing context and is not the real-time Pattern Interrupt/blocking surface.
 - Partner invitation routes are protected and retain a validated relative
   `next` path through login. Approval authority comes from an active backend
   relationship, not from hiding/showing a navigation item.
-- Recovery sync is local-first and independently opt-in for intention and
-  structured check-in categories. Never silently enable or broaden it.
+- Intentions remain local-first and opt-in for account sync. Structured
+  check-ins are committed to the account after the user explicitly submits the
+  daily form; never broaden what the check-in payload contains.
 
 ## E2E
 

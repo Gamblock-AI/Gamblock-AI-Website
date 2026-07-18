@@ -1,14 +1,12 @@
-export type RecoverySyncCategory = 'intentions' | 'checkIns';
+export type RecoverySyncCategory = 'intentions';
 
 export interface RecoverySyncPreferences {
   intentions: boolean;
-  checkIns: boolean;
 }
 
 const STORAGE_KEY = 'gamblock:recovery-sync:v1';
 const DEFAULT_PREFERENCES: RecoverySyncPreferences = {
   intentions: false,
-  checkIns: false,
 };
 
 export function getRecoverySyncPreferences(): RecoverySyncPreferences {
@@ -19,7 +17,6 @@ export function getRecoverySyncPreferences(): RecoverySyncPreferences {
     const parsed = JSON.parse(raw) as Partial<RecoverySyncPreferences>;
     return {
       intentions: parsed.intentions === true,
-      checkIns: parsed.checkIns === true,
     };
   } catch {
     return DEFAULT_PREFERENCES;

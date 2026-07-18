@@ -68,7 +68,104 @@
     "logoutTitle": "Keluar dari akun?",
     "logoutDescription": "Anda perlu masuk kembali untuk mengakses dashboard.",
     "logoutConfirm": "Ya, keluar",
-    "logoutCancel": "Batal"
+    "logoutCancel": "Batal",
+    "gamiSupportTitle": "Gami siap mendukungmu",
+    "gamiSupportBody": "Temukan bantuan saat langkah berikutnya terasa sulit.",
+    "gamiSupportAction": "Buka bantuan"
+  },
+  "dynamicLabels": {
+    "approvalAction": {
+      "pause_protection": "Jeda perlindungan selama {minutes} menit",
+      "disable_protection": "Nonaktifkan perlindungan",
+      "remove_partner": "Lepaskan pendamping",
+      "uninstall_detected": "Pemulihan izin perlindungan",
+      "reset_settings": "Atur ulang pengaturan perlindungan",
+      "emergency_access": "Akses pemulihan darurat",
+      "unknown": "Tindakan lainnya ({value})"
+    },
+    "supportStatus": {
+      "open": "Terbuka",
+      "waiting_user": "Menunggu pengguna",
+      "waiting_internal": "Ditangani tim",
+      "resolved": "Terselesaikan",
+      "closed": "Ditutup",
+      "unknown": "Status lainnya ({value})"
+    },
+    "supportType": {
+      "technical_support": "Dukungan teknis",
+      "account_recovery": "Pemulihan akun",
+      "partner_abuse": "Keamanan pendampingan",
+      "stuck_approval": "Kendala persetujuan",
+      "device_recovery": "Pemulihan perangkat",
+      "notification_failure": "Kendala notifikasi",
+      "organization_dispute": "Kendala organisasi",
+      "accountability_guidance": "Panduan pendampingan",
+      "privacy_request": "Permintaan privasi",
+      "unknown": "Kategori lainnya ({value})"
+    },
+    "priority": {
+      "low": "Rendah",
+      "normal": "Normal",
+      "high": "Tinggi",
+      "urgent": "Mendesak",
+      "unknown": "Prioritas lainnya ({value})"
+    },
+    "role": {
+      "user": "Siswa",
+      "partner": "Pendamping",
+      "content_admin": "Admin konten",
+      "platform_admin": "Admin platform",
+      "model_release_operator": "Operator rilis model",
+      "support_operator": "Operator dukungan",
+      "research_evaluator": "Evaluator riset",
+      "organization_owner": "Pemilik organisasi",
+      "organization_admin": "Admin organisasi",
+      "unknown": "Peran lainnya ({value})"
+    },
+    "status": {
+      "draft": "Draf",
+      "in_review": "Dalam tinjauan",
+      "published": "Diterbitkan",
+      "archived": "Diarsipkan",
+      "validated": "Tervalidasi",
+      "staged": "Disiapkan",
+      "active": "Aktif",
+      "paused": "Dijeda",
+      "rolled_back": "Dikembalikan",
+      "completed": "Selesai",
+      "open": "Terbuka",
+      "waiting_user": "Menunggu pengguna",
+      "waiting_internal": "Ditangani tim",
+      "resolved": "Terselesaikan",
+      "closed": "Ditutup",
+      "pending": "Menunggu",
+      "reviewed": "Sudah ditinjau",
+      "approved": "Disetujui",
+      "used": "Sudah digunakan",
+      "expired": "Kedaluwarsa",
+      "queued": "Dalam antrean",
+      "sent": "Terkirim",
+      "failed": "Gagal",
+      "unknown": "Status lainnya ({value})"
+    },
+    "platform": {
+      "android": "Android",
+      "windows": "Windows",
+      "linux": "Linux",
+      "macos": "macOS",
+      "web": "Web",
+      "all": "Semua platform",
+      "unknown": "Platform lainnya ({value})"
+    },
+    "educationCategory": {
+      "impulse-awareness": "Kesadaran dorongan",
+      "digital-literacy": "Literasi digital",
+      "coping-skill": "Keterampilan menghadapi dorongan",
+      "financial-literacy": "Literasi keuangan",
+      "environment-change": "Perubahan lingkungan",
+      "help-seeking": "Mencari dukungan",
+      "unknown": "Topik lainnya ({value})"
+    }
   },
   "NotFound": {
     "message": "Halaman yang Anda cari tidak ditemukan.",

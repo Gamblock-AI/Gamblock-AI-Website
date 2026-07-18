@@ -18,6 +18,13 @@ export const config = {
   get googleClientId() {
     return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
   },
+  /** Space/comma separated public origins permitted for education iframes. */
+  get educationEmbedOrigins() {
+    return (
+      process.env.NEXT_PUBLIC_EDUCATION_EMBED_ORIGINS ||
+      'https://www.youtube-nocookie.com,https://player.vimeo.com,https://who.int,https://www.who.int,https://ppatk.go.id,https://www.ppatk.go.id,https://ojk.go.id,https://www.ojk.go.id,https://komdigi.go.id,https://www.komdigi.go.id,https://kemkes.go.id,https://www.kemkes.go.id'
+    );
+  },
   /**
    * Whether the app runs in production. User-facing messages remain friendly
    * in every environment; this flag gates development-only console diagnostics.

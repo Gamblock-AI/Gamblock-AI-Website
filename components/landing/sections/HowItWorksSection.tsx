@@ -1,47 +1,70 @@
 'use client';
 
-import { Download, Cpu, HeartHandshake } from 'lucide-react';
+import Image from 'next/image';
+import { Check, Cpu, Download, HeartHandshake } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Section } from '@/components/ui/section';
 import { Pill } from '@/components/ui/pill';
 import { Reveal } from '@/components/common/Reveal';
 
-/**
- * HowItWorksSection — three connected steps from install to rehabilitation.
- */
+const STEPS = [
+  { icon: Download, titleKey: 'howStep1Title', bodyKey: 'howStep1Body' },
+  { icon: Cpu, titleKey: 'howStep2Title', bodyKey: 'howStep2Body' },
+  { icon: HeartHandshake, titleKey: 'howStep3Title', bodyKey: 'howStep3Body' },
+] as const;
+
 export function HowItWorksSection() {
   const t = useTranslations('LandingPage');
 
-  const steps = [
-    { icon: Download, titleKey: 'howStep1Title', bodyKey: 'howStep1Body' },
-    { icon: Cpu, titleKey: 'howStep2Title', bodyKey: 'howStep2Body' },
-    { icon: HeartHandshake, titleKey: 'howStep3Title', bodyKey: 'howStep3Body' },
-  ] as const;
-
   return (
-    <Section id="cara-kerja" tone="navy">
-      <Reveal className="mx-auto mb-14 max-w-3xl text-center">
-        <Pill variant="ghost" className="mb-4 bg-white/10 text-white">
-          {t('howKicker')}
-        </Pill>
-        <h2 className="text-heading text-3xl text-white md:text-4xl">{t('howTitle')}</h2>
-      </Reveal>
+    <Section id="cara-kerja" tone="white" className="py-20 md:py-28">
+      <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
+        <Reveal className="relative mx-auto w-full max-w-[34rem]">
+          <div className="bg-sky-light absolute inset-8 rounded-full blur-3xl" aria-hidden />
+          <div className="border-navy/8 relative flex aspect-square items-center justify-center overflow-hidden rounded-[2.5rem] border bg-[radial-gradient(circle_at_50%_35%,#f9fdff,#d9f4ff)]">
+            <Image
+              src="/images/landing/generated/gami-shield-feature.webp"
+              alt="Gami memegang perisai perlindungan digital"
+              width={771}
+              height={1295}
+              sizes="(max-width: 1024px) 88vw, 44vw"
+              className="h-[98%] w-auto object-contain drop-shadow-[0_24px_36px_rgba(22,41,76,0.20)]"
+            />
+          </div>
+        </Reveal>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {steps.map(({ icon: Icon, titleKey, bodyKey }, i) => (
-          <Reveal key={titleKey} delay={i * 0.08}>
-            <div className="relative h-full rounded-3xl border border-white/10 bg-white/[0.07] p-7 backdrop-blur transition-colors hover:bg-white/[0.11]">
-              <span className="text-label absolute right-6 top-6 text-white/25">
-                0{i + 1}
-              </span>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-crimson text-white shadow-[0_8px_24px_-6px_rgba(200,16,46,0.6)]">
-                <Icon className="h-6 w-6" />
-              </div>
-              <h3 className="text-title mt-5 text-xl text-white">{t(titleKey)}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-white/70">{t(bodyKey)}</p>
-            </div>
+        <div>
+          <Reveal>
+            <Pill variant="navy" className="mb-4">
+              {t('howKicker')}
+            </Pill>
+            <h2 className="text-heading text-navy max-w-2xl text-3xl md:text-5xl">
+              {t('howTitle')}
+            </h2>
           </Reveal>
-        ))}
+
+          <ol className="mt-9 space-y-4">
+            {STEPS.map(({ icon: Icon, titleKey, bodyKey }, index) => (
+              <Reveal key={titleKey} delay={0.05 + index * 0.05}>
+                <li className="border-navy/8 shadow-soft grid grid-cols-[3rem_1fr] gap-4 rounded-2xl border bg-white/80 p-5 backdrop-blur">
+                  <span className="bg-navy flex h-12 w-12 items-center justify-center rounded-xl text-white">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-crimson text-[11px] font-extrabold tracking-[0.16em] uppercase">
+                        0{index + 1}
+                      </span>
+                      <Check className="text-sky h-3.5 w-3.5" />
+                    </div>
+                    <h3 className="text-navy mt-1 font-bold">{t(titleKey)}</h3>
+                    <p className="text-muted-foreground mt-1.5 text-sm leading-6">{t(bodyKey)}</p>
+                  </div>
+                </li>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
       </div>
     </Section>
   );

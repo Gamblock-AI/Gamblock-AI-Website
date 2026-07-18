@@ -1,5 +1,5 @@
 schema_version: 1
-context_version: "2026-07-16.5"
+context_version: "2026-07-18.3"
 component: "gamblock-ai-website"
 
 shared_contracts:
@@ -10,6 +10,7 @@ shared_contracts:
   api_error_catalog: 1
   accountability_state: 1
   emergency_two_operator: 1
+  education_revisioned_content: 1
 
 canonical:
   instructions: "AGENTS.md"
@@ -64,6 +65,6 @@ required_paths:
   - "messages/README.md"
   - "messages/en"
   - "messages/id"
-  - "middleware.ts"
+  - "proxy.ts"
   - "routes.ts"
   - "scripts/validate-messages.mjs"

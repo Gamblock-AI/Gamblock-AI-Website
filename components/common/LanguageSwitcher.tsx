@@ -1,8 +1,6 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { usePathname, useRouter } from '@/i18n/routing';
-import { useTransition } from 'react';
 import { cn } from '@/lib/utils';
 
 const LOCALES = [
@@ -17,20 +15,23 @@ interface LanguageSwitcherProps {
 }
 
 /**
- * LanguageSwitcher — toggles between ID and EN locales while preserving the
- * current path. Uses next-intl navigation so locale prefixes are handled.
+ * LanguageSwitcher toggles between ID and EN locales while preserving the
+ * current path, query, and hash. A document navigation guarantees that the
+ * requested locale catalog is reloaded through the locale-aware proxy.
  */
 export function LanguageSwitcher({ tone = 'light', className }: LanguageSwitcherProps) {
   const locale = useLocale();
-  const pathname = usePathname();
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
 
-  const switchTo = (code: string) => {
+  const switchTo = (code: (typeof LOCALES)[number]['code']) => {
     if (code === locale) return;
-    startTransition(() => {
-      router.replace(pathname, { locale: code });
-    });
+
+    const { pathname, search, hash } = window.location;
+    const localePrefix = /^\/(id|en)(?=\/|$)/;
+    const localizedPath = localePrefix.test(pathname)
+      ? pathname.replace(localePrefix, `/${code}`)
+      : `/${code}${pathname === '/' ? '' : pathname}`;
+
+    window.location.replace(`${localizedPath}${search}${hash}`);
   };
 
   return (
@@ -52,10 +53,9 @@ export function LanguageSwitcher({ tone = 'light', className }: LanguageSwitcher
             key={code}
             type="button"
             onClick={() => switchTo(code)}
-            disabled={isPending}
             aria-pressed={active}
             className={cn(
-              'flex size-8 cursor-pointer items-center justify-center rounded-[0.625rem] text-[0.625rem] font-bold transition-[background-color,color,box-shadow] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-sky/70 focus-visible:ring-offset-1 disabled:cursor-wait disabled:opacity-50 motion-reduce:transition-none',
+              'flex size-8 cursor-pointer items-center justify-center rounded-[0.625rem] text-[0.625rem] font-bold transition-[background-color,color,box-shadow] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-sky/70 focus-visible:ring-offset-1 motion-reduce:transition-none',
               active
                 ? tone === 'light'
                   ? 'bg-navy text-white shadow-sm'

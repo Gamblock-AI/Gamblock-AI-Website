@@ -211,6 +211,14 @@
   --shadow-card: 0 2px 8px rgba(22, 41, 76, 0.07), 0 20px 48px -26px rgba(22, 41, 76, 0.24);
 }
 
+.dashboard-canvas {
+  background-color: #f5f8fc;
+  background-image:
+    radial-gradient(65% 55% at 12% -10%, rgba(191, 233, 245, 0.48) 0%, transparent 64%),
+    radial-gradient(60% 52% at 100% 0%, rgba(220, 235, 251, 0.72) 0%, transparent 66%),
+    linear-gradient(180deg, #f8fbff 0%, #f3f7fc 100%);
+}
+
 .dark .dashboard-theme {
   --secondary: oklch(0.31 0.035 264);
   --muted: oklch(0.29 0.035 264);
@@ -219,6 +227,14 @@
   --input: oklch(1 0 0 / 22%);
   --ring: oklch(0.72 0.12 235);
   --sidebar-border: oklch(1 0 0 / 16%);
+}
+
+.dark .dashboard-canvas {
+  background-color: #111d35;
+  background-image:
+    radial-gradient(65% 55% at 12% -10%, rgba(36, 72, 127, 0.38) 0%, transparent 64%),
+    radial-gradient(60% 52% at 100% 0%, rgba(22, 41, 76, 0.72) 0%, transparent 66%),
+    linear-gradient(180deg, #14213a 0%, #101a30 100%);
 }
 
 @media (max-width: 639px) {

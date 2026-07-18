@@ -1,5 +1,5 @@
 import { CircleHelp, FileWarning, RefreshCw, ShieldCheck } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   DashboardNotice,
   DashboardPanel,
@@ -8,6 +8,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { SupportCaseRecord } from '@/hooks/use-support-request';
+import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
 
 interface SupportCaseHistoryProps {
   cases: SupportCaseRecord[];
@@ -63,6 +67,11 @@ function SupportCaseHistoryContent({
   error,
 }: Omit<SupportCaseHistoryProps, 'onRetry'>) {
   const t = useTranslations('supportWorkspace');
+  const tDynamic = useTranslations('dynamicLabels');
+  const locale = useLocale();
+  const dateFormatter = new Intl.DateTimeFormat(locale, {
+    dateStyle: 'medium',
+  });
 
   if (loading) {
     return (
@@ -90,30 +99,52 @@ function SupportCaseHistoryContent({
 
   return (
     <div className="space-y-3">
-      {cases.slice(0, 4).map((item) => (
-        <article
-          key={item.id}
-          className="border-border bg-muted/55 rounded-2xl border p-4"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-navy line-clamp-2 text-sm font-bold">
-              {item.title}
+      {cases.slice(0, 4).map((item) => {
+        const parsedDate = item.created_at ? new Date(item.created_at) : null;
+        const date =
+          parsedDate && !Number.isNaN(parsedDate.getTime())
+            ? dateFormatter.format(parsedDate)
+            : t('dateUnavailable');
+        const labelValues = { value: dynamicLabelFallback(item.status) };
+        return (
+          <article
+            key={item.id}
+            className="border-border bg-muted/55 rounded-2xl border p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-navy line-clamp-2 text-sm font-bold">
+                {item.title}
+              </p>
+              <DashboardStatus
+                tone={
+                  item.status === 'resolved' || item.status === 'closed'
+                    ? 'sage'
+                    : 'amber'
+                }
+              >
+                {tDynamic(
+                  dynamicLabelKey('supportStatus', item.status),
+                  labelValues
+                )}
+              </DashboardStatus>
+            </div>
+            <p className="text-muted-foreground mt-2 font-mono text-[11px]">
+              {item.id}
             </p>
-            <DashboardStatus
-              tone={
-                item.status === 'resolved' || item.status === 'closed'
-                  ? 'sage'
-                  : 'amber'
-              }
-            >
-              {item.status.replaceAll('_', ' ')}
-            </DashboardStatus>
-          </div>
-          <p className="text-muted-foreground mt-2 font-mono text-[11px]">
-            {item.id}
-          </p>
-        </article>
-      ))}
+            <p className="text-muted-foreground mt-2 text-xs leading-5">
+              {tDynamic(dynamicLabelKey('supportType', item.type), {
+                value: dynamicLabelFallback(item.type),
+              })}
+              {' · '}
+              {tDynamic(dynamicLabelKey('priority', item.priority), {
+                value: dynamicLabelFallback(item.priority),
+              })}
+              {' · '}
+              {date}
+            </p>
+          </article>
+        );
+      })}
     </div>
   );
 }

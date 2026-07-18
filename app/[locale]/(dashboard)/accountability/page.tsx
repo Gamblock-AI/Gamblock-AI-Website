@@ -56,14 +56,6 @@ export default function AccountabilityPage() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice
-            icon={LockKeyhole}
-            title={t('privacyTitle')}
-          >
-            {t('privacyBody')}
-          </DashboardNotice>
-        }
       />
 
       {dataError ? (

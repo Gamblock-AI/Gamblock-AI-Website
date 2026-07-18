@@ -17,13 +17,11 @@
     "helpBody": "Kirim tiket bantuan atau akses panduan pengaturan sistem proteksi Gamblock-AI.",
     "supportAction": "Buka bantuan",
     "setupAction": "Panduan pengaturan",
-    "syncTitle": "Sinkronisasi pemulihan opsional",
-    "syncBody": "Data tetap disimpan lokal lebih dulu. Aktifkan hanya kategori yang ingin tersedia di perangkat lain.",
+    "syncTitle": "Sinkronisasi pemulihan",
+    "syncBody": "Check-in tersimpan ke akun Anda agar tersedia di seluruh perangkat. Niat tetap dapat Anda pilih untuk disinkronkan.",
     "syncIntentions": "Sinkronkan niat",
     "syncIntentionsBody": "Niat aktif dikirim ke akun Anda saat tersambung.",
-    "syncCheckIns": "Sinkronkan check-in",
-    "syncCheckInsBody": "Hanya skor suasana hati dan dorongan; tanpa riwayat penjelajahan.",
-    "syncPrivateNote": "Pilihan ini mati secara default dan dapat dimatikan kembali kapan saja. Jurnal memiliki pengaturan penyimpanan terpisah."
+    "syncPrivateNote": "Sinkronisasi niat dapat dimatikan kapan saja. Jurnal memiliki pengaturan penyimpanan terpisah."
   },
   "supportWorkspace": {
     "eyebrow": "Bantuan",
@@ -64,6 +62,7 @@
     "historyLoading": "Memuat riwayat tiket",
     "historyError": "Riwayat tiket belum dapat dimuat.",
     "historyRetry": "Coba lagi",
+    "dateUnavailable": "Tanggal tidak tersedia",
     "urgentTitle": "Butuh bantuan mendesak?",
     "urgentBody": "Jika situasi terasa sulit ditangani sendiri, hubungi orang tepercaya atau hubungi hotline krisis."
   },
@@ -118,10 +117,12 @@
     "emptyBody": "Permintaan yang Anda kirim akan muncul di sini beserta statusnya.",
     "typeExport": "Ekspor data",
     "typeDelete": "Penghapusan akun",
+    "typeRetentionReview": "Tinjauan retensi data",
     "dateUnavailable": "Tanggal tidak tersedia",
     "status": {
       "completed": "Selesai",
-      "failed": "Gagal",
+      "rejected": "Ditolak",
+      "cancelled": "Dibatalkan",
       "processing": "Diproses",
       "pending": "Menunggu"
     },

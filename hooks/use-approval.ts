@@ -13,11 +13,15 @@ export interface ApprovalDetails {
 }
 
 export type ResolveStatus = 'approved' | 'denied';
+export type ApprovalErrorCode =
+  | 'missing_token'
+  | 'invalid_token'
+  | 'resolve_failed';
 
 export interface UseApprovalVerificationResult {
   details: ApprovalDetails | null;
   loading: boolean;
-  error: string | null;
+  error: ApprovalErrorCode | null;
   refetch: () => Promise<void>;
 }
 
@@ -30,13 +34,13 @@ export function useApprovalVerification(
   // Loading starts true only when a token is present; without a token there is
   // nothing to verify, so we surface the missing-token error immediately.
   const [loading, setLoading] = useState<boolean>(Boolean(token));
-  const [error, setError] = useState<string | null>(
-    token ? null : 'Tautan persetujuan tidak lengkap.'
+  const [error, setError] = useState<ApprovalErrorCode | null>(
+    token ? null : 'missing_token'
   );
 
   const verify = useCallback(async () => {
     if (!token) {
-      setError('Tautan persetujuan tidak lengkap.');
+      setError('missing_token');
       setLoading(false);
       return;
     }
@@ -48,7 +52,7 @@ export function useApprovalVerification(
       );
       setDetails(data);
     } catch {
-      setError('Tautan persetujuan tidak valid atau sudah kedaluwarsa.');
+      setError('invalid_token');
     } finally {
       setLoading(false);
     }
@@ -69,7 +73,7 @@ export function useApprovalVerification(
         setDetails(data);
       } catch {
         if (!active) return;
-        setError('Tautan persetujuan tidak valid atau sudah kedaluwarsa.');
+        setError('invalid_token');
       } finally {
         if (active) setLoading(false);
       }
@@ -85,7 +89,7 @@ export function useApprovalVerification(
 export interface UseResolveApprovalResult {
   resolve: (status: ResolveStatus) => Promise<boolean>;
   submitting: boolean;
-  error: string | null;
+  error: ApprovalErrorCode | null;
 }
 
 // Resolves an approval request by token (approve/deny) — PRD §5.2 quick link.
@@ -94,7 +98,7 @@ export function useResolveApproval(
   token: string
 ): UseResolveApprovalResult {
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApprovalErrorCode | null>(null);
 
   const resolve = useCallback(
     async (status: ResolveStatus): Promise<boolean> => {
@@ -108,7 +112,7 @@ export function useResolveApproval(
         });
         return true;
       } catch {
-        setError('Keputusan belum dapat disimpan. Silakan coba lagi.');
+        setError('resolve_failed');
         return false;
       } finally {
         setSubmitting(false);

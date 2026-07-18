@@ -1,20 +1,19 @@
 'use client';
 
-import { BarChart3, CircleAlert } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { BiteSizedLearning } from '@/components/dashboard/today/bite-sized-learning';
+import { CircleAlert } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { DashboardWelcome } from '@/components/dashboard/today/dashboard-welcome';
+import { DashboardSummaryStrip } from '@/components/dashboard/today/dashboard-summary-strip';
+import { DashboardShortcuts } from '@/components/dashboard/today/dashboard-shortcuts';
 import { EmergencyHelp } from '@/components/dashboard/today/emergency-help';
+import { LearningNextStep } from '@/components/dashboard/today/learning-next-step';
 import { ProtectionSummary } from '@/components/dashboard/today/protection-summary';
-import { RecoveryAtAGlance } from '@/components/dashboard/today/recovery-at-a-glance';
-import { SkillGuidance } from '@/components/dashboard/today/skill-guidance';
-import { TodayRecoveryWorkspace } from '@/components/dashboard/today/today-recovery-workspace';
+import { StudentCheckInGate } from '@/components/dashboard/today/student-check-in-gate';
 import { WeeklySnapshot } from '@/components/dashboard/today/weekly-snapshot';
-import { useDailyMission } from '@/hooks/use-daily-mission';
 import { useDashboardSummary } from '@/hooks/use-dashboard-summary';
+import { useEducationModules } from '@/hooks/use-education';
 import { useProtectionStatus } from '@/hooks/use-protection-status';
 import { useRecoveryJourney } from '@/hooks/use-recovery-journey';
-import type { MissionNumber } from '@/lib/recovery/types';
 
 interface StudentDashboardProps {
   name: string;
@@ -22,35 +21,25 @@ interface StudentDashboardProps {
 
 export function StudentDashboard({ name }: StudentDashboardProps) {
   const t = useTranslations('recoveryDashboard');
+  const locale = useLocale();
   const recovery = useRecoveryJourney();
-  const mission = useDailyMission();
   const protection = useProtectionStatus();
-  const { summary } = useDashboardSummary();
-  const selectedMissionNumber = recovery.selectedMission?.missionNumber ?? 1;
-  const selectedMissionItem =
-    mission.items.find((item) => item.number === selectedMissionNumber) ??
-    mission.items[0];
-  const activeStep = getActiveStep(
-    recovery.activeIntention,
-    recovery.todayCheckIn,
-    selectedMissionItem?.completed
-  );
-
-  const saveIntention = (value: string) => {
-    if (recovery.activeIntention) {
-      recovery.updateIntention(recovery.activeIntention.id, { title: value });
-      return;
-    }
-    recovery.createIntention({ title: value });
-  };
-
-  const chooseAlternative = () => {
-    const next = ((selectedMissionNumber % 5) + 1) as MissionNumber;
-    recovery.selectMissionAlternative(next);
-  };
+  const { summary, loading: summaryLoading } = useDashboardSummary();
+  const education = useEducationModules(locale);
+  const learningModule =
+    education.modules.find(
+      (module) =>
+        module.progress.progress_percent > 0 &&
+        module.progress.progress_percent < 100
+    ) ??
+    education.modules.find(
+      (module) => module.progress.progress_percent < 100
+    ) ??
+    education.modules[0] ??
+    null;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] space-y-5 sm:space-y-6">
+    <div className="mx-auto w-full max-w-[1360px] space-y-5 sm:space-y-6">
       <DashboardWelcome
         name={name}
         protectionActive={protection.status?.mode === 'active'}
@@ -67,52 +56,38 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
           {t('memoryOnlyWarning')}
         </div>
       ) : null}
+      <DashboardSummaryStrip
+        summary={summary}
+        summaryLoading={summaryLoading}
+        checkIns={recovery.state.checkIns}
+      />
       <div className="grid gap-5 xl:grid-cols-12 xl:items-start">
-        <TodayRecoveryWorkspace
-          activeStep={activeStep}
-          activeIntention={recovery.activeIntention}
-          todayCheckIn={recovery.todayCheckIn}
-          selectedMissionNumber={selectedMissionNumber}
-          selectedMissionItem={selectedMissionItem}
-          mission={mission}
-          onSaveIntention={saveIntention}
-          onSaveCheckIn={recovery.recordDailyCheckIn}
-          onAlternative={chooseAlternative}
-        />
-        <aside
-          className="space-y-5 xl:col-span-4"
-          aria-label={t('skillEyebrow')}
-        >
-          <SkillGuidance
-            recommendation={recovery.skillRecommendation}
-            onAnother={recovery.cycleSkillRecommendation}
-          />
+        <div className="xl:col-span-8">
+          <WeeklySnapshot checkIns={recovery.state.checkIns} />
+        </div>
+        <aside className="xl:col-span-4" aria-label={t('protectionTitle')}>
           <ProtectionSummary
             status={protection.status}
             loading={protection.loading}
             error={protection.error}
             onRetry={() => void protection.refetch()}
           />
-          <BiteSizedLearning />
-          <EmergencyHelp />
         </aside>
       </div>
-      <RecoveryAtAGlance summary={summary} checkIns={recovery.state.checkIns} />
-      <WeeklySnapshot checkIns={recovery.state.checkIns} />
-      <p className="text-muted-foreground flex items-start gap-2 px-1 text-xs leading-5">
-        <BarChart3 className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-        {t('weeklyPrivate')}
-      </p>
+      <DashboardShortcuts />
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+        <LearningNextStep
+          module={learningModule}
+          loading={education.loading}
+          error={education.error}
+          onRetry={() => void education.refetch()}
+        />
+        <EmergencyHelp />
+      </div>
+      <StudentCheckInGate
+        completed={Boolean(recovery.todayCheckIn)}
+        onSave={recovery.recordDailyCheckIn}
+      />
     </div>
   );
-}
-
-function getActiveStep(
-  activeIntention: ReturnType<typeof useRecoveryJourney>['activeIntention'],
-  todayCheckIn: ReturnType<typeof useRecoveryJourney>['todayCheckIn'],
-  missionCompleted: boolean | undefined
-): number {
-  if (!activeIntention) return 1;
-  if (!todayCheckIn) return 2;
-  return missionCompleted ? 4 : 3;
 }

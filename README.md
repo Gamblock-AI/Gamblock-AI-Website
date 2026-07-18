@@ -22,7 +22,7 @@ npm run dev                  # http://localhost:3000
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-16.5`.
+`2026-07-18.3`.
 
 ## Structure
 
@@ -40,7 +40,7 @@ app/
 components/
   landing/                 # marketing sections and scroll animations
   dashboard/               # responsive shell, Today dashboard, and navigation
-  education/               # safe published-content rendering
+  education/               # rich-text reader, checks, media, and admin editor
   common/                  # PageTransition and reusable cross-surface helpers
   auth/                    # authentication composition
   ui/                      # shadcn-style primitives
@@ -50,7 +50,7 @@ lib/            # api-client, config/messages, and versioned recovery domain
 messages/
   en/           # English JSON split by product domain
   id/           # Indonesian JSON with the same modules and nested keys
-middleware.ts   # route protection (cookie token)
+proxy.ts        # route protection (cookie token)
 routes.ts       # route constants + PROTECTED/GUEST lists
 docs/ai/        # clone-portable AI context guide and manifest
 ```
@@ -61,35 +61,52 @@ Dashboard route transitions are implemented by
 
 ## Recovery prototype
 
-The redesigned student dashboard is action-first: intention, current mission,
-quick check-in, recovery overview, explained next actions, and a weekly review.
-It uses calm status feedback, meaningful four-or-more-point trend charts, and
-reduced-motion-safe hover/press interactions instead of punitive streak or
-casino-like rewards.
+The student dashboard is insight-first: privacy-safe aggregate analytics,
+protection information, weekly check-in trends, education, help, and shortcuts.
+The PKM recovery loop remains directly available through a student-only
+gamification FAB across authenticated dashboard pages and a once-per-day
+check-in gate on the main dashboard. The gate uses the `Asia/Jakarta` calendar
+boundary, requires a mood choice, and keeps urge intensity optional through an
+explicit “prefer not to say” choice. UI feedback remains calm and avoids
+punitive streak or casino-like rewards.
 
 Recovery remains local-first in the bounded, versioned
-`gamblock:recovery:v1` browser store. Intention and structured check-in sync are
-separate opt-in categories in Settings; failures remain visible and preserve
-the local record. Weekly plans, recommendations, and other deeper recovery
-state remain local. The schema contains no URL, domain, DOM, browsing history,
-or detected-page field.
+`gamblock:recovery:v1` browser store. A submitted structured check-in is also
+committed to the authenticated account before the gate can finish; failures
+remain visible for retry. Intention sync remains optional in Settings. Weekly
+plans, recommendations, and other deeper recovery state remain local. The
+schema contains no URL, domain, DOM, browsing history, or detected-page field.
 
-Mission completion uses `GET /v1/missions/today` and `PATCH /v1/missions`.
-Published psychoeducation comes from the backend and Markdown is rendered
-through a text-only allowlist. The public `/post-intervention` page provides a
+Mission eligibility uses `GET /v1/missions/today`; EXP claims use `POST
+/v1/missions/claim`.
+The student-only FAB presents one primary and two optional bonus tasks, a
+gamepad trigger, fixed effort-based EXP, and personal level progress. Each task
+shows not-verified, ready-to-claim, or claimed state; its claim button activates
+only when the backend verifies existing account activity. There is no
+self-completion toggle or client-side EXP grant. The rotation follows the
+`Asia/Jakarta` date and contains no random reward, leaderboard, punitive streak,
+or partner-visible projection.
+Published psychoeducation comes from the backend as validated TipTap JSON; raw
+HTML is never rendered. The education library supports bilingual sections,
+single/multiple thumbnail carousels, click-to-load external media, uploaded
+images/video/PDF, revision-scoped progress, and teaching-oriented knowledge
+checks. Content admins use the operations workspace for bilingual WYSIWYG
+authoring, 16:9 crop/resize, sources/reviewer metadata, and the
+draft-review-publish/archive lifecycle. The public `/post-intervention` page provides a
 privacy-safe grounding/help entry; the Flutter Pattern Interrupt handoff now
 opens it with only locale and `source=pattern_interrupt`.
 
-Browser-local state is not a claim of encrypted or universally cross-device
-storage. Only enabled categories use the backend. See `docs/ai/README.md` for
-current website capability status and the umbrella
+Browser-local state is not a claim of encrypted storage. Account-stored
+check-ins can be restored across devices, while partner monitoring requires a
+separate, explicit sharing design before it is available. See
+`docs/ai/README.md` for current website capability status and the umbrella
 `context/proposal-requirements.md` for requirement-level targets.
 
 ## API client
 
 `lib/api-client.ts` wraps fetch with the backend envelope (`{ data, error,
 request_id }`), auto-refreshes the access token on 401, and stores tokens in
-`localStorage` + a `gamblock_access_token` cookie (read by `middleware.ts`).
+`localStorage` + a `gamblock_access_token` cookie (read by `proxy.ts`).
 User-facing failures always resolve through friendly copy. Expected 4xx
 outcomes stay in the UI without noisy console errors. In development,
 unexpected network/server failures write sanitized details through

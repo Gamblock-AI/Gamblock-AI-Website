@@ -1,16 +1,19 @@
 import { Shield } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl';
 
 export function ApprovalProcessedState() {
-    const t = useTranslations('ApprovalProcessedState');
+  const t = useTranslations('approvalFlow');
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="bg-background flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md p-8 text-center">
-        <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h2 className="mt-4 text-heading text-xl text-navy">{t('text_267')}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {t('text_268')}</p>
+        <Shield className="text-muted-foreground mx-auto h-12 w-12" />
+        <h2 className="text-heading text-navy mt-4 text-xl">
+          {t('processedTitle')}
+        </h2>
+        <p className="text-muted-foreground mt-2 text-sm">
+          {t('processedBody')}
+        </p>
       </Card>
     </div>
   );

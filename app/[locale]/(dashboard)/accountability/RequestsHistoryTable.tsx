@@ -19,6 +19,10 @@ import {
 } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { ApprovalRequest } from '@/hooks/use-accountability';
+import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
 
 interface RequestsHistoryTableProps {
   requests: ApprovalRequest[];
@@ -52,6 +56,7 @@ export function RequestsHistoryTable({
   viewerRole,
 }: RequestsHistoryTableProps) {
   const t = useTranslations('accountabilityWorkspace');
+  const tDynamic = useTranslations('dynamicLabels');
   const locale = useLocale();
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [resolution, setResolution] = useState<{
@@ -71,7 +76,7 @@ export function RequestsHistoryTable({
           icon={ClipboardList}
           title={t('historyEmptyTitle')}
           hint={t('historyEmptyBody')}
-          className="min-h-48 bg-muted/55"
+          className="bg-muted/55 min-h-48"
         />
       ) : (
         <div className="space-y-3">
@@ -103,7 +108,13 @@ export function RequestsHistoryTable({
                     {request.reason || t('reasonNotProvided')}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {request.action_label}
+                    {tDynamic(
+                      dynamicLabelKey('approvalAction', request.action),
+                      {
+                        minutes: request.requested_duration_minutes,
+                        value: dynamicLabelFallback(request.action),
+                      }
+                    )}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">{date}</p>
                 </div>

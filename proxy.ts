@@ -1,19 +1,21 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+
 import { routing } from './i18n/routing';
-import { PROTECTED_ROUTES, GUEST_ROUTES } from './routes';
+import { GUEST_ROUTES, PROTECTED_ROUTES } from './routes';
 
 const intlMiddleware = createMiddleware(routing);
 
-export function middleware(request: NextRequest) {
-  // First, apply i18n routing
-  const response = intlMiddleware(request);
-
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const localeMatch = pathname.match(/^\/(id|en)/);
+  const localeMatch = pathname.match(/^\/(id|en)(?=\/|$)/);
   const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
-  const pathnameWithoutLocale = pathname.replace(/^\/(id|en)/, '') || '/';
+  const pathnameWithoutLocale = pathname.replace(/^\/(id|en)(?=\/|$)/, '') || '/';
+
+  // Keep next-intl's request header override intact. It carries the resolved
+  // locale into the App Router and is required for matching app/[locale].
+  const response = intlMiddleware(request);
 
   const token = request.cookies.get('gamblock_access_token')?.value;
 

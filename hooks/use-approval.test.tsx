@@ -51,12 +51,12 @@ describe('useApprovalVerification', () => {
     const { result } = renderHook(() => useApprovalVerification('bad'));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.details).toBeNull();
-    expect(result.current.error).toContain('Tautan persetujuan tidak valid');
+    expect(result.current.error).toBe('invalid_token');
   });
 
   it('errors immediately when token is null', async () => {
     const { result } = renderHook(() => useApprovalVerification(null));
-    expect(result.current.error).toContain('Tautan persetujuan tidak lengkap');
+    expect(result.current.error).toBe('missing_token');
     expect(result.current.loading).toBe(false);
   });
 });

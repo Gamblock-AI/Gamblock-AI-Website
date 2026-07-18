@@ -27,9 +27,6 @@ export default async function PartnersPage() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice icon={Clock3} title={t('liveStatus')} tone="amber" />
-        }
       />
 
       <DashboardNotice icon={LockKeyhole} title={t('privacyTitle')}>

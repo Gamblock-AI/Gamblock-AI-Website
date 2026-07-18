@@ -1,23 +1,27 @@
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 
-export function ApprovalResolvedState({ status }: { status: 'approved' | 'denied' }) {
+export function ApprovalResolvedState({
+  status,
+}: {
+  status: 'approved' | 'denied';
+}) {
+  const t = useTranslations('approvalFlow');
   const isApproved = status === 'approved';
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="bg-background flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md p-8 text-center">
         {isApproved ? (
-          <CheckCircle className="mx-auto h-12 w-12 text-sage" />
+          <CheckCircle className="text-sage mx-auto h-12 w-12" />
         ) : (
-          <XCircle className="mx-auto h-12 w-12 text-crimson" />
+          <XCircle className="text-crimson mx-auto h-12 w-12" />
         )}
-        <h2 className="mt-4 text-heading text-xl text-navy">
-          {isApproved ? 'Permohonan Disetujui' : 'Permohonan Ditolak'}
+        <h2 className="text-heading text-navy mt-4 text-xl">
+          {isApproved ? t('approvedTitle') : t('deniedTitle')}
         </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {isApproved
-            ? 'Aplikasi akan dibuka dalam waktu singkat. Member akan menerima notifikasi.'
-            : 'Permohonan telah ditolak. Aplikasi tetap terkunci.'}
+        <p className="text-muted-foreground mt-2 text-sm">
+          {isApproved ? t('approvedBody') : t('deniedBody')}
         </p>
       </Card>
     </div>

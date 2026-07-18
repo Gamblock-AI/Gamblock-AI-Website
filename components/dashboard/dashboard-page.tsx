@@ -21,7 +21,7 @@ export function DashboardPage({
   return (
     <div
       className={cn(
-        'mx-auto w-full max-w-6xl pb-8',
+        'mx-auto w-full max-w-[1360px] pb-8',
         density === 'compact' ? 'space-y-5' : 'space-y-6 sm:space-y-7',
         className,
       )}
@@ -46,11 +46,13 @@ export function DashboardPageHeader({
   return (
     <header className="grid gap-4 border-b border-navy/15 pb-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
       <div>
-        <div className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-sage uppercase">
-          <Icon className="size-4" aria-hidden="true" />
+        <div className="flex items-center gap-2 text-xs font-bold tracking-[0.1em] text-navy-light uppercase">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-azure/75 text-navy">
+            <Icon className="size-4" aria-hidden="true" />
+          </span>
           <p>{eyebrow}</p>
         </div>
-        <h1 className="mt-2 max-w-3xl text-[1.75rem] leading-tight font-extrabold tracking-tight text-navy sm:text-[2rem]">
+        <h1 className="mt-3 max-w-3xl text-[1.875rem] leading-tight font-extrabold tracking-[-0.03em] text-navy sm:text-[2.25rem]">
           {title}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">

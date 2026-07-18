@@ -14,9 +14,14 @@ import {
   AdminStatusBadge,
   AdminTableShell,
 } from './admin-shared';
+import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
 
 export function SupportTab({ cases }: { cases: AdminSupportCase[] }) {
   const t = useTranslations('adminPage');
+  const tDynamic = useTranslations('dynamicLabels');
 
   return (
     <div className="space-y-4">
@@ -47,8 +52,18 @@ export function SupportTab({ cases }: { cases: AdminSupportCase[] }) {
                   <TableCell className="text-navy font-semibold">
                     {supportCase.title}
                   </TableCell>
-                  <TableCell>{supportCase.type.replaceAll('_', ' ')}</TableCell>
-                  <TableCell>{supportCase.priority}</TableCell>
+                  <TableCell>
+                    {tDynamic(
+                      dynamicLabelKey('supportType', supportCase.type),
+                      { value: dynamicLabelFallback(supportCase.type) }
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {tDynamic(
+                      dynamicLabelKey('priority', supportCase.priority),
+                      { value: dynamicLabelFallback(supportCase.priority) }
+                    )}
+                  </TableCell>
                   <TableCell>
                     <AdminStatusBadge status={supportCase.status} />
                   </TableCell>

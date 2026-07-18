@@ -38,22 +38,20 @@ const COLUMNS = [
 ] as const;
 
 /**
- * SiteFooter — solid navy surface with crimson glow (tina.io footer energy).
- * Includes link columns, a recovery CTA, and the PKM-KC academic credit.
+ * SiteFooter — product navigation and academic project context.
  */
 export function SiteFooter() {
   const t = useTranslations('Footer');
 
   return (
     <footer className="bg-footer-navy relative overflow-hidden text-white">
-      {/* faint mascot watermark */}
       <Image
-        src="/images/mascot/gami-hero.png"
+        src="/images/landing/generated/gami-encourage.webp"
         alt=""
         aria-hidden
-        width={360}
-        height={360}
-        className="pointer-events-none absolute -right-16 -bottom-10 w-72 opacity-[0.06] select-none"
+        width={1024}
+        height={1536}
+        className="pointer-events-none absolute -bottom-28 -right-10 w-80 opacity-[0.05] select-none"
       />
 
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:px-10">
@@ -77,19 +75,14 @@ export function SiteFooter() {
             <p className="max-w-xs text-sm leading-relaxed text-white/60">{t('tagline')}</p>
             <div className="pt-2">
               <Link href={ROUTES.REGISTER}>
-                <Button variant="accent" className="rounded-full">
+                <Button
+                  variant="primary"
+                  className="rounded-full border-white bg-white text-navy hover:bg-white/90"
+                >
                   {t('ctaStart')}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
-            </div>
-            <div className="flex items-center gap-3 pt-3">
-              <SocialLink href="https://instagram.com/gamblock.ai" label="Instagram Gamblock-AI">
-                <InstagramIcon />
-              </SocialLink>
-              <SocialLink href="https://facebook.com/gamblock.ai" label="Facebook Gamblock-AI">
-                <FacebookIcon />
-              </SocialLink>
             </div>
           </div>
 
@@ -126,45 +119,5 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
-  );
-}
-
-function SocialLink({
-  href,
-  label,
-  children,
-}: {
-  href: string;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={label}
-      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-    >
-      {children}
-    </a>
-  );
-}
-
-function InstagramIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-    </svg>
-  );
-}
-
-function FacebookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
-      <path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z" />
-    </svg>
   );
 }

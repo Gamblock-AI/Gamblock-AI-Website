@@ -23,9 +23,14 @@ import { Link } from '@/i18n/routing';
 import { updateLocalUser, useLocalUser } from '@/hooks/use-local-user';
 import { ROUTES } from '@/routes';
 import { apiClient } from '@/lib/api-client';
+import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
 
 export default function ProfilePage() {
   const t = useTranslations('profileWorkspace');
+  const tDynamic = useTranslations('dynamicLabels');
   const user = useLocalUser();
   const [saving, setSaving] = useState(false);
 
@@ -56,14 +61,6 @@ export default function ProfilePage() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice
-            icon={LockKeyhole}
-            title={t('sessionTitle')}
-          >
-            {t('sessionBody')}
-          </DashboardNotice>
-        }
       />
 
       <div className="grid gap-5 lg:grid-cols-12 lg:items-start">
@@ -74,7 +71,11 @@ export default function ProfilePage() {
           className="lg:col-span-7"
           action={
             <DashboardStatus tone="navy">
-              {user.role || t('roleUnavailable')}
+              {user.role
+                ? tDynamic(dynamicLabelKey('role', user.role), {
+                    value: dynamicLabelFallback(user.role),
+                  })
+                : t('roleUnavailable')}
             </DashboardStatus>
           }
         >

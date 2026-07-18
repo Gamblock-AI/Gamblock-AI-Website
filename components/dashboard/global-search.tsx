@@ -80,16 +80,14 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
         className={
           variant === 'icon'
             ? 'flex size-11 items-center justify-center rounded-xl border border-navy/15 bg-card text-navy shadow-soft outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/30 hover:bg-azure/75 focus-visible:ring-2 focus-visible:ring-navy/35 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none'
-            : 'group flex h-11 w-72 items-center gap-2.5 rounded-xl border border-navy/20 bg-card px-2.5 text-sm text-muted-foreground shadow-soft outline-none transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-navy/40 hover:bg-card hover:shadow-card focus-visible:ring-2 focus-visible:ring-navy/35 active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none'
+            : 'group flex h-11 w-72 items-center gap-2.5 rounded-xl border border-border bg-muted/45 px-3 text-sm text-muted-foreground outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/25 hover:bg-card focus-visible:ring-2 focus-visible:ring-navy/35 active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none xl:w-80'
         }
       >
         {variant === 'icon' ? (
           <Search className="size-5" aria-hidden="true" />
         ) : (
           <>
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-azure text-navy transition-colors duration-200 group-hover:bg-sky-light motion-reduce:transition-none">
-              <Search className="size-4" aria-hidden="true" />
-            </span>
+            <Search className="size-4 shrink-0 text-navy/75" aria-hidden="true" />
             <span className="flex-1 truncate text-left font-medium">
               {t('searchPlaceholder')}
             </span>

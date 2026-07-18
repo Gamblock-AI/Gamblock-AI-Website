@@ -1,8 +1,17 @@
 import type {
   MissionNumber,
+  MoodLevel,
   SkillId,
   SkillReasonCode,
 } from '@/lib/recovery/types';
+
+export const moodCopy: Record<MoodLevel, `mood${MoodLevel}`> = {
+  1: 'mood1',
+  2: 'mood2',
+  3: 'mood3',
+  4: 'mood4',
+  5: 'mood5',
+};
 
 export const missionMinutes: Record<MissionNumber, number> = {
   1: 2,

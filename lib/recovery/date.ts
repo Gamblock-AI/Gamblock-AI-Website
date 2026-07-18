@@ -6,6 +6,15 @@ import {
   type RecoveryState,
 } from './types';
 
+export const RECOVERY_TIME_ZONE = 'Asia/Jakarta' as const;
+
+const jakartaDateFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: RECOVERY_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
 export function createEmptyRecoveryState(): RecoveryState {
   return {
     version: RECOVERY_STORAGE_VERSION,
@@ -18,18 +27,35 @@ export function createEmptyRecoveryState(): RecoveryState {
 }
 
 export function getLocalDateString(date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const { year, month, day } = getJakartaDateParts(date);
   return `${year}-${month}-${day}`;
 }
 
 export function getLocalWeekStartString(date = new Date()): string {
-  const weekStart = new Date(date);
-  const day = weekStart.getDay();
-  const daysSinceMonday = day === 0 ? 6 : day - 1;
-  weekStart.setDate(weekStart.getDate() - daysSinceMonday);
-  return getLocalDateString(weekStart);
+  const { year, month, day } = getJakartaDateParts(date);
+  const weekStart = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day)),
+  );
+  const weekDay = weekStart.getUTCDay();
+  const daysSinceMonday = weekDay === 0 ? 6 : weekDay - 1;
+  weekStart.setUTCDate(weekStart.getUTCDate() - daysSinceMonday);
+
+  return [
+    weekStart.getUTCFullYear(),
+    String(weekStart.getUTCMonth() + 1).padStart(2, '0'),
+    String(weekStart.getUTCDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function getJakartaDateParts(date: Date) {
+  const parts = jakartaDateFormatter.formatToParts(date);
+  const values = new Map(parts.map((part) => [part.type, part.value]));
+
+  return {
+    year: values.get('year') ?? '1970',
+    month: values.get('month') ?? '01',
+    day: values.get('day') ?? '01',
+  };
 }
 
 export function createHistoryEvent(

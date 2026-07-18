@@ -17,13 +17,11 @@
     "helpBody": "Submit a support ticket or access setup guides for the Gamblock-AI protection system.",
     "supportAction": "Open support",
     "setupAction": "Setup guide",
-    "syncTitle": "Optional recovery sync",
-    "syncBody": "Data is stored locally first. Enable only the categories you want available on another device.",
+    "syncTitle": "Recovery sync",
+    "syncBody": "Check-ins are stored in your account so they are available across devices. You can still choose whether to sync intentions.",
     "syncIntentions": "Sync intentions",
     "syncIntentionsBody": "Your active intention is sent to your account when connected.",
-    "syncCheckIns": "Sync check-ins",
-    "syncCheckInsBody": "Only mood and urge scores; never browsing history.",
-    "syncPrivateNote": "These choices are off by default and can be disabled at any time. Journals use separate storage settings."
+    "syncPrivateNote": "Intention sync can be disabled at any time. Journals use separate storage settings."
   },
   "supportWorkspace": {
     "eyebrow": "Support",
@@ -64,6 +62,7 @@
     "historyLoading": "Loading ticket history",
     "historyError": "Ticket history could not be loaded.",
     "historyRetry": "Try again",
+    "dateUnavailable": "Date unavailable",
     "urgentTitle": "Need urgent help?",
     "urgentBody": "If the situation feels hard to manage alone, contact someone you trust or call a crisis helpline."
   },
@@ -118,10 +117,12 @@
     "emptyBody": "Requests you submit will appear here with their status.",
     "typeExport": "Data export",
     "typeDelete": "Account deletion",
+    "typeRetentionReview": "Data retention review",
     "dateUnavailable": "Date unavailable",
     "status": {
       "completed": "Completed",
-      "failed": "Failed",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
       "processing": "Processing",
       "pending": "Pending"
     },

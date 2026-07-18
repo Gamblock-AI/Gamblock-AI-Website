@@ -2,6 +2,9 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { renderHook, waitFor } from '@testing-library/react';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { NextIntlClientProvider } from 'next-intl';
+import type { PropsWithChildren } from 'react';
+import accountabilityMessages from '@/messages/id/accountability.json';
 
 // Swal and sonner touch the DOM at call time; mock them to keep jsdom clean.
 vi.mock('sweetalert2', () => ({
@@ -10,6 +13,14 @@ vi.mock('sweetalert2', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 import { useAccountability } from './use-accountability';
+
+function IntlTestProvider({ children }: PropsWithChildren) {
+  return (
+    <NextIntlClientProvider locale="id" messages={accountabilityMessages}>
+      {children}
+    </NextIntlClientProvider>
+  );
+}
 
 const API = 'http://localhost:8080';
 const server = setupServer(
@@ -32,7 +43,9 @@ afterAll(() => server.close());
 
 describe('useAccountability', () => {
   it('loads active partner and approval requests', async () => {
-    const { result } = renderHook(() => useAccountability());
+    const { result } = renderHook(() => useAccountability(), {
+      wrapper: IntlTestProvider,
+    });
     await waitFor(() => expect(result.current.partnerStatus).toBe('active'));
     expect(result.current.partnerEmail).toBe('suci@gmail.com');
     expect(result.current.partnerLinkId).toBe('pl_1');
@@ -41,7 +54,9 @@ describe('useAccountability', () => {
   });
 
   it('exposes partner controls without a student web request modal', async () => {
-    const { result } = renderHook(() => useAccountability());
+    const { result } = renderHook(() => useAccountability(), {
+      wrapper: IntlTestProvider,
+    });
     await waitFor(() => expect(result.current.partnerStatus).toBe('active'));
     expect(typeof result.current.handleInvitePartner).toBe('function');
     expect(result.current).not.toHaveProperty('setIsModalOpen');

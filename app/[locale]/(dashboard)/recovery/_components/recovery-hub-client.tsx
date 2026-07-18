@@ -50,15 +50,6 @@ export function RecoveryHubClient() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        aside={
-          <DashboardNotice
-            icon={LockKeyhole}
-            title={t('privateTitle')}
-            className="shadow-soft"
-          >
-            {t('privateBody')}
-          </DashboardNotice>
-        }
       />
       {persistence === 'memory' ? (
         <div

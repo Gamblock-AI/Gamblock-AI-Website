@@ -1,57 +1,65 @@
 'use client';
 
 import Image from 'next/image';
-import { Smartphone, Monitor } from 'lucide-react';
+import { ArrowRight, Monitor, Smartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { Section } from '@/components/ui/section';
 import { Pill } from '@/components/ui/pill';
+import { Button } from '@/components/ui/button';
 import { Reveal } from '@/components/common/Reveal';
+import { ROUTES } from '@/routes';
 
-/**
- * PlatformSection — multi-platform reach (Android + Windows, offline-capable)
- * with a laptop mockup.
- */
 export function PlatformSection() {
   const t = useTranslations('LandingPage');
 
-  const badges = [
-    { icon: Smartphone, key: 'platformAndroid' },
-    { icon: Monitor, key: 'platformWindows' },
-  ] as const;
-
   return (
-    <Section tone="aqua">
-      <Reveal className="mx-auto mb-12 max-w-2xl text-center">
-        <Pill variant="navy" className="mb-4">
-          {t('platformKicker')}
-        </Pill>
-        <h2 className="text-heading text-3xl text-navy md:text-4xl">{t('platformTitle')}</h2>
-        <p className="mt-4 text-base text-muted-foreground">{t('platformBody')}</p>
-      </Reveal>
+    <Section tone="white" className="py-20 md:py-28">
+      <div className="border-navy/8 overflow-hidden rounded-[2.5rem] border bg-white shadow-[0_30px_90px_rgba(22,41,76,0.12)]">
+        <div className="grid items-stretch lg:grid-cols-[0.82fr_1.18fr]">
+          <Reveal className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
+            <Pill variant="navy" className="mb-4">
+              {t('platformKicker')}
+            </Pill>
+            <h2 className="text-heading text-navy text-3xl md:text-4xl">{t('platformTitle')}</h2>
+            <p className="text-muted-foreground mt-4 max-w-xl text-base leading-7">
+              {t('platformBody')}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-2.5">
+              <PlatformBadge icon={Smartphone} label={t('platformAndroid')} />
+              <PlatformBadge icon={Monitor} label={t('platformWindows')} />
+            </div>
+            <Link href={ROUTES.DOWNLOAD} className="mt-8 inline-block">
+              <Button variant="primary" size="lg" className="rounded-full">
+                {t('linkDownload')}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </Reveal>
 
-      <Reveal delay={0.08} className="flex flex-col items-center gap-8">
-        <div className="relative w-full max-w-3xl">
-          <div className="absolute inset-0 -z-10 rounded-[3rem] bg-azure blur-3xl" aria-hidden />
-          <Image
-            src="/images/laptop-mockup.webp"
-            alt="Tampilan Gamblock-AI di laptop dan perangkat desktop"
-            width={1200}
-            height={760}
-            className="w-full select-none drop-shadow-[0_30px_70px_rgba(22,41,76,0.22)]"
-          />
+          <Reveal
+            delay={0.08}
+            className="relative min-h-[24rem] overflow-hidden sm:min-h-[30rem] lg:min-h-0 lg:self-stretch"
+          >
+            <Image
+              src="/images/landing/generated/platform-student-context.webp"
+              alt="Mahasiswa berjalan di kampus ditemani Gami dalam satu alur perlindungan"
+              fill
+              sizes="(max-width: 1024px) 100vw, 58vw"
+              className="object-cover object-center"
+            />
+          </Reveal>
         </div>
-        <div className="flex flex-wrap justify-center gap-3">
-          {badges.map(({ icon: Icon, key }) => (
-            <span
-              key={key}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-navy shadow-soft"
-            >
-              <Icon className="h-4 w-4 text-navy" />
-              {t(key)}
-            </span>
-          ))}
-        </div>
-      </Reveal>
+      </div>
     </Section>
+  );
+}
+
+function PlatformBadge({ icon: Icon, label }: { icon: typeof Smartphone; label: string }) {
+  return (
+    <span className="border-navy/10 bg-navy/[0.04] text-navy inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold">
+      <Icon className="h-4 w-4" />
+      {label}
+    </span>
   );
 }

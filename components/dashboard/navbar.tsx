@@ -101,7 +101,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card/90 px-4 shadow-[0_12px_34px_-30px_rgba(22,41,76,0.7)] backdrop-blur-md sm:px-6 lg:justify-between">
+      <header className="sticky top-0 z-40 flex h-[4.5rem] shrink-0 items-center justify-between border-b border-border/90 bg-card/92 px-4 backdrop-blur-md sm:px-6 lg:justify-between xl:px-8">
         <div className="flex flex-1 items-center justify-start lg:hidden">
           <Link
             href={ROUTES.DASHBOARD}
@@ -128,7 +128,7 @@ export function Navbar() {
               aria-expanded={profileOpen}
               aria-label={t('openProfileMenu')}
               onClick={() => setProfileOpen((open) => !open)}
-              className="flex min-h-11 items-center gap-2 rounded-xl border border-navy/15 bg-card px-1.5 text-sm font-semibold text-navy shadow-soft outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/30 hover:bg-azure/60 focus-visible:ring-2 focus-visible:ring-navy/35 focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none sm:px-2"
+              className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-1.5 text-sm font-semibold text-navy outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/25 hover:bg-azure/45 focus-visible:ring-2 focus-visible:ring-navy/35 focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none sm:px-2"
             >
               <span className="bg-azure text-navy flex size-8 items-center justify-center rounded-lg text-xs font-bold">
                 {initials ?? (
