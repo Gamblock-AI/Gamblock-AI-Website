@@ -7,33 +7,37 @@ interface DataRequestActionsProps {
   submitting: 'export' | 'delete' | null;
   onExport: () => void;
   onDelete: () => void;
+  allowDelete: boolean;
 }
 
 export function DataRequestActions({
   submitting,
   onExport,
   onDelete,
+  allowDelete,
 }: DataRequestActionsProps) {
   const t = useTranslations('dataRequestsWorkspace');
 
   return (
-    <div className="grid gap-5 md:grid-cols-2">
-      <DashboardPanel
-        icon={Download}
-        title={t('exportTitle')}
-        description={t('exportBody')}
-        className="flex h-full flex-col"
-      >
-        <Button
-          size="lg"
-          className="w-full sm:w-auto"
-          disabled={submitting !== null}
-          onClick={onExport}
+    <div className={`grid gap-5 ${allowDelete ? 'md:grid-cols-2' : ''}`}>
+      {allowDelete ? (
+        <DashboardPanel
+          icon={Download}
+          title={t('exportTitle')}
+          description={t('exportBody')}
+          className="flex h-full flex-col"
         >
-          <Download className="size-4" aria-hidden="true" />
-          {submitting === 'export' ? t('submitting') : t('exportAction')}
-        </Button>
-      </DashboardPanel>
+          <Button
+            size="lg"
+            className="w-full sm:w-auto"
+            disabled={submitting !== null}
+            onClick={onExport}
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {submitting === 'export' ? t('submitting') : t('exportAction')}
+          </Button>
+        </DashboardPanel>
+      ) : null}
       <DashboardPanel
         icon={Trash2}
         title={t('deleteTitle')}

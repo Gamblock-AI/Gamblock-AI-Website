@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CircleAlert, Database, LockKeyhole } from 'lucide-react';
+import { CircleAlert, Database } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
   DashboardNotice,
@@ -13,12 +13,22 @@ import { toastError, toastSuccess } from '@/lib/feedback';
 import { DataRequestActions } from './data-request-actions';
 import { DataRequestHistory } from './data-request-history';
 import { DeleteDataDialog } from './delete-data-dialog';
+import { useLocalUser } from '@/hooks/use-local-user';
 
 export function DataRequestsClient() {
   const t = useTranslations('dataRequestsWorkspace');
+  const user = useLocalUser();
+  const canDelete = user.role === 'user' || user.role === 'partner';
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const { requests, loading, submitting, error, refetch, createRequest } =
-    useDataRequests();
+  const {
+    requests,
+    loading,
+    submitting,
+    error,
+    refetch,
+    createRequest,
+    downloadExport,
+  } = useDataRequests();
 
   const submitRequest = async (type: 'export' | 'delete'): Promise<boolean> => {
     try {
@@ -50,19 +60,27 @@ export function DataRequestsClient() {
         submitting={submitting}
         onExport={() => void submitRequest('export')}
         onDelete={() => setDeleteOpen(true)}
+        allowDelete={canDelete}
       />
       <DataRequestHistory
         requests={requests}
         loading={loading}
         error={error}
         onRetry={() => void refetch()}
+        onDownload={(id) =>
+          void downloadExport(id).catch((downloadError) =>
+            toastError(downloadError, t('downloadError'))
+          )
+        }
       />
-      <DeleteDataDialog
-        open={deleteOpen}
-        submitting={submitting !== null}
-        onOpenChange={setDeleteOpen}
-        onDelete={() => submitRequest('delete')}
-      />
+      {canDelete ? (
+        <DeleteDataDialog
+          open={deleteOpen}
+          submitting={submitting !== null}
+          onOpenChange={setDeleteOpen}
+          onDelete={() => submitRequest('delete')}
+        />
+      ) : null}
     </DashboardPage>
   );
 }

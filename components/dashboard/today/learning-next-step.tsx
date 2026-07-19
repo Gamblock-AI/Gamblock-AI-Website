@@ -25,7 +25,7 @@ export function LearningNextStep({
 
   return (
     <section
-      className="border-border bg-card shadow-soft flex min-h-64 flex-col rounded-2xl border p-5"
+      className="border-border bg-card shadow-soft flex h-full min-h-64 flex-col rounded-2xl border p-5"
       aria-labelledby="learning-next-step-title"
     >
       <div className="flex items-start gap-3">

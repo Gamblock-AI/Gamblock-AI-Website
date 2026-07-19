@@ -17,7 +17,7 @@ export function JournalSection() {
     event.preventDefault();
     if (!journalText.trim()) return;
     try {
-      await createReflection(journalText.trim(), journalMood);
+      await createReflection({ text: journalText.trim() });
       setJournalText('');
       toastSuccess(t('journalSaved'));
     } catch (requestError) {

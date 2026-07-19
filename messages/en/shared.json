@@ -6,6 +6,7 @@
     "howItWorks": "How It Works",
     "team": "Team",
     "login": "Log in",
+    "dashboard": "Dashboard",
     "start": "Start Free",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
@@ -35,7 +36,8 @@
     "linkFaq": "FAQ",
     "linkHelp": "Help Center",
     "linkContact": "Contact Us",
-    "linkTerms": "Terms of Service"
+    "linkTerms": "Terms of Service",
+    "socialLabel": "Gamblock-AI social media"
   },
   "dashboardNav": {
     "skipToContent": "Skip to content",
@@ -84,9 +86,8 @@
       "unknown": "Other action ({value})"
     },
     "supportStatus": {
-      "open": "Open",
+      "waiting_support": "Waiting for support",
       "waiting_user": "Waiting for user",
-      "waiting_internal": "With support team",
       "resolved": "Resolved",
       "closed": "Closed",
       "unknown": "Other status ({value})"
@@ -144,6 +145,12 @@
       "used": "Used",
       "expired": "Expired",
       "queued": "Queued",
+      "processing": "Processing",
+      "pending_confirmation": "Awaiting confirmation",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
+      "accepted": "Accepted",
+      "revoked": "Revoked",
       "sent": "Sent",
       "failed": "Failed",
       "unknown": "Other status ({value})"
@@ -167,9 +174,20 @@
       "unknown": "Other topic ({value})"
     }
   },
-  "NotFound": {
-    "message": "The page you are looking for was not found.",
-    "backHome": "Back to Home"
+  "ErrorPages": {
+    "notFound": {
+      "title": "This page could not be found",
+      "description": "This link may have moved. You are still safe and can continue from the home page.",
+      "imageAlt": "Gami sits beside a map while looking for directions."
+    },
+    "unexpected": {
+      "title": "Something needs a moment",
+      "description": "This page could not load yet. Try again, or return to the home page.",
+      "imageAlt": "Gami calmly repairs a small module."
+    },
+    "backHome": "Back to home",
+    "goBack": "Go back",
+    "tryAgain": "Try again"
   },
   "empty-state-test": {
     "text_331": "Belum ada member"

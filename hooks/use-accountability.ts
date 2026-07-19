@@ -1,263 +1,282 @@
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api-client';
-import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
+'use client';
 
-export interface PartnerLink {
+import { useCallback, useEffect, useState } from 'react';
+import { apiClient } from '@/lib/api-client';
+
+export interface SharingPreferences {
+  protection_health: boolean;
+  protection_activity: boolean;
+  recovery_engagement: boolean;
+  education_progress: boolean;
+}
+
+export interface MemberAggregate {
+  protection_status?: 'ready' | 'attention' | 'unknown';
+  active_device_count?: number;
+  last_heartbeat_bucket?: 'today' | '1-3d' | '4-7d' | 'older' | 'never';
+  weekly_block_count?: number;
+  check_in_days?: number;
+  mission_completed?: number;
+  education_progress_band?:
+    | 'not_started'
+    | 'starting'
+    | 'in_progress'
+    | 'near_complete';
+}
+
+export interface AccountabilityGroup {
   id: string;
-  partner_email: string;
-  status: string;
-  relationship_role?: 'owner' | 'partner';
+  owner_name: string;
+  name: string;
+  description: string;
+  join_code?: string;
+  join_code_hint: string;
+  status: 'active' | 'archived';
+  member_count: number;
+  code_rotated_at: string;
+  created_at: string;
+}
+
+export interface AccountabilityMembership {
+  id: string;
+  group_id: string;
+  student_id: string;
+  student_name: string;
+  student_email?: string;
+  status:
+    | 'active'
+    | 'leave_pending'
+    | 'support_review'
+    | 'safety_suspended'
+    | 'left'
+    | 'removed';
+  sharing: SharingPreferences;
+  aggregate: MemberAggregate;
+  joined_at: string;
+  ended_at?: string;
+}
+
+export interface MembershipExitRequest {
+  id: string;
+  membership_id: string;
+  requested_by: string;
+  kind: 'normal' | 'unsafe' | 'partner_removal';
+  status: 'pending' | 'approved' | 'denied' | 'auto_reviewed' | 'cancelled';
+  reason?: string;
+  review_due_at?: string;
+  created_at: string;
+}
+
+export interface PartnerContactRequest {
+  id: string;
+  membership_id: string;
+  student_name: string;
+  category: 'check_in' | 'practical_help' | 'accountability' | 'other';
+  message?: string;
+  status: 'pending' | 'acknowledged' | 'closed' | 'cancelled';
+  escalated_at?: string;
+  created_at: string;
 }
 
 export interface ApprovalRequest {
   id: string;
   device_id: string;
-  partner_link_id: string;
-  action: string;
-  status: string;
+  membership_id: string;
+  action: 'pause_protection' | 'uninstall_detected';
+  status: 'pending' | 'approved' | 'denied' | 'expired' | 'cancelled';
   reason: string;
+  supportive_response?: string;
   requested_duration_minutes: number;
   created_at: string;
   expires_at?: string;
-  resolved_at?: string;
-  applied_at?: string;
-  grant_expires_at?: string;
 }
 
-function resolvePartnerState(data: {
-  active_partner: PartnerLink | null | undefined;
-  items: PartnerLink[];
-}) {
-  if (data.active_partner) {
-    return {
-      email: data.active_partner.partner_email,
-      status: 'active' as const,
-      id: data.active_partner.id,
-      relationshipRole: data.active_partner.relationship_role ?? 'owner',
-    };
-  }
-
-  const invited = data.items?.find((partner) => partner.status === 'invited');
-  if (invited) {
-    return {
-      email: invited.partner_email,
-      status: 'invited' as const,
-      id: invited.id,
-      relationshipRole: invited.relationship_role ?? 'owner',
-    };
-  }
-
-  return {
-    email: '',
-    status: 'none' as const,
-    id: null,
-    relationshipRole: null,
-  };
+export interface AccountabilityWorkspace {
+  role: 'user' | 'partner';
+  groups: AccountabilityGroup[];
+  membership?: AccountabilityMembership;
+  members: AccountabilityMembership[];
+  exit_requests: MembershipExitRequest[];
+  contact_requests: PartnerContactRequest[];
+  pending_actions: number;
 }
+
+const EMPTY_WORKSPACE: AccountabilityWorkspace = {
+  role: 'user',
+  groups: [],
+  members: [],
+  exit_requests: [],
+  contact_requests: [],
+  pending_actions: 0,
+};
 
 export function useAccountability() {
-  const t = useTranslations('accountabilityWorkspace');
-  const [partnerEmail, setPartnerEmail] = useState('');
-  const [partnerStatus, setPartnerStatus] = useState<
-    'none' | 'invited' | 'active'
-  >('none');
-  const [partnerLinkId, setPartnerLinkId] = useState<string | null>(null);
-  const [partnerLinks, setPartnerLinks] = useState<PartnerLink[]>([]);
-  const [relationshipRole, setRelationshipRole] = useState<
-    'owner' | 'partner' | null
-  >(null);
-  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
-
+  const [workspace, setWorkspace] =
+    useState<AccountabilityWorkspace>(EMPTY_WORKSPACE);
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [dataError, setDataError] = useState<unknown>(null);
+  const [loading, setLoading] = useState(true);
+  const [mutating, setMutating] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   const fetchData = useCallback(async () => {
-    setDataLoading(true);
-    setDataError(null);
+    setLoading(true);
+    setError(null);
     try {
-      const [partnersData, approvalData] = await Promise.all([
-        apiClient<{
-          active_partner: PartnerLink | null | undefined;
-          items: PartnerLink[];
-        }>('/partners'),
+      const [nextWorkspace, approvalRequests] = await Promise.all([
+        apiClient<AccountabilityWorkspace>('/accountability/workspace'),
         apiClient<ApprovalRequest[]>('/approval-requests'),
       ]);
-      const nextPartner = resolvePartnerState(partnersData);
-      setPartnerEmail(nextPartner.email);
-      setPartnerStatus(nextPartner.status);
-      setPartnerLinkId(nextPartner.id);
-      setPartnerLinks(partnersData.items ?? []);
-      setRelationshipRole(nextPartner.relationshipRole);
-      setRequests(approvalData || []);
-    } catch (err) {
-      setDataError(err);
+      setWorkspace(nextWorkspace);
+      setRequests(approvalRequests ?? []);
+    } catch (fetchError) {
+      setError(fetchError);
     } finally {
-      setDataLoading(false);
+      setLoading(false);
     }
   }, []);
 
-  // Fetch on mount. setState only after `await` (lint-safe, no setTimeout).
   useEffect(() => {
-    let active = true;
-    Promise.all([
-      apiClient<{
-        active_partner: PartnerLink | null | undefined;
-        items: PartnerLink[];
-      }>('/partners'),
-      apiClient<ApprovalRequest[]>('/approval-requests'),
-    ])
-      .then(([partnersData, approvalData]) => {
-        if (!active) return;
-        const nextPartner = resolvePartnerState(partnersData);
-        setPartnerEmail(nextPartner.email);
-        setPartnerStatus(nextPartner.status);
-        setPartnerLinkId(nextPartner.id);
-        setPartnerLinks(partnersData.items ?? []);
-        setRelationshipRole(nextPartner.relationshipRole);
-        setRequests(approvalData || []);
-      })
-      .catch((err: unknown) => {
-        if (active) setDataError(err);
-      })
-      .finally(() => {
-        if (active) setDataLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+    void fetchData();
+  }, [fetchData]);
 
-  const handleInvitePartner = useCallback(
-    async (email: string) => {
-      if (!email.trim()) return;
-      setLoading(true);
+  const mutate = useCallback(
+    async <T>(request: Promise<T>) => {
+      setMutating(true);
       try {
-        const inviteRes = await apiClient<{
-          id: string;
-          status: string;
-          invite_url: string;
-          expires_in: string;
-        }>('/partners/invitations', {
-          method: 'POST',
-          body: JSON.stringify({ email }),
-        });
-        toast.success(t('inviteSuccess', { email }));
-        setPartnerStatus('invited');
-        setPartnerLinkId(inviteRes.id);
-        setInviteUrl(inviteRes.invite_url);
-        fetchData();
-        return inviteRes;
-      } catch (err) {
-        toast.error(t('inviteError'));
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchData, t]
-  );
-
-  const selectPartner = useCallback(
-    (id: string) => {
-      const selected = partnerLinks.find((partner) => partner.id === id);
-      if (!selected) return;
-      setPartnerLinkId(selected.id);
-      setPartnerEmail(selected.partner_email);
-      setPartnerStatus(
-        selected.status === 'active'
-          ? 'active'
-          : selected.status === 'invited'
-            ? 'invited'
-            : 'none'
-      );
-      setRelationshipRole(selected.relationship_role ?? 'owner');
-    },
-    [partnerLinks]
-  );
-
-  const handleRevokePartner = useCallback(async () => {
-    if (!partnerLinkId) return;
-    try {
-      await apiClient(`/partners/${partnerLinkId}/revoke`, {
-        method: 'POST',
-      });
-      toast.success(t('revokeSuccess'));
-      setPartnerEmail('');
-      setPartnerStatus('none');
-      setPartnerLinkId(null);
-      setRelationshipRole(null);
-      setInviteUrl(null);
-      await fetchData();
-    } catch (err) {
-      toast.error(t('revokeError'));
-      throw err;
-    }
-  }, [partnerLinkId, fetchData, t]);
-
-  const handleCancelRequest = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient(`/approval-requests/${id}/cancel`, {
-          method: 'POST',
-        });
-        toast.success(t('requestCancelSuccess'));
+        const result = await request;
         await fetchData();
-      } catch (err) {
-        toast.error(t('requestCancelError'));
-        throw err;
-      }
-    },
-    [fetchData, t]
-  );
-
-  const handleResolveRequest = useCallback(
-    async (id: string, decision: 'approve' | 'deny') => {
-      setLoading(true);
-      try {
-        await apiClient(`/approval-requests/${id}/${decision}`, {
-          method: 'POST',
-        });
-        toast.success(
-          decision === 'approve'
-            ? t('requestApproveSuccess')
-            : t('requestDenySuccess')
-        );
-        await fetchData();
-      } catch (err) {
-        toast.error(t('requestDecisionError'));
-        throw err;
+        return result;
       } finally {
-        setLoading(false);
+        setMutating(false);
       }
     },
-    [fetchData, t]
-  );
-
-  const pendingRequest = requests.find(
-    (request) => request.status === 'pending'
+    [fetchData]
   );
 
   return {
-    partnerEmail,
-    setPartnerEmail,
-    partnerStatus,
-    partnerLinkId,
-    partnerLinks,
-    relationshipRole,
-    inviteUrl,
+    workspace,
     requests,
     loading,
-    dataLoading,
-    dataError,
-    fetchData,
-    handleInvitePartner,
-    selectPartner,
-    handleRevokePartner,
-    handleCancelRequest,
-    handleResolveRequest,
-    pendingRequest,
+    mutating,
+    error,
+    refetch: fetchData,
+    createGroup: (name: string, description: string) =>
+      mutate(
+        apiClient<AccountabilityGroup>('/accountability/groups', {
+          method: 'POST',
+          body: JSON.stringify({ name, description }),
+        })
+      ),
+    previewGroup: (code: string) =>
+      apiClient<AccountabilityGroup>('/accountability/groups/preview', {
+        method: 'POST',
+        body: JSON.stringify({ code }),
+      }),
+    joinGroup: (code: string) =>
+      mutate(
+        apiClient<AccountabilityMembership>('/accountability/groups/join', {
+          method: 'POST',
+          body: JSON.stringify({ code, confirmed: true }),
+        })
+      ),
+    rotateCode: (groupId: string) =>
+      mutate(
+        apiClient<{ join_code: string }>(
+          `/accountability/groups/${groupId}/rotate-code`,
+          { method: 'POST' }
+        )
+      ),
+    archiveGroup: (groupId: string) =>
+      mutate(
+        apiClient(`/accountability/groups/${groupId}/archive`, {
+          method: 'POST',
+        })
+      ),
+    updateSharing: (membershipId: string, sharing: SharingPreferences) =>
+      mutate(
+        apiClient<AccountabilityMembership>(
+          `/accountability/memberships/${membershipId}/sharing`,
+          { method: 'PATCH', body: JSON.stringify(sharing) }
+        )
+      ),
+    requestLeave: (
+      membershipId: string,
+      kind: 'normal' | 'unsafe',
+      reason: string
+    ) =>
+      mutate(
+        apiClient<MembershipExitRequest>(
+          `/accountability/memberships/${membershipId}/leave`,
+          { method: 'POST', body: JSON.stringify({ kind, reason }) }
+        )
+      ),
+    resolveLeave: (requestId: string, decision: 'approved' | 'denied') =>
+      mutate(
+        apiClient(`/accountability/exit-requests/${requestId}/resolve`, {
+          method: 'POST',
+          body: JSON.stringify({ decision }),
+        })
+      ),
+    removeMember: (membershipId: string, reason: string) =>
+      mutate(
+        apiClient(`/accountability/memberships/${membershipId}/remove`, {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        })
+      ),
+    createContactRequest: (
+      membershipId: string,
+      category: PartnerContactRequest['category'],
+      message: string
+    ) =>
+      mutate(
+        apiClient<PartnerContactRequest>('/accountability/contact-requests', {
+          method: 'POST',
+          body: JSON.stringify({
+            membership_id: membershipId,
+            category,
+            message,
+          }),
+        })
+      ),
+    transitionContact: (requestId: string, status: string) =>
+      mutate(
+        apiClient(`/accountability/contact-requests/${requestId}/transition`, {
+          method: 'POST',
+          body: JSON.stringify({ status }),
+        })
+      ),
+    cancelApproval: (requestId: string) =>
+      mutate(
+        apiClient(`/approval-requests/${requestId}/cancel`, {
+          method: 'POST',
+        })
+      ),
+    resolveApproval: (
+      requestId: string,
+      decision: 'approve' | 'deny',
+      supportiveResponse: string
+    ) =>
+      mutate(
+        apiClient(`/approval-requests/${requestId}/${decision}`, {
+          method: 'POST',
+          body: JSON.stringify({ supportive_response: supportiveResponse }),
+        })
+      ),
+    resendEmailVerification: () =>
+      apiClient<{ sent: boolean; preview_url?: string }>(
+        '/auth/email-verification/resend',
+        { method: 'POST' }
+      ),
+    startPhoneVerification: (phone: string) =>
+      apiClient<{ sent: boolean; preview_code?: string }>(
+        '/auth/phone-verification/start',
+        { method: 'POST', body: JSON.stringify({ phone }) }
+      ),
+    confirmPhoneVerification: (code: string) =>
+      apiClient<{ verified: boolean }>('/auth/phone-verification/confirm', {
+        method: 'POST',
+        body: JSON.stringify({ code }),
+      }),
   };
 }

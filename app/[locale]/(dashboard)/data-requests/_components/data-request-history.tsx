@@ -1,4 +1,4 @@
-import { CircleAlert, FileClock, RefreshCw } from 'lucide-react';
+import { CircleAlert, Download, FileClock, RefreshCw } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   DashboardNotice,
@@ -16,6 +16,7 @@ interface DataRequestHistoryProps {
   loading: boolean;
   error: unknown;
   onRetry: () => void;
+  onDownload: (id: string) => void;
 }
 
 export function DataRequestHistory({
@@ -23,6 +24,7 @@ export function DataRequestHistory({
   loading,
   error,
   onRetry,
+  onDownload,
 }: DataRequestHistoryProps) {
   const t = useTranslations('dataRequestsWorkspace');
 
@@ -44,6 +46,7 @@ export function DataRequestHistory({
         requests={requests}
         loading={loading}
         error={error}
+        onDownload={onDownload}
       />
     </DashboardPanel>
   );
@@ -53,6 +56,7 @@ function DataRequestHistoryContent({
   requests,
   loading,
   error,
+  onDownload,
 }: Omit<DataRequestHistoryProps, 'onRetry'>) {
   const t = useTranslations('dataRequestsWorkspace');
   const locale = useLocale();
@@ -126,6 +130,19 @@ function DataRequestHistoryContent({
             <DashboardStatus tone={status.tone}>
               {t(`status.${status.key}`)}
             </DashboardStatus>
+            {request.type === 'export' &&
+            request.status === 'completed' &&
+            request.result_expires_at &&
+            new Date(request.result_expires_at) > new Date() ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onDownload(request.id)}
+              >
+                <Download className="size-4" aria-hidden="true" />
+                {t('downloadAction')}
+              </Button>
+            ) : null}
           </article>
         );
       })}

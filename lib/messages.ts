@@ -21,6 +21,13 @@ export const MESSAGES: Record<string, string> = {
   invalid_refresh_token: 'Sesi tidak valid. Silakan masuk kembali.',
   refresh_token_required: 'Sesi telah berakhir. Silakan masuk kembali.',
   logout_failed: 'Gagal keluar. Silakan coba lagi.',
+  email_verification_failed:
+    'Tautan verifikasi email tidak valid atau telah kedaluwarsa.',
+  email_verification_delivery_failed:
+    'Email verifikasi belum dapat dikirim. Silakan coba lagi.',
+  phone_verification_failed: 'Nomor atau kode verifikasi WhatsApp tidak valid.',
+  recent_auth_required:
+    'Silakan masuk kembali sebelum menyelesaikan keputusan sensitif ini.',
 
   // devices
   device_create_failed: 'Gagal mendaftarkan perangkat.',
@@ -57,6 +64,26 @@ export const MESSAGES: Record<string, string> = {
   approval_deny_failed: 'Gagal menolak permohonan.',
   approval_apply_failed:
     'Persetujuan tidak dapat diterapkan atau masa penerapannya telah berakhir.',
+  accountability_workspace_failed:
+    'Ruang akuntabilitas tidak dapat dimuat untuk akun ini.',
+  accountability_group_create_failed:
+    'Grup belum dapat dibuat. Pastikan email dan WhatsApp pendamping telah terverifikasi.',
+  accountability_code_invalid: 'Kode grup tidak valid atau sudah diganti.',
+  accountability_join_failed:
+    'Belum dapat bergabung ke grup. Periksa konfirmasi dan keanggotaan aktif Anda.',
+  accountability_code_rotate_failed: 'Kode grup belum dapat diganti.',
+  accountability_group_archive_failed:
+    'Grup hanya dapat diarsipkan setelah tidak memiliki anggota aktif.',
+  accountability_sharing_update_failed:
+    'Preferensi berbagi belum dapat diperbarui.',
+  accountability_leave_failed: 'Permintaan keluar belum dapat diproses.',
+  accountability_leave_resolve_failed: 'Keputusan keluar belum dapat disimpan.',
+  accountability_member_remove_failed:
+    'Anggota belum dapat dikeluarkan dari grup.',
+  partner_contact_create_failed:
+    'Permintaan menghubungi pendamping belum dapat dikirim.',
+  partner_contact_transition_failed:
+    'Status permintaan kontak belum dapat diperbarui.',
 
   // organizations
   name_required: 'Nama grup wajib diisi.',
@@ -77,6 +104,7 @@ export const MESSAGES: Record<string, string> = {
   // reflections / psychoeducation
   fetch_reflections_failed: 'Gagal memuat jurnal refleksi.',
   reflection_create_failed: 'Gagal menyimpan jurnal refleksi.',
+  reflection_update_failed: 'Jurnal refleksi belum dapat diperbarui.',
   fetch_modules_failed: 'Gagal memuat modul psikoedukasi.',
   module_not_found: 'Modul tidak ditemukan.',
   education_conflict:
@@ -97,14 +125,48 @@ export const MESSAGES: Record<string, string> = {
   fetch_support_cases_failed: 'Gagal memuat tiket bantuan.',
   support_case_failed: 'Gagal mengirim tiket bantuan.',
   summary_required: 'Ringkasan tiket wajib diisi.',
+  support_case_not_found:
+    'Tiket bantuan tidak ditemukan atau bukan milik Anda.',
+  support_reply_failed: 'Balasan belum dapat dikirim.',
+  support_transition_failed: 'Status tiket belum dapat diperbarui.',
+  support_claim_failed:
+    'Tiket belum dapat diambil. Muat ulang antrean dan coba lagi.',
+  support_release_failed: 'Tiket belum dapat dilepas dari antrean Anda.',
+  recovery_records_failed: 'Data pemulihan belum dapat dimuat.',
+  recovery_record_save_failed: 'Data pemulihan belum dapat disimpan.',
+  recovery_practice_fetch_failed: 'Latihan pemulihan belum dapat dimuat.',
+  recovery_practice_invalid:
+    'Latihan belum dapat disimpan. Periksa jenis, durasi, atau umpan baliknya.',
+  recovery_space_fetch_failed: 'Ruang pulih belum dapat dimuat.',
+  recovery_space_update_failed: 'Tata ruang pulih belum dapat disimpan.',
+  weekly_review_fetch_failed: 'Tinjauan mingguan belum dapat dimuat.',
+  weekly_review_save_failed: 'Tinjauan mingguan belum dapat disimpan.',
   fetch_data_requests_failed: 'Gagal memuat permintaan data.',
   data_request_failed: 'Gagal mengajukan permintaan data.',
+  data_request_retry_failed: 'Permintaan data belum dapat diproses ulang.',
+  data_request_reject_failed: 'Permintaan data belum dapat ditolak.',
+  data_export_unavailable:
+    'Arsip data tidak tersedia atau masa unduhnya telah berakhir.',
+  account_deletion_failed: 'Penghapusan akun belum dapat dikonfirmasi.',
   type_required: 'Jenis permintaan wajib dipilih.',
 
   // admin / releases / emergency
   fetch_admin_modules_failed: 'Gagal memuat modul admin.',
   fetch_admin_model_releases_failed: 'Gagal memuat rilis model.',
   fetch_admin_support_cases_failed: 'Gagal memuat tiket admin.',
+  fetch_admin_releases_failed: 'Gagal memuat rilis operasional.',
+  admin_overview_failed: 'Gagal memuat ringkasan operasional.',
+  site_social_links_failed: 'Pengaturan sosial media belum dapat diproses.',
+  audit_events_failed: 'Gagal memuat jejak audit.',
+  operators_fetch_failed: 'Gagal memuat akun operator.',
+  operator_invite_failed: 'Undangan operator belum dapat dikirim.',
+  operator_update_failed: 'Akun operator belum dapat diperbarui.',
+  operator_invitation_revoke_failed: 'Undangan operator belum dapat dicabut.',
+  operator_invitation_invalid:
+    'Undangan operator tidak valid atau telah kedaluwarsa.',
+  operator_invitation_accept_failed: 'Akun operator belum dapat diaktifkan.',
+  release_rollout_create_failed: 'Rollout belum dapat disiapkan.',
+  release_rollout_transition_failed: 'Status rollout belum dapat diperbarui.',
   create_model_release_failed: 'Gagal merilis model.',
   create_ruleset_release_failed: 'Gagal merilis ruleset.',
   create_network_release_failed: 'Gagal merilis ruleset jaringan.',

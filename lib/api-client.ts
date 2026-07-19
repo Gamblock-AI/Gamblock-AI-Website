@@ -50,6 +50,11 @@ async function unwrapResponse<T>(response: Response): Promise<T> {
   return json && typeof json === 'object' && 'data' in json ? json.data : json;
 }
 
+async function unwrapBlobResponse(response: Response): Promise<Blob> {
+  if (!response.ok) await throwApiError(response);
+  return response.blob();
+}
+
 async function refreshAccessToken(): Promise<string> {
   if (refreshPromise) return refreshPromise;
 
@@ -85,7 +90,8 @@ async function refreshAccessToken(): Promise<string> {
 
 async function performApiRequest<T>(
   path: string,
-  options?: RequestInit
+  options?: RequestInit,
+  unwrap: (response: Response) => Promise<T> = unwrapResponse
 ): Promise<T> {
   const token =
     typeof window !== 'undefined'
@@ -114,7 +120,7 @@ async function performApiRequest<T>(
     typeof window !== 'undefined' &&
     !cleanPath.includes('/auth/refresh') &&
     !cleanPath.includes('/auth/login');
-  if (!canRefresh) return unwrapResponse<T>(response);
+  if (!canRefresh) return unwrap(response);
 
   try {
     const newToken = await refreshAccessToken();
@@ -126,10 +132,11 @@ async function performApiRequest<T>(
       ]),
       credentials: 'include',
     });
-    return await unwrapResponse<T>(retriedResponse);
+    return await unwrap(retriedResponse);
   } catch (error) {
     clearBrowserSession();
-    window.location.href = `${getCurrentLocalePrefix()}/login`;
+    const nextPath = `${window.location.pathname.replace(/^\/(id|en)(?=\/|$)/, '') || '/'}${window.location.search}`;
+    window.location.href = `${getCurrentLocalePrefix()}/login?next=${encodeURIComponent(nextPath)}`;
     throw error instanceof ApiError
       ? error
       : new ApiError(401, 'invalid_refresh_token');
@@ -144,6 +151,20 @@ export async function apiClient<T>(
     return await performApiRequest<T>(path, options);
   } catch (error) {
     reportDevelopmentError('API request failed', error, {
+      method: options?.method ?? 'GET',
+    });
+    throw error;
+  }
+}
+
+export async function apiClientBlob(
+  path: string,
+  options?: RequestInit
+): Promise<Blob> {
+  try {
+    return await performApiRequest(path, options, unwrapBlobResponse);
+  } catch (error) {
+    reportDevelopmentError('Binary API request failed', error, {
       method: options?.method ?? 'GET',
     });
     throw error;

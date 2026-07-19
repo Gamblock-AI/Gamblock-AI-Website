@@ -71,7 +71,7 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
 
   return (
     <section
-      className="border-border bg-card shadow-soft rounded-2xl border p-5"
+      className="border-border bg-card shadow-soft h-full rounded-2xl border p-5"
       aria-labelledby="weekly-snapshot-title"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

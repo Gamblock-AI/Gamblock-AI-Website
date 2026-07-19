@@ -44,7 +44,7 @@ export function ProtectionSummary({
 
   return (
     <section
-      className="border-border bg-card shadow-soft rounded-2xl border p-5"
+      className="border-border bg-card shadow-soft flex h-full flex-col rounded-2xl border p-5"
       aria-labelledby="protection-summary-title"
     >
       <div>
@@ -140,7 +140,7 @@ export function ProtectionSummary({
 
           <Link
             href={ROUTES.SETTINGS}
-            className="border-navy/20 text-navy hover:bg-azure/45 focus-visible:ring-navy/35 mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold transition-colors outline-none focus-visible:ring-2"
+            className="border-navy/20 text-navy hover:bg-azure/45 focus-visible:ring-navy/35 mt-auto inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold transition-colors outline-none focus-visible:ring-2"
           >
             <Settings2 className="size-4" aria-hidden="true" />
             {t('protectionManage')}

@@ -17,15 +17,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: 'Email wajib diisi' })
-    .email({ message: 'Format email tidak valid' }),
-  password: z.string().min(6, { message: 'Password minimal 6 karakter' }),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
 
 interface AuthResponse {
   access_token: string;
@@ -40,6 +35,13 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loginSchema = z.object({
+    email: z
+      .string()
+      .min(1, { message: t('validation.emailRequired') })
+      .email({ message: t('validation.emailInvalid') }),
+    password: z.string().min(6, { message: t('validation.passwordMinimum') }),
+  });
 
   const {
     register: formRegister,
@@ -58,7 +60,16 @@ export default function LoginPage() {
     const nextPath =
       requestedNext?.startsWith('/') && !requestedNext.startsWith('//')
         ? requestedNext
-        : ROUTES.DASHBOARD;
+        : [
+              'content_admin',
+              'model_release_operator',
+              'support_operator',
+              'platform_admin',
+            ].includes(res.user.role)
+          ? ROUTES.ADMIN
+          : res.user.role === 'partner'
+            ? ROUTES.PARTNERS
+            : ROUTES.DASHBOARD;
     router.push(nextPath);
   };
 

@@ -64,6 +64,8 @@ export interface EducationModule {
   learning_objective: string;
   disclaimer: string;
   category: string;
+  audience: 'student' | 'partner' | 'all';
+  experience_type: 'article' | 'partner_response_simulator';
   estimated_minutes: number;
   reviewer_name: string;
   reviewer_role: string;
@@ -187,9 +189,11 @@ function useEducationRequest<T>(
   };
 }
 
-export function useEducationModules(locale: string) {
+export function useEducationModules(locale: string, enabled = true) {
   const result = useEducationRequest<EducationModule[]>(
-    `/psychoeducation/modules?locale=${encodeURIComponent(locale)}`,
+    enabled
+      ? `/psychoeducation/modules?locale=${encodeURIComponent(locale)}`
+      : null,
     normalizeEducationModules
   );
   return { modules: result.data ?? [], ...result };

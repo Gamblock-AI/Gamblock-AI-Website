@@ -21,6 +21,7 @@ export function SupportRequestForm({
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('normal');
+  const [impact, setImpact] = useState('can_continue');
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -32,7 +33,9 @@ export function SupportRequestForm({
       await createCase({
         type: category,
         priority,
-        summary: `${cleanSubject}: ${cleanDescription}`,
+        impact,
+        summary: cleanSubject,
+        detail: cleanDescription,
       });
       setSubject('');
       setDescription('');
@@ -48,9 +51,13 @@ export function SupportRequestForm({
       icon={Send}
       title={t('formTitle')}
       description={t('formBody')}
-      className="xl:col-span-8"
+      className="flex h-full flex-col xl:col-span-8"
+      contentClassName="flex flex-1 flex-col"
     >
-      <form onSubmit={(event) => void submit(event)} className="space-y-5">
+      <form
+        onSubmit={(event) => void submit(event)}
+        className="flex flex-1 flex-col space-y-5"
+      >
         <div className="grid gap-5 sm:grid-cols-2">
           <SupportSelect
             id="support-category"
@@ -78,6 +85,17 @@ export function SupportRequestForm({
             <option value="high">{t('priorities.high')}</option>
             <option value="urgent">{t('priorities.urgent')}</option>
           </SupportSelect>
+          <SupportSelect
+            id="support-impact"
+            label={t('impactLabel')}
+            value={impact}
+            onChange={setImpact}
+          >
+            <option value="can_continue">{t('impacts.canContinue')}</option>
+            <option value="partly_blocked">{t('impacts.partlyBlocked')}</option>
+            <option value="fully_blocked">{t('impacts.fullyBlocked')}</option>
+            <option value="safety_concern">{t('impacts.safetyConcern')}</option>
+          </SupportSelect>
         </div>
         <div className="space-y-2">
           <label
@@ -96,7 +114,7 @@ export function SupportRequestForm({
             required
           />
         </div>
-        <div className="space-y-2">
+        <div className="flex flex-1 flex-col space-y-2">
           <label
             htmlFor="support-description"
             className="text-navy text-sm font-semibold"
@@ -110,7 +128,7 @@ export function SupportRequestForm({
             placeholder={t('descriptionPlaceholder')}
             rows={6}
             aria-describedby="support-privacy-help"
-            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 w-full resize-y rounded-xl border p-3 text-sm leading-6 outline-none focus-visible:ring-2"
+            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 min-h-40 w-full flex-1 resize-y rounded-xl border p-3 text-sm leading-6 outline-none focus-visible:ring-2"
             required
           />
           <p
@@ -124,7 +142,7 @@ export function SupportRequestForm({
           type="submit"
           size="lg"
           disabled={submitting}
-          className="w-full sm:w-auto"
+          className="mt-auto w-full sm:w-auto"
         >
           <Send className="size-4" aria-hidden="true" />
           {submitting ? t('submitting') : t('submit')}

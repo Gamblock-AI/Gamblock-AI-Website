@@ -25,6 +25,7 @@ import { notifyLocalUserChanged, useLocalUser } from '@/hooks/use-local-user';
 import { useRecoverySync } from '@/hooks/use-recovery-sync';
 import { GlobalSearch } from './global-search';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+import { AvatarImage } from '@/components/account/avatar-image';
 import { logout } from '@/lib/auth';
 
 const PROFILE_PANEL_ID = 'dashboard-profile-panel';
@@ -101,7 +102,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-[4.5rem] shrink-0 items-center justify-between border-b border-border/90 bg-card/92 px-4 backdrop-blur-md sm:px-6 lg:justify-between xl:px-8">
+      <header className="border-border/90 bg-card/92 sticky top-0 z-40 flex h-[4.5rem] shrink-0 items-center justify-between border-b px-4 backdrop-blur-md sm:px-6 lg:justify-between xl:px-8">
         <div className="flex flex-1 items-center justify-start lg:hidden">
           <Link
             href={ROUTES.DASHBOARD}
@@ -128,13 +129,18 @@ export function Navbar() {
               aria-expanded={profileOpen}
               aria-label={t('openProfileMenu')}
               onClick={() => setProfileOpen((open) => !open)}
-              className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-1.5 text-sm font-semibold text-navy outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/25 hover:bg-azure/45 focus-visible:ring-2 focus-visible:ring-navy/35 focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none sm:px-2"
+              className="border-border bg-card text-navy hover:border-navy/25 hover:bg-azure/45 focus-visible:ring-navy/35 flex min-h-11 items-center gap-2 rounded-xl border px-1.5 text-sm font-semibold transition-[background-color,border-color,transform] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none sm:px-2"
             >
-              <span className="bg-azure text-navy flex size-8 items-center justify-center rounded-lg text-xs font-bold">
-                {initials ?? (
-                  <UserRound className="size-4" aria-hidden="true" />
-                )}
-              </span>
+              <AvatarImage
+                avatarUrl={user.avatar_url}
+                alt=""
+                fallback={
+                  initials ?? (
+                    <UserRound className="size-4" aria-hidden="true" />
+                  )
+                }
+                className="bg-azure text-navy flex size-8 items-center justify-center rounded-lg text-xs font-bold"
+              />
               <span className="hidden max-w-36 truncate sm:block">
                 {user?.display_name || t('profileFallback')}
               </span>
@@ -149,7 +155,7 @@ export function Navbar() {
             {profileOpen && (
               <div
                 id={PROFILE_PANEL_ID}
-                className="absolute right-0 mt-2 w-64 animate-in overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-card fade-in slide-in-from-top-1 duration-150 motion-reduce:animate-none"
+                className="animate-in border-border bg-card shadow-card fade-in slide-in-from-top-1 absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border p-2 duration-150 motion-reduce:animate-none"
               >
                 <div className="border-border border-b px-3 py-3">
                   <p className="text-navy truncate text-sm font-bold">

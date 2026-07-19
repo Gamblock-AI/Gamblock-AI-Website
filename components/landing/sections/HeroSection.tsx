@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { ArrowRight, BookOpen, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
@@ -14,19 +14,19 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden px-6 pt-24 pb-16 md:px-10 lg:min-h-[100dvh]">
-      <GradientBlob className="top-20 left-[-8rem] h-80 w-80" color="bg-sky-light" />
-      <GradientBlob className="top-32 right-[-6rem] h-96 w-96" color="bg-azure" />
+      <GradientBlob
+        className="top-20 left-[-8rem] h-80 w-80"
+        color="bg-sky-light"
+      />
+      <GradientBlob
+        className="top-32 right-[-6rem] h-96 w-96"
+        color="bg-azure"
+      />
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-8 lg:min-h-[calc(100dvh-6rem)] lg:grid-cols-[0.94fr_1.06fr] lg:gap-8">
         <div>
-          <Reveal>
-            <span className="border-navy/10 text-navy shadow-soft inline-flex items-center gap-2 rounded-full border bg-white/75 px-4 py-2 text-xs font-bold tracking-[0.14em] uppercase backdrop-blur">
-              <ShieldCheck className="text-sky h-4 w-4" />
-              {t('badgeNewText')}
-            </span>
-          </Reveal>
           <Reveal delay={0.05}>
-            <h1 className="text-display text-navy mt-7 max-w-3xl text-4xl leading-[1.05] sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+            <h1 className="text-display text-navy max-w-3xl text-4xl leading-[1.05] sm:text-5xl md:text-6xl lg:text-[4.25rem]">
               {t('titleLead')}{' '}
               <span className="text-crimson">{t('titleAccent')}</span>{' '}
               {t('titleTail')}
@@ -67,8 +67,14 @@ export function HeroSection() {
           delay={0.1}
           className="relative flex min-h-[31rem] items-center justify-center lg:-mr-12 lg:min-h-[calc(100dvh-7rem)] lg:justify-end"
         >
-          <div className="absolute h-[68%] w-[68%] rounded-full bg-cyan-200/35 blur-3xl" aria-hidden />
-          <div className="bg-navy/10 absolute bottom-[8%] h-16 w-[68%] rounded-full blur-2xl" aria-hidden />
+          <div
+            className="absolute h-[68%] w-[68%] rounded-full bg-cyan-200/35 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="bg-navy/10 absolute bottom-[8%] h-16 w-[68%] rounded-full blur-2xl"
+            aria-hidden
+          />
           <Image
             src="/images/landing/generated/gami-guide-hero.webp"
             alt="Gami, pendamping digital Gamblock-AI, melambai dengan ramah"

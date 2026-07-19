@@ -18,6 +18,8 @@ export interface AdminEducationCheck {
 }
 
 export interface AdminEducationDocument {
+  audience: 'student' | 'partner' | 'all';
+  experience_type: 'article' | 'partner_response_simulator';
   category: string;
   estimated_minutes: number;
   reviewer_name: string;
@@ -61,13 +63,22 @@ export interface AdminEducationMedia {
   height?: number;
 }
 
+export interface AdminSupportMessage {
+  id: string;
+  author_role: 'requester' | 'support_operator';
+  content: string;
+  created_at: string;
+}
+
 export interface AdminSupportCase {
   id: string;
   title: string;
   type: string;
   status: string;
   priority: string;
+  impact?: string;
   owner?: string;
+  messages?: AdminSupportMessage[];
   created_at?: string;
   updated_at?: string;
 }
@@ -85,7 +96,17 @@ export interface AdminEducationModule {
   published_revision: number;
 }
 
-export interface AdminModelRelease {
+export interface AdminEducationRevision {
+  id: string;
+  module_id: string;
+  revision: number;
+  slug: string;
+  kind: 'draft' | 'published' | 'rollback';
+  created_by: string;
+  created_at: string;
+}
+
+export interface AdminRelease {
   id: string;
   version: string;
   platform: string;
@@ -94,6 +115,82 @@ export interface AdminModelRelease {
   threshold?: number;
   status: string;
   published_at_text?: string;
+}
+
+export type AdminModelRelease = AdminRelease;
+
+export interface AdminReleaseRollout {
+  id: string;
+  kind: 'model' | 'ruleset' | 'network';
+  release_id: string;
+  release_version: string;
+  status: string;
+  platform: string;
+  percentage: number;
+  app_version_constraint?: string;
+  created_at: string;
+}
+
+export interface AdminDataRequest {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  failure_code?: string;
+  retry_count: number;
+  result_expires_at?: string;
+  created_at: string;
+}
+
+export interface AdminOperatorAccount {
+  id: string;
+  email: string;
+  display_name: string;
+  role: string;
+  disabled_at?: string;
+  created_at: string;
+}
+
+export interface AdminOperatorInvitation {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface AdminSiteSocialLink {
+  id?: string;
+  platform: string;
+  label: string;
+  url: string | null;
+  enabled: boolean;
+  sort_order: number;
+}
+
+export interface AdminAuditEvent {
+  id: string;
+  actor: string;
+  action: string;
+  target_type: string;
+  target: string;
+  reason: string;
+  created_at: string;
+}
+
+export interface AdminOverview {
+  role: string;
+  draft_content?: number;
+  review_content?: number;
+  open_support?: number;
+  unassigned_support?: number;
+  failed_data_requests?: number;
+  validated_releases?: number;
+  active_rollouts?: number;
+  pending_emergency?: number;
+  active_operators?: number;
+  visible_social_links?: number;
 }
 
 export interface EmergencyKeyRequest {
@@ -114,6 +211,7 @@ export interface AdminCapabilities {
   releases: boolean;
   support: boolean;
   emergency: boolean;
+  platform: boolean;
 }
 
 export interface AdminModuleDraft {
@@ -122,6 +220,7 @@ export interface AdminModuleDraft {
 }
 
 export interface AdminModelReleaseDraft {
+  kind: 'model' | 'ruleset' | 'network';
   version: string;
   platform: string;
   artifact_path: string;
@@ -131,51 +230,102 @@ export interface AdminModelReleaseDraft {
 }
 
 interface AdminOperationsState {
+  overview: AdminOverview | null;
   modules: AdminEducationModule[];
-  releases: AdminModelRelease[];
+  releases: Record<'model' | 'ruleset' | 'network', AdminRelease[]>;
+  rollouts: AdminReleaseRollout[];
   cases: AdminSupportCase[];
+  dataRequests: AdminDataRequest[];
   emergencyRequests: EmergencyKeyRequest[];
+  operatorAccounts: AdminOperatorAccount[];
+  operatorInvitations: AdminOperatorInvitation[];
+  socialLinks: AdminSiteSocialLink[];
+  auditEvents: AdminAuditEvent[];
 }
 
 const EMPTY_STATE: AdminOperationsState = {
+  overview: null,
   modules: [],
-  releases: [],
+  releases: { model: [], ruleset: [], network: [] },
+  rollouts: [],
   cases: [],
+  dataRequests: [],
   emergencyRequests: [],
+  operatorAccounts: [],
+  operatorInvitations: [],
+  socialLinks: [],
+  auditEvents: [],
 };
 
 async function fetchAdminOperations(
   capabilities: AdminCapabilities
 ): Promise<AdminOperationsState> {
-  const [modules, releases, cases, emergencyRequests] = await Promise.all([
+  const [
+    overview,
+    modules,
+    releasePayload,
+    cases,
+    dataRequests,
+    emergencyRequests,
+    operators,
+    socialLinks,
+    auditEvents,
+  ] = await Promise.all([
+    apiClient<AdminOverview>('/admin/overview'),
     capabilities.content
       ? apiClient<AdminEducationModule[]>('/admin/content/modules')
       : Promise.resolve([]),
     capabilities.releases
-      ? apiClient<AdminModelRelease[]>('/admin/model-releases')
-      : Promise.resolve([]),
+      ? apiClient<{
+          releases: Record<'model' | 'ruleset' | 'network', AdminRelease[]>;
+          rollouts: AdminReleaseRollout[];
+        }>('/admin/releases')
+      : Promise.resolve({ releases: EMPTY_STATE.releases, rollouts: [] }),
     capabilities.support
       ? apiClient<AdminSupportCase[]>('/admin/support-cases')
+      : Promise.resolve([]),
+    capabilities.support
+      ? apiClient<AdminDataRequest[]>('/admin/data-requests')
       : Promise.resolve([]),
     capabilities.emergency
       ? apiClient<EmergencyKeyRequest[]>('/admin/emergency-key-requests')
       : Promise.resolve([]),
+    capabilities.platform
+      ? apiClient<{
+          accounts: AdminOperatorAccount[];
+          invitations: AdminOperatorInvitation[];
+        }>('/admin/operators')
+      : Promise.resolve({ accounts: [], invitations: [] }),
+    capabilities.platform
+      ? apiClient<AdminSiteSocialLink[]>('/admin/site-social-links')
+      : Promise.resolve([]),
+    capabilities.platform
+      ? apiClient<AdminAuditEvent[]>('/admin/audit-events')
+      : Promise.resolve([]),
   ]);
 
   return {
+    overview,
     modules: modules ?? [],
-    releases: releases ?? [],
+    releases: releasePayload.releases,
+    rollouts: releasePayload.rollouts ?? [],
     cases: cases ?? [],
+    dataRequests: dataRequests ?? [],
     emergencyRequests: emergencyRequests ?? [],
+    operatorAccounts: operators.accounts ?? [],
+    operatorInvitations: operators.invitations ?? [],
+    socialLinks: socialLinks ?? [],
+    auditEvents: auditEvents ?? [],
   };
 }
 
 export function getAdminCapabilities(role?: string): AdminCapabilities {
   return {
-    content: role === 'content_admin' || role === 'platform_admin',
-    releases: role === 'model_release_operator' || role === 'platform_admin',
-    support: role === 'support_operator' || role === 'platform_admin',
+    content: role === 'content_admin',
+    releases: role === 'model_release_operator',
+    support: role === 'support_operator',
     emergency: role === 'platform_admin',
+    platform: role === 'platform_admin',
   };
 }
 
@@ -188,12 +338,11 @@ export function useAdminOperations(role?: string) {
   const [emergencyKey, setEmergencyKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!role) {
+    if (!role || !Object.values(capabilities).some(Boolean)) {
       setData(EMPTY_STATE);
       setLoading(false);
       return;
     }
-
     setLoading(true);
     setError(null);
     try {
@@ -206,8 +355,7 @@ export function useAdminOperations(role?: string) {
   }, [capabilities, role]);
 
   useEffect(() => {
-    if (!role) return;
-
+    if (!role || !Object.values(capabilities).some(Boolean)) return;
     let active = true;
     void fetchAdminOperations(capabilities)
       .then((nextData) => {
@@ -221,11 +369,19 @@ export function useAdminOperations(role?: string) {
       .finally(() => {
         if (active) setLoading(false);
       });
-
     return () => {
       active = false;
     };
   }, [capabilities, role]);
+
+  const mutateAndReload = useCallback(
+    async <T>(path: string, options: RequestInit) => {
+      const result = await apiClient<T>(path, options);
+      await load();
+      return result;
+    },
+    [load]
+  );
 
   const approveEmergencyKey = useCallback(
     async (requestID: string) => {
@@ -234,8 +390,6 @@ export function useAdminOperations(role?: string) {
         const result = await apiClient<{
           request: EmergencyKeyRequest;
           emergency_key: string;
-          expires_in: string;
-          single_use: boolean;
         }>(`/admin/emergency-key-requests/${requestID}/approve`, {
           method: 'POST',
         });
@@ -253,46 +407,37 @@ export function useAdminOperations(role?: string) {
     async (requestID: string) => {
       setKeyLoading(true);
       try {
-        await apiClient<EmergencyKeyRequest>(
+        await mutateAndReload(
           `/admin/emergency-key-requests/${requestID}/review`,
           { method: 'POST' }
         );
-        await load();
       } finally {
         setKeyLoading(false);
       }
     },
-    [load]
+    [mutateAndReload]
   );
 
   const createModule = useCallback(
-    async (module: AdminModuleDraft) => {
-      const created = await apiClient<AdminEducationModule>(
-        '/admin/content/modules',
-        {
-          method: 'POST',
-          body: JSON.stringify(module),
-        }
-      );
-      await load();
-      return created;
-    },
-    [load]
+    (module: AdminModuleDraft) =>
+      mutateAndReload<AdminEducationModule>('/admin/content/modules', {
+        method: 'POST',
+        body: JSON.stringify(module),
+      }),
+    [mutateAndReload]
   );
-
   const getModule = useCallback(
     (id: string) =>
       apiClient<AdminEducationModule>(`/admin/content/modules/${id}`),
     []
   );
-
   const saveModule = useCallback(
-    async (
+    (
       module: AdminEducationModule,
       slug: string,
       document: AdminEducationDocument
-    ) => {
-      const result = await apiClient<AdminEducationModule>(
+    ) =>
+      mutateAndReload<AdminEducationModule>(
         `/admin/content/modules/${module.id}`,
         {
           method: 'PUT',
@@ -302,23 +447,34 @@ export function useAdminOperations(role?: string) {
             document,
           }),
         }
-      );
-      await load();
-      return result;
-    },
-    [load]
+      ),
+    [mutateAndReload]
   );
-
   const transitionModule = useCallback(
-    async (id: string, action: 'submit-review' | 'publish' | 'archive') => {
-      const result = await apiClient<AdminEducationModule>(
+    (id: string, action: 'submit-review' | 'publish' | 'archive') =>
+      mutateAndReload<AdminEducationModule>(
         `/admin/content/modules/${id}/${action}`,
         { method: 'POST' }
-      );
-      await load();
-      return result;
-    },
-    [load]
+      ),
+    [mutateAndReload]
+  );
+  const getModuleRevisions = useCallback(
+    (id: string) =>
+      apiClient<AdminEducationRevision[]>(
+        `/admin/content/modules/${id}/revisions`
+      ),
+    []
+  );
+  const rollbackModule = useCallback(
+    (moduleID: string, revisionID: string, reason: string) =>
+      mutateAndReload<AdminEducationModule>(
+        `/admin/content/modules/${moduleID}/revisions/${revisionID}/rollback`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        }
+      ),
+    [mutateAndReload]
   );
 
   const uploadEducationMedia = useCallback(
@@ -333,7 +489,6 @@ export function useAdminOperations(role?: string) {
     },
     []
   );
-
   const registerExternalEducationMedia = useCallback(
     (url: string, mediaType: 'image' | 'video' | 'pdf') =>
       apiClient<AdminEducationMedia>('/admin/content/media/external', {
@@ -348,19 +503,48 @@ export function useAdminOperations(role?: string) {
   );
 
   const createModelRelease = useCallback(
-    async (release: AdminModelReleaseDraft) => {
-      await apiClient('/releases/model', {
+    (release: AdminModelReleaseDraft) =>
+      mutateAndReload('/releases/model', {
         method: 'POST',
         body: JSON.stringify({
           ...release,
           threshold: Number(release.threshold),
           metrics: {},
         }),
-      });
-      await load();
-    },
-    [load]
+      }).then(() => undefined),
+    [mutateAndReload]
   );
+  const createRelease = useCallback(
+    (release: AdminModelReleaseDraft) => {
+      const path =
+        release.kind === 'model'
+          ? '/releases/model'
+          : release.kind === 'ruleset'
+            ? '/releases/ruleset'
+            : '/releases/network-rulesets';
+      return mutateAndReload(path, {
+        method: 'POST',
+        body: JSON.stringify({
+          ...release,
+          threshold: Number(release.threshold),
+          metrics: {},
+          rules: {},
+        }),
+      }).then(() => undefined);
+    },
+    [mutateAndReload]
+  );
+  const uploadReleaseArtifact = useCallback(async (file: File) => {
+    const body = new FormData();
+    body.append('file', file);
+    return apiClient<{ artifact_path: string; sha256: string }>(
+      '/admin/release-artifacts',
+      {
+        method: 'POST',
+        body,
+      }
+    );
+  }, []);
 
   return {
     ...data,
@@ -377,8 +561,83 @@ export function useAdminOperations(role?: string) {
     getModule,
     saveModule,
     transitionModule,
+    getModuleRevisions,
+    rollbackModule,
     uploadEducationMedia,
     registerExternalEducationMedia,
     createModelRelease,
+    createRelease,
+    uploadReleaseArtifact,
+    getSupportCase: (id: string) =>
+      apiClient<AdminSupportCase>(`/admin/support-cases/${id}`),
+    claimSupportCase: (id: string, reason: string) =>
+      mutateAndReload<AdminSupportCase>(`/admin/support-cases/${id}/claim`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      }),
+    releaseSupportCase: (id: string, reason: string) =>
+      mutateAndReload(`/admin/support-cases/${id}/release`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      }),
+    replySupportCase: (id: string, content: string) =>
+      mutateAndReload(`/admin/support-cases/${id}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ content }),
+      }),
+    transitionSupportCase: (id: string, status: string) =>
+      mutateAndReload(`/admin/support-cases/${id}/transition`, {
+        method: 'POST',
+        body: JSON.stringify({ status }),
+      }),
+    retryDataRequest: (id: string) =>
+      mutateAndReload(`/admin/data-requests/${id}/retry`, { method: 'POST' }),
+    rejectDataRequest: (id: string, reason: string) =>
+      mutateAndReload(`/admin/data-requests/${id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      }),
+    createRollout: (input: {
+      kind: string;
+      release_id: string;
+      platform: string;
+      percentage: number;
+      app_version_constraint?: string;
+      reason: string;
+    }) =>
+      mutateAndReload('/admin/releases/rollouts', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    transitionRollout: (id: string, action: string, reason: string) =>
+      mutateAndReload(`/admin/releases/rollouts/${id}/transition`, {
+        method: 'POST',
+        body: JSON.stringify({ action, reason }),
+      }),
+    replaceSocialLinks: (items: AdminSiteSocialLink[], reason: string) =>
+      mutateAndReload<AdminSiteSocialLink[]>('/admin/site-social-links', {
+        method: 'PUT',
+        body: JSON.stringify({ items, reason }),
+      }),
+    inviteOperator: (email: string, operatorRole: string, reason: string) =>
+      mutateAndReload('/admin/operators/invitations', {
+        method: 'POST',
+        body: JSON.stringify({ email, role: operatorRole, reason }),
+      }),
+    revokeOperatorInvitation: (id: string, reason: string) =>
+      mutateAndReload(`/admin/operators/invitations/${id}/revoke`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      }),
+    updateOperator: (
+      id: string,
+      operatorRole: string,
+      disabled: boolean,
+      reason: string
+    ) =>
+      mutateAndReload(`/admin/operators/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ role: operatorRole, disabled, reason }),
+      }),
   };
 }

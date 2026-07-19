@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Mail, Lock, ArrowRight, User, Shield } from 'lucide-react';
 import { register } from '@/lib/auth';
+import { persistAuthSession } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthField } from '@/components/auth/AuthField';
@@ -17,18 +18,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-const registerSchema = z.object({
-  role: z.enum(['user', 'partner']),
-  name: z.string().min(3, { message: 'Nama minimal 3 karakter' }),
-  email: z
-    .string()
-    .min(1, { message: 'Email wajib diisi' })
-    .email({ message: 'Format email tidak valid' }),
-  password: z.string().min(8, { message: 'Password minimal 8 karakter' }),
-  terms: z.literal(true, { error: 'Anda harus menyetujui syarat & ketentuan' }),
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type RegisterFormValues = {
+  role: 'user' | 'partner';
+  name: string;
+  email: string;
+  password: string;
+  terms: true;
+};
 
 interface AuthResponse {
   access_token: string;
@@ -40,9 +36,20 @@ interface AuthResponse {
 
 export default function RegisterPage() {
   const t = useTranslations('registerPage');
+  const authT = useTranslations('authShell');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const registerSchema = z.object({
+    role: z.enum(['user', 'partner']),
+    name: z.string().min(3, { message: t('validation.nameMinimum') }),
+    email: z
+      .string()
+      .min(1, { message: t('validation.emailRequired') })
+      .email({ message: t('validation.emailInvalid') }),
+    password: z.string().min(8, { message: t('validation.passwordMinimum') }),
+    terms: z.literal(true, { error: t('validation.termsRequired') }),
+  });
 
   const {
     register: formRegister,
@@ -64,18 +71,13 @@ export default function RegisterPage() {
       const res = (await register(
         data.email,
         data.password,
-        data.name
+        data.name,
+        data.role
       )) as AuthResponse;
       if (res?.access_token) {
-        localStorage.setItem('gamblock_access_token', res.access_token);
-        localStorage.setItem('gamblock_refresh_token', res.refresh_token);
-        document.cookie = `gamblock_access_token=${res.access_token}; path=/; max-age=${res.expires_in || 3600}; SameSite=Lax; Secure`;
-        localStorage.setItem(
-          'gamblock_user',
-          JSON.stringify({ ...res.user, role: data.role })
-        );
+        persistAuthSession(res);
         router.push(
-          data.role === 'partner' ? ROUTES.CREATE_GROUP : ROUTES.DASHBOARD
+          data.role === 'partner' ? ROUTES.PARTNERS : ROUTES.DASHBOARD
         );
       } else {
         reportDevelopmentError(
@@ -110,6 +112,8 @@ export default function RegisterPage() {
     <AuthShell
       heading={t('text_248')}
       subheading={t('text_249')}
+      backFallbackHref={ROUTES.LOGIN}
+      backLabel={authT('backLogin')}
       footer={
         <p className="text-muted-foreground text-center text-sm">
           {t('text_259')}{' '}
@@ -139,6 +143,7 @@ export default function RegisterPage() {
               key={value}
               type="button"
               onClick={() => setValue('role', value)}
+              aria-pressed={role === value}
               className={cn(
                 'flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border p-4 transition-all',
                 role === value

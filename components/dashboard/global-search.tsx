@@ -1,28 +1,41 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Search } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { BookOpen, Search } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useLocalUser } from '@/hooks/use-local-user';
-import { dashboardNavigationGroups, canShowNavigationItem, type DashboardNavGroup } from './navigation-config';
+import { useEducationModules } from '@/hooks/use-education';
+import { ROUTES } from '@/routes';
+import {
+  dashboardNavigationGroups,
+  canShowNavigationItem,
+  type DashboardNavGroup,
+} from './navigation-config';
 import type { LucideIcon } from 'lucide-react';
 
 interface GlobalSearchProps {
   variant?: 'field' | 'icon';
 }
 
+interface SearchItem {
+  id: string;
+  label: string;
+  description?: string;
+  href: string;
+  icon: LucideIcon;
+  section: string;
+}
+
 export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
   const t = useTranslations('dashboardNav');
   const router = useRouter();
+  const locale = useLocale();
   const user = useLocalUser();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const { modules: educationModules } = useEducationModules(locale, open);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -36,11 +49,12 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
   }, []);
 
   const items = useMemo(() => {
-    const allItems: { label: string; href: string; icon: LucideIcon; section: string }[] = [];
+    const allItems: SearchItem[] = [];
     dashboardNavigationGroups.forEach((group: DashboardNavGroup) => {
       group.items.forEach((item) => {
         if (canShowNavigationItem(item, user?.role)) {
           allItems.push({
+            id: item.href,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             label: t(item.labelKey as any),
             href: item.href,
@@ -54,9 +68,30 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
     return allItems;
   }, [t, user?.role]);
 
-  const filteredItems = query === '' 
-    ? items 
-    : items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()));
+  const educationItems = useMemo<SearchItem[]>(
+    () =>
+      educationModules.map((module) => ({
+        id: `education-${module.id}`,
+        label: module.title,
+        description: module.summary,
+        href: `${ROUTES.EDUCATION}/${module.slug}`,
+        icon: BookOpen,
+        section: t('education'),
+      })),
+    [educationModules, t]
+  );
+
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const searchableItems = normalizedQuery
+    ? [...items, ...educationItems]
+    : items;
+  const filteredItems = normalizedQuery
+    ? searchableItems.filter((item) =>
+        [item.label, item.description, item.section]
+          .filter(Boolean)
+          .some((value) => value!.toLocaleLowerCase().includes(normalizedQuery))
+      )
+    : items;
 
   const handleSelect = (href: string) => {
     setOpen(false);
@@ -79,19 +114,22 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
         aria-label={t('searchPlaceholder')}
         className={
           variant === 'icon'
-            ? 'flex size-11 items-center justify-center rounded-xl border border-navy/15 bg-card text-navy shadow-soft outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/30 hover:bg-azure/75 focus-visible:ring-2 focus-visible:ring-navy/35 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none'
-            : 'group flex h-11 w-72 items-center gap-2.5 rounded-xl border border-border bg-muted/45 px-3 text-sm text-muted-foreground outline-none transition-[background-color,border-color,transform] duration-200 hover:border-navy/25 hover:bg-card focus-visible:ring-2 focus-visible:ring-navy/35 active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none xl:w-80'
+            ? 'border-navy/15 bg-card text-navy shadow-soft hover:border-navy/30 hover:bg-azure/75 focus-visible:ring-navy/35 flex size-11 items-center justify-center rounded-xl border transition-[background-color,border-color,transform] duration-200 outline-none focus-visible:ring-2 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none'
+            : 'group border-border bg-muted/45 text-muted-foreground hover:border-navy/25 hover:bg-card focus-visible:ring-navy/35 flex h-11 w-72 items-center gap-2.5 rounded-xl border px-3 text-sm transition-[background-color,border-color,transform] duration-200 outline-none focus-visible:ring-2 active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none xl:w-80'
         }
       >
         {variant === 'icon' ? (
           <Search className="size-5" aria-hidden="true" />
         ) : (
           <>
-            <Search className="size-4 shrink-0 text-navy/75" aria-hidden="true" />
+            <Search
+              className="text-navy/75 size-4 shrink-0"
+              aria-hidden="true"
+            />
             <span className="flex-1 truncate text-left font-medium">
               {t('searchPlaceholder')}
             </span>
-            <kbd className="pointer-events-none hidden h-6 items-center rounded-md border border-navy/10 bg-muted px-2 font-mono text-[10px] font-semibold text-navy/70 xl:flex">
+            <kbd className="border-navy/10 bg-muted text-navy/70 pointer-events-none hidden h-6 items-center rounded-md border px-2 font-mono text-[10px] font-semibold xl:flex">
               Ctrl K
             </kbd>
           </>
@@ -99,17 +137,20 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
       </button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="overflow-hidden p-0 shadow-lg sm:max-w-[500px]" showCloseButton={false}>
+        <DialogContent
+          className="overflow-hidden p-0 shadow-lg sm:max-w-[500px]"
+          showCloseButton={false}
+        >
           <div className="sr-only">
-             <DialogTitle>{t('searchPlaceholder')}</DialogTitle>
+            <DialogTitle>{t('searchPlaceholder')}</DialogTitle>
           </div>
-          <div className="flex items-center border-b border-border px-3">
+          <div className="border-border flex items-center border-b px-3">
             <Search className="mr-2 size-4 shrink-0 opacity-50" />
             <input
               autoFocus
               type="search"
               aria-label={t('searchPlaceholder')}
-              className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="placeholder:text-muted-foreground flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder={t('searchPlaceholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -117,20 +158,29 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
           </div>
           <div className="max-h-[300px] overflow-y-auto p-2">
             {filteredItems.length === 0 ? (
-              <p className="p-4 text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground p-4 text-center text-sm">
                 {t('searchEmpty')}
               </p>
             ) : (
               <div className="space-y-1">
                 {filteredItems.map((item) => (
                   <button
-                    key={item.href}
+                    key={item.id}
                     onClick={() => handleSelect(item.href)}
-                    className="flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm outline-none transition-colors hover:bg-muted hover:text-navy focus:bg-muted focus:text-navy"
+                    className="hover:bg-muted hover:text-navy focus:bg-muted focus:text-navy flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors outline-none"
                   >
                     <item.icon className="size-4 opacity-70" />
-                    <span>{item.label}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{item.section}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{item.label}</span>
+                      {item.description ? (
+                        <span className="text-muted-foreground mt-0.5 block truncate text-xs font-normal">
+                          {item.description}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="text-muted-foreground ml-auto text-xs">
+                      {item.section}
+                    </span>
                   </button>
                 ))}
               </div>

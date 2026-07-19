@@ -1,9 +1,8 @@
 'use client';
 
-import { LifeBuoy, LockKeyhole } from 'lucide-react';
+import { LifeBuoy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
-  DashboardNotice,
   DashboardPage,
   DashboardPageHeader,
 } from '@/components/dashboard/dashboard-page';
@@ -23,7 +22,7 @@ export function SupportWorkspaceClient() {
         title={t('title')}
         description={t('description')}
       />
-      <div className="grid gap-5 xl:grid-cols-12 xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-12 xl:items-stretch">
         <SupportRequestForm
           submitting={support.submitting}
           createCase={support.createCase}

@@ -6,11 +6,17 @@ export function getRequestStatus(status: string) {
   if (normalized === 'rejected') {
     return { key: 'rejected', tone: 'crimson' as const };
   }
+  if (normalized === 'failed') {
+    return { key: 'failed', tone: 'crimson' as const };
+  }
   if (normalized === 'cancelled') {
     return { key: 'cancelled', tone: 'muted' as const };
   }
   if (normalized === 'processing') {
     return { key: 'processing', tone: 'amber' as const };
+  }
+  if (normalized === 'pending_confirmation') {
+    return { key: 'pendingConfirmation', tone: 'amber' as const };
   }
   return { key: 'pending', tone: 'navy' as const };
 }

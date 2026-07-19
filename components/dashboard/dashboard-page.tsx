@@ -23,7 +23,7 @@ export function DashboardPage({
       className={cn(
         'mx-auto w-full max-w-[1360px] pb-8',
         density === 'compact' ? 'space-y-5' : 'space-y-6 sm:space-y-7',
-        className,
+        className
       )}
       {...props}
     />
@@ -44,18 +44,18 @@ export function DashboardPageHeader({
   aside?: ReactNode;
 }) {
   return (
-    <header className="grid gap-4 border-b border-navy/15 pb-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+    <header className="border-navy/15 grid gap-4 border-b pb-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
       <div>
-        <div className="flex items-center gap-2 text-xs font-bold tracking-[0.1em] text-navy-light uppercase">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-azure/75 text-navy">
+        <div className="text-navy-light flex items-center gap-2 text-xs font-bold tracking-[0.1em] uppercase">
+          <span className="bg-azure/75 text-navy flex size-8 items-center justify-center rounded-lg">
             <Icon className="size-4" aria-hidden="true" />
           </span>
           <p>{eyebrow}</p>
         </div>
-        <h1 className="mt-3 max-w-3xl text-[1.875rem] leading-tight font-extrabold tracking-[-0.03em] text-navy sm:text-[2.25rem]">
+        <h1 className="text-navy mt-3 max-w-3xl text-[1.875rem] leading-tight font-extrabold tracking-[-0.03em] sm:text-[2.25rem]">
           {title}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+        <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-7 sm:text-base">
           {description}
         </p>
       </div>
@@ -74,6 +74,7 @@ export function DashboardPanel({
   surface = 'default',
   children,
   className,
+  contentClassName,
   ...props
 }: HTMLAttributes<HTMLElement> & {
   icon?: LucideIcon;
@@ -83,6 +84,7 @@ export function DashboardPanel({
   accent?: Accent;
   density?: DashboardDensity;
   surface?: DashboardSurface;
+  contentClassName?: string;
 }) {
   const surfaceClasses: Record<DashboardSurface, string> = {
     default: 'border-border bg-card shadow-soft',
@@ -97,7 +99,7 @@ export function DashboardPanel({
         'rounded-2xl border',
         surfaceClasses[surface],
         density === 'compact' ? 'p-4 sm:p-5' : 'p-5 sm:p-6',
-        className,
+        className
       )}
       {...props}
     >
@@ -107,13 +109,13 @@ export function DashboardPanel({
             <span
               className={cn(
                 'flex size-10 shrink-0 items-center justify-center rounded-xl',
-                accentClasses[accent],
+                accentClasses[accent]
               )}
             >
               <Icon className="size-[1.125rem]" aria-hidden="true" />
             </span>
           ) : null}
-          <h2 className="min-w-0 text-lg leading-7 font-bold text-navy">
+          <h2 className="text-navy min-w-0 text-lg leading-7 font-bold">
             {title}
           </h2>
         </div>
@@ -124,12 +126,17 @@ export function DashboardPanel({
         ) : null}
       </div>
       {description ? (
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        <p className="text-muted-foreground mt-3 text-sm leading-6">
           {description}
         </p>
       ) : null}
       {children ? (
-        <div className={density === 'compact' ? 'mt-4' : 'mt-5'}>
+        <div
+          className={cn(
+            density === 'compact' ? 'mt-4' : 'mt-5',
+            contentClassName
+          )}
+        >
           {children}
         </div>
       ) : null}
@@ -154,8 +161,8 @@ export function DashboardNotice({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-border bg-card p-4 shadow-soft',
-        className,
+        'border-border bg-card shadow-soft rounded-2xl border p-4',
+        className
       )}
       {...props}
     >
@@ -164,12 +171,12 @@ export function DashboardNotice({
           <span
             className={cn(
               'flex size-10 shrink-0 items-center justify-center rounded-xl',
-              accentClasses[tone],
+              accentClasses[tone]
             )}
           >
             <Icon className="size-[1.125rem]" aria-hidden="true" />
           </span>
-          <p className="min-w-0 text-[0.9375rem] leading-6 font-bold text-navy">
+          <p className="text-navy min-w-0 text-[0.9375rem] leading-6 font-bold">
             {title}
           </p>
         </div>
@@ -180,7 +187,7 @@ export function DashboardNotice({
         ) : null}
       </div>
       {children ? (
-        <div className="mt-3 text-sm leading-6 text-muted-foreground">
+        <div className="text-muted-foreground mt-3 text-sm leading-6">
           {children}
         </div>
       ) : null}
@@ -207,7 +214,7 @@ export function DashboardStatus({
     <span
       className={cn(
         'inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-semibold',
-        classes[tone],
+        classes[tone]
       )}
     >
       {children}

@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-07-18.3`
+**Context version:** `2026-07-19.1`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading
@@ -84,6 +84,12 @@ error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
 - Quick approval (`/approve/[token]`) is a supporting flow that is
   token-authenticated, not session-authenticated. Keep it reachable without
   login while preserving single-use/expiry checks.
+- Operator invitation acceptance is also token-authenticated and public; the
+  backend owns email/role/expiry validation. The `/admin` shell must keep
+  content, support, release, and platform capabilities non-cumulative and hide
+  consumer navigation for operator roles. Public social footer links come only
+  from the safe public endpoint and render no placeholder for null/disabled
+  records.
 
 ## Proposal-derived website core
 
@@ -94,6 +100,12 @@ Requirements `PKM-WEB-001`, `PKM-WEB-002`, `PKM-WEB-003`, `PKM-WEB-004`,
 `PKM-WEB-005`, `PKM-WEB-006`, and `PKM-WEB-007` outrank supporting dashboards,
 journals, admin portals, and marketing polish. The website never receives
 browsing context and is not the real-time Pattern Interrupt/blocking surface.
+
+The supporting recovery room keeps active timers and focus-task labels local,
+submits only completed practices, and stores reflection free text through the
+encrypted account workflow. Partner recovery/progress must use reviewed CMS
+guidance and consented aggregates, never student room, journal, mood, focus, or
+practice detail. Education audience checks remain server-authoritative.
 
 ## Validation policy
 

@@ -16,7 +16,7 @@ export function QuickReflection() {
     e.preventDefault();
     if (!text.trim()) return;
     try {
-      await createReflection(text.trim(), 'Neutral');
+      await createReflection({ text: text.trim() });
       setText('');
       toastSuccess(t('journalSubmit') + ' ✓');
     } catch (err) {
@@ -25,13 +25,17 @@ export function QuickReflection() {
   };
 
   return (
-    <section className="h-full bg-card/80 px-5 py-4">
+    <section className="bg-card/80 h-full px-5 py-4">
       <div className="flex items-center gap-2">
-        <PenTool className="size-4 text-navy" />
-        <h3 id="quick-journal-title" className="text-sm font-bold text-navy">{t('quickJournalTitle')}</h3>
+        <PenTool className="text-navy size-4" />
+        <h3 id="quick-journal-title" className="text-navy text-sm font-bold">
+          {t('quickJournalTitle')}
+        </h3>
       </div>
-      <p className="mt-1 mb-3 text-xs leading-5 text-muted-foreground">{t('quickJournalDesc')}</p>
-      
+      <p className="text-muted-foreground mt-1 mb-3 text-xs leading-5">
+        {t('quickJournalDesc')}
+      </p>
+
       <form onSubmit={handleSave} className="flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
@@ -39,10 +43,14 @@ export function QuickReflection() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={t('quickJournalPlaceholder')}
-          className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-card px-3 text-base outline-none transition-[border-color,box-shadow] duration-200 focus-visible:border-navy/35 focus-visible:ring-2 focus-visible:ring-navy/35 motion-reduce:transition-none sm:text-sm"
+          className="border-input bg-card focus-visible:border-navy/35 focus-visible:ring-navy/35 h-11 min-w-0 flex-1 rounded-xl border px-3 text-base transition-[border-color,box-shadow] duration-200 outline-none focus-visible:ring-2 motion-reduce:transition-none sm:text-sm"
           disabled={submitting}
         />
-        <Button type="submit" disabled={!text.trim() || submitting} className="h-11 w-full px-4 sm:w-auto">
+        <Button
+          type="submit"
+          disabled={!text.trim() || submitting}
+          className="h-11 w-full px-4 sm:w-auto"
+        >
           {submitting ? '...' : t('quickJournalSubmit')}
         </Button>
       </form>

@@ -1,12 +1,17 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 export interface LocalUser {
   id?: string;
   email?: string;
   display_name?: string;
+  avatar_url?: string;
   role?: string;
+  email_verified_at?: string;
+  phone_e164?: string;
+  phone_verified_at?: string;
 }
 
 const STORAGE_KEY = 'gamblock_user';
@@ -15,6 +20,8 @@ const listeners = new Set<() => void>();
 
 let cachedRaw: string | null | undefined;
 let cachedUser: LocalUser = EMPTY_USER;
+let currentProfileRequest: Promise<LocalUser> | null = null;
+let loadedForToken: string | null = null;
 
 function readUser(): LocalUser {
   if (typeof window === 'undefined') return EMPTY_USER;
@@ -61,16 +68,46 @@ export function notifyLocalUserChanged() {
   listeners.forEach((listener) => listener());
 }
 
-export function updateLocalUser(updates: Pick<LocalUser, 'display_name'>) {
+export async function refreshCurrentUser() {
+  if (typeof window === 'undefined') return EMPTY_USER;
+  const token = window.localStorage.getItem('gamblock_access_token');
+  if (!token) return EMPTY_USER;
+  if (currentProfileRequest) return currentProfileRequest;
+
+  currentProfileRequest = apiClient<LocalUser>('/me')
+    .then((profile) => {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      loadedForToken = token;
+      notifyLocalUserChanged();
+      return profile;
+    })
+    .finally(() => {
+      currentProfileRequest = null;
+    });
+  return currentProfileRequest;
+}
+
+export function updateLocalUser(
+  updates: Partial<Pick<LocalUser, 'display_name' | 'avatar_url'>>
+) {
   if (typeof window === 'undefined') return;
   const current = readUser();
   window.localStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify({ ...current, ...updates }),
+    JSON.stringify({ ...current, ...updates })
   );
   notifyLocalUserChanged();
 }
 
 export function useLocalUser() {
-  return useSyncExternalStore(subscribe, readUser, () => EMPTY_USER);
+  const user = useSyncExternalStore(subscribe, readUser, () => EMPTY_USER);
+
+  useEffect(() => {
+    const token = window.localStorage.getItem('gamblock_access_token');
+    if (token && loadedForToken !== token) {
+      void refreshCurrentUser();
+    }
+  }, []);
+
+  return user;
 }

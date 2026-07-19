@@ -1,5 +1,6 @@
 'use client';
 
+import { useLocale } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { config } from '@/lib/config';
 import { reportDevelopmentError } from '@/lib/diagnostics';
@@ -22,6 +23,7 @@ interface GoogleIdentityAPI {
       text: 'continue_with';
       shape: 'rectangular';
       width: number;
+      locale: string;
     }
   ): void;
 }
@@ -44,6 +46,7 @@ export function GoogleIdentityButton({
   const containerRef = useRef<HTMLDivElement>(null);
   const callbackRef = useRef(onCredential);
   const [scriptFailed, setScriptFailed] = useState(false);
+  const locale = useLocale();
 
   useEffect(() => {
     callbackRef.current = onCredential;
@@ -73,6 +76,7 @@ export function GoogleIdentityButton({
         text: 'continue_with',
         shape: 'rectangular',
         width: Math.min(containerRef.current.clientWidth || 360, 400),
+        locale,
       });
     };
 
@@ -86,7 +90,7 @@ export function GoogleIdentityButton({
     ) as HTMLScriptElement | null;
     const script = existing ?? document.createElement('script');
     script.id = SCRIPT_ID;
-    script.src = 'https://accounts.google.com/gsi/client';
+    script.src = `https://accounts.google.com/gsi/client?hl=${locale}`;
     script.async = true;
     script.defer = true;
     const handleScriptError = () => {
@@ -104,7 +108,7 @@ export function GoogleIdentityButton({
       script.removeEventListener('load', render);
       script.removeEventListener('error', handleScriptError);
     };
-  }, []);
+  }, [locale]);
 
   if (!config.googleClientId || scriptFailed) {
     return (

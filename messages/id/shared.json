@@ -6,6 +6,7 @@
     "howItWorks": "Cara Kerja",
     "team": "Tim",
     "login": "Masuk",
+    "dashboard": "Dashboard",
     "start": "Mulai Gratis",
     "openMenu": "Buka menu",
     "closeMenu": "Tutup menu",
@@ -35,7 +36,8 @@
     "linkFaq": "Pertanyaan Umum",
     "linkHelp": "Pusat Bantuan",
     "linkContact": "Hubungi Kami",
-    "linkTerms": "Ketentuan Layanan"
+    "linkTerms": "Ketentuan Layanan",
+    "socialLabel": "Media sosial Gamblock-AI"
   },
   "dashboardNav": {
     "skipToContent": "Langsung ke konten",
@@ -84,9 +86,8 @@
       "unknown": "Tindakan lainnya ({value})"
     },
     "supportStatus": {
-      "open": "Terbuka",
+      "waiting_support": "Menunggu tim dukungan",
       "waiting_user": "Menunggu pengguna",
-      "waiting_internal": "Ditangani tim",
       "resolved": "Terselesaikan",
       "closed": "Ditutup",
       "unknown": "Status lainnya ({value})"
@@ -144,6 +145,12 @@
       "used": "Sudah digunakan",
       "expired": "Kedaluwarsa",
       "queued": "Dalam antrean",
+      "processing": "Sedang diproses",
+      "pending_confirmation": "Menunggu konfirmasi",
+      "rejected": "Ditolak",
+      "cancelled": "Dibatalkan",
+      "accepted": "Diterima",
+      "revoked": "Dicabut",
       "sent": "Terkirim",
       "failed": "Gagal",
       "unknown": "Status lainnya ({value})"
@@ -167,9 +174,20 @@
       "unknown": "Topik lainnya ({value})"
     }
   },
-  "NotFound": {
-    "message": "Halaman yang Anda cari tidak ditemukan.",
-    "backHome": "Kembali ke Beranda"
+  "ErrorPages": {
+    "notFound": {
+      "title": "Halaman ini tidak ditemukan",
+      "description": "Tautan ini mungkin sudah berpindah. Kamu tetap aman dan bisa kembali melanjutkan dari halaman utama.",
+      "imageAlt": "Gami duduk di samping peta sambil mencari arah."
+    },
+    "unexpected": {
+      "title": "Ada kendala sementara",
+      "description": "Halaman ini belum dapat dimuat. Coba lagi, atau kembali ke halaman utama.",
+      "imageAlt": "Gami memperbaiki sebuah modul dengan tenang."
+    },
+    "backHome": "Kembali ke beranda",
+    "goBack": "Kembali sebelumnya",
+    "tryAgain": "Coba lagi"
   },
   "empty-state-test": {
     "text_331": "Belum ada member"

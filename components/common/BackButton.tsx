@@ -11,10 +11,9 @@ interface BackButtonProps {
 }
 
 /**
- * BackButton — goes to the previous page when the user arrived from within the
- * app (same-origin referrer + existing history), otherwise navigates to a safe
- * fallback (the landing page by default). Used by the minimal marketing nav on
- * legal/standalone pages.
+ * BackButton — returns to the browser's previous entry whenever one exists;
+ * otherwise it navigates to a route-specific fallback. Used by standalone
+ * marketing and authentication pages.
  */
 export function BackButton({ label, fallbackHref = '/' }: BackButtonProps) {
   const router = useRouter();
@@ -24,10 +23,7 @@ export function BackButton({ label, fallbackHref = '/' }: BackButtonProps) {
       router.push(fallbackHref);
       return;
     }
-    const sameOrigin =
-      document.referrer && new URL(document.referrer).origin === window.location.origin;
-    // history.length > 1 means there is a previous entry to return to.
-    if (sameOrigin && window.history.length > 1) {
+    if (window.history.length > 1) {
       router.back();
     } else {
       router.push(fallbackHref);
@@ -35,7 +31,12 @@ export function BackButton({ label, fallbackHref = '/' }: BackButtonProps) {
   };
 
   return (
-    <Button variant="outline" size="default" className="rounded-full px-5" onClick={handleBack}>
+    <Button
+      variant="outline"
+      size="default"
+      className="rounded-full px-5"
+      onClick={handleBack}
+    >
       <ArrowLeft className="h-3.5 w-3.5" />
       {label}
     </Button>

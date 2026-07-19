@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { BackButton } from '@/components/common/BackButton';
 import { ROUTES } from '@/routes';
+import { useLocalUser } from '@/hooks/use-local-user';
 
 const NAV_LINKS = [
   { href: '/#fitur', key: 'features' },
@@ -26,13 +27,15 @@ const NAV_LINKS = [
  */
 export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
   const t = useTranslations('Nav');
+  const user = useLocalUser();
   const [open, setOpen] = useState(false);
+  const isSignedIn = Boolean(user.id || user.email);
+  const primaryHref = isSignedIn ? ROUTES.DASHBOARD : ROUTES.LOGIN;
+  const primaryLabel = isSignedIn ? t('dashboard') : t('login');
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
-      <nav
-        className="pointer-events-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-full border border-white/70 bg-white/88 px-3 py-2.5 shadow-[0_12px_40px_rgba(22,41,76,0.10)] backdrop-blur-xl"
-      >
+      <nav className="pointer-events-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-full border border-white/70 bg-white/88 px-3 py-2.5 shadow-[0_12px_40px_rgba(22,41,76,0.10)] backdrop-blur-xl">
         {/* Brand */}
         <Link href={ROUTES.HOME} className="flex items-center gap-2 pl-2">
           <Image
@@ -43,7 +46,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
             className="h-10 w-10 object-contain"
             preload
           />
-          <span className="text-base font-extrabold tracking-tight text-navy">
+          <span className="text-navy text-base font-extrabold tracking-tight">
             Gamblock<span className="text-crimson">-AI</span>
           </span>
         </Link>
@@ -59,7 +62,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
                 <Link
                   key={link.key}
                   href={link.href}
-                  className="rounded-full px-3.5 py-2 text-sm font-semibold text-navy/70 transition-colors hover:bg-navy/5 hover:text-navy"
+                  className="text-navy/70 hover:bg-navy/5 hover:text-navy rounded-full px-3.5 py-2 text-sm font-semibold transition-colors"
                 >
                   {t(link.key)}
                 </Link>
@@ -69,9 +72,13 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
             {/* Right cluster */}
             <div className="flex items-center gap-2">
               <LanguageSwitcher className="hidden sm:inline-flex" />
-              <Link href={ROUTES.LOGIN} className="hidden md:block">
-                <Button variant="primary" size="default" className="rounded-full px-6">
-                  {t('login')}
+              <Link href={primaryHref} className="hidden md:block">
+                <Button
+                  variant="primary"
+                  size="default"
+                  className="rounded-full px-6"
+                >
+                  {primaryLabel}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </Link>
@@ -80,9 +87,13 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
                 onClick={() => setOpen((v) => !v)}
                 aria-label={open ? t('closeMenu') : t('openMenu')}
                 aria-expanded={open}
-                className="cursor-pointer flex h-9 w-9 items-center justify-center rounded-full bg-navy/5 text-navy lg:hidden"
+                className="bg-navy/5 text-navy flex h-9 w-9 cursor-pointer items-center justify-center rounded-full lg:hidden"
               >
-                {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {open ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
               </button>
             </div>
           </>
@@ -91,24 +102,24 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
 
       {/* Mobile drawer */}
       {!minimal && open && (
-        <div className="pointer-events-auto absolute inset-x-4 top-20 rounded-3xl border border-border bg-card p-4 shadow-card lg:hidden">
+        <div className="border-border bg-card shadow-card pointer-events-auto absolute inset-x-4 top-20 rounded-3xl border p-4 lg:hidden">
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.key}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-2xl px-4 py-3 text-sm font-semibold text-navy/80 transition-colors hover:bg-navy/5"
+                className="text-navy/80 hover:bg-navy/5 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors"
               >
                 {t(link.key)}
               </Link>
             ))}
           </div>
-          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+          <div className="border-border mt-3 flex items-center justify-between border-t pt-3">
             <LanguageSwitcher />
-            <Link href={ROUTES.LOGIN} onClick={() => setOpen(false)}>
+            <Link href={primaryHref} onClick={() => setOpen(false)}>
               <Button variant="primary" size="sm" className="rounded-full">
-                {t('login')}
+                {primaryLabel}
               </Button>
             </Link>
           </div>

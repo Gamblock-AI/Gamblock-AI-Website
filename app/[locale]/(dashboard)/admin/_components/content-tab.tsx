@@ -7,6 +7,7 @@ import {
   ArrowUp,
   BookOpen,
   ExternalLink,
+  History,
   Plus,
   Save,
   Send,
@@ -20,6 +21,7 @@ import type {
   AdminEducationDocument,
   AdminEducationMedia,
   AdminEducationModule,
+  AdminEducationRevision,
   AdminModuleDraft,
 } from '@/hooks/use-admin-operations';
 import type { EditorMediaSelection } from '@/components/education/rich-text-editor';
@@ -72,6 +74,8 @@ const makeSection = (order: number) => {
   };
 };
 const makeDocument = (idTitle = '', enTitle = ''): AdminEducationDocument => ({
+  audience: 'student',
+  experience_type: 'article',
   category: 'impulse-awareness',
   estimated_minutes: 8,
   reviewer_name: '',
@@ -107,6 +111,8 @@ const makeDocument = (idTitle = '', enTitle = ''): AdminEducationDocument => ({
 
 function normalizeEducationDocument(document: AdminEducationDocument) {
   const normalized = structuredClone(document);
+  normalized.audience ||= 'all';
+  normalized.experience_type ||= 'article';
   for (const locale of ['id', 'en'] as const) {
     normalized.translations[locale].reviewer_role ||= document.reviewer_role;
   }
@@ -134,6 +140,12 @@ interface ContentTabProps {
     url: string,
     type: 'image' | 'video' | 'pdf'
   ) => Promise<AdminEducationMedia>;
+  getModuleRevisions: (id: string) => Promise<AdminEducationRevision[]>;
+  rollbackModule: (
+    moduleID: string,
+    revisionID: string,
+    reason: string
+  ) => Promise<AdminEducationModule>;
 }
 
 export function ContentTab(props: ContentTabProps) {
@@ -148,6 +160,8 @@ export function ContentTab(props: ContentTabProps) {
   const [newSlug, setNewSlug] = useState('');
   const [newIDTitle, setNewIDTitle] = useState('');
   const [newENTitle, setNewENTitle] = useState('');
+  const [revisions, setRevisions] = useState<AdminEducationRevision[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const openModule = async (id: string) => {
     setBusy(true);
@@ -202,6 +216,40 @@ export function ContentTab(props: ContentTabProps) {
       );
     } catch (error) {
       toastError(error, t('moduleTransitionError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const openHistory = async () => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      setRevisions(await props.getModuleRevisions(selected.id));
+      setHistoryOpen(true);
+    } catch (error) {
+      toastError(error, t('fetchError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const rollback = async (revisionID: string) => {
+    if (!selected) return;
+    const reason = window.prompt(t('rollbackReasonPrompt'));
+    if (!reason) return;
+    setBusy(true);
+    try {
+      const updated = await props.rollbackModule(
+        selected.id,
+        revisionID,
+        reason
+      );
+      setSelected(updated);
+      setSlug(updated.slug);
+      setDocument(normalizeEducationDocument(updated.draft_document));
+      setHistoryOpen(false);
+      toastSuccess(t('rollbackSuccess'));
+    } catch (error) {
+      toastError(error, t('rollbackError'));
     } finally {
       setBusy(false);
     }
@@ -401,6 +449,14 @@ export function ContentTab(props: ContentTabProps) {
           <Button
             variant="outline"
             disabled={busy}
+            onClick={() => void openHistory()}
+          >
+            <History className="size-4" />
+            {t('revisionHistory')}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={busy}
             onClick={() => void transition('archive')}
           >
             <Archive className="size-4" />
@@ -429,6 +485,58 @@ export function ContentTab(props: ContentTabProps) {
         </div>
       </div>
 
+      {historyOpen ? (
+        <section className="border-border bg-card rounded-2xl border p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-navy font-extrabold">
+                {t('revisionHistory')}
+              </h3>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {t('revisionHistoryHelp')}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setHistoryOpen(false)}
+            >
+              <X className="size-4" />
+              {t('close')}
+            </Button>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {revisions.map((revision) => (
+              <div
+                key={revision.id}
+                className="border-border rounded-xl border p-4"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-navy font-bold">#{revision.revision}</p>
+                  <span className="bg-muted rounded-full px-2 py-1 text-[10px] font-bold uppercase">
+                    {revision.kind}
+                  </span>
+                </div>
+                <p className="text-muted-foreground mt-2 text-xs">
+                  {new Date(revision.created_at).toLocaleString()}
+                </p>
+                <Button
+                  className="mt-3"
+                  size="sm"
+                  variant="outline"
+                  disabled={
+                    busy || revision.revision === selected.draft_revision
+                  }
+                  onClick={() => void rollback(revision.id)}
+                >
+                  {t('restoreRevision')}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <div className="border-border bg-muted flex w-fit rounded-xl border p-1">
         <button
           type="button"
@@ -454,6 +562,46 @@ export function ContentTab(props: ContentTabProps) {
             value={slug}
             onChange={(event) => setSlug(event.target.value)}
           />
+        </label>
+        <label className="space-y-2">
+          <span className="text-navy text-xs font-bold">{t('audience')}</span>
+          <select
+            className={adminFieldClassName}
+            value={document.audience}
+            onChange={(event) =>
+              mutate((draft) => {
+                draft.audience = event.target
+                  .value as AdminEducationDocument['audience'];
+              })
+            }
+          >
+            <option value="student">{t('audienceStudent')}</option>
+            <option value="partner">{t('audiencePartner')}</option>
+            <option value="all">{t('audienceAll')}</option>
+          </select>
+        </label>
+        <label className="space-y-2">
+          <span className="text-navy text-xs font-bold">
+            {t('experienceType')}
+          </span>
+          <select
+            className={adminFieldClassName}
+            value={document.experience_type}
+            onChange={(event) =>
+              mutate((draft) => {
+                draft.experience_type = event.target
+                  .value as AdminEducationDocument['experience_type'];
+                if (draft.experience_type === 'partner_response_simulator') {
+                  draft.audience = 'partner';
+                }
+              })
+            }
+          >
+            <option value="article">{t('experienceArticle')}</option>
+            <option value="partner_response_simulator">
+              {t('experienceSimulator')}
+            </option>
+          </select>
         </label>
         <label className="space-y-2">
           <span className="text-navy text-xs font-bold">{t('category')}</span>

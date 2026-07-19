@@ -8,7 +8,6 @@ import { DashboardShortcuts } from '@/components/dashboard/today/dashboard-short
 import { EmergencyHelp } from '@/components/dashboard/today/emergency-help';
 import { LearningNextStep } from '@/components/dashboard/today/learning-next-step';
 import { ProtectionSummary } from '@/components/dashboard/today/protection-summary';
-import { StudentCheckInGate } from '@/components/dashboard/today/student-check-in-gate';
 import { WeeklySnapshot } from '@/components/dashboard/today/weekly-snapshot';
 import { useDashboardSummary } from '@/hooks/use-dashboard-summary';
 import { useEducationModules } from '@/hooks/use-education';
@@ -61,11 +60,11 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         summaryLoading={summaryLoading}
         checkIns={recovery.state.checkIns}
       />
-      <div className="grid gap-5 xl:grid-cols-12 xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-12 xl:items-stretch">
         <div className="xl:col-span-8">
           <WeeklySnapshot checkIns={recovery.state.checkIns} />
         </div>
-        <aside className="xl:col-span-4" aria-label={t('protectionTitle')}>
+        <aside className="flex xl:col-span-4" aria-label={t('protectionTitle')}>
           <ProtectionSummary
             status={protection.status}
             loading={protection.loading}
@@ -75,7 +74,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         </aside>
       </div>
       <DashboardShortcuts />
-      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch">
         <LearningNextStep
           module={learningModule}
           loading={education.loading}
@@ -84,10 +83,6 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         />
         <EmergencyHelp />
       </div>
-      <StudentCheckInGate
-        completed={Boolean(recovery.todayCheckIn)}
-        onSave={recovery.recordDailyCheckIn}
-      />
     </div>
   );
 }

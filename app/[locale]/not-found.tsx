@@ -1,21 +1,22 @@
-import { Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { ErrorStatusPage } from '@/components/error/error-status-page';
 
-export default function NotFound() {
-  const t = useTranslations('NotFound');
+export default async function NotFound() {
+  const [locale, t] = await Promise.all([
+    getLocale(),
+    getTranslations('ErrorPages'),
+  ]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-aqua px-4 text-center">
-      <h1 className="text-6xl font-extrabold text-navy">404</h1>
-      <p className="mt-4 text-lg text-muted-foreground">
-        {t('message')}
-      </p>
-      <Link
-        href="/"
-        className="mt-8 inline-flex items-center gap-2 rounded-full bg-crimson px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-crimson/90"
-      >
-        {t('backHome')}
-      </Link>
-    </div>
+    <ErrorStatusPage
+      code="404"
+      title={t('notFound.title')}
+      description={t('notFound.description')}
+      imageSrc="/images/errors/gami-lost.webp"
+      imageAlt={t('notFound.imageAlt')}
+      homeHref={`/${locale}`}
+      homeLabel={t('backHome')}
+      backLabel={t('goBack')}
+    />
   );
 }

@@ -22,7 +22,7 @@ npm run dev                  # http://localhost:3000
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-18.3`.
+`2026-07-19.1`.
 
 ## Structure
 
@@ -35,11 +35,12 @@ app/
     (landing)/             # landing, post-intervention, impact, technology,
                            # and legal pages
     approve/[token]/       # supporting quick-approval deep link
-    partner/invitations/   # partner invitation acceptance
+    partner/invitations/   # legacy redirect to the accountability workspace
     onboarding/            # authenticated onboarding flows
 components/
   landing/                 # marketing sections and scroll animations
   dashboard/               # responsive shell, Today dashboard, and navigation
+  account/                 # authenticated profile/avatar composition
   education/               # rich-text reader, checks, media, and admin editor
   common/                  # PageTransition and reusable cross-surface helpers
   auth/                    # authentication composition
@@ -59,23 +60,37 @@ Dashboard route transitions are implemented by
 `components/common/PageTransition.tsx` and mounted from
 `app/[locale]/(dashboard)/layout.tsx`.
 
-## Recovery prototype
+## Recovery experience
 
 The student dashboard is insight-first: privacy-safe aggregate analytics,
 protection information, weekly check-in trends, education, help, and shortcuts.
+The authenticated support workspace shows a newest-first three-ticket summary;
+`/[locale]/support/history` provides the complete requester-scoped history and
+`/[locale]/support/[id]` provides encrypted threaded replies and status actions.
 The PKM recovery loop remains directly available through a student-only
-gamification FAB across authenticated dashboard pages and a once-per-day
-check-in gate on the main dashboard. The gate uses the `Asia/Jakarta` calendar
+gamification FAB and a once-per-day check-in gate across authenticated
+dashboard pages. The gate uses the `Asia/Jakarta` calendar
 boundary, requires a mood choice, and keeps urge intensity optional through an
 explicit “prefer not to say” choice. UI feedback remains calm and avoids
 punitive streak or casino-like rewards.
 
-Recovery remains local-first in the bounded, versioned
-`gamblock:recovery:v1` browser store. A submitted structured check-in is also
-committed to the authenticated account before the gate can finish; failures
-remain visible for retry. Intention sync remains optional in Settings. Weekly
-plans, recommendations, and other deeper recovery state remain local. The
-schema contains no URL, domain, DOM, browsing history, or detected-page field.
+Recovery uses a calm, keyboard-accessible dorm-room workspace. The window
+opens three-minute urge surfing, the rug guides 5-4-3-2-1 grounding, the desk
+starts a ten-minute focus sprint, the notebook opens the encrypted reflection
+journal, and the phone opens partner/support choices. Active timers and focus
+task labels stay browser-local. Completed practices and typed weekly reviews
+sync to the account for a rolling 12-month view; deterministic decor placement
+remains until account deletion and is included in export/deletion. Reflection
+payload v2 is AES-256-GCM encrypted and can carry an optional next step and one
+current-focus marker. Legacy local intention text is never uploaded without a
+one-time opt-in import. The schema contains no URL, domain, DOM, browsing
+history, or detected-page field.
+
+Student progress renders inspectable 7/30/90-day activity calendars across
+check-ins, practices, journal entries, missions, education, and weekly reviews.
+Trend language stays unavailable below three check-ins. Partner recovery uses
+a role-filtered CMS response simulator, while partner progress consumes only
+consented aggregate categories and never student recovery details.
 
 Mission eligibility uses `GET /v1/missions/today`; EXP claims use `POST
 /v1/missions/claim`.
@@ -102,6 +117,16 @@ separate, explicit sharing design before it is available. See
 `docs/ai/README.md` for current website capability status and the umbrella
 `context/proposal-requirements.md` for requirement-level targets.
 
+## Error surfaces
+
+Locale-aware 404 and route error boundaries use one minimal status-page system
+with safe Indonesian/English copy, a home action, history-aware back behavior,
+and retry for temporary rendering failures. `app/global-not-found.tsx` covers
+unmatched URLs when the top-level locale layout cannot be composed, while
+`app/global-error.tsx` replaces a failed root layout. Both global fallbacks are
+self-contained and show no exception message, URL, token, form value, or
+recovery data. Generated Gami illustrations live under `public/images/errors/`.
+
 ## API client
 
 `lib/api-client.ts` wraps fetch with the backend envelope (`{ data, error,
@@ -123,20 +148,29 @@ The current website does not install a service worker. `public/sw.js` and
 builds; the cleanup does not clear authentication, recovery records, or other
 browser storage.
 
+The profile page crops/resizes a selected image in the browser before uploading
+a square WebP avatar. Avatar retrieval stays authenticated through the central
+API client and is only shown in authenticated website sessions; removing it
+returns the interface to its initials fallback. Dashboard search combines
+role-permitted navigation with published education modules after the search is
+opened.
+
 ## Quick approval (supporting feature)
 
 `/approve/[token]` resolves an uninstall request via a single-use token, without
 requiring the Kepala to log in on mobile.
 
-Partner invitations are email-bound, expire after seven days, and show their
-share link only after creation. The accountability workspace supports multiple
-relationships, owner cancellation, and relationship-authorized partner
-approve/deny actions. Students initiate protection pause/disable/removal
-requests in the native client; the website remains the partner decision and
-history surface. The operations panel is role-aware; content saves as draft,
-release submissions require a real server artifact plus SHA-256, and a
-device-bound emergency request is reviewed and issued by two distinct platform
-administrators.
+Verified partners create multiple named groups with rotatable codes. Verified
+students preview and explicitly confirm one active membership, then control
+category-specific aggregate sharing and safe exit. Students initiate protection
+pause/removal requests in the native client; the website remains the scoped
+partner decision and history surface. The operations panel is strictly
+role-separated: content admins get revision/rollback authoring, support
+operators get claim-owned threads and eligible data-request actions, release
+operators upload managed artifacts and run manual cohort rollouts, while
+platform admins manage specialist invitations/accounts, safe social links,
+audit history, and dual-control emergency access. Enabled non-null social links
+are rendered in the landing footer; empty settings produce no icon.
 
 Google Identity Services renders only when
 `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is configured to match the backend. Self-service
@@ -162,16 +196,16 @@ to both locale folders and to both explicit loader lists, then run
 
 ## Validation commands
 
-| Command | Purpose |
-|---|---|
+| Command                     | Purpose                                                     |
+| --------------------------- | ----------------------------------------------------------- |
 | `npm run verify:ai-context` | Validate required AI context, paths, adapters, and tracking |
-| `npm run i18n:check` | Validate modular locale files, namespaces, and key parity |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run TypeScript without emitting files |
-| `npm test` | Run Vitest unit tests |
-| `npm run verify` | Run context validation and lint only |
-| `npm run build` | Build the production Next.js app |
-| `npm run e2e` | Run Playwright end-to-end tests |
+| `npm run i18n:check`        | Validate modular locale files, namespaces, and key parity   |
+| `npm run lint`              | Run ESLint                                                  |
+| `npm run typecheck`         | Run TypeScript without emitting files                       |
+| `npm test`                  | Run Vitest unit tests                                       |
+| `npm run verify`            | Run context validation and lint only                        |
+| `npm run build`             | Build the production Next.js app                            |
+| `npm run e2e`               | Run Playwright end-to-end tests                             |
 
 The AI runs `npm run lint -- <changed-source-files>` (and the context validator
 when relevant) by default. Typecheck, tests, builds, and E2E run only when the

@@ -4,25 +4,26 @@ import { FormEvent, useState } from 'react';
 import {
   BadgeCheck,
   KeyRound,
-  LockKeyhole,
   Mail,
   Save,
+  Trash2,
   UserRound,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
-  DashboardNotice,
   DashboardPage,
   DashboardPageHeader,
   DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import { AvatarCropper } from '@/components/account/avatar-cropper';
+import { AvatarImage } from '@/components/account/avatar-image';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { Link } from '@/i18n/routing';
 import { updateLocalUser, useLocalUser } from '@/hooks/use-local-user';
+import { useProfileActions } from '@/hooks/use-profile';
 import { ROUTES } from '@/routes';
-import { apiClient } from '@/lib/api-client';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
@@ -32,7 +33,13 @@ export default function ProfilePage() {
   const t = useTranslations('profileWorkspace');
   const tDynamic = useTranslations('dynamicLabels');
   const user = useLocalUser();
+  const {
+    updateDisplayName,
+    uploadAvatar: sendAvatar,
+    deleteAvatar,
+  } = useProfileActions();
   const [saving, setSaving] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
 
   const saveDisplayName = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,16 +48,43 @@ export default function ProfilePage() {
     if (!displayName) return;
     setSaving(true);
     try {
-      const updated = await apiClient<{ display_name: string }>('/me', {
-        method: 'PATCH',
-        body: JSON.stringify({ display_name: displayName }),
-      });
+      const updated = await updateDisplayName(displayName);
       updateLocalUser({ display_name: updated.display_name });
       toastSuccess(t('saved'));
     } catch (error) {
       toastError(error, t('saveError'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const uploadAvatar = async (avatar: File) => {
+    setAvatarBusy(true);
+    try {
+      const updated = await sendAvatar(avatar);
+      updateLocalUser({
+        avatar_url: updated.avatar_url
+          ? `${updated.avatar_url}?v=${Date.now()}`
+          : undefined,
+      });
+      toastSuccess(t('avatarUploadSuccess'));
+    } catch (error) {
+      toastError(error, t('avatarUploadError'));
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
+  const removeAvatar = async () => {
+    setAvatarBusy(true);
+    try {
+      await deleteAvatar();
+      updateLocalUser({ avatar_url: undefined });
+      toastSuccess(t('avatarRemoveSuccess'));
+    } catch (error) {
+      toastError(error, t('avatarRemoveError'));
+    } finally {
+      setAvatarBusy(false);
     }
   };
 
@@ -63,12 +97,13 @@ export default function ProfilePage() {
         description={t('description')}
       />
 
-      <div className="grid gap-5 lg:grid-cols-12 lg:items-start">
+      <div className="grid gap-5 lg:grid-cols-12 lg:items-stretch">
         <DashboardPanel
           icon={UserRound}
           title={t('identityTitle')}
           description={t('identityBody')}
-          className="lg:col-span-7"
+          className="flex h-full flex-col lg:col-span-7"
+          contentClassName="flex flex-1 flex-col"
           action={
             <DashboardStatus tone="navy">
               {user.role
@@ -79,10 +114,43 @@ export default function ProfilePage() {
             </DashboardStatus>
           }
         >
+          <div className="border-border flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center">
+            <AvatarImage
+              avatarUrl={user.avatar_url}
+              alt={t('avatarAlt', {
+                name: user.display_name || t('profileFallback'),
+              })}
+              fallback={<UserRound className="size-8" aria-hidden="true" />}
+              className="bg-azure text-navy flex size-20 shrink-0 items-center justify-center rounded-2xl"
+            />
+            <div className="min-w-0 flex-1">
+              <h3 className="text-navy text-sm font-bold">
+                {t('avatarTitle')}
+              </h3>
+              <p className="text-muted-foreground mt-1 text-xs leading-5">
+                {t('avatarBody')}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <AvatarCropper busy={avatarBusy} onCrop={uploadAvatar} />
+                {user.avatar_url ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={avatarBusy}
+                    onClick={() => void removeAvatar()}
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    {t('avatarRemove')}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
           <form
             key={user.display_name ?? 'empty-profile'}
             onSubmit={(event) => void saveDisplayName(event)}
-            className="space-y-5"
+            className="flex flex-1 flex-col space-y-5"
           >
             <div className="space-y-2">
               <label
@@ -144,7 +212,7 @@ export default function ProfilePage() {
             <Button
               type="submit"
               size="lg"
-              className="w-full sm:w-auto"
+              className="mt-auto w-full sm:w-auto"
               disabled={saving}
             >
               <Save className="size-4" aria-hidden="true" />
@@ -153,28 +221,38 @@ export default function ProfilePage() {
           </form>
         </DashboardPanel>
 
-        <div className="space-y-5 lg:col-span-5">
+        <div className="flex h-full flex-col gap-5 lg:col-span-5">
           <DashboardPanel
             icon={KeyRound}
             title={t('securityTitle')}
             description={t('securityBody')}
+            className="flex flex-1 flex-col"
+            contentClassName="flex flex-1 flex-col"
           >
             <Link
               href={ROUTES.FORGOT_PASSWORD}
-              className="border-navy/15 text-navy hover:bg-navy/[0.04] focus-visible:ring-navy/30 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+              className="border-navy/15 text-navy hover:bg-navy/[0.04] focus-visible:ring-navy/30 mt-auto inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
             >
               <KeyRound className="size-4" aria-hidden="true" />
               {t('resetPassword')}
             </Link>
           </DashboardPanel>
 
-          <DashboardNotice
+          <DashboardPanel
             icon={BadgeCheck}
             title={t('accountTruthTitle')}
-            tone="navy"
+            description={t('accountTruthBody')}
+            className="flex flex-1 flex-col"
+            contentClassName="flex flex-1 flex-col"
           >
-            {t('accountTruthBody')}
-          </DashboardNotice>
+            <Link
+              href={ROUTES.DATA_REQUESTS}
+              className="border-navy/15 text-navy hover:bg-navy/[0.04] focus-visible:ring-navy/30 mt-auto inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+            >
+              <BadgeCheck className="size-4" aria-hidden="true" />
+              {t('accountTruthAction')}
+            </Link>
+          </DashboardPanel>
         </div>
       </div>
     </DashboardPage>

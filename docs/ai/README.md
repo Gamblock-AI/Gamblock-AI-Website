@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-18.3`
+**Context version:** `2026-07-19.1`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -19,7 +19,8 @@ surface presents an own-account seven-day check-in trend, plain-language
 activity and protection aggregates, education continuation, help, and compact
 shortcuts. Device/model implementation versions stay out of the student canvas.
 PKM core `PKM-WEB-004` is available as a once-per-`Asia/Jakarta`-day check-in
-gate with optional urge disclosure and an account-persistence acknowledgement;
+gate across authenticated dashboard routes, with optional urge disclosure and
+an account-persistence acknowledgement;
 `PKM-WEB-005` and `PKM-WEB-006` remain available from the student-only FAB
 mounted by the authenticated dashboard layout. No browsing details enter these
 surfaces. Partner monitoring of raw check-in values remains `planned` until an
@@ -28,6 +29,49 @@ insight-first main canvas differs from the target “Today first” information
 architecture in `context/ui-context.md`; the mandatory gate and global FAB
 preserve direct access to the core recovery loop while that product-level gap
 remains open.
+
+Supporting error-surface status (`implemented`): locale 404 and runtime error
+boundaries share a minimal, keyboard-accessible Gami status page. Temporary
+rendering failures provide Next.js retry plus a safe home route; unmatched URLs
+and root-layout failures use self-contained global fallbacks. User-facing copy
+never renders exception details, digests, URLs, form values, tokens, or recovery
+content, while unexpected errors reach the sanitized development-only logger.
+
+Supporting dashboard/profile status (`implemented`): paired dashboard cards
+stretch to a shared row height; the support card uses its additional space for
+a direct recovery-plan action. Global search combines role-permitted navigation
+with published education modules only after search is opened. Authenticated
+users can crop/resize, upload, replace, and remove a square WebP profile avatar;
+the avatar is fetched only within authenticated sessions and removal restores
+the initials fallback.
+
+Supporting support-workspace status (`implemented`): student and partner forms
+create category/priority/impact cases, the rail shows the three newest cases,
+`/support/history` exposes the full requester-scoped list, and `/support/[id]`
+provides encrypted threaded replies plus close/seven-day-reopen actions. Status
+badges use the same waiting-support/waiting-user/resolved/closed vocabulary.
+
+Supporting accountability status (`implemented`, `WEB-SUP-ACC-001` through
+`003`): backend-authoritative `user` and `partner` accounts share the same
+locale routes with different actions. Students preview/confirm one group,
+control four aggregate-sharing categories, send structured contact requests,
+and use normal or immediate unsafe exit. Verified partners create multiple
+groups, rotate codes, inspect consented aggregates, remove members, archive
+empty groups, and resolve scoped protection/leave requests with recent auth.
+
+Supporting recovery/progress status (`implemented`, `WEB-SUP-REC-001` and
+`WEB-SUP-PROG-001`): the student uses a calm recovery-room workspace for urge
+surfing, 5-4-3-2-1 grounding, focus sprint, encrypted reflection, and support.
+Active timers/task labels remain browser-local; completed practices and typed
+weekly reviews use a rolling 12-month account view, while deterministic room
+decor remains until account deletion. Reflection payload v2 carries the only
+recovery free text plus optional next-step/current-focus fields. Student
+progress provides inspectable 7/30/90-day activity calendars, suppresses trends
+below three check-ins, and generates CSV/print-to-PDF locally after a privacy
+warning. Partner progress uses only category-specific member aggregates and
+never the student trend endpoint. Partner recovery is a CMS-authored response
+simulator and never record access. The complete `PKM-WEB-002` focus-period and
+reminder lifecycle remains incomplete core work.
 
 Current mission gamification status (`implemented`, supporting PKM-WEB-005):
 the FAB uses a gamepad trigger and consumes the server's deterministic
@@ -40,8 +84,10 @@ projection. PKM-core skip/replace/reflection states remain incomplete and must
 not be inferred from this supporting layer.
 
 Current psychoeducation status (`implemented`, PKM core `PKM-WEB-003`): the
-student library and reader consume only published, revisioned bilingual
-documents and track required sections, media, and knowledge checks. Rich text
+library and direct reader consume only published, revisioned bilingual
+documents allowed for the caller's student/partner role and track required
+sections, media, and knowledge checks. Documents explicitly distinguish
+articles from response simulators. Rich text
 is rendered from an allowlisted JSON tree without raw HTML. Uploaded
 image/video/PDF media is served by the backend; external media remains
 click-to-load. The content-admin workspace supports WYSIWYG authoring,
@@ -81,11 +127,11 @@ and review/publish/archive transitions.
 - Dashboard/recovery UI: inspect `app/[locale]/(dashboard)/`,
   `components/dashboard/`, `lib/recovery/`, the relevant recovery hooks, and
   `design-system/gamblock-ai-recovery-dashboard/`.
-- Accountability: invitations are seven-day, email-bound consent links;
-  approval authority comes from an active relationship, not a client-side role
-  label. Student protection-change requests start in the native client;
-  website accountability is partner decision/history. Quick tokens are secrets
-  and must not enter logs or analytics.
+- Accountability: group codes are hashed, rotatable, rate-limited discovery
+  values; preview plus explicit confirmation creates the active membership.
+  Approval authority comes from that backend membership, not a client-side role
+  label. Student protection-change requests start in the native client; quick
+  tokens remain single-use secrets and never enter logs or analytics.
 - Operations: tabs and fetches are role-specific. Content creation is draft
   only, artifact validation requires a real server-side file/checksum, and
   user/device emergency requests require review and issuance by two distinct
@@ -140,3 +186,20 @@ file must be committed so another clone receives the same instructions.
 
 Never place secrets, personal instructions, credentials, machine-specific
 paths, or session-only notes in committed AI context.
+
+## Current operational UI truth
+
+The locale-aware `/[locale]/admin` shell is implemented as role-specific
+workspaces rather than a cumulative super-admin dashboard. Content admins get
+CMS revision/rollback actions, support operators get claim-owned case threads
+and eligible data-request actions, release operators get managed artifact
+upload plus manual cohort rollout, and platform admins get specialist
+invitation/account management, safe social-link settings, audit history, and
+dual-control emergency access. Operator login defaults to this route and
+consumer dashboard navigation is hidden for operator roles.
+
+The landing footer fetches `/v1/public/site-social-links` and renders enabled,
+non-null records only. The data-request UI supports encrypted export download
+and a protected deletion-confirmation route. These are operational/supporting
+features; external delivery, release signing, automated rollout health, and
+research administration are not claimed complete.

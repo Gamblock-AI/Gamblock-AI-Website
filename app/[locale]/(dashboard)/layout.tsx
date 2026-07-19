@@ -2,6 +2,7 @@ import { Sidebar } from '@/components/dashboard/sidebar';
 import { Navbar } from '@/components/dashboard/navbar';
 import { MobileNavigation } from '@/components/dashboard/mobile-navigation';
 import { StudentGamificationFab } from '@/components/dashboard/student-gamification-fab';
+import { StudentDailyCheckInGate } from '@/components/dashboard/student-daily-check-in-gate';
 import { PageTransition } from '@/components/common/PageTransition';
 import { getTranslations } from 'next-intl/server';
 
@@ -16,7 +17,7 @@ export default async function AppLayout({
     <div className="dashboard-theme dashboard-canvas min-h-dvh">
       <a
         href="#dashboard-content"
-        className="fixed left-4 top-4 z-[70] -translate-y-24 rounded-xl bg-navy px-4 py-3 text-sm font-semibold text-white shadow-card outline-none transition-transform focus:translate-y-0 focus:ring-2 focus:ring-sky focus:ring-offset-2 motion-reduce:transition-none"
+        className="bg-navy shadow-card focus:ring-sky fixed top-4 left-4 z-[70] -translate-y-24 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-transform outline-none focus:translate-y-0 focus:ring-2 focus:ring-offset-2 motion-reduce:transition-none"
       >
         {t('skipToContent')}
       </a>
@@ -37,6 +38,7 @@ export default async function AppLayout({
 
       <MobileNavigation />
       <StudentGamificationFab />
+      <StudentDailyCheckInGate />
     </div>
   );
 }

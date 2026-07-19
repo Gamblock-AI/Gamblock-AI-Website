@@ -7,13 +7,7 @@ const DYNAMIC_LABEL_VALUES = {
     'reset_settings',
     'emergency_access',
   ],
-  supportStatus: [
-    'open',
-    'waiting_user',
-    'waiting_internal',
-    'resolved',
-    'closed',
-  ],
+  supportStatus: ['waiting_support', 'waiting_user', 'resolved', 'closed'],
   supportType: [
     'technical_support',
     'account_recovery',
@@ -59,6 +53,12 @@ const DYNAMIC_LABEL_VALUES = {
     'used',
     'expired',
     'queued',
+    'processing',
+    'pending_confirmation',
+    'rejected',
+    'cancelled',
+    'accepted',
+    'revoked',
     'sent',
     'failed',
   ],
@@ -87,6 +87,16 @@ export function dynamicLabelKey(group: DynamicLabelGroup, value: string) {
 
 export function dynamicLabelFallback(value: string) {
   return value.trim().replaceAll('_', ' ').replaceAll('-', ' ') || '—';
+}
+
+export function normalizeSupportStatus(value: string) {
+  const normalized = normalizeDynamicCode(value);
+
+  if (normalized === 'open' || normalized === 'waiting_internal') {
+    return 'waiting_support';
+  }
+
+  return normalized;
 }
 
 export const educationCategoryCodes = DYNAMIC_LABEL_VALUES.educationCategory;

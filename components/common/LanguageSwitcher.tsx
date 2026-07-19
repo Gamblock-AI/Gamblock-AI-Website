@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 const LOCALES = [
@@ -19,8 +19,12 @@ interface LanguageSwitcherProps {
  * current path, query, and hash. A document navigation guarantees that the
  * requested locale catalog is reloaded through the locale-aware proxy.
  */
-export function LanguageSwitcher({ tone = 'light', className }: LanguageSwitcherProps) {
+export function LanguageSwitcher({
+  tone = 'light',
+  className,
+}: LanguageSwitcherProps) {
   const locale = useLocale();
+  const t = useTranslations('dashboardNav');
 
   const switchTo = (code: (typeof LOCALES)[number]['code']) => {
     if (code === locale) return;
@@ -41,10 +45,10 @@ export function LanguageSwitcher({ tone = 'light', className }: LanguageSwitcher
         tone === 'light'
           ? 'border-border bg-card'
           : 'border-white/20 bg-white/10',
-        className,
+        className
       )}
       role="group"
-      aria-label="Pilih bahasa / Select language"
+      aria-label={t('languageToggle')}
     >
       {LOCALES.map(({ code, label }) => {
         const active = code === locale;
@@ -55,14 +59,14 @@ export function LanguageSwitcher({ tone = 'light', className }: LanguageSwitcher
             onClick={() => switchTo(code)}
             aria-pressed={active}
             className={cn(
-              'flex size-8 cursor-pointer items-center justify-center rounded-[0.625rem] text-[0.625rem] font-bold transition-[background-color,color,box-shadow] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-sky/70 focus-visible:ring-offset-1 motion-reduce:transition-none',
+              'focus-visible:ring-sky/70 flex size-8 cursor-pointer items-center justify-center rounded-[0.625rem] text-[0.625rem] font-bold transition-[background-color,color,box-shadow] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-1 motion-reduce:transition-none',
               active
                 ? tone === 'light'
                   ? 'bg-navy text-white shadow-sm'
-                  : 'bg-white text-navy shadow-sm'
+                  : 'text-navy bg-white shadow-sm'
                 : tone === 'light'
                   ? 'text-muted-foreground hover:bg-muted hover:text-navy'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white',
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
             )}
           >
             {label}
