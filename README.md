@@ -30,7 +30,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-20.3`.
+`2026-07-20.4`.
 
 ## Structure
 
@@ -211,6 +211,12 @@ requires configured SMTP and does not expose whether an email is registered. CI 
 both public settings as Docker build arguments; the Google value remains
 optional and its absence is treated as a normal disabled state rather than a
 runtime warning.
+
+Production CI builds for `https://gamblock-ai.com` with
+`NEXT_PUBLIC_API_URL=https://api.gamblock-ai.com` and the public web Google
+client ID. Its SSH deploy step uses the pinned VPS host identity with
+root/password authentication on port 22 and remains disabled until
+`ENABLE_VPS_DEPLOY=true` after infrastructure bootstrap.
 
 ## Translation catalogs
 

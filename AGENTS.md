@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-07-20.3`
+**Context version:** `2026-07-20.4`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading
@@ -112,6 +112,12 @@ submits only completed practices, and stores reflection free text through the
 encrypted account workflow. Partner recovery/progress must use reviewed CMS
 guidance and consented aggregates, never student room, journal, mood, focus, or
 practice detail. Education audience checks remain server-authoritative.
+
+Production Docker images receive `NEXT_PUBLIC_API_URL` and the public Google
+client ID at build time. CI deploys from `main` only when
+`ENABLE_VPS_DEPLOY=true`, using the pinned root/password/port-22 contract; do
+not move these public build values into runtime Ansible templates or
+reintroduce deploy-user SSH keys.
 
 ## Validation policy
 

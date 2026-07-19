@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-20.3`
+**Context version:** `2026-07-20.4`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -41,6 +41,13 @@ safe errors, and returns to login after success. Production delivery depends on
 the backend SMTP adapter and operational email evidence. Google login maps the
 explicit link-required backend response safely; same-email linking is available
 from the native student Settings flow.
+
+Operational delivery status: production images bake
+`https://api.gamblock-ai.com` and the public web Google client ID through
+GitHub variables, then deploy to the pinned VPS as root over password SSH only
+when `ENABLE_VPS_DEPLOY=true`. The public site is `https://gamblock-ai.com`;
+deployment remains gated until infrastructure bootstrap and backend SMTP are
+ready.
 
 Supporting error-surface status (`implemented`): locale 404 and runtime error
 boundaries share a minimal, keyboard-accessible Gami status page. Temporary
