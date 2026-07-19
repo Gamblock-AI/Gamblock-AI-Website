@@ -1,7 +1,6 @@
 'use client';
 
 import { toast } from 'sonner';
-import { ApiError } from './api-error';
 import { reportDevelopmentError } from './diagnostics';
 import { friendlyMessage } from './messages';
 
@@ -15,10 +14,7 @@ export function toastSuccess(message: string) {
 
 export function toastError(error: unknown, fallback?: string) {
   reportDevelopmentError('UI action failed', error);
-  const message =
-    fallback ??
-    (error instanceof ApiError ? error.friendly() : friendlyMessage(error));
-  toast.error(message);
+  toast.error(friendlyMessage(error, fallback));
 }
 
 // Convenience for mutation flows: shows a success toast on resolve, a friendly

@@ -1,23 +1,17 @@
 import { config } from './config';
+import { errorStatus, isNetworkFailure } from './messages';
 
 type DiagnosticDetails = Record<string, unknown>;
 
 function isExpectedClientRejection(error: unknown): boolean {
-  if (!(error instanceof Error) || !('status' in error)) return false;
-
-  const status = (error as Error & { status?: unknown }).status;
-  return (
-    typeof status === 'number' &&
-    Number.isInteger(status) &&
-    status >= 400 &&
-    status < 500
-  );
+  const status = errorStatus(error);
+  return status !== undefined && status >= 400 && status < 500;
 }
 
 function describeError(error: unknown): unknown {
-  if (!(error instanceof Error)) return error;
+  if (!error || typeof error !== 'object') return { type: typeof error };
 
-  const diagnostic = error as Error & {
+  const diagnostic = error as Partial<Error> & {
     code?: string;
     status?: number;
     diagnosticMessage?: string;
@@ -32,6 +26,8 @@ function describeError(error: unknown): unknown {
   };
 }
 
+const reportedErrors = new WeakSet<object>();
+
 /**
  * Send implementation details to the developer console only. Never pass form
  * values, tokens, URLs, or other user data through `details`.
@@ -44,7 +40,17 @@ export function reportDevelopmentError(
   // Validation, authentication, authorization, and other expected 4xx results
   // are represented in the UI. Keep the console for unexpected failures such
   // as network errors, malformed responses, and server-side faults.
-  if (config.isProduction || isExpectedClientRejection(error)) return;
+  if (
+    config.isProduction ||
+    isExpectedClientRejection(error) ||
+    isNetworkFailure(error)
+  ) {
+    return;
+  }
+  if (error && typeof error === 'object') {
+    if (reportedErrors.has(error)) return;
+    reportedErrors.add(error);
+  }
   console.error(`[Gamblock AI] ${scope}`, {
     ...details,
     error: describeError(error),

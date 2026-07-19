@@ -24,7 +24,10 @@ export function DataRequestsClient() {
     requests,
     loading,
     submitting,
+    downloadingId,
     error,
+    activeExport,
+    activeDeletion,
     refetch,
     createRequest,
     downloadExport,
@@ -32,8 +35,16 @@ export function DataRequestsClient() {
 
   const submitRequest = async (type: 'export' | 'delete'): Promise<boolean> => {
     try {
-      await createRequest(type);
-      toastSuccess(t(type === 'export' ? 'exportSuccess' : 'deleteSuccess'));
+      const request = await createRequest(type);
+      toastSuccess(
+        t(
+          type === 'export' && request.status === 'completed'
+            ? 'exportReady'
+            : type === 'export'
+              ? 'exportSuccess'
+              : 'deleteSuccess'
+        )
+      );
       return true;
     } catch (requestError) {
       toastError(requestError, t('requestError'));
@@ -61,12 +72,18 @@ export function DataRequestsClient() {
         onExport={() => void submitRequest('export')}
         onDelete={() => setDeleteOpen(true)}
         allowDelete={canDelete}
+        activeExport={activeExport}
+        activeDeletion={activeDeletion}
       />
       <DataRequestHistory
         requests={requests}
         loading={loading}
         error={error}
         onRetry={() => void refetch()}
+        onCreateExport={() => void submitRequest('export')}
+        submittingExport={submitting === 'export'}
+        downloadingId={downloadingId}
+        activeExport={activeExport}
         onDownload={(id) =>
           void downloadExport(id).catch((downloadError) =>
             toastError(downloadError, t('downloadError'))

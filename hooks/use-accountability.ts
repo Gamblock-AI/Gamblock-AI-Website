@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { useApiQuery } from './use-api';
 
 export interface SharingPreferences {
   protection_health: boolean;
@@ -73,7 +74,9 @@ export interface PartnerContactRequest {
   student_name: string;
   category: 'check_in' | 'practical_help' | 'accountability' | 'other';
   message?: string;
-  status: 'pending' | 'acknowledged' | 'closed' | 'cancelled';
+  status: 'pending' | 'acknowledged' | 'closed' | 'cancelled' | 'escalated';
+  acknowledged_at?: string;
+  closed_at?: string;
   escalated_at?: string;
   created_at: string;
 }
@@ -87,6 +90,7 @@ export interface ApprovalRequest {
   reason: string;
   supportive_response?: string;
   requested_duration_minutes: number;
+  resolved_at?: string;
   created_at: string;
   expires_at?: string;
 }
@@ -101,6 +105,17 @@ export interface AccountabilityWorkspace {
   pending_actions: number;
 }
 
+type AccountabilityWorkspaceResponse = Omit<
+  AccountabilityWorkspace,
+  'groups' | 'membership' | 'members' | 'exit_requests' | 'contact_requests'
+> & {
+  groups?: AccountabilityGroup[] | null;
+  membership?: AccountabilityMembership | null;
+  members?: AccountabilityMembership[] | null;
+  exit_requests?: MembershipExitRequest[] | null;
+  contact_requests?: PartnerContactRequest[] | null;
+};
+
 const EMPTY_WORKSPACE: AccountabilityWorkspace = {
   role: 'user',
   groups: [],
@@ -110,12 +125,97 @@ const EMPTY_WORKSPACE: AccountabilityWorkspace = {
   pending_actions: 0,
 };
 
+const EMPTY_CONTACT_REQUESTS: PartnerContactRequest[] = [];
+
+function normalizeWorkspace(
+  workspace: AccountabilityWorkspaceResponse | null | undefined
+): AccountabilityWorkspace {
+  if (!workspace) return EMPTY_WORKSPACE;
+  return {
+    ...workspace,
+    groups: workspace.groups ?? [],
+    membership: workspace.membership ?? undefined,
+    members: workspace.members ?? [],
+    exit_requests: workspace.exit_requests ?? [],
+    contact_requests: workspace.contact_requests ?? [],
+  };
+}
+
+export function usePartnerContactRequests() {
+  const [mutating, setMutating] = useState(false);
+  const query = useApiQuery<AccountabilityWorkspaceResponse>(
+    '/accountability/workspace'
+  );
+  const { refetch } = query;
+  const workspace = useMemo(
+    () => (query.data ? normalizeWorkspace(query.data) : null),
+    [query.data]
+  );
+
+  const mutate = useCallback(
+    async <T>(request: () => Promise<T>) => {
+      setMutating(true);
+      try {
+        const result = await request();
+        await refetch();
+        return result;
+      } finally {
+        setMutating(false);
+      }
+    },
+    [refetch]
+  );
+
+  const createRequest = useCallback(
+    (
+      membershipId: string,
+      category: PartnerContactRequest['category'],
+      message: string
+    ) =>
+      mutate(() =>
+        apiClient<PartnerContactRequest>('/accountability/contact-requests', {
+          method: 'POST',
+          body: JSON.stringify({
+            membership_id: membershipId,
+            category,
+            message,
+          }),
+        })
+      ),
+    [mutate]
+  );
+
+  const transitionRequest = useCallback(
+    (requestId: string, status: string) =>
+      mutate(() =>
+        apiClient(`/accountability/contact-requests/${requestId}/transition`, {
+          method: 'POST',
+          body: JSON.stringify({ status }),
+        })
+      ),
+    [mutate]
+  );
+
+  return {
+    workspace,
+    requests: workspace?.contact_requests ?? EMPTY_CONTACT_REQUESTS,
+    loading: query.loading,
+    error: query.error,
+    mutating,
+    refetch,
+    createRequest,
+    transitionRequest,
+  };
+}
+
 export function useAccountability() {
   const [workspace, setWorkspace] =
     useState<AccountabilityWorkspace>(EMPTY_WORKSPACE);
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mutating, setMutating] = useState(false);
+  const [mutatingActions, setMutatingActions] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
   const [error, setError] = useState<unknown>(null);
 
   const fetchData = useCallback(async () => {
@@ -123,10 +223,10 @@ export function useAccountability() {
     setError(null);
     try {
       const [nextWorkspace, approvalRequests] = await Promise.all([
-        apiClient<AccountabilityWorkspace>('/accountability/workspace'),
+        apiClient<AccountabilityWorkspaceResponse>('/accountability/workspace'),
         apiClient<ApprovalRequest[]>('/approval-requests'),
       ]);
-      setWorkspace(nextWorkspace);
+      setWorkspace(normalizeWorkspace(nextWorkspace));
       setRequests(approvalRequests ?? []);
     } catch (fetchError) {
       setError(fetchError);
@@ -136,18 +236,42 @@ export function useAccountability() {
   }, []);
 
   useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+    let active = true;
+    (async () => {
+      try {
+        const [nextWorkspace, approvalRequests] = await Promise.all([
+          apiClient<AccountabilityWorkspaceResponse>(
+            '/accountability/workspace'
+          ),
+          apiClient<ApprovalRequest[]>('/approval-requests'),
+        ]);
+        if (!active) return;
+        setWorkspace(normalizeWorkspace(nextWorkspace));
+        setRequests(approvalRequests ?? []);
+      } catch (fetchError) {
+        if (active) setError(fetchError);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const mutate = useCallback(
-    async <T>(request: Promise<T>) => {
-      setMutating(true);
+    async <T>(action: string, request: () => Promise<T>) => {
+      setMutatingActions((current) => new Set(current).add(action));
       try {
-        const result = await request;
+        const result = await request();
         await fetchData();
         return result;
       } finally {
-        setMutating(false);
+        setMutatingActions((current) => {
+          const next = new Set(current);
+          next.delete(action);
+          return next;
+        });
       }
     },
     [fetchData]
@@ -157,11 +281,12 @@ export function useAccountability() {
     workspace,
     requests,
     loading,
-    mutating,
+    mutating: mutatingActions.size > 0,
+    isMutating: (action: string) => mutatingActions.has(action),
     error,
     refetch: fetchData,
     createGroup: (name: string, description: string) =>
-      mutate(
+      mutate('group:create', () =>
         apiClient<AccountabilityGroup>('/accountability/groups', {
           method: 'POST',
           body: JSON.stringify({ name, description }),
@@ -173,27 +298,27 @@ export function useAccountability() {
         body: JSON.stringify({ code }),
       }),
     joinGroup: (code: string) =>
-      mutate(
+      mutate('group:join', () =>
         apiClient<AccountabilityMembership>('/accountability/groups/join', {
           method: 'POST',
           body: JSON.stringify({ code, confirmed: true }),
         })
       ),
     rotateCode: (groupId: string) =>
-      mutate(
+      mutate(`group:${groupId}:rotate`, () =>
         apiClient<{ join_code: string }>(
           `/accountability/groups/${groupId}/rotate-code`,
           { method: 'POST' }
         )
       ),
     archiveGroup: (groupId: string) =>
-      mutate(
+      mutate(`group:${groupId}:archive`, () =>
         apiClient(`/accountability/groups/${groupId}/archive`, {
           method: 'POST',
         })
       ),
     updateSharing: (membershipId: string, sharing: SharingPreferences) =>
-      mutate(
+      mutate('sharing:update', () =>
         apiClient<AccountabilityMembership>(
           `/accountability/memberships/${membershipId}/sharing`,
           { method: 'PATCH', body: JSON.stringify(sharing) }
@@ -204,21 +329,27 @@ export function useAccountability() {
       kind: 'normal' | 'unsafe',
       reason: string
     ) =>
-      mutate(
+      mutate(`leave:${kind}`, () =>
         apiClient<MembershipExitRequest>(
           `/accountability/memberships/${membershipId}/leave`,
           { method: 'POST', body: JSON.stringify({ kind, reason }) }
         )
       ),
+    cancelLeave: (requestId: string) =>
+      mutate(`leave:${requestId}:cancel`, () =>
+        apiClient(`/accountability/exit-requests/${requestId}/cancel`, {
+          method: 'POST',
+        })
+      ),
     resolveLeave: (requestId: string, decision: 'approved' | 'denied') =>
-      mutate(
+      mutate(`leave:${requestId}:${decision}`, () =>
         apiClient(`/accountability/exit-requests/${requestId}/resolve`, {
           method: 'POST',
           body: JSON.stringify({ decision }),
         })
       ),
     removeMember: (membershipId: string, reason: string) =>
-      mutate(
+      mutate(`membership:${membershipId}:remove`, () =>
         apiClient(`/accountability/memberships/${membershipId}/remove`, {
           method: 'POST',
           body: JSON.stringify({ reason }),
@@ -229,7 +360,7 @@ export function useAccountability() {
       category: PartnerContactRequest['category'],
       message: string
     ) =>
-      mutate(
+      mutate('contact:create', () =>
         apiClient<PartnerContactRequest>('/accountability/contact-requests', {
           method: 'POST',
           body: JSON.stringify({
@@ -240,14 +371,14 @@ export function useAccountability() {
         })
       ),
     transitionContact: (requestId: string, status: string) =>
-      mutate(
+      mutate(`contact:${requestId}:${status}`, () =>
         apiClient(`/accountability/contact-requests/${requestId}/transition`, {
           method: 'POST',
           body: JSON.stringify({ status }),
         })
       ),
     cancelApproval: (requestId: string) =>
-      mutate(
+      mutate(`approval:${requestId}:cancel`, () =>
         apiClient(`/approval-requests/${requestId}/cancel`, {
           method: 'POST',
         })
@@ -257,7 +388,7 @@ export function useAccountability() {
       decision: 'approve' | 'deny',
       supportiveResponse: string
     ) =>
-      mutate(
+      mutate(`approval:${requestId}:${decision}`, () =>
         apiClient(`/approval-requests/${requestId}/${decision}`, {
           method: 'POST',
           body: JSON.stringify({ supportive_response: supportiveResponse }),

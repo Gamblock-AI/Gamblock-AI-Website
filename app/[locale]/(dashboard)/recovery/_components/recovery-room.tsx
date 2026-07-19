@@ -22,13 +22,15 @@ import {
   X,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogClose,
-  DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogOverlay,
+  DialogPortal,
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
@@ -181,6 +183,7 @@ export function RecoveryRoom() {
                       duration: 0.2,
                     }}
                     onClick={() => openActivity(key)}
+                    data-activity-trigger={key}
                     className={`${config.hotspot} focus-visible:ring-cyan absolute z-10 flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-4 border-white/90 shadow-[0_10px_35px_rgba(23,38,77,0.45)] transition-transform outline-none hover:scale-105 focus-visible:ring-4 focus-visible:ring-offset-2 motion-reduce:transition-none ${config.tone}`}
                     aria-label={t(`activities.${key}.label`)}
                   >
@@ -202,6 +205,7 @@ export function RecoveryRoom() {
                   key={key}
                   type="button"
                   onClick={() => openActivity(key)}
+                  data-activity-trigger={key}
                   className="focus-visible:ring-cyan flex min-h-12 cursor-pointer items-center justify-center gap-1 rounded-xl px-3 text-xs font-semibold text-white/80 transition-colors outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2"
                 >
                   <Icon
@@ -226,6 +230,7 @@ export function RecoveryRoom() {
                 key={key}
                 type="button"
                 onClick={() => openActivity(key)}
+                data-activity-trigger={key}
                 className={`focus-visible:ring-cyan flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border border-white/15 bg-white/[0.08] p-3 text-left text-sm leading-5 font-semibold text-white transition-colors outline-none hover:bg-white/[0.14] focus-visible:ring-2 active:bg-white/[0.16] ${key === 'support' ? 'col-span-2' : ''}`}
               >
                 <span
@@ -428,68 +433,64 @@ function ActivitySheet({
         if (!open) onClose();
       }}
     >
-      <DialogContent
-        showCloseButton={false}
-        className="bg-navy/55 z-[80] flex h-dvh max-h-none items-end justify-center rounded-none p-0 ring-0 backdrop-blur-sm sm:items-center sm:p-6"
-        style={{
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          maxWidth: 'none',
-          transform: 'none',
-        }}
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose();
-        }}
-      >
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.2 }}
-          className="bg-card flex max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)] w-full max-w-3xl flex-col overflow-hidden rounded-t-[2rem] shadow-2xl sm:max-h-[92dvh] sm:rounded-[2rem]"
-        >
-          <DialogHeader className="border-border bg-card relative shrink-0 border-b p-4 pr-16 text-left sm:p-7 sm:pr-20">
-            <p className="text-cyan-dark text-xs font-bold tracking-[0.14em] uppercase">
-              {t('sheetEyebrow')}
-            </p>
-            <DialogTitle
-              id="activity-title"
-              className="text-navy mt-1 text-xl leading-tight font-bold sm:text-2xl"
-            >
-              {t(`activities.${activity}.label`)}
-            </DialogTitle>
-            <DialogDescription className="mt-1 max-w-xl text-sm leading-6">
-              {t(`activities.${activity}.body`)}
-            </DialogDescription>
-            <DialogClose
-              className="border-border text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/30 absolute top-4 right-4 flex size-11 cursor-pointer items-center justify-center rounded-full border transition-colors outline-none focus-visible:ring-2 sm:top-7 sm:right-7"
-              aria-label={t('close')}
-            >
-              <X className="size-5" aria-hidden="true" />
-            </DialogClose>
-          </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-7">
-            {activity === 'urge' ? (
-              <TimedPractice
-                kind="urge_surfing"
-                seconds={180}
-                onComplete={onComplete}
-                saving={saving}
+      <DialogPortal>
+        <DialogOverlay
+          data-testid="recovery-activity-backdrop"
+          className="bg-navy/55 z-[80] backdrop-blur-sm"
+        />
+        <DialogPrimitive.Viewport className="fixed inset-0 z-[80] flex items-end justify-center overflow-y-auto overscroll-contain pt-[max(0.75rem,env(safe-area-inset-top))] md:items-center md:p-6">
+          <DialogPrimitive.Popup
+            data-testid="recovery-activity-dialog"
+            render={
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.2 }}
               />
-            ) : null}
-            {activity === 'grounding' ? (
-              <GroundingPractice onComplete={onComplete} saving={saving} />
-            ) : null}
-            {activity === 'focus' ? (
-              <FocusPractice onComplete={onComplete} saving={saving} />
-            ) : null}
-            {activity === 'journal' ? <RoomJournal /> : null}
-            {activity === 'support' ? <SupportChoices /> : null}
-          </div>
-        </motion.div>
-      </DialogContent>
+            }
+            className="ring-foreground/10 bg-card text-popover-foreground relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)] w-full max-w-none flex-col overflow-hidden rounded-t-[2rem] shadow-2xl ring-1 outline-none md:max-h-[calc(100dvh-3rem)] md:w-[min(48rem,calc(100vw-3rem))] md:rounded-[2rem]"
+          >
+            <DialogHeader className="border-border bg-card relative shrink-0 border-b p-4 pr-16 text-left sm:p-7 sm:pr-20">
+              <p className="text-cyan-dark text-xs font-bold tracking-[0.14em] uppercase">
+                {t('sheetEyebrow')}
+              </p>
+              <DialogTitle
+                id="activity-title"
+                className="text-navy mt-1 text-xl leading-tight font-bold sm:text-2xl"
+              >
+                {t(`activities.${activity}.label`)}
+              </DialogTitle>
+              <DialogDescription className="mt-1 max-w-xl text-sm leading-6">
+                {t(`activities.${activity}.body`)}
+              </DialogDescription>
+              <DialogClose
+                className="border-border text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/30 absolute top-4 right-4 flex size-11 cursor-pointer items-center justify-center rounded-full border transition-colors outline-none focus-visible:ring-2 sm:top-7 sm:right-7"
+                aria-label={t('close')}
+              >
+                <X className="size-5" aria-hidden="true" />
+              </DialogClose>
+            </DialogHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-7">
+              {activity === 'urge' ? (
+                <TimedPractice
+                  kind="urge_surfing"
+                  seconds={180}
+                  onComplete={onComplete}
+                  saving={saving}
+                />
+              ) : null}
+              {activity === 'grounding' ? (
+                <GroundingPractice onComplete={onComplete} saving={saving} />
+              ) : null}
+              {activity === 'focus' ? (
+                <FocusPractice onComplete={onComplete} saving={saving} />
+              ) : null}
+              {activity === 'journal' ? <RoomJournal /> : null}
+              {activity === 'support' ? <SupportChoices /> : null}
+            </div>
+          </DialogPrimitive.Popup>
+        </DialogPrimitive.Viewport>
+      </DialogPortal>
     </Dialog>
   );
 }

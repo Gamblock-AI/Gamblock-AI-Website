@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { DataRequestRecord } from '@/hooks/use-data-requests';
-import { getRequestStatus } from './request-status';
+import { getExportAvailability, getRequestStatus } from './request-status';
 
 interface DataRequestHistoryProps {
   requests: DataRequestRecord[];
@@ -17,6 +17,10 @@ interface DataRequestHistoryProps {
   error: unknown;
   onRetry: () => void;
   onDownload: (id: string) => void;
+  onCreateExport: () => void;
+  submittingExport: boolean;
+  downloadingId: string | null;
+  activeExport: boolean;
 }
 
 export function DataRequestHistory({
@@ -25,6 +29,10 @@ export function DataRequestHistory({
   error,
   onRetry,
   onDownload,
+  onCreateExport,
+  submittingExport,
+  downloadingId,
+  activeExport,
 }: DataRequestHistoryProps) {
   const t = useTranslations('dataRequestsWorkspace');
 
@@ -47,6 +55,10 @@ export function DataRequestHistory({
         loading={loading}
         error={error}
         onDownload={onDownload}
+        onCreateExport={onCreateExport}
+        submittingExport={submittingExport}
+        downloadingId={downloadingId}
+        activeExport={activeExport}
       />
     </DashboardPanel>
   );
@@ -57,6 +69,10 @@ function DataRequestHistoryContent({
   loading,
   error,
   onDownload,
+  onCreateExport,
+  submittingExport,
+  downloadingId,
+  activeExport,
 }: Omit<DataRequestHistoryProps, 'onRetry'>) {
   const t = useTranslations('dataRequestsWorkspace');
   const locale = useLocale();
@@ -114,6 +130,32 @@ function DataRequestHistoryContent({
             : request.type === 'retention_review'
               ? t('typeRetentionReview')
               : t('typeExport');
+        const availability = getExportAvailability(request);
+        const downloadAvailable = availability.kind === 'ready';
+        const canCreateReplacement =
+          request.type === 'export' &&
+          ['failed', 'expired', 'unavailable'].includes(availability.kind);
+        const archiveMessage =
+          availability.kind === 'expired'
+            ? t('archiveExpired')
+            : availability.kind === 'unavailable'
+              ? t('archiveUnavailable')
+              : availability.kind === 'failed'
+                ? t('archiveFailed')
+                : availability.kind === 'ready'
+                  ? t('archiveExpires', {
+                      date: dateFormatter.format(availability.expiresAt),
+                    })
+                  : null;
+        const displayedStatus =
+          availability.kind === 'expired'
+            ? { label: t('status.expired'), tone: 'muted' as const }
+            : availability.kind === 'unavailable'
+              ? { label: t('status.unavailable'), tone: 'crimson' as const }
+              : {
+                  label: t(`status.${status.key}`),
+                  tone: status.tone,
+                };
 
         return (
           <article
@@ -126,23 +168,48 @@ function DataRequestHistoryContent({
                 {request.id}
               </p>
               <p className="text-muted-foreground mt-2 text-xs">{date}</p>
+              {archiveMessage ? (
+                <p
+                  className="text-muted-foreground mt-2 text-xs leading-5"
+                  role={request.status === 'failed' ? 'alert' : undefined}
+                >
+                  {archiveMessage}
+                </p>
+              ) : null}
             </div>
-            <DashboardStatus tone={status.tone}>
-              {t(`status.${status.key}`)}
-            </DashboardStatus>
-            {request.type === 'export' &&
-            request.status === 'completed' &&
-            request.result_expires_at &&
-            new Date(request.result_expires_at) > new Date() ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onDownload(request.id)}
-              >
-                <Download className="size-4" aria-hidden="true" />
-                {t('downloadAction')}
-              </Button>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+              <DashboardStatus tone={displayedStatus.tone}>
+                {displayedStatus.label}
+              </DashboardStatus>
+              {downloadAvailable ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={downloadingId !== null}
+                  onClick={() => onDownload(request.id)}
+                >
+                  <Download className="size-4" aria-hidden="true" />
+                  {downloadingId === request.id
+                    ? t('downloading')
+                    : t('downloadAction')}
+                </Button>
+              ) : null}
+              {canCreateReplacement ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={submittingExport || activeExport}
+                  onClick={onCreateExport}
+                >
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                  {submittingExport
+                    ? t('submitting')
+                    : activeExport
+                      ? t('exportActive')
+                      : t('createReplacement')}
+                </Button>
+              ) : null}
+            </div>
           </article>
         );
       })}

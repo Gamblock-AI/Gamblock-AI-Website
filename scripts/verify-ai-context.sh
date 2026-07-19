@@ -58,6 +58,18 @@ assert_contains() {
   fi
 }
 
+assert_not_contains() {
+  local file="$1"
+  local pattern="$2"
+  local description="$3"
+
+  if grep -Fq -- "$pattern" "$file"; then
+    fail "$description"
+  else
+    pass "$description"
+  fi
+}
+
 required_files=(
   ".gitattributes"
   ".nvmrc"
@@ -94,6 +106,7 @@ required_paths=(
   "messages/README.md"
   "messages/en"
   "messages/id"
+  "next.config.ts"
   "proxy.ts"
   "routes.ts"
   "scripts/validate-messages.mjs"
@@ -179,6 +192,14 @@ assert_contains ".github/workflows/ci.yml" "npm run verify:ai-context" "CI runs 
 assert_contains ".github/workflows/ci.yml" "npm run i18n:check" "CI validates modular message catalogs"
 assert_contains ".github/workflows/ci.yml" "npm run typecheck" "CI uses the package typecheck script"
 assert_contains ".github/workflows/ci.yml" "npm run e2e" "CI uses the package e2e script"
+assert_contains \
+  "next.config.ts" \
+  "turbopackFileSystemCacheForDev: false" \
+  "development disables persistent Turbopack filesystem caching"
+assert_not_contains \
+  "proxy.ts" \
+  "(id|en)" \
+  "proxy locale parsing remains derived from the routing configuration"
 
 if node <<'NODE'
 const pkg = require('./package.json');

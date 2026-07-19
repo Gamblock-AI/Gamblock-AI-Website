@@ -30,6 +30,11 @@ Next.js versions.
 - `bun.lock` is retained for compatibility/history, but it is not the source of
   truth for installs or CI. Do not delete or regenerate it unless a package
   manager migration is explicitly requested.
+- Turbopack filesystem caching for `next dev` is intentionally disabled in
+  `next.config.ts`; restored graphs have previously omitted `app/[locale]`
+  routes. Do not re-enable it without validating `/id`, `/en`, protected-route
+  redirects, and generated `AppRoutes` across two server restarts. Never remove
+  `.next/dev` while a development server is running.
 - Copy `.env.example` to `.env.local` for local development. Never commit an
   `.env*` file containing local values or secrets.
 - After a fresh clone, run `npm run verify:ai-context` before implementation so
@@ -136,16 +141,20 @@ practice detail. Education audience checks remain server-authoritative.
 
 - **Messages**: `lib/messages.ts` is the FE mirror of the backend
   `internal/i18n/messages.go` catalog. Resolve any thrown error to a
-  production-safe string via `friendlyMessage(err)`; throw `ApiError` (never
+  safe localized string via `friendlyMessage(err)`; resolution is structural
+  so `code`/`status` survive module and realm boundaries. Throw `ApiError` (never
   generic `Error`) from `lib/api-client.ts` so `code`/`status` propagate.
 - **Environment gate**: user-facing errors are concise and non-technical in
   every environment. `config.isProduction` allows sanitized code/status context
   only through `lib/diagnostics.ts` in the development console; production
-  emits no browser-console diagnostic. Never pass form values, tokens, URLs, or
-  recovery/browsing content to that logger.
+  emits no browser-console diagnostic. Expected 4xx and browser transport
+  failures are represented in the UI without a console diagnostic. Never pass
+  form values, tokens, URLs, or recovery/browsing content to that logger.
 - **Feedback**: use `lib/feedback.ts` (`toastSuccess`/`toastError`/`withFeedback`)
   for consistent sonner toasts. Do not swallow errors with `console.error` only —
-  surface a toast where the user took an action.
+  surface a toast where the user took an action. Expected validation/business
+  rejections belong beside the relevant field or in an accessible form summary;
+  reserve toasts for success and request-level/network failures.
 - **Micro-interactions** (all honour `prefers-reduced-motion` via `useReducedMotion`
   or `motion-reduce:` variants):
   - Button press scale lives in `components/ui/button.tsx` (framer-motion `whileTap`).

@@ -12,6 +12,7 @@ export interface LocalUser {
   email_verified_at?: string;
   phone_e164?: string;
   phone_verified_at?: string;
+  password_enabled?: boolean;
 }
 
 const STORAGE_KEY = 'gamblock_user';

@@ -1,8 +1,9 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import {
   BadgeCheck,
+  CircleAlert,
   KeyRound,
   Mail,
   Save,
@@ -10,36 +11,150 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import {
+  DashboardNotice,
   DashboardPage,
   DashboardPageHeader,
   DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AuthField } from '@/components/auth/AuthField';
 import { AvatarCropper } from '@/components/account/avatar-cropper';
 import { AvatarImage } from '@/components/account/avatar-image';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { Link } from '@/i18n/routing';
-import { updateLocalUser, useLocalUser } from '@/hooks/use-local-user';
+import {
+  refreshCurrentUser,
+  updateLocalUser,
+  useLocalUser,
+} from '@/hooks/use-local-user';
 import { useProfileActions } from '@/hooks/use-profile';
 import { ROUTES } from '@/routes';
+import { useRouter } from '@/i18n/routing';
+import { clearBrowserSession } from '@/lib/api-client';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
 } from '@/lib/i18n/dynamic-labels';
+import { errorCode, friendlyMessage } from '@/lib/messages';
+
+interface PasswordFormValues {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
 
 export default function ProfilePage() {
   const t = useTranslations('profileWorkspace');
   const tDynamic = useTranslations('dynamicLabels');
+  const router = useRouter();
   const user = useLocalUser();
   const {
     updateDisplayName,
     uploadAvatar: sendAvatar,
     deleteAvatar,
+    updatePassword,
   } = useProfileActions();
   const [saving, setSaving] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState(false);
+  const [passwordBusy, setPasswordBusy] = useState(false);
+  const passwordSchema = z
+    .object({
+      currentPassword: z.string().min(1, t('currentPasswordRequired')),
+      newPassword: z.string().min(8, t('newPasswordMinimum')),
+      confirmPassword: z.string().min(1, t('confirmPasswordRequired')),
+    })
+    .refine((values) => values.newPassword === values.confirmPassword, {
+      path: ['confirmPassword'],
+      message: t('passwordMismatch'),
+    })
+    .refine((values) => values.newPassword !== values.currentPassword, {
+      path: ['newPassword'],
+      message: t('passwordMustDiffer'),
+    });
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    clearErrors: clearPasswordErrors,
+    setError: setPasswordError,
+    formState: { errors: passwordErrors },
+  } = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
+
+  useEffect(() => {
+    let active = true;
+    refreshCurrentUser()
+      .then(() => {
+        if (active) setProfileError(false);
+      })
+      .catch(() => {
+        if (active) setProfileError(true);
+      })
+      .finally(() => {
+        if (active) setProfileLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const retryProfile = async () => {
+    setProfileLoading(true);
+    setProfileError(false);
+    try {
+      await refreshCurrentUser();
+    } catch {
+      setProfileError(true);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const savePassword = async (values: PasswordFormValues) => {
+    clearPasswordErrors();
+    setPasswordBusy(true);
+    try {
+      await updatePassword(values.currentPassword, values.newPassword);
+      toastSuccess(t('passwordUpdateSuccess'));
+      clearBrowserSession();
+      router.replace(ROUTES.LOGIN);
+    } catch (error) {
+      const code = errorCode(error);
+      const message = friendlyMessage(error);
+      if (code === 'current_password_invalid') {
+        setPasswordError(
+          'currentPassword',
+          { type: 'server', message },
+          { shouldFocus: true }
+        );
+      } else if (code === 'password_reuse_not_allowed') {
+        setPasswordError(
+          'newPassword',
+          { type: 'server', message },
+          { shouldFocus: true }
+        );
+      } else if (code === 'password_validation_failed') {
+        setPasswordError('root.server', { type: 'server', message });
+      } else {
+        toastError(error);
+      }
+    } finally {
+      setPasswordBusy(false);
+    }
+  };
 
   const saveDisplayName = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,12 +212,32 @@ export default function ProfilePage() {
         description={t('description')}
       />
 
-      <div className="grid gap-5 lg:grid-cols-12 lg:items-stretch">
+      {profileError ? (
+        <DashboardNotice
+          icon={CircleAlert}
+          title={t('profileLoadErrorTitle')}
+          tone="amber"
+          role="alert"
+          action={
+            <Button
+              variant="outline"
+              disabled={profileLoading}
+              onClick={() => void retryProfile()}
+            >
+              {t('retryProfile')}
+            </Button>
+          }
+        >
+          {t('profileLoadErrorBody')}
+        </DashboardNotice>
+      ) : null}
+
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch">
         <DashboardPanel
           icon={UserRound}
           title={t('identityTitle')}
           description={t('identityBody')}
-          className="flex h-full flex-col lg:col-span-7"
+          className="flex h-full flex-col"
           contentClassName="flex flex-1 flex-col"
           action={
             <DashboardStatus tone="navy">
@@ -221,40 +356,115 @@ export default function ProfilePage() {
           </form>
         </DashboardPanel>
 
-        <div className="flex h-full flex-col gap-5 lg:col-span-5">
-          <DashboardPanel
-            icon={KeyRound}
-            title={t('securityTitle')}
-            description={t('securityBody')}
-            className="flex flex-1 flex-col"
-            contentClassName="flex flex-1 flex-col"
-          >
-            <Link
-              href={ROUTES.FORGOT_PASSWORD}
-              className="border-navy/15 text-navy hover:bg-navy/[0.04] focus-visible:ring-navy/30 mt-auto inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+        <DashboardPanel
+          icon={KeyRound}
+          title={t('securityTitle')}
+          description={t('securityBody')}
+          className="flex h-full flex-col"
+          contentClassName="flex flex-1 flex-col"
+        >
+          {profileError ? (
+            <DashboardNotice
+              icon={CircleAlert}
+              title={t('securityUnavailableTitle')}
+              tone="amber"
+              role="alert"
+              action={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={profileLoading}
+                  onClick={() => void retryProfile()}
+                >
+                  {t('retryProfile')}
+                </Button>
+              }
             >
-              <KeyRound className="size-4" aria-hidden="true" />
-              {t('resetPassword')}
-            </Link>
-          </DashboardPanel>
-
-          <DashboardPanel
-            icon={BadgeCheck}
-            title={t('accountTruthTitle')}
-            description={t('accountTruthBody')}
-            className="flex flex-1 flex-col"
-            contentClassName="flex flex-1 flex-col"
-          >
-            <Link
-              href={ROUTES.DATA_REQUESTS}
-              className="border-navy/15 text-navy hover:bg-navy/[0.04] focus-visible:ring-navy/30 mt-auto inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+              {t('securityUnavailableBody')}
+            </DashboardNotice>
+          ) : profileLoading || user.password_enabled === undefined ? (
+            <div className="space-y-3" role="status">
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <span className="sr-only">{t('loadingSecurity')}</span>
+            </div>
+          ) : user.password_enabled === false ? (
+            <DashboardNotice
+              icon={BadgeCheck}
+              title={t('providerSecurityTitle')}
+              tone="navy"
             >
-              <BadgeCheck className="size-4" aria-hidden="true" />
-              {t('accountTruthAction')}
-            </Link>
-          </DashboardPanel>
-        </div>
+              {t('providerSecurityBody')}
+            </DashboardNotice>
+          ) : (
+            <form
+              onSubmit={handlePasswordSubmit(savePassword)}
+              className="space-y-4"
+              noValidate
+            >
+              {passwordErrors.root?.server?.message ? (
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  className="border-crimson/20 bg-crimson/5 text-crimson rounded-xl border px-4 py-3 text-sm font-medium"
+                >
+                  {passwordErrors.root.server.message}
+                </div>
+              ) : null}
+              <AuthField
+                label={t('currentPasswordLabel')}
+                icon={KeyRound}
+                type="password"
+                placeholder={t('currentPasswordPlaceholder')}
+                autoComplete="current-password"
+                error={passwordErrors.currentPassword?.message}
+                {...registerPassword('currentPassword')}
+              />
+              <AuthField
+                label={t('newPasswordLabel')}
+                icon={KeyRound}
+                type="password"
+                placeholder={t('newPasswordPlaceholder')}
+                autoComplete="new-password"
+                error={passwordErrors.newPassword?.message}
+                {...registerPassword('newPassword')}
+              />
+              <AuthField
+                label={t('confirmPasswordLabel')}
+                icon={KeyRound}
+                type="password"
+                placeholder={t('confirmPasswordPlaceholder')}
+                autoComplete="new-password"
+                error={passwordErrors.confirmPassword?.message}
+                {...registerPassword('confirmPassword')}
+              />
+              <p className="text-muted-foreground text-xs leading-5">
+                {t('passwordSignOutNote')}
+              </p>
+              <Button type="submit" className="w-full" disabled={passwordBusy}>
+                <KeyRound className="size-4" aria-hidden="true" />
+                {passwordBusy ? t('updatingPassword') : t('updatePassword')}
+              </Button>
+            </form>
+          )}
+        </DashboardPanel>
       </div>
+
+      <DashboardPanel
+        icon={BadgeCheck}
+        title={t('accountTruthTitle')}
+        description={t('accountTruthBody')}
+        density="compact"
+      >
+        <Link
+          href={ROUTES.DATA_REQUESTS}
+          className="border-navy/15 text-navy hover:bg-navy/[0.04] focus-visible:ring-navy/30 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+        >
+          <BadgeCheck className="size-4" aria-hidden="true" />
+          {t('accountTruthAction')}
+        </Link>
+      </DashboardPanel>
     </DashboardPage>
   );
 }

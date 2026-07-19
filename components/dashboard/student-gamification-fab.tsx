@@ -1,37 +1,46 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import {
   ArrowRight,
   Check,
+  ChevronDown,
   CircleAlert,
-  Clock3,
   Gamepad2,
   Lightbulb,
   LockKeyhole,
   RefreshCw,
+  ShieldCheck,
+  Sparkles,
   Star,
+  Target,
+  Trophy,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { MissionAdjustDialog } from '@/components/dashboard/gamification/mission-adjust-dialog';
+import { MissionReflectionDialog } from '@/components/dashboard/gamification/mission-reflection-dialog';
 import {
-  missionMinutes,
   skillCopy,
   skillReasonCopy,
 } from '@/components/dashboard/today/dashboard-copy';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   type DailyMissionItem,
+  type MissionAdjustmentReason,
   useDailyMission,
 } from '@/hooks/use-daily-mission';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { useRecoveryJourney } from '@/hooks/use-recovery-journey';
 import { Link, usePathname } from '@/i18n/routing';
-import { toastSuccess } from '@/lib/feedback';
-import { cn } from '@/lib/utils';
+import { toastError, toastSuccess } from '@/lib/feedback';
 import type { MissionNumber } from '@/lib/recovery/types';
+import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
 
 const GAMIFICATION_PANEL_ID = 'student-gamification-panel';
@@ -46,9 +55,7 @@ const MISSION_ACTION_ROUTE: Record<MissionNumber, string> = {
 export function StudentGamificationFab() {
   const user = useLocalUser();
   const pathname = usePathname();
-
   if (user.role !== 'user') return null;
-
   return <StudentGamificationContent key={pathname} />;
 }
 
@@ -58,10 +65,10 @@ function StudentGamificationContent() {
   const mission = useDailyMission();
   const [open, setOpen] = useState(false);
   const [practising, setPractising] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
-  const rootRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [reflectionOpen, setReflectionOpen] = useState(false);
+  const [reflectionSaved, setReflectionSaved] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const recommendation = recovery.skillRecommendation;
   const recommendationCopy = recommendation
@@ -70,8 +77,10 @@ function StudentGamificationContent() {
   const primaryTask = mission.items.find((item) => item.role === 'primary');
   const bonusTasks = mission.items.filter((item) => item.role === 'bonus');
   const experience = mission.mission?.experience;
-  const completedCount = mission.mission?.completed_count ?? 0;
+  const resolvedCount = mission.mission?.resolved_count ?? 0;
   const totalCount = mission.mission?.total_count ?? 3;
+  const claimableCount = mission.items.filter((item) => item.claimable).length;
+  const allResolved = totalCount > 0 && resolvedCount >= totalCount;
   const progressPercent = experience
     ? Math.min(
         100,
@@ -79,103 +88,89 @@ function StudentGamificationContent() {
       )
     : 0;
 
-  useEffect(() => {
-    if (!open) return;
-
-    closeRef.current?.focus();
-
-    const closeOnOutsidePress = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
-    document.addEventListener('pointerdown', closeOnOutsidePress);
-    document.addEventListener('keydown', closeOnEscape);
-
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePress);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [open]);
-
-  const togglePanel = () => {
-    if (!open && !mission.loading) void mission.refetch();
-    setOpen((current) => !current);
-  };
-
   const claimTask = async (task: DailyMissionItem) => {
     if (!task.claimable || task.completed) return;
+    const willLevelUp = experience
+      ? experience.level_progress + task.expReward >= experience.level_target
+      : false;
     const saved = await mission.claimMission(task.number);
-    if (!saved) return;
-
-    const message = t('expEarned', { count: task.expReward });
-    setStatusMessage(message);
+    if (!saved) {
+      toastError(mission.error, t('missionError'));
+      return;
+    }
+    const message = willLevelUp
+      ? t('levelUp')
+      : t('expEarned', { count: task.expReward });
+    setSuccessMessage(message);
     toastSuccess(message);
   };
 
+  const adjustTask = async (input: {
+    action: 'skip' | 'replace';
+    reason: MissionAdjustmentReason;
+    replacementNumber?: MissionNumber;
+  }) => {
+    if (!primaryTask) return false;
+    const saved = await mission.adjustMission({
+      missionNumber: primaryTask.number,
+      ...input,
+    });
+    if (saved) {
+      setSuccessMessage(t('adjustSaved'));
+      toastSuccess(t('adjustSaved'));
+    } else {
+      toastError(mission.error, t('missionError'));
+    }
+    return saved;
+  };
+
   return (
-    <div
-      ref={rootRef}
-      className="fixed right-4 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-[45] lg:right-6 lg:bottom-6"
-    >
-      {open ? (
-        <section
+    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Backdrop className="data-open:animate-in data-open:fade-in data-closed:animate-out data-closed:fade-out fixed inset-0 z-[54] bg-navy/30 backdrop-blur-xs duration-200 motion-reduce:animate-none" />
+        <DialogPrimitive.Popup
           id={GAMIFICATION_PANEL_ID}
-          role="dialog"
-          aria-modal="false"
-          aria-labelledby="student-gamification-title"
-          className="border-navy/15 bg-card shadow-float animate-in fade-in zoom-in-95 slide-in-from-bottom-2 absolute right-0 bottom-16 max-h-[min(76dvh,42rem)] w-[min(24rem,calc(100vw-2rem))] origin-bottom-right overflow-y-auto rounded-3xl border duration-200 motion-reduce:animate-none"
+          className="shadow-float data-open:animate-in data-open:slide-in-from-bottom-4 data-closed:animate-out data-closed:slide-out-to-bottom-4 fixed inset-x-0 bottom-0 z-[55] flex max-h-[85dvh] min-h-0 flex-col overflow-hidden rounded-t-[1.75rem] border border-navy/15 bg-card duration-200 outline-none motion-reduce:animate-none sm:inset-x-auto sm:right-6 sm:bottom-20 sm:max-h-[min(80dvh,43rem)] sm:w-[26rem] sm:rounded-[1.75rem]"
         >
-          <header className="border-border bg-card/95 sticky top-0 z-10 border-b px-4 py-4 backdrop-blur-md">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="bg-navy text-sky flex size-10 shrink-0 items-center justify-center rounded-xl">
-                  <Gamepad2 className="size-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <h2
-                    id="student-gamification-title"
-                    className="text-navy text-base font-bold"
-                  >
-                    {t('fabTitle')}
-                  </h2>
-                  <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                    {t('fabDescription')}
-                  </p>
-                </div>
+          {/* Header */}
+          <header className="relative shrink-0 border-b border-border/80 bg-gradient-to-b from-navy/5 via-card to-card px-4 pt-4 pb-3.5">
+            <div className="flex items-center gap-3">
+              <div className="relative size-12 shrink-0 overflow-hidden rounded-2xl border border-navy/10 bg-gradient-to-br from-azure/40 to-sky/20 p-0.5 shadow-xs">
+                <Image
+                  src="/images/mascot/gami-peek.png"
+                  alt=""
+                  fill
+                  sizes="48px"
+                  className="scale-125 object-contain object-bottom"
+                  priority={false}
+                />
               </div>
-              <button
-                ref={closeRef}
-                type="button"
-                onClick={() => {
-                  setOpen(false);
-                  triggerRef.current?.focus();
-                }}
-                className="text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/35 flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors outline-none focus-visible:ring-2"
-                aria-label={t('fabClose')}
-              >
-                <X className="size-5" aria-hidden="true" />
-              </button>
+              <div className="min-w-0 flex-1">
+                <DialogPrimitive.Title className="text-base font-extrabold tracking-tight text-navy">
+                  {t('fabTitle')}
+                </DialogPrimitive.Title>
+                <DialogPrimitive.Description className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                  {t('fabDescription')}
+                </DialogPrimitive.Description>
+              </div>
+              <DialogPrimitive.Close className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/30">
+                <X className="size-4.5" aria-hidden="true" />
+                <span className="sr-only">{t('fabClose')}</span>
+              </DialogPrimitive.Close>
             </div>
 
             {mission.loading ? (
-              <Skeleton className="mt-4 h-14 w-full rounded-xl" />
+              <Skeleton className="mt-3.5 h-11 rounded-xl" />
             ) : experience ? (
-              <div className="bg-azure/45 mt-4 rounded-2xl px-3 py-3">
-                <div className="flex items-center justify-between gap-3 text-xs">
-                  <span className="text-navy flex items-center gap-1.5 font-bold">
-                    <Star className="fill-sky text-navy size-4" aria-hidden="true" />
-                    {t('level', { count: experience.level })}
-                  </span>
-                  <span className="text-muted-foreground font-semibold">
+              <div className="mt-3.5 rounded-xl border border-navy/10 bg-navy/5 p-2.5 backdrop-blur-xs">
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 font-extrabold text-navy">
+                    <span className="flex size-5 items-center justify-center rounded-md bg-navy text-[0.625rem] text-white">
+                      <Trophy className="size-3 text-amber-300" />
+                    </span>
+                    <span>{t('level', { count: experience.level })}</span>
+                  </div>
+                  <span className="text-[0.6875rem] font-bold text-navy/70">
                     {t('expProgress', {
                       current: experience.level_progress,
                       target: experience.level_target,
@@ -183,7 +178,7 @@ function StudentGamificationContent() {
                   </span>
                 </div>
                 <div
-                  className="mt-2 h-2 overflow-hidden rounded-full bg-white/80"
+                  className="relative mt-2 h-2.5 w-full overflow-hidden rounded-full bg-navy/10 p-0.5"
                   role="progressbar"
                   aria-label={t('levelProgress')}
                   aria-valuemin={0}
@@ -191,355 +186,422 @@ function StudentGamificationContent() {
                   aria-valuenow={experience.level_progress}
                 >
                   <div
-                    className="bg-navy h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"
+                    className="h-full rounded-full bg-gradient-to-r from-sky via-azure to-navy transition-all duration-500 ease-out motion-reduce:transition-none"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
-                <p className="text-muted-foreground mt-2 text-[0.6875rem]">
-                  {t('totalExp', { count: experience.total_exp })}
-                </p>
               </div>
             ) : null}
           </header>
 
-          <div className="divide-border divide-y px-4">
-            <section className="py-4" aria-labelledby="fab-mission-title">
-              <div className="flex items-start justify-between gap-3">
+          <Tabs defaultValue="today" className="flex min-h-0 flex-1 flex-col gap-0">
+            <div className="shrink-0 border-b border-border/80 bg-card px-4 py-2.5">
+              <TabsList className="grid w-full grid-cols-2 gap-1 rounded-xl bg-muted/60 p-1">
+                <TabsTrigger
+                  value="today"
+                  className="flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold text-muted-foreground transition-all data-[state=active]:bg-card data-[state=active]:font-extrabold data-[state=active]:text-navy data-[state=active]:shadow-xs"
+                >
+                  <Sparkles className="size-3.5" aria-hidden="true" />
+                  {t('fabTodayTab')}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="practice"
+                  className="flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold text-muted-foreground transition-all data-[state=active]:bg-card data-[state=active]:font-extrabold data-[state=active]:text-navy data-[state=active]:shadow-xs"
+                >
+                  <Target className="size-3.5" aria-hidden="true" />
+                  {t('fabPracticeTab')}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent
+              value="today"
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3.5"
+            >
+              {successMessage ? (
+                <div className="animate-in fade-in slide-in-from-top-1 mb-3.5 flex items-center gap-2 rounded-xl border border-sage/35 bg-sage/12 px-3 py-2 text-xs font-bold text-navy duration-200 motion-reduce:animate-none">
+                  <Sparkles
+                    className="size-4 shrink-0 text-sage"
+                    aria-hidden="true"
+                  />
+                  <span className="flex-1">{successMessage}</span>
+                  <button
+                    type="button"
+                    className="flex size-7 items-center justify-center rounded-lg text-navy hover:bg-white/60"
+                    onClick={() => setSuccessMessage('')}
+                    aria-label={t('fabClose')}
+                  >
+                    <X className="size-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              ) : null}
+
+              <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <p id="fab-mission-title" className="text-navy text-sm font-bold">
+                  <h3 className="text-sm font-extrabold tracking-tight text-navy">
                     {t('dailyTasksTitle')}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    {t('dailyTasksDescription')}
+                  </h3>
+                  <p className="mt-0.5 text-[0.75rem] font-medium text-muted-foreground">
+                    {allResolved
+                      ? t('allTasksResolved')
+                      : t('claimableCount', { count: claimableCount })}
                   </p>
                 </div>
-                <span className="bg-navy shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-white">
-                  {t('taskCount', { completed: completedCount, total: totalCount })}
+                <span className="inline-flex items-center gap-1 rounded-full bg-navy px-2.5 py-1 text-xs font-extrabold text-white shadow-xs">
+                  {t('taskCount', {
+                    completed: resolvedCount,
+                    total: totalCount,
+                  })}
                 </span>
               </div>
 
               {mission.loading ? (
-                <div className="mt-3 space-y-2" role="status">
-                  <Skeleton className="h-24 w-full rounded-2xl" />
-                  <Skeleton className="h-14 w-full rounded-xl" />
-                  <Skeleton className="h-14 w-full rounded-xl" />
-                  <span className="sr-only">{t('missionLoading')}</span>
+                <div className="space-y-2.5" role="status">
+                  <Skeleton className="h-28 rounded-2xl" />
+                  <Skeleton className="h-12 rounded-xl" />
                 </div>
               ) : mission.error || !primaryTask ? (
-                <div className="border-amber/35 bg-amber/10 mt-3 rounded-xl border p-3">
-                  <p className="text-foreground flex items-start gap-2 text-xs leading-5">
-                    <CircleAlert
-                      className="text-amber mt-0.5 size-4 shrink-0"
-                      aria-hidden="true"
-                    />
+                <div className="rounded-xl border border-amber/35 bg-amber/10 p-3.5">
+                  <p className="flex gap-2 text-xs leading-5 text-foreground font-medium">
+                    <CircleAlert className="mt-0.5 size-4 shrink-0 text-amber" />
                     {t('missionError')}
                   </p>
                   <Button
                     type="button"
                     variant="outline"
-                    className="mt-3 h-11"
+                    className="mt-2.5 min-h-10 text-xs font-semibold"
                     onClick={() => void mission.refetch()}
                   >
-                    <RefreshCw className="size-4" aria-hidden="true" />
+                    <RefreshCw className="size-3.5" />
                     {t('missionRetry')}
                   </Button>
                 </div>
               ) : (
-                <div className="mt-3 space-y-2">
-                  <MissionTaskButton
+                <>
+                  <MissionTaskCard
                     task={primaryTask}
                     label={t(`mission${primaryTask.number}`)}
-                    roleLabel={t('primaryTask')}
-                    minutesLabel={t('minutes', {
-                      count: missionMinutes[primaryTask.number],
-                    })}
-                    rewardLabel={t('expReward', { count: primaryTask.expReward })}
-                    updating={mission.updatingMissionNumber === primaryTask.number}
-                    disabled={mission.updatingMissionNumber !== null}
-                    claimLabel={t('claimExp')}
-                    claimingLabel={t('claimingExp')}
-                    claimedLabel={t('expClaimed')}
-                    lockedLabel={t('claimLocked')}
-                    readyLabel={t('claimReady')}
                     actionLabel={t(`mission${primaryTask.number}Action`)}
-                    actionHref={MISSION_ACTION_ROUTE[primaryTask.number]}
+                    claimLabel={t('claimExp')}
+                    claimedLabel={t('expClaimed')}
+                    skippedLabel={t('missionSkipped')}
+                    replacedLabel={t('missionReplaced')}
+                    busy={mission.updatingMissionNumber !== null}
                     onClaim={() => void claimTask(primaryTask)}
                     onNavigate={() => setOpen(false)}
                     primary
                   />
 
-                  <p className="text-muted-foreground pt-1 text-[0.6875rem] font-bold tracking-[0.12em] uppercase">
-                    {t('bonusTasks')}
-                  </p>
-                  {bonusTasks.map((task) => (
-                    <MissionTaskButton
-                      key={task.id}
-                      task={task}
-                      label={t(`mission${task.number}`)}
-                      roleLabel={t('bonusTask')}
-                      minutesLabel={t('minutes', {
-                        count: missionMinutes[task.number],
-                      })}
-                      rewardLabel={t('expReward', { count: task.expReward })}
-                      updating={mission.updatingMissionNumber === task.number}
-                      disabled={mission.updatingMissionNumber !== null}
-                      claimLabel={t('claimExp')}
-                      claimingLabel={t('claimingExp')}
-                      claimedLabel={t('expClaimed')}
-                      lockedLabel={t('claimLocked')}
-                      readyLabel={t('claimReady')}
-                      actionLabel={t(`mission${task.number}Action`)}
-                      actionHref={MISSION_ACTION_ROUTE[task.number]}
-                      onClaim={() => void claimTask(task)}
-                      onNavigate={() => setOpen(false)}
-                    />
-                  ))}
-                </div>
-              )}
-              <p className="sr-only" aria-live="polite">
-                {statusMessage}
-              </p>
-            </section>
+                  {!primaryTask.completed &&
+                  primaryTask.status !== 'skipped' ? (
+                    <button
+                      type="button"
+                      onClick={() => setAdjustOpen(true)}
+                      className="mt-2 flex min-h-10 w-full items-center justify-center rounded-xl text-xs font-bold text-navy/80 transition-colors hover:bg-muted/70 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/30"
+                    >
+                      {t('adjustTask')}
+                    </button>
+                  ) : !reflectionSaved ? (
+                    <div className="mt-3 rounded-xl border border-navy/10 bg-gradient-to-br from-azure/20 via-sky/10 to-card p-3 shadow-xs">
+                      <div className="flex items-start gap-2.5">
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-navy/10 text-navy">
+                          <Sparkles className="size-3.5" aria-hidden="true" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold leading-relaxed text-navy">
+                            {t('reflectionPrompt')}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="mt-2.5 w-full border-navy/20 text-xs font-bold text-navy hover:bg-navy/5"
+                            onClick={() => setReflectionOpen(true)}
+                          >
+                            {t('reflectionAction')}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
 
-            <section className="py-4" aria-labelledby="fab-skill-title">
-              <p id="fab-skill-title" className="text-navy text-sm font-bold">
+                  {bonusTasks.length > 0 ? (
+                    <details className="group mt-3.5 border-t border-border/80 pt-2.5">
+                      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-xl px-2 text-xs font-extrabold text-navy transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/30">
+                        <span className="flex items-center gap-2">
+                          <ShieldCheck className="size-4 text-navy/70" />
+                          {t('bonusTasks')}
+                          <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[0.625rem] font-bold text-navy">
+                            {bonusTasks.length}
+                          </span>
+                        </span>
+                        <ChevronDown className="size-4 text-muted-foreground transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
+                      </summary>
+                      <div className="mt-2 space-y-2.5 pb-1">
+                        {bonusTasks.map((task) => (
+                          <MissionTaskCard
+                            key={task.id}
+                            task={task}
+                            label={t(`mission${task.number}`)}
+                            actionLabel={t(`mission${task.number}Action`)}
+                            claimLabel={t('claimExp')}
+                            claimedLabel={t('expClaimed')}
+                            skippedLabel={t('missionSkipped')}
+                            replacedLabel={t('missionReplaced')}
+                            busy={mission.updatingMissionNumber !== null}
+                            onClaim={() => void claimTask(task)}
+                            onNavigate={() => setOpen(false)}
+                          />
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
+                </>
+              )}
+            </TabsContent>
+
+            <TabsContent
+              value="practice"
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3.5"
+            >
+              <h3 className="text-sm font-extrabold tracking-tight text-navy">
                 {t('fabSkillTitle')}
-              </p>
+              </h3>
               {recommendation && recommendationCopy ? (
-                <div className="mt-3">
+                <div className="mt-3 rounded-2xl border border-navy/15 bg-gradient-to-br from-azure/20 via-card to-card p-3.5 shadow-xs">
                   <div className="flex items-start gap-3">
-                    <span className="bg-azure/65 text-navy flex size-9 shrink-0 items-center justify-center rounded-xl">
-                      <Lightbulb className="size-[1.125rem]" aria-hidden="true" />
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-xs">
+                      <Lightbulb className="size-4.5 text-amber-300" aria-hidden="true" />
                     </span>
-                    <div>
-                      <p className="text-foreground text-sm font-semibold">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-extrabold text-navy sm:text-sm">
                         {t(recommendationCopy.title)}
                       </p>
-                      <p className="text-muted-foreground mt-1 text-xs leading-5">
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                         {t(recommendationCopy.summary)}
                       </p>
                     </div>
                   </div>
-
                   {practising ? (
-                    <p
-                      className="bg-muted/45 text-foreground mt-3 rounded-xl p-3 text-xs leading-6"
-                      role="status"
-                    >
+                    <p className="mt-3 rounded-xl border border-border/60 bg-muted/50 p-3 text-xs leading-relaxed text-foreground">
                       {t(recommendationCopy.practice)}
                     </p>
                   ) : null}
-
-                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                    <Button
-                      type="button"
-                      className="h-11 flex-1"
-                      onClick={() => setPractising((current) => !current)}
-                      aria-expanded={practising}
-                    >
-                      {practising ? t('skillClose') : t('skillStart')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-11"
-                      onClick={() => {
-                        setPractising(false);
-                        recovery.cycleSkillRecommendation();
-                      }}
-                    >
-                      <RefreshCw className="size-4" aria-hidden="true" />
-                      {t('skillAnother')}
-                    </Button>
-                  </div>
-                  <p className="text-muted-foreground mt-3 text-[0.6875rem] leading-5">
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="mt-3 w-full font-bold shadow-xs"
+                    onClick={() => setPractising((current) => !current)}
+                    aria-expanded={practising}
+                  >
+                    {practising ? t('skillClose') : t('skillStart')}
+                  </Button>
+                  <button
+                    type="button"
+                    className="mt-2 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl text-xs font-bold text-navy/80 transition-colors hover:bg-muted/70 hover:text-navy"
+                    onClick={() => {
+                      setPractising(false);
+                      recovery.cycleSkillRecommendation();
+                    }}
+                  >
+                    <RefreshCw className="size-3.5" />
+                    {t('skillAnother')}
+                  </button>
+                  <p className="mt-2 text-[0.6875rem] leading-relaxed text-muted-foreground">
                     {t(skillReasonCopy[recommendation.reasonCode])}
                   </p>
                 </div>
               ) : (
-                <div className="border-border bg-muted/35 mt-3 rounded-xl border border-dashed p-3">
-                  <p className="text-muted-foreground text-xs leading-5">
-                    {t('fabCheckInRequired')}
-                  </p>
-                  <Link
-                    href={ROUTES.DASHBOARD}
-                    onClick={() => setOpen(false)}
-                    className="text-navy focus-visible:ring-navy/35 mt-2 inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
-                  >
-                    {t('fabGoDashboard')}
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
-                </div>
+                <p className="mt-3 rounded-xl border border-dashed border-border bg-muted/30 p-3.5 text-xs leading-relaxed text-muted-foreground">
+                  {t('fabCheckInRequired')}
+                </p>
               )}
-            </section>
-          </div>
+            </TabsContent>
+          </Tabs>
 
-          <Link
-            href={ROUTES.RECOVERY}
-            onClick={() => setOpen(false)}
-            className="border-border bg-azure/25 text-navy hover:bg-azure/50 focus-visible:ring-navy/35 flex min-h-12 items-center justify-between gap-3 border-t px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
-          >
-            {t('fabOpenRecovery')}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        </section>
-      ) : null}
+          <footer className="shrink-0 border-t border-border/80 bg-card p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
+            <Link
+              href={ROUTES.RECOVERY}
+              onClick={() => setOpen(false)}
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'lg' }),
+                'w-full justify-between font-bold border-navy/15 text-navy hover:bg-navy/5 shadow-xs'
+              )}
+            >
+              <span>{t('fabOpenRecovery')}</span>
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </footer>
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
 
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-controls={GAMIFICATION_PANEL_ID}
-        aria-expanded={open}
-        aria-label={open ? t('fabClose') : t('fabOpen')}
-        onClick={togglePanel}
-        className="bg-navy shadow-float hover:bg-navy-light focus-visible:ring-sky/45 relative flex size-14 items-center justify-center rounded-full border border-white/25 text-white transition-[background-color,transform,box-shadow] duration-200 outline-none hover:-translate-y-0.5 focus-visible:ring-4 focus-visible:ring-offset-2 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"
+      <DialogPrimitive.Trigger
+        render={
+          <button
+            type="button"
+            aria-label={open ? t('fabClose') : t('fabOpen')}
+            onClick={() => {
+              if (!open && !mission.loading) void mission.refetch();
+            }}
+            className={cn(
+              'fixed right-4 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-[56] flex size-14 items-center justify-center rounded-full border border-white/25 bg-navy text-white shadow-float transition-all duration-200 outline-none hover:-translate-y-0.5 hover:bg-navy-light focus-visible:ring-4 focus-visible:ring-sky/45 focus-visible:ring-offset-2 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none lg:right-6 lg:bottom-6',
+              open && 'max-sm:hidden'
+            )}
+          />
+        }
       >
-        {open ? (
-          <X className="size-6" aria-hidden="true" />
-        ) : (
-          <Gamepad2 className="size-7" aria-hidden="true" />
-        )}
+        {open ? <X className="size-6" /> : <Gamepad2 className="size-7" />}
         {!open && mission.mission ? (
-          <span className="border-background bg-sky text-navy absolute -top-1 -right-1 flex min-w-5 items-center justify-center rounded-full border-2 px-1 text-[0.625rem] leading-4 font-extrabold">
-            {completedCount}/{totalCount}
+          <span className="absolute -top-1 -right-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-background bg-sky px-1 text-[0.625rem] font-extrabold text-navy shadow-xs">
+            {allResolved ? <Check className="size-3 stroke-[2.5]" /> : claimableCount}
           </span>
         ) : null}
-      </button>
-    </div>
+      </DialogPrimitive.Trigger>
+
+      {primaryTask ? (
+        <MissionAdjustDialog
+          open={adjustOpen}
+          task={primaryTask}
+          replacementOptions={mission.mission?.replacement_options ?? []}
+          busy={mission.updatingMissionNumber !== null}
+          onOpenChange={setAdjustOpen}
+          onSubmit={adjustTask}
+        />
+      ) : null}
+      {mission.mission ? (
+        <MissionReflectionDialog
+          open={reflectionOpen}
+          missionDate={mission.mission.date}
+          onOpenChange={setReflectionOpen}
+          onSaved={() => setReflectionSaved(true)}
+        />
+      ) : null}
+    </DialogPrimitive.Root>
   );
 }
 
-interface MissionTaskButtonProps {
+interface MissionTaskCardProps {
   task: DailyMissionItem;
   label: string;
-  roleLabel: string;
-  minutesLabel: string;
-  rewardLabel: string;
-  updating: boolean;
-  disabled: boolean;
-  claimLabel: string;
-  claimingLabel: string;
-  claimedLabel: string;
-  lockedLabel: string;
-  readyLabel: string;
   actionLabel: string;
-  actionHref: string;
+  claimLabel: string;
+  claimedLabel: string;
+  skippedLabel: string;
+  replacedLabel: string;
+  busy: boolean;
+  primary?: boolean;
   onClaim: () => void;
   onNavigate: () => void;
-  primary?: boolean;
 }
 
-function MissionTaskButton({
+function MissionTaskCard({
   task,
   label,
-  roleLabel,
-  minutesLabel,
-  rewardLabel,
-  updating,
-  disabled,
-  claimLabel,
-  claimingLabel,
-  claimedLabel,
-  lockedLabel,
-  readyLabel,
   actionLabel,
-  actionHref,
+  claimLabel,
+  claimedLabel,
+  skippedLabel,
+  replacedLabel,
+  busy,
+  primary = false,
   onClaim,
   onNavigate,
-  primary = false,
-}: MissionTaskButtonProps) {
+}: MissionTaskCardProps) {
+  const resolved = task.completed || task.status === 'skipped';
   return (
-    <div
+    <article
       className={cn(
-        'w-full border text-left transition-colors duration-200 motion-reduce:transition-none',
-        primary ? 'rounded-2xl p-3' : 'rounded-xl p-3',
-        task.completed
-          ? 'border-sage/40 bg-sage/10'
-          : task.claimable
-            ? 'border-navy/30 bg-azure/35'
-          : primary
-            ? 'border-navy/15 bg-muted/25'
-            : 'border-border bg-muted/25'
+        'group relative overflow-hidden rounded-xl border transition-all duration-200',
+        primary ? 'p-3.5' : 'p-3',
+        task.claimable
+          ? 'border-amber/40 bg-gradient-to-br from-amber/10 via-azure/15 to-card shadow-xs'
+          : resolved
+            ? 'border-sage/35 bg-sage/8'
+            : 'border-border/80 bg-card hover:border-navy/20'
       )}
     >
       <div className="flex items-start gap-3">
         <span
           className={cn(
-            'flex size-8 shrink-0 items-center justify-center rounded-full border-2',
-            task.completed
-              ? 'border-sage bg-sage text-white'
+            'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors',
+            resolved
+              ? 'bg-sage text-white shadow-xs'
               : task.claimable
-                ? 'border-navy bg-navy text-white'
-                : 'border-border bg-card text-muted-foreground'
+                ? 'bg-navy text-amber-300 shadow-xs ring-2 ring-amber/30'
+                : 'bg-muted text-muted-foreground'
           )}
           aria-hidden="true"
         >
-          {task.completed ? (
-            <Check className="size-4" />
+          {resolved ? (
+            <Check className="size-4.5 stroke-[2.5]" />
           ) : task.claimable ? (
-            <Star className="size-4" />
+            <Star className="size-4.5 fill-amber-300 text-amber-300" />
           ) : (
-            <LockKeyhole className="size-3.5" />
+            <LockKeyhole className="size-4" />
           )}
         </span>
-        <span className="min-w-0 flex-1">
-          {primary ? (
-            <span className="text-navy mb-1 block text-[0.625rem] font-extrabold tracking-[0.12em] uppercase">
-              {roleLabel}
-            </span>
-          ) : (
-            <span className="sr-only">{roleLabel}</span>
-          )}
-          <span className="text-foreground block text-sm leading-5 font-semibold">
-            {label}
-          </span>
-          <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem]">
-            <span className="inline-flex items-center gap-1">
-              <Clock3 className="size-3.5" aria-hidden="true" />
-              {minutesLabel}
-            </span>
-            <span className="text-navy font-bold">{rewardLabel}</span>
-          </span>
-          <span className="text-foreground mt-2 block text-xs font-semibold">
-            {task.completed
-              ? claimedLabel
-              : task.claimable
-                ? readyLabel
-                : lockedLabel}
-          </span>
-        </span>
-      </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Button
-          type="button"
-          className="h-11"
-          variant={task.claimable && !task.completed ? 'primary' : 'outline'}
-          disabled={disabled || !task.claimable || task.completed}
-          onClick={onClaim}
-        >
-          {updating ? (
-            <RefreshCw className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
-          ) : task.completed ? (
-            <Check className="size-4" aria-hidden="true" />
-          ) : task.claimable ? (
-            <Star className="size-4" aria-hidden="true" />
-          ) : (
-            <LockKeyhole className="size-4" aria-hidden="true" />
-          )}
-          {updating ? claimingLabel : task.completed ? claimedLabel : claimLabel}
-        </Button>
-        {task.completed ? null : (
-          <Link
-            href={actionHref}
-            onClick={onNavigate}
-            className={cn(buttonVariants({ variant: 'ghost' }), 'h-11')}
-          >
-            {actionLabel}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs font-bold leading-snug text-navy sm:text-sm">
+              {label}
+            </p>
+            <span
+              className={cn(
+                'inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[0.6875rem] font-extrabold',
+                resolved
+                  ? 'bg-sage/15 text-navy dark:text-sage'
+                  : task.claimable
+                    ? 'bg-amber/20 text-amber-900 border border-amber/35 dark:text-amber-300'
+                    : 'bg-muted text-muted-foreground'
+              )}
+            >
+              {task.replacedFrom ? (
+                replacedLabel
+              ) : (
+                <>
+                  <Sparkles className="size-3 text-amber-600" />
+                  {`+${task.expReward} EXP`}
+                </>
+              )}
+            </span>
+          </div>
+
+          <div className="mt-2.5">
+            {task.completed ? (
+              <div className="flex items-center gap-1.5 text-[0.75rem] font-bold text-sage">
+                <Check className="size-3.5 stroke-[2.5]" />
+                {claimedLabel}
+              </div>
+            ) : task.status === 'skipped' ? (
+              <p className="text-xs font-semibold text-muted-foreground">
+                {skippedLabel}
+              </p>
+            ) : task.claimable ? (
+              <Button
+                type="button"
+                className="w-full bg-navy hover:bg-navy-light font-extrabold text-amber-300 shadow-xs active:scale-[0.98]"
+                disabled={busy}
+                onClick={onClaim}
+              >
+                <Star className="size-4 fill-amber-300 text-amber-300" />
+                {claimLabel}
+              </Button>
+            ) : (
+              <Link
+                href={MISSION_ACTION_ROUTE[task.number]}
+                onClick={onNavigate}
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'w-full justify-between font-semibold border-navy/15 text-navy hover:bg-navy/5'
+                )}
+              >
+                <span>{actionLabel}</span>
+                <ArrowRight className="size-3.5" />
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </article>
   );
 }

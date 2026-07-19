@@ -39,4 +39,27 @@ describe('messages catalog', () => {
   it('friendlyMessage returns generic for shapeless errors', () => {
     expect(friendlyMessage(new Error('boom'))).toContain('Terjadi kendala');
   });
+
+  it('resolves structurally and honors localized fallbacks', () => {
+    expect(
+      friendlyMessage(
+        { code: 'current_password_invalid', status: 400 },
+        undefined,
+        'en'
+      )
+    ).toBe('Your current password is incorrect.');
+    expect(
+      friendlyMessage({ code: 'unknown', status: 400 }, 'Try again', 'en')
+    ).toBe('Try again');
+  });
+
+  it('gives browser connection failures a recovery-focused message', () => {
+    const error = new TypeError('Failed to fetch');
+    expect(friendlyMessage(error)).toBe(
+      'Tidak dapat terhubung ke layanan. Periksa koneksi dan coba lagi.'
+    );
+    expect(friendlyMessage(error, undefined, 'en')).toBe(
+      'Could not connect to the service. Check your connection and try again.'
+    );
+  });
 });

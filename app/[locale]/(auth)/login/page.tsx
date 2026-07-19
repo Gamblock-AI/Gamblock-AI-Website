@@ -12,6 +12,7 @@ import { AuthField, AuthDivider } from '@/components/auth/AuthField';
 import { GoogleIdentityButton } from '@/components/auth/google-identity-button';
 import { reportDevelopmentError } from '@/lib/diagnostics';
 import { useTranslations } from 'next-intl';
+import { friendlyMessage } from '@/lib/messages';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -87,8 +88,8 @@ export default function LoginPage() {
         );
         setError(t('loginError'));
       }
-    } catch {
-      setError(t('loginError'));
+    } catch (error) {
+      setError(friendlyMessage(error, t('loginError')));
     } finally {
       setLoading(false);
     }
@@ -108,8 +109,8 @@ export default function LoginPage() {
         return;
       }
       completeLogin(res);
-    } catch {
-      setError(t('googleError'));
+    } catch (error) {
+      setError(friendlyMessage(error, t('googleError')));
     } finally {
       setLoading(false);
     }
@@ -132,7 +133,11 @@ export default function LoginPage() {
       }
     >
       {error && (
-        <div className="border-crimson/20 bg-crimson/5 text-crimson mb-6 rounded-xl border px-4 py-3 text-xs font-semibold">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="border-crimson/20 bg-crimson/5 text-crimson mb-6 rounded-xl border px-4 py-3 text-xs font-semibold"
+        >
           {error}
         </div>
       )}

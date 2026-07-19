@@ -36,6 +36,18 @@ rendering failures provide Next.js retry plus a safe home route; unmatched URLs
 and root-layout failures use self-contained global fallbacks. User-facing copy
 never renders exception details, digests, URLs, form values, tokens, or recovery
 content, while unexpected errors reach the sanitized development-only logger.
+Expected 4xx values are detected structurally and never trigger the Next.js
+development console overlay; duplicate reports of the same unexpected object
+are suppressed. Stable error codes take precedence over generic action copy,
+and password/auth forms announce contextual errors without clearing user input.
+Stopped or unreachable local APIs are also treated as a recovery-focused UI
+state rather than exposing the browser's technical fetch exception.
+
+Operational routing status (`implemented`): development keeps Turbopack enabled
+but disables its cross-run filesystem persistence after reproduced stale graphs
+generated `AppRoutes = never` and false 404 responses for valid locale routes.
+Proxy locale parsing now derives from `i18n/routing.ts`; production routing and
+cache behavior are unchanged.
 
 Supporting dashboard/profile status (`implemented`): paired dashboard cards
 stretch to a shared row height; the support card uses its additional space for
@@ -43,21 +55,41 @@ a direct recovery-plan action. Global search combines role-permitted navigation
 with published education modules only after search is opened. Authenticated
 users can crop/resize, upload, replace, and remove a square WebP profile avatar;
 the avatar is fetched only within authenticated sessions and removal restores
-the initials fallback.
+the initials fallback. Password-backed accounts use the wired current-password
+change endpoint and reauthenticate after refresh-token revocation, while
+provider-only accounts do not receive an unusable password form. Settings hides
+student/partner-only destinations from operator roles and the local recovery
+sync preference immediately attempts the current active intention with an
+accessible retry state.
 
-Supporting support-workspace status (`implemented`): student and partner forms
-create category/priority/impact cases, the rail shows the three newest cases,
-`/support/history` exposes the full requester-scoped list, and `/support/[id]`
-provides encrypted threaded replies plus close/seven-day-reopen actions. Status
-badges use the same waiting-support/waiting-user/resolved/closed vocabulary.
+Operational data-request status (`implemented`): all authenticated accounts can
+create their own export, account deletion remains student/partner-only, active
+requests disable duplicate submission, and recent-auth download preserves the
+return path through login. Only completed, unexpired managed archives expose a
+download action; failed, expired, and legacy records without a real file explain
+their state and offer a replacement export.
+
+Supporting support-workspace status (`implemented`): `/support` presents two
+explicit recipient channels without merging their records. Connected students
+send encrypted structured contact requests to their partner and can inspect,
+cancel, close, or request follow-up according to status; partners acknowledge
+and close those requests. The Gamblock-AI team channel creates
+category/priority/impact cases, its rail shows the three newest cases,
+`/support/history` exposes the full requester-scoped ticket list, and
+`/support/[id]` provides encrypted threaded replies plus close/seven-day-reopen
+actions. Status badges accompany color in both channels.
 
 Supporting accountability status (`implemented`, `WEB-SUP-ACC-001` through
 `003`): backend-authoritative `user` and `partner` accounts share the same
 locale routes with different actions. Students preview/confirm one group,
-control four aggregate-sharing categories, send structured contact requests,
-and use normal or immediate unsafe exit. Verified partners create multiple
-groups, rotate codes, inspect consented aggregates, remove members, archive
-empty groups, and resolve scoped protection/leave requests with recent auth.
+stage and explicitly save four aggregate-sharing categories, send structured
+contact requests, cancel a pending normal exit, and use immediate unsafe exit
+when needed. `/partners` owns relationship/group setup and privacy-safe status
+summaries, while `/accountability` owns confirmed protection and exit
+decisions, status/history visibility, and the support-review route after an
+unsafe exit. Verified partners create multiple groups,
+rotate codes, inspect consented aggregates, remove members, archive empty
+groups, and resolve scoped protection/leave requests with recent auth.
 
 Supporting recovery/progress status (`implemented`, `WEB-SUP-REC-001` and
 `WEB-SUP-PROG-001`): the student uses a calm recovery-room workspace for urge
@@ -74,14 +106,13 @@ simulator and never record access. The complete `PKM-WEB-002` focus-period and
 reminder lifecycle remains incomplete core work.
 
 Current mission gamification status (`implemented`, supporting PKM-WEB-005):
-the FAB uses a gamepad trigger and consumes the server's deterministic
-`Asia/Jakarta` set of one primary plus two optional bonus tasks. It displays
-fixed effort-based rewards, per-user level/EXP progress, and explicit locked,
-claimable, and claimed states. Only the backend can mark a task claimable from
-existing account records; the UI has no self-completion or undo control. There
-is no random reward, paid currency, leaderboard, punitive streak, or partner
-projection. PKM-core skip/replace/reflection states remain incomplete and must
-not be inferred from this supporting layer.
+the adaptive FAB dialog consumes the server's deterministic `Asia/Jakarta` set
+of one primary plus two compact optional bonus tasks. It displays fixed rewards,
+personal level progress, explicit locked/claimable/claimed/skipped states, one
+bounded primary replacement, and an optional encrypted 30-second reflection.
+Only the backend can mark a task claimable or persist adjustment state; the UI
+has no self-completion or undo control. There is no random reward, paid currency,
+leaderboard, punitive streak, casino celebration, or partner projection.
 
 Current psychoeducation status (`implemented`, PKM core `PKM-WEB-003`): the
 library and direct reader consume only published, revisioned bilingual

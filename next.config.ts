@@ -72,6 +72,11 @@ const csp =
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  experimental: {
+    // A persisted Turbopack graph has repeatedly omitted app/[locale] routes.
+    // Rebuild it on each dev-server start; production build caching is unchanged.
+    turbopackFileSystemCacheForDev: false,
+  },
   async headers() {
     return [
       {

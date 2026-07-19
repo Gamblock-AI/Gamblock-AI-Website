@@ -8,6 +8,8 @@ interface DataRequestActionsProps {
   onExport: () => void;
   onDelete: () => void;
   allowDelete: boolean;
+  activeExport: boolean;
+  activeDeletion: boolean;
 }
 
 export function DataRequestActions({
@@ -15,47 +17,53 @@ export function DataRequestActions({
   onExport,
   onDelete,
   allowDelete,
+  activeExport,
+  activeDeletion,
 }: DataRequestActionsProps) {
   const t = useTranslations('dataRequestsWorkspace');
 
   return (
     <div className={`grid gap-5 ${allowDelete ? 'md:grid-cols-2' : ''}`}>
-      {allowDelete ? (
-        <DashboardPanel
-          icon={Download}
-          title={t('exportTitle')}
-          description={t('exportBody')}
-          className="flex h-full flex-col"
-        >
-          <Button
-            size="lg"
-            className="w-full sm:w-auto"
-            disabled={submitting !== null}
-            onClick={onExport}
-          >
-            <Download className="size-4" aria-hidden="true" />
-            {submitting === 'export' ? t('submitting') : t('exportAction')}
-          </Button>
-        </DashboardPanel>
-      ) : null}
       <DashboardPanel
-        icon={Trash2}
-        title={t('deleteTitle')}
-        description={t('deleteBody')}
-        accent="crimson"
+        icon={Download}
+        title={t('exportTitle')}
+        description={t('exportBody')}
         className="flex h-full flex-col"
       >
         <Button
-          variant="destructive"
           size="lg"
           className="w-full sm:w-auto"
-          disabled={submitting !== null}
-          onClick={onDelete}
+          disabled={submitting !== null || activeExport}
+          onClick={onExport}
         >
-          <Trash2 className="size-4" aria-hidden="true" />
-          {t('deleteAction')}
+          <Download className="size-4" aria-hidden="true" />
+          {submitting === 'export'
+            ? t('submitting')
+            : activeExport
+              ? t('exportActive')
+              : t('exportAction')}
         </Button>
       </DashboardPanel>
+      {allowDelete ? (
+        <DashboardPanel
+          icon={Trash2}
+          title={t('deleteTitle')}
+          description={t('deleteBody')}
+          accent="crimson"
+          className="flex h-full flex-col"
+        >
+          <Button
+            variant="destructive"
+            size="lg"
+            className="w-full sm:w-auto"
+            disabled={submitting !== null || activeDeletion}
+            onClick={onDelete}
+          >
+            <Trash2 className="size-4" aria-hidden="true" />
+            {activeDeletion ? t('deleteActive') : t('deleteAction')}
+          </Button>
+        </DashboardPanel>
+      ) : null}
     </div>
   );
 }

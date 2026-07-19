@@ -11,7 +11,7 @@ function getCurrentLocalePrefix(): string {
   return match ? `/${match[1]}` : '/id';
 }
 
-function clearBrowserSession() {
+export function clearBrowserSession() {
   localStorage.removeItem('gamblock_access_token');
   localStorage.removeItem('gamblock_refresh_token');
   localStorage.removeItem('gamblock_user');
@@ -24,7 +24,15 @@ function persistAccessCookie(token: string, expiresIn = 3600) {
   document.cookie = `gamblock_access_token=${token}; path=/; max-age=${expiresIn}; SameSite=Lax${secure}`;
 }
 
-async function throwApiError(response: Response): Promise<never> {
+function currentRelativePath(): string {
+  return `${window.location.pathname.replace(/^\/(id|en)(?=\/|$)/, '') || '/'}${window.location.search}`;
+}
+
+function redirectToLogin(nextPath = currentRelativePath()) {
+  window.location.href = `${getCurrentLocalePrefix()}/login?next=${encodeURIComponent(nextPath)}`;
+}
+
+async function apiErrorFromResponse(response: Response): Promise<ApiError> {
   let code: string | undefined;
   let message: string | undefined;
   try {
@@ -41,7 +49,11 @@ async function throwApiError(response: Response): Promise<never> {
   } catch {
     // Gateways can return non-JSON bodies; status-based messaging remains safe.
   }
-  throw new ApiError(response.status, code, message);
+  return new ApiError(response.status, code, message);
+}
+
+async function throwApiError(response: Response): Promise<never> {
+  throw await apiErrorFromResponse(response);
 }
 
 async function unwrapResponse<T>(response: Response): Promise<T> {
@@ -115,6 +127,15 @@ async function performApiRequest<T>(
     credentials: 'include',
   });
 
+  if (response.status === 401 && typeof window !== 'undefined') {
+    const authError = await apiErrorFromResponse(response.clone());
+    if (authError.code === 'recent_auth_required') {
+      clearBrowserSession();
+      redirectToLogin();
+      throw authError;
+    }
+  }
+
   const canRefresh =
     response.status === 401 &&
     typeof window !== 'undefined' &&
@@ -135,8 +156,7 @@ async function performApiRequest<T>(
     return await unwrap(retriedResponse);
   } catch (error) {
     clearBrowserSession();
-    const nextPath = `${window.location.pathname.replace(/^\/(id|en)(?=\/|$)/, '') || '/'}${window.location.search}`;
-    window.location.href = `${getCurrentLocalePrefix()}/login?next=${encodeURIComponent(nextPath)}`;
+    redirectToLogin();
     throw error instanceof ApiError
       ? error
       : new ApiError(401, 'invalid_refresh_token');

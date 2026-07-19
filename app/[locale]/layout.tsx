@@ -66,7 +66,7 @@ import { LegacyServiceWorkerCleanup } from '@/components/common/legacy-service-w
 
 export default async function RootLayout({
   children,
-  params
+  params,
 }: {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
@@ -78,6 +78,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      data-scroll-behavior="smooth"
       className={`${plusJakarta.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
@@ -85,7 +86,17 @@ export default async function RootLayout({
           <LegacyServiceWorkerCleanup />
           {children}
         </NextIntlClientProvider>
-        <Toaster richColors position="top-right" />
+        <Toaster
+          richColors
+          expand
+          position="top-right"
+          closeButton
+          containerAriaLabel={locale === 'id' ? 'Notifikasi' : 'Notifications'}
+          toastOptions={{
+            closeButtonAriaLabel:
+              locale === 'id' ? 'Tutup notifikasi' : 'Close notification',
+          }}
+        />
       </body>
     </html>
   );

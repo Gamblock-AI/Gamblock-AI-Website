@@ -8,9 +8,10 @@ shared_contracts:
   local_ai_lint_policy: 1
   privacy_boundary: 1
   api_error_catalog: 1
-  accountability_state: 1
+  accountability_state: 2
   emergency_two_operator: 1
   education_revisioned_content: 1
+  daily_mission_experience: 2
 
 canonical:
   instructions: "AGENTS.md"
@@ -65,6 +66,7 @@ required_paths:
   - "messages/README.md"
   - "messages/en"
   - "messages/id"
+  - "next.config.ts"
   - "proxy.ts"
   - "routes.ts"
   - "scripts/validate-messages.mjs"

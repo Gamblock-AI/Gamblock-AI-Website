@@ -15,9 +15,25 @@ export interface DailyMissionTask {
   role: 'primary' | 'bonus';
   completed: boolean;
   claimable: boolean;
-  status: 'locked' | 'claimable' | 'claimed';
+  status: 'locked' | 'claimable' | 'claimed' | 'skipped';
   verification_key: string;
   exp_reward: number;
+  replaced_from?: MissionNumber;
+}
+
+export type MissionAdjustmentReason =
+  | 'not_enough_time'
+  | 'not_a_good_fit'
+  | 'need_lower_effort'
+  | 'accessibility_need'
+  | 'prefer_not_to_say';
+
+export interface MissionAdjustment {
+  original_number: MissionNumber;
+  action: 'skip' | 'replace';
+  reason: MissionAdjustmentReason;
+  replacement_number?: MissionNumber;
+  adjusted_at: string;
 }
 
 export interface ExperienceProgress {
@@ -39,7 +55,10 @@ export interface DailyMission {
   tasks: DailyMissionTask[];
   experience: ExperienceProgress;
   completed_count: number;
+  resolved_count: number;
   total_count: number;
+  adjustment?: MissionAdjustment;
+  replacement_options: MissionNumber[];
   created_at: string;
   updated_at: string;
 }
@@ -51,6 +70,7 @@ export interface DailyMissionItem extends MissionCatalogItem {
   status: DailyMissionTask['status'];
   verificationKey: string;
   expReward: number;
+  replacedFrom?: MissionNumber;
 }
 
 export interface UseDailyMissionResult {
@@ -61,6 +81,12 @@ export interface UseDailyMissionResult {
   updatingMissionNumber: MissionNumber | null;
   refetch: () => Promise<void>;
   claimMission: (missionNumber: MissionNumber) => Promise<boolean>;
+  adjustMission: (input: {
+    missionNumber: MissionNumber;
+    action: 'skip' | 'replace';
+    reason: MissionAdjustmentReason;
+    replacementNumber?: MissionNumber;
+  }) => Promise<boolean>;
 }
 
 function requestTodayMission(): Promise<DailyMission> {
@@ -87,7 +113,10 @@ export function useDailyMission(): UseDailyMissionResult {
 
     void requestTodayMission().then(
       (data) => {
-        if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
+        if (
+          !mountedRef.current ||
+          requestSequence !== loadSequenceRef.current
+        ) {
           return;
         }
         setMission(data);
@@ -95,7 +124,10 @@ export function useDailyMission(): UseDailyMissionResult {
         setLoading(false);
       },
       (requestError: unknown) => {
-        if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
+        if (
+          !mountedRef.current ||
+          requestSequence !== loadSequenceRef.current
+        ) {
           return;
         }
         setError(toError(requestError));
@@ -146,12 +178,66 @@ export function useDailyMission(): UseDailyMissionResult {
       setError(null);
 
       try {
-        const updatedMission = await apiClient<DailyMission>('/missions/claim', {
-          method: 'POST',
-          body: JSON.stringify({
-            mission_number: missionNumber,
-          }),
-        });
+        const updatedMission = await apiClient<DailyMission>(
+          '/missions/claim',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              mission_number: missionNumber,
+            }),
+          }
+        );
+        if (mountedRef.current) setMission(updatedMission);
+        return true;
+      } catch (requestError) {
+        if (mountedRef.current) {
+          setMission(previousMission);
+          setError(toError(requestError));
+        }
+        return false;
+      } finally {
+        mutationInFlightRef.current = false;
+        if (mountedRef.current) setUpdatingMissionNumber(null);
+      }
+    },
+    [loading, mission]
+  );
+
+  const adjustMission = useCallback(
+    async ({
+      missionNumber,
+      action,
+      reason,
+      replacementNumber,
+    }: {
+      missionNumber: MissionNumber;
+      action: 'skip' | 'replace';
+      reason: MissionAdjustmentReason;
+      replacementNumber?: MissionNumber;
+    }) => {
+      if (mutationInFlightRef.current || loading || !mission) return false;
+
+      mutationInFlightRef.current = true;
+      loadSequenceRef.current += 1;
+      const previousMission = mission;
+      setUpdatingMissionNumber(missionNumber);
+      setError(null);
+
+      try {
+        const updatedMission = await apiClient<DailyMission>(
+          '/missions/adjust',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              mission_number: missionNumber,
+              action,
+              reason,
+              ...(replacementNumber
+                ? { replacement_number: replacementNumber }
+                : {}),
+            }),
+          }
+        );
         if (mountedRef.current) setMission(updatedMission);
         return true;
       } catch (requestError) {
@@ -182,6 +268,7 @@ export function useDailyMission(): UseDailyMissionResult {
         status: task.status,
         verificationKey: task.verification_key,
         expReward: task.exp_reward,
+        replacedFrom: task.replaced_from,
       },
     ];
   });
@@ -194,5 +281,6 @@ export function useDailyMission(): UseDailyMissionResult {
     updatingMissionNumber,
     refetch,
     claimMission,
+    adjustMission,
   };
 }

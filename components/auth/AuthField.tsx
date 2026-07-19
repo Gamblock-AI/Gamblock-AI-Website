@@ -46,7 +46,10 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
           {labelAdornment}
         </div>
         <div className="group relative">
-          <Icon className="text-muted-foreground group-focus-within:text-navy absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 transition-colors" />
+          <Icon
+            className="text-muted-foreground group-focus-within:text-navy absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 transition-colors"
+            aria-hidden="true"
+          />
           <input
             ref={ref}
             id={inputId}
@@ -69,8 +72,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
               onClick={() => setShow((v) => !v)}
               aria-label={show ? t('hidePassword') : t('showPassword')}
               aria-pressed={show}
-              tabIndex={-1}
-              className="text-muted-foreground hover:bg-muted hover:text-navy absolute top-1/2 right-3 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg transition-colors"
+              className="text-muted-foreground hover:bg-muted hover:text-navy absolute top-1/2 right-0.5 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg transition-colors"
             >
               {show ? (
                 <EyeOff className="h-4 w-4" />
@@ -81,7 +83,11 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
           )}
         </div>
         {error ? (
-          <p id={errorId} className="text-crimson text-xs font-medium">
+          <p
+            id={errorId}
+            role="alert"
+            className="text-crimson text-xs font-medium"
+          >
             {error}
           </p>
         ) : null}

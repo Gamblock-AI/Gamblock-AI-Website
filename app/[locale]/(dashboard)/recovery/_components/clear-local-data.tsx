@@ -47,6 +47,7 @@ export function ClearLocalData({ cleared, onClear }: ClearLocalDataProps) {
             render={
               <Button
                 variant="outline"
+                data-testid="recovery-clear-trigger"
                 className="border-crimson/25 text-crimson hover:bg-crimson/5 h-11 shrink-0"
               />
             }
@@ -55,7 +56,8 @@ export function ClearLocalData({ cleared, onClear }: ClearLocalDataProps) {
             {t('deleteLocalAction')}
           </DialogTrigger>
           <DialogContent
-            className="max-w-md rounded-2xl p-5"
+            data-testid="recovery-clear-dialog"
+            className="top-auto bottom-0 left-0 max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)] max-w-none translate-x-0 translate-y-0 overflow-y-auto rounded-t-2xl rounded-b-none p-5 sm:max-w-none md:top-1/2 md:bottom-auto md:left-1/2 md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl"
             showCloseButton={false}
           >
             <DialogHeader>
@@ -66,7 +68,7 @@ export function ClearLocalData({ cleared, onClear }: ClearLocalDataProps) {
                 {t('deleteLocalBody')}
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="-mx-5 mt-2 -mb-5 px-5">
+            <DialogFooter className="-mx-5 mt-2 -mb-5 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:pb-4">
               <DialogClose render={<Button variant="outline" size="lg" />}>
                 {recoveryT('intentionCancel')}
               </DialogClose>

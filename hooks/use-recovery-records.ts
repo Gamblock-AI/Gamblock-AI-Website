@@ -8,6 +8,7 @@ export type RecoveryRecordKind =
   | 'roadmap'
   | 'coping_plan'
   | 'weekly_review'
+  | 'mission_reflection'
   | 'practice_log'
   | 'saved_resource'
   | 'reminder';

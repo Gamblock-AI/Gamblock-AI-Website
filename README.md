@@ -20,6 +20,14 @@ npm run verify:ai-context
 npm run dev                  # http://localhost:3000
 ```
 
+Development intentionally disables Turbopack's cross-run filesystem cache. A
+stale persisted route graph can omit `app/[locale]` routes and return false
+404s even though the route files are valid. Each `npm run dev` therefore
+rebuilds the compiler graph while retaining normal incremental compilation for
+the lifetime of that process; production build caching is unchanged. When
+upgrading an existing checkout that already has a bad cache, stop the active
+development server and remove only `.next/dev` once before restarting it.
+
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
 `2026-07-19.1`.
@@ -64,9 +72,15 @@ Dashboard route transitions are implemented by
 
 The student dashboard is insight-first: privacy-safe aggregate analytics,
 protection information, weekly check-in trends, education, help, and shortcuts.
-The authenticated support workspace shows a newest-first three-ticket summary;
-`/[locale]/support/history` provides the complete requester-scoped history and
-`/[locale]/support/[id]` provides encrypted threaded replies and status actions.
+The authenticated support workspace separates two recipient channels. Partner
+contact requests remain scoped to the connected relationship, while Gamblock-AI
+team tickets show a newest-first three-ticket summary;
+`/[locale]/support/history` provides the complete requester-scoped ticket
+history and `/[locale]/support/[id]` provides encrypted threaded replies and
+status actions. The partner page owns relationship/group setup, and the
+accountability page owns staged aggregate-sharing changes, confirmed
+protection decisions, and cancellable pending normal-exit requests. Unsafe
+exit remains immediate and routes recovery through the support team.
 The PKM recovery loop remains directly available through a student-only
 gamification FAB and a once-per-day check-in gate across authenticated
 dashboard pages. The gate uses the `Asia/Jakarta` calendar
@@ -93,7 +107,8 @@ a role-filtered CMS response simulator, while partner progress consumes only
 consented aggregate categories and never student recovery details.
 
 Mission eligibility uses `GET /v1/missions/today`; EXP claims use `POST
-/v1/missions/claim`.
+/v1/missions/claim`, and bounded primary replacement/skip uses `POST
+/v1/missions/adjust` without changing EXP.
 The student-only FAB presents one primary and two optional bonus tasks, a
 gamepad trigger, fixed effort-based EXP, and personal level progress. Each task
 shows not-verified, ready-to-claim, or claimed state; its claim button activates
@@ -151,9 +166,20 @@ browser storage.
 The profile page crops/resizes a selected image in the browser before uploading
 a square WebP avatar. Avatar retrieval stays authenticated through the central
 API client and is only shown in authenticated website sessions; removing it
-returns the interface to its initials fallback. Dashboard search combines
+returns the interface to its initials fallback. Password-backed accounts can
+change their password by confirming the current value and are signed out after
+backend session revocation; provider-only accounts receive provider-specific
+guidance. Dashboard search combines
 role-permitted navigation with published education modules after the search is
 opened.
+
+Settings navigation is role-aware: recovery-plan sync is student-only, while
+accountability and support links appear only for student/partner accounts. The
+opt-in recovery-plan switch remains browser-local and immediately attempts to
+sync an active plan when enabled, with an inline retry state when delivery
+fails. Data-request history shows downloads only for completed, unexpired
+managed archives and offers a replacement export for failed, expired, or
+legacy-unavailable results.
 
 ## Quick approval (supporting feature)
 

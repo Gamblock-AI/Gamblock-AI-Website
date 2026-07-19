@@ -15,16 +15,22 @@ export interface DataRequestRecord {
   retry_count?: number;
 }
 
+interface CreateDataRequestResponse {
+  request: DataRequestRecord;
+  confirmation_preview_url?: string;
+}
+
 export function useDataRequests() {
   const [requests, setRequests] = useState<DataRequestRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<'export' | 'delete' | null>(
     null
   );
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
 
-  const refetch = useCallback(async () => {
-    setLoading(true);
+  const loadRequests = useCallback(async (showLoading: boolean) => {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
       const data = await apiClient<DataRequestRecord[]>('/data-requests');
@@ -32,9 +38,11 @@ export function useDataRequests() {
     } catch (requestError) {
       setError(requestError);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, []);
+
+  const refetch = useCallback(() => loadRequests(true), [loadRequests]);
 
   useEffect(() => {
     let active = true;
@@ -55,37 +63,80 @@ export function useDataRequests() {
     };
   }, []);
 
+  const hasProcessingExport = requests.some(
+    (request) =>
+      request.type === 'export' &&
+      (request.status === 'queued' || request.status === 'processing')
+  );
+
+  useEffect(() => {
+    if (!hasProcessingExport) return;
+    const refresh = () => void loadRequests(false);
+    const interval = window.setInterval(refresh, 5000);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [hasProcessingExport, loadRequests]);
+
   const createRequest = useCallback(
     async (type: 'export' | 'delete') => {
       setSubmitting(type);
       try {
-        await apiClient('/data-requests', {
-          method: 'POST',
-          body: JSON.stringify({ type }),
-        });
-        await refetch();
+        const response = await apiClient<CreateDataRequestResponse>(
+          '/data-requests',
+          {
+            method: 'POST',
+            body: JSON.stringify({ type }),
+          }
+        );
+        return response.request;
       } finally {
+        await loadRequests(false);
         setSubmitting(null);
       }
     },
-    [refetch]
+    [loadRequests]
   );
 
   const downloadExport = useCallback(async (id: string) => {
-    const blob = await apiClientBlob(`/data-requests/${id}/download`);
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = 'gamblock-ai-account-export.zip';
-    anchor.click();
-    URL.revokeObjectURL(url);
+    setDownloadingId(id);
+    try {
+      const blob = await apiClientBlob(`/data-requests/${id}/download`);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'gamblock-ai-account-export.zip';
+      anchor.hidden = true;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.requestAnimationFrame(() => URL.revokeObjectURL(url));
+    } finally {
+      setDownloadingId(null);
+    }
   }, []);
+
+  const activeExport = requests.some(
+    (request) =>
+      request.type === 'export' &&
+      !['completed', 'failed', 'rejected', 'cancelled'].includes(request.status)
+  );
+  const activeDeletion = requests.some(
+    (request) =>
+      request.type === 'delete' &&
+      !['completed', 'failed', 'rejected', 'cancelled'].includes(request.status)
+  );
 
   return {
     requests,
     loading,
     submitting,
+    downloadingId,
     error,
+    activeExport,
+    activeDeletion,
     refetch,
     createRequest,
     downloadExport,

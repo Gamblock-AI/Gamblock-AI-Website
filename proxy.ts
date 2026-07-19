@@ -7,11 +7,23 @@ import { GUEST_ROUTES, PROTECTED_ROUTES } from './routes';
 
 const intlMiddleware = createMiddleware(routing);
 
+function resolveLocalePathname(pathname: string) {
+  const matchedLocale = routing.locales.find(
+    (candidate) =>
+      pathname === `/${candidate}` || pathname.startsWith(`/${candidate}/`)
+  );
+
+  return {
+    locale: matchedLocale ?? routing.defaultLocale,
+    pathnameWithoutLocale: matchedLocale
+      ? pathname.slice(matchedLocale.length + 1) || '/'
+      : pathname,
+  };
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const localeMatch = pathname.match(/^\/(id|en)(?=\/|$)/);
-  const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
-  const pathnameWithoutLocale = pathname.replace(/^\/(id|en)(?=\/|$)/, '') || '/';
+  const { locale, pathnameWithoutLocale } = resolveLocalePathname(pathname);
 
   // Keep next-intl's request header override intact. It carries the resolved
   // locale into the App Router and is required for matching app/[locale].
@@ -57,5 +69,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/(id|en)/:path*', '/((?!api|_next|_vercel|.*\\..*).*)'],
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 };

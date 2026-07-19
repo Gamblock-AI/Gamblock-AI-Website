@@ -1,15 +1,25 @@
 // End-user-facing message catalog (mirrors backend internal/i18n/messages.go).
 //
 // Maps the stable backend error `code` (and HTTP status fallbacks) to friendly
-// Indonesian text. Use `friendlyMessage()` to resolve any thrown ApiError into a
-// production-safe string. In development the ApiError already carries technical
-// detail; in production this catalog is the fallback when the backend did not
-// include a friendly message.
+// Indonesian text. Use `friendlyMessage()` to resolve any thrown ApiError into
+// a safe, localized string. Technical details are never rendered to users.
 //
 // Keep codes in sync with the backend catalog and the Flutter catalog
 // (gamblock_ai_apps/lib/core/messaging/app_messages.dart).
 
 export const MESSAGES: Record<string, string> = {
+  // shared request / authorization
+  auth_required: 'Sesi diperlukan. Silakan masuk terlebih dahulu.',
+  forbidden: 'Anda tidak memiliki izin untuk tindakan ini.',
+  invalid_body:
+    'Data yang dikirim tidak dapat dibaca. Periksa isian lalu coba lagi.',
+  privacy_payload_rejected:
+    'Permintaan ditolak karena memuat data yang tidak boleh dikirim.',
+  err_validation: 'Periksa kembali isian yang belum sesuai.',
+  err_internal:
+    'Terjadi kendala pada layanan. Silakan coba beberapa saat lagi.',
+  create_admin_module_failed: 'Modul admin belum dapat dibuat.',
+
   // auth
   email_required: 'Email wajib diisi.',
   validation_failed: 'Email dan nama wajib diisi.',
@@ -77,6 +87,8 @@ export const MESSAGES: Record<string, string> = {
   accountability_sharing_update_failed:
     'Preferensi berbagi belum dapat diperbarui.',
   accountability_leave_failed: 'Permintaan keluar belum dapat diproses.',
+  accountability_leave_cancel_failed:
+    'Permintaan keluar tidak dapat dibatalkan. Muat ulang status lalu coba lagi.',
   accountability_leave_resolve_failed: 'Keputusan keluar belum dapat disimpan.',
   accountability_member_remove_failed:
     'Anggota belum dapat dikeluarkan dari grup.',
@@ -100,6 +112,7 @@ export const MESSAGES: Record<string, string> = {
   mission_fetch_failed: 'Gagal memuat misi harian.',
   invalid_mission: 'Nomor misi harus 1-5.',
   mission_update_failed: 'Gagal memperbarui misi harian.',
+  mission_adjust_failed: 'Misi utama belum dapat disesuaikan. Coba pilihan lain.',
 
   // reflections / psychoeducation
   fetch_reflections_failed: 'Gagal memuat jurnal refleksi.',
@@ -183,41 +196,181 @@ export const MESSAGES: Record<string, string> = {
   invalid_key: 'Kunci darurat tidak valid.',
 };
 
-const GENERIC = 'Terjadi kendala, silakan coba beberapa saat lagi.';
+type SupportedLocale = 'id' | 'en';
 
-// Status-based fallbacks when no code is available.
-const STATUS_MESSAGES: Record<number, string> = {
-  400: 'Permintaan tidak valid. Periksa kembali isian Anda.',
-  401: 'Sesi telah berakhir. Silakan masuk kembali.',
-  403: 'Anda tidak memiliki izin untuk aksi ini.',
-  404: 'Data yang diminta tidak ditemukan.',
-  409: 'Konflik data. Silakan muat ulang dan coba lagi.',
-  422: 'Beberapa isian perlu diperbaiki.',
-  429: 'Terlalu banyak permintaan. Coba lagi sebentar lagi.',
-  500: 'Layanan sedang mengalami kendala. Silakan coba beberapa saat lagi.',
-  502: 'Layanan sedang tidak tersedia. Coba lagi nanti.',
-  503: 'Layanan sedang dalam pemeliharaan.',
+const MESSAGES_EN: Record<string, string> = {
+  auth_required: 'Please sign in to continue.',
+  forbidden: 'You do not have permission to perform this action.',
+  invalid_body:
+    'The submitted data could not be read. Review it and try again.',
+  privacy_payload_rejected:
+    'The request was rejected because it included data that must not be sent.',
+  err_validation: 'Review the fields that still need attention.',
+  err_internal: 'The service encountered a problem. Please try again shortly.',
+  create_admin_module_failed: 'The admin module could not be created.',
+  email_required: 'Email is required.',
+  validation_failed: 'Email and name are required.',
+  invalid_credentials: 'The email or password is incorrect. Please try again.',
+  registration_failed:
+    'Registration failed. This email may already be registered.',
+  google_token_required: 'The Google session is unavailable. Please try again.',
+  google_verification_failed: 'Google verification failed. Please try again.',
+  invalid_refresh_token: 'Your session is invalid. Please sign in again.',
+  refresh_token_required: 'Your session has ended. Please sign in again.',
+  logout_failed: 'Could not sign out. Please try again.',
+  email_verification_failed:
+    'The email verification link is invalid or has expired.',
+  email_verification_delivery_failed:
+    'The verification email could not be sent. Please try again.',
+  phone_verification_failed:
+    'The WhatsApp number or verification code is invalid.',
+  recent_auth_required:
+    'Please sign in again before completing this sensitive action.',
+  profile_not_found: 'Your profile could not be found.',
+  profile_update_failed: 'Your profile could not be updated.',
+  password_validation_failed:
+    'Enter your current password and a new password of at least 8 characters.',
+  current_password_invalid: 'Your current password is incorrect.',
+  password_reuse_not_allowed:
+    'Your new password must be different from your current password.',
+  password_update_failed: 'Your password could not be updated.',
+  partner_email_required: 'Accountability partner email is required.',
+  name_required: 'Group name is required.',
+  group_code_required: 'Group code is required.',
+  text_required: 'Reflection text is required.',
+  token_required: 'The approval link is incomplete.',
+  invalid_token: 'The link or token is invalid or has expired.',
+  invalid_input: 'The submitted choice is incomplete.',
+  summary_required: 'A support request summary is required.',
+  support_case_failed: 'The support request could not be sent.',
+  support_reply_failed: 'The reply could not be sent.',
+  fetch_data_requests_failed: 'Data requests could not be loaded.',
+  data_request_failed: 'The data request could not be submitted.',
+  data_request_retry_failed: 'The data request could not be retried.',
+  data_request_reject_failed: 'The data request could not be rejected.',
+  data_export_unavailable:
+    'The data archive is unavailable or its download period has ended.',
+  account_deletion_failed: 'Account deletion could not be confirmed.',
+  type_required: 'Select a request type.',
+  release_validation_failed:
+    'The release artifact is incomplete or its checksum does not match.',
+  emergency_key_required: 'Emergency key is required.',
+  invalid_key: 'The emergency key is invalid.',
 };
 
-export function messageForCode(code: string | undefined | null): string | null {
+const GENERIC: Record<SupportedLocale, string> = {
+  id: 'Terjadi kendala, silakan coba beberapa saat lagi.',
+  en: 'Something went wrong. Please try again shortly.',
+};
+
+const NETWORK_FAILURE_MESSAGES: Record<SupportedLocale, string> = {
+  id: 'Tidak dapat terhubung ke layanan. Periksa koneksi dan coba lagi.',
+  en: 'Could not connect to the service. Check your connection and try again.',
+};
+
+// Status-based fallbacks when no code is available.
+const STATUS_MESSAGES: Record<SupportedLocale, Record<number, string>> = {
+  id: {
+    400: 'Permintaan tidak valid. Periksa kembali isian Anda.',
+    401: 'Sesi telah berakhir. Silakan masuk kembali.',
+    403: 'Anda tidak memiliki izin untuk aksi ini.',
+    404: 'Data yang diminta tidak ditemukan.',
+    409: 'Konflik data. Silakan muat ulang dan coba lagi.',
+    422: 'Beberapa isian perlu diperbaiki.',
+    429: 'Terlalu banyak permintaan. Coba lagi sebentar lagi.',
+    500: 'Layanan sedang mengalami kendala. Silakan coba beberapa saat lagi.',
+    502: 'Layanan sedang tidak tersedia. Coba lagi nanti.',
+    503: 'Layanan sedang dalam pemeliharaan.',
+  },
+  en: {
+    400: 'The request is invalid. Review your entries and try again.',
+    401: 'Your session has ended. Please sign in again.',
+    403: 'You do not have permission to perform this action.',
+    404: 'The requested data could not be found.',
+    409: 'The data changed. Reload the page and try again.',
+    422: 'Some fields need your attention.',
+    429: 'Too many requests. Please wait a moment and try again.',
+    500: 'The service encountered a problem. Please try again shortly.',
+    502: 'The service is currently unavailable. Please try again later.',
+    503: 'The service is currently under maintenance.',
+  },
+};
+
+function currentLocale(locale?: string): SupportedLocale {
+  if (locale === 'en' || locale === 'id') return locale;
+  if (
+    typeof document !== 'undefined' &&
+    document.documentElement.lang === 'en'
+  ) {
+    return 'en';
+  }
+  return 'id';
+}
+
+export function errorCode(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object' || !('code' in error)) return;
+  const code = (error as { code?: unknown }).code;
+  return typeof code === 'string' && code ? code : undefined;
+}
+
+export function errorStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object' || !('status' in error)) return;
+  const status = (error as { status?: unknown }).status;
+  return typeof status === 'number' && Number.isInteger(status)
+    ? status
+    : undefined;
+}
+
+/**
+ * Browser fetch failures have no HTTP status or API envelope. They are an
+ * expected user-facing state when the local API is stopped, unavailable, or
+ * blocked by the network, so the UI should offer recovery rather than expose
+ * the browser's technical "Failed to fetch" text.
+ */
+export function isNetworkFailure(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const failure = error as { name?: unknown; message?: unknown };
+  const name = typeof failure.name === 'string' ? failure.name : '';
+  const message =
+    typeof failure.message === 'string' ? failure.message.toLowerCase() : '';
+  return (
+    name === 'AbortError' ||
+    (name === 'TypeError' &&
+      (message.includes('failed to fetch') ||
+        message.includes('networkerror') ||
+        message.includes('load failed')))
+  );
+}
+
+export function messageForCode(
+  code: string | undefined | null,
+  locale?: string
+): string | null {
   if (!code) return null;
+  const resolvedLocale = currentLocale(locale);
+  if (resolvedLocale === 'en') return MESSAGES_EN[code] ?? null;
   return MESSAGES[code] ?? null;
 }
 
-export function messageForStatus(status: number): string {
-  return STATUS_MESSAGES[status] ?? GENERIC;
+export function messageForStatus(status: number, locale?: string): string {
+  const resolvedLocale = currentLocale(locale);
+  return STATUS_MESSAGES[resolvedLocale][status] ?? GENERIC[resolvedLocale];
 }
 
-// Resolve any thrown error into a production-safe friendly message.
-export function friendlyMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'code' in error) {
-    const code = (error as { code?: string }).code;
-    const fromCode = messageForCode(code);
-    if (fromCode) return fromCode;
+// Resolve any thrown value structurally so errors remain reliable across
+// module, realm, and serialization boundaries.
+export function friendlyMessage(
+  error: unknown,
+  fallback?: string,
+  locale?: string
+): string {
+  const fromCode = messageForCode(errorCode(error), locale);
+  if (fromCode) return fromCode;
+  if (isNetworkFailure(error)) {
+    return NETWORK_FAILURE_MESSAGES[currentLocale(locale)];
   }
-  if (error && typeof error === 'object' && 'status' in error) {
-    const status = (error as { status?: number }).status;
-    if (typeof status === 'number') return messageForStatus(status);
-  }
-  return GENERIC;
+  if (fallback) return fallback;
+  const status = errorStatus(error);
+  if (status !== undefined) return messageForStatus(status, locale);
+  return GENERIC[currentLocale(locale)];
 }

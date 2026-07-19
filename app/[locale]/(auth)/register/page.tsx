@@ -13,8 +13,9 @@ import { AuthField } from '@/components/auth/AuthField';
 import { cn } from '@/lib/utils';
 import { reportDevelopmentError } from '@/lib/diagnostics';
 import { useTranslations } from 'next-intl';
+import { friendlyMessage } from '@/lib/messages';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -55,14 +56,14 @@ export default function RegisterPage() {
     register: formRegister,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { role: 'user', name: '', email: '', password: '' },
   });
 
-  const role = watch('role');
+  const role = useWatch({ control, name: 'role' });
 
   const onSubmit = async (data: RegisterFormValues) => {
     setError(null);
@@ -86,8 +87,8 @@ export default function RegisterPage() {
         );
         setError(t('registrationError'));
       }
-    } catch {
-      setError(t('registrationError'));
+    } catch (error) {
+      setError(friendlyMessage(error, t('registrationError')));
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,11 @@ export default function RegisterPage() {
       }
     >
       {error && (
-        <div className="border-crimson/20 bg-crimson/5 text-crimson mb-6 rounded-xl border px-4 py-3 text-xs font-semibold">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="border-crimson/20 bg-crimson/5 text-crimson mb-6 rounded-xl border px-4 py-3 text-xs font-semibold"
+        >
           {error}
         </div>
       )}
@@ -215,7 +220,7 @@ export default function RegisterPage() {
             </label>
           </div>
           {errors.terms && (
-            <p className="text-crimson text-xs font-medium">
+            <p role="alert" className="text-crimson text-xs font-medium">
               {errors.terms.message}
             </p>
           )}

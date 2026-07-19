@@ -8,6 +8,11 @@ interface ProfileResponse {
   avatar_url?: string;
 }
 
+interface PasswordUpdateResponse {
+  updated: boolean;
+  reauth_required: boolean;
+}
+
 export function useProfileActions() {
   const updateDisplayName = useCallback(
     (displayName: string) =>
@@ -32,5 +37,17 @@ export function useProfileActions() {
     []
   );
 
-  return { updateDisplayName, uploadAvatar, deleteAvatar };
+  const updatePassword = useCallback(
+    (currentPassword: string, newPassword: string) =>
+      apiClient<PasswordUpdateResponse>('/me/password', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      }),
+    []
+  );
+
+  return { updateDisplayName, uploadAvatar, deleteAvatar, updatePassword };
 }
