@@ -6,7 +6,6 @@ import {
   CircleAlert,
   Download,
   FlaskConical,
-  LockKeyhole,
   Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -80,12 +79,12 @@ export default function ResearchSandboxPage() {
         {t('warningBody')}
       </DashboardNotice>
 
-      <div className="grid gap-5 xl:grid-cols-12 xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-12">
         <DashboardPanel
           icon={Beaker}
           title={t('stagesTitle')}
           description={t('stagesBody')}
-          className="xl:col-span-8"
+          className="flex h-full flex-col xl:col-span-8"
         >
           <div className="grid gap-3 sm:grid-cols-2">
             {stages.map((stage) => {
@@ -128,7 +127,8 @@ export default function ResearchSandboxPage() {
           icon={Users}
           title={t('fixtureTitle')}
           description={t('fixtureBody')}
-          className="xl:col-span-4"
+          className="flex h-full flex-col xl:col-span-4"
+          contentClassName="flex-1 flex flex-col justify-between"
         >
           <dl className="divide-border divide-y">
             <div className="flex items-center justify-between py-3">

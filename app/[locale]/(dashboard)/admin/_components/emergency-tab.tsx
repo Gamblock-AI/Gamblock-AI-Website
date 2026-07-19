@@ -7,7 +7,6 @@ import { Card } from '@/components/ui/card';
 import type { EmergencyKeyRequest } from '@/hooks/use-admin-operations';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { EmergencyKeyCard } from './emergency-key-card';
-import { AdminSectionHeader } from './admin-shared';
 
 interface EmergencyTabProps {
   userId?: string;
@@ -65,10 +64,6 @@ export function EmergencyTab({
 
   return (
     <div className="space-y-4">
-      <AdminSectionHeader
-        title={t('emergencyTitle')}
-        description={t('emergencyDescription')}
-      />
       {emergencyKey ? (
         <EmergencyKeyCard
           emergencyKey={emergencyKey}

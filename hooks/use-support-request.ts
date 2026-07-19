@@ -23,7 +23,7 @@ export interface SupportCaseRecord {
 export interface SupportMessageRecord {
   id: string;
   support_case_id: string;
-  author_role: 'requester' | 'support_operator';
+  author_role: 'requester' | 'admin';
   content: string;
   read_at?: string;
   created_at: string;

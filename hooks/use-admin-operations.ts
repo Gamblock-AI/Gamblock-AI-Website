@@ -65,7 +65,7 @@ export interface AdminEducationMedia {
 
 export interface AdminSupportMessage {
   id: string;
-  author_role: 'requester' | 'support_operator';
+  author_role: 'requester' | 'admin';
   content: string;
   created_at: string;
 }
@@ -142,21 +142,14 @@ export interface AdminDataRequest {
   created_at: string;
 }
 
-export interface AdminOperatorAccount {
+export interface AdminAccount {
   id: string;
   email: string;
   display_name: string;
   role: string;
   disabled_at?: string;
-  created_at: string;
-}
-
-export interface AdminOperatorInvitation {
-  id: string;
-  email: string;
-  role: string;
-  status: string;
-  expires_at: string;
+  email_verified_at?: string;
+  must_change_password: boolean;
   created_at: string;
 }
 
@@ -214,6 +207,15 @@ export interface AdminCapabilities {
   platform: boolean;
 }
 
+export type AdminArea =
+  | 'overview'
+  | 'content'
+  | 'releases'
+  | 'tickets'
+  | 'emergency'
+  | 'platform'
+  | 'all';
+
 export interface AdminModuleDraft {
   slug: string;
   document: AdminEducationDocument;
@@ -237,8 +239,7 @@ interface AdminOperationsState {
   cases: AdminSupportCase[];
   dataRequests: AdminDataRequest[];
   emergencyRequests: EmergencyKeyRequest[];
-  operatorAccounts: AdminOperatorAccount[];
-  operatorInvitations: AdminOperatorInvitation[];
+  accounts: AdminAccount[];
   socialLinks: AdminSiteSocialLink[];
   auditEvents: AdminAuditEvent[];
 }
@@ -251,14 +252,14 @@ const EMPTY_STATE: AdminOperationsState = {
   cases: [],
   dataRequests: [],
   emergencyRequests: [],
-  operatorAccounts: [],
-  operatorInvitations: [],
+  accounts: [],
   socialLinks: [],
   auditEvents: [],
 };
 
 async function fetchAdminOperations(
-  capabilities: AdminCapabilities
+  capabilities: AdminCapabilities,
+  area: AdminArea
 ): Promise<AdminOperationsState> {
   const [
     overview,
@@ -271,35 +272,34 @@ async function fetchAdminOperations(
     socialLinks,
     auditEvents,
   ] = await Promise.all([
-    apiClient<AdminOverview>('/admin/overview'),
-    capabilities.content
+    area === 'overview' || area === 'all'
+      ? apiClient<AdminOverview>('/admin/overview')
+      : Promise.resolve(null),
+    capabilities.content && (area === 'content' || area === 'all')
       ? apiClient<AdminEducationModule[]>('/admin/content/modules')
       : Promise.resolve([]),
-    capabilities.releases
+    capabilities.releases && (area === 'releases' || area === 'all')
       ? apiClient<{
           releases: Record<'model' | 'ruleset' | 'network', AdminRelease[]>;
           rollouts: AdminReleaseRollout[];
         }>('/admin/releases')
       : Promise.resolve({ releases: EMPTY_STATE.releases, rollouts: [] }),
-    capabilities.support
+    capabilities.support && (area === 'tickets' || area === 'all')
       ? apiClient<AdminSupportCase[]>('/admin/support-cases')
       : Promise.resolve([]),
-    capabilities.support
+    capabilities.support && (area === 'tickets' || area === 'all')
       ? apiClient<AdminDataRequest[]>('/admin/data-requests')
       : Promise.resolve([]),
-    capabilities.emergency
+    capabilities.emergency && (area === 'emergency' || area === 'all')
       ? apiClient<EmergencyKeyRequest[]>('/admin/emergency-key-requests')
       : Promise.resolve([]),
-    capabilities.platform
-      ? apiClient<{
-          accounts: AdminOperatorAccount[];
-          invitations: AdminOperatorInvitation[];
-        }>('/admin/operators')
-      : Promise.resolve({ accounts: [], invitations: [] }),
-    capabilities.platform
+    capabilities.platform && (area === 'platform' || area === 'all')
+      ? apiClient<AdminAccount[]>('/admin/accounts')
+      : Promise.resolve([]),
+    capabilities.platform && (area === 'platform' || area === 'all')
       ? apiClient<AdminSiteSocialLink[]>('/admin/site-social-links')
       : Promise.resolve([]),
-    capabilities.platform
+    capabilities.platform && (area === 'platform' || area === 'all')
       ? apiClient<AdminAuditEvent[]>('/admin/audit-events')
       : Promise.resolve([]),
   ]);
@@ -312,24 +312,24 @@ async function fetchAdminOperations(
     cases: cases ?? [],
     dataRequests: dataRequests ?? [],
     emergencyRequests: emergencyRequests ?? [],
-    operatorAccounts: operators.accounts ?? [],
-    operatorInvitations: operators.invitations ?? [],
+    accounts: operators ?? [],
     socialLinks: socialLinks ?? [],
     auditEvents: auditEvents ?? [],
   };
 }
 
 export function getAdminCapabilities(role?: string): AdminCapabilities {
+  const allowed = role === 'admin';
   return {
-    content: role === 'content_admin',
-    releases: role === 'model_release_operator',
-    support: role === 'support_operator',
-    emergency: role === 'platform_admin',
-    platform: role === 'platform_admin',
+    content: allowed,
+    releases: allowed,
+    support: allowed,
+    emergency: allowed,
+    platform: allowed,
   };
 }
 
-export function useAdminOperations(role?: string) {
+export function useAdminOperations(role?: string, area: AdminArea = 'all') {
   const capabilities = useMemo(() => getAdminCapabilities(role), [role]);
   const [data, setData] = useState<AdminOperationsState>(EMPTY_STATE);
   const [loading, setLoading] = useState(Boolean(role));
@@ -346,18 +346,18 @@ export function useAdminOperations(role?: string) {
     setLoading(true);
     setError(null);
     try {
-      setData(await fetchAdminOperations(capabilities));
+      setData(await fetchAdminOperations(capabilities, area));
     } catch (requestError) {
       setError(requestError);
     } finally {
       setLoading(false);
     }
-  }, [capabilities, role]);
+  }, [area, capabilities, role]);
 
   useEffect(() => {
     if (!role || !Object.values(capabilities).some(Boolean)) return;
     let active = true;
-    void fetchAdminOperations(capabilities)
+    void fetchAdminOperations(capabilities, area)
       .then((nextData) => {
         if (!active) return;
         setData(nextData);
@@ -372,7 +372,7 @@ export function useAdminOperations(role?: string) {
     return () => {
       active = false;
     };
-  }, [capabilities, role]);
+  }, [area, capabilities, role]);
 
   const mutateAndReload = useCallback(
     async <T>(path: string, options: RequestInit) => {
@@ -419,12 +419,17 @@ export function useAdminOperations(role?: string) {
   );
 
   const createModule = useCallback(
-    (module: AdminModuleDraft) =>
-      mutateAndReload<AdminEducationModule>('/admin/content/modules', {
-        method: 'POST',
-        body: JSON.stringify(module),
-      }),
-    [mutateAndReload]
+    async (module: AdminModuleDraft) => {
+      const created = await apiClient<AdminEducationModule>(
+        '/admin/content/modules',
+        {
+          method: 'POST',
+          body: JSON.stringify(module),
+        }
+      );
+      return created;
+    },
+    []
   );
   const getModule = useCallback(
     (id: string) =>
@@ -619,25 +624,28 @@ export function useAdminOperations(role?: string) {
         method: 'PUT',
         body: JSON.stringify({ items, reason }),
       }),
-    inviteOperator: (email: string, operatorRole: string, reason: string) =>
-      mutateAndReload('/admin/operators/invitations', {
-        method: 'POST',
-        body: JSON.stringify({ email, role: operatorRole, reason }),
-      }),
-    revokeOperatorInvitation: (id: string, reason: string) =>
-      mutateAndReload(`/admin/operators/invitations/${id}/revoke`, {
-        method: 'POST',
-        body: JSON.stringify({ reason }),
-      }),
-    updateOperator: (
-      id: string,
-      operatorRole: string,
-      disabled: boolean,
+    createAccount: (
+      email: string,
+      displayName: string,
+      accountRole: string,
       reason: string
     ) =>
-      mutateAndReload(`/admin/operators/${id}`, {
+      mutateAndReload<{ account: AdminAccount; temporary_password: string }>(
+        '/admin/accounts',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email,
+            display_name: displayName,
+            role: accountRole,
+            reason,
+          }),
+        }
+      ),
+    updateAccount: (id: string, disabled: boolean, reason: string) =>
+      mutateAndReload(`/admin/accounts/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ role: operatorRole, disabled, reason }),
+        body: JSON.stringify({ disabled, reason }),
       }),
   };
 }

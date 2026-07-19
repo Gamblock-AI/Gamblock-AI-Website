@@ -7,10 +7,7 @@ export function useAvatar(avatarUrl?: string) {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!avatarUrl) {
-      setUrl(null);
-      return;
-    }
+    if (!avatarUrl) return;
 
     let active = true;
     let objectUrl: string | null = null;
@@ -30,5 +27,5 @@ export function useAvatar(avatarUrl?: string) {
     };
   }, [avatarUrl]);
 
-  return url;
+  return avatarUrl ? url : null;
 }

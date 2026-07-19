@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-19.1`
+**Context version:** `2026-07-20.3`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -14,10 +14,14 @@ education, mood tracking, daily missions, skill recommendations, and a coherent
 self-regulation review loop. Other website surfaces are supporting/operational
 and must preserve the on-device browsing-data boundary.
 
-Current dashboard status (`implemented`): the supporting student-dashboard
-surface presents an own-account seven-day check-in trend, plain-language
-activity and protection aggregates, education continuation, help, and compact
-shortcuts. Device/model implementation versions stay out of the student canvas.
+Current dashboard status (`implemented`): every authenticated role lands on
+`/dashboard` with a distinct surface. The student dashboard preserves its
+own-account seven-day check-in trend, activity/protection aggregates, education
+continuation, help, and compact shortcuts. The partner dashboard shows group,
+pending-decision/contact, and consented protection aggregates without private
+recovery details. The admin dashboard shows operational attention counts and
+links to isolated work areas. Device/model implementation versions stay out of
+the student canvas.
 PKM core `PKM-WEB-004` is available as a once-per-`Asia/Jakarta`-day check-in
 gate across authenticated dashboard routes, with optional urge disclosure and
 an account-persistence acknowledgement;
@@ -29,6 +33,14 @@ insight-first main canvas differs from the target “Today first” information
 architecture in `context/ui-context.md`; the mandatory gate and global FAB
 preserve direct access to the core recovery loop while that product-level gap
 remains open.
+
+Supporting account recovery status (`implemented code-complete prototype`):
+the locale-aware forgot-password screen requests a non-enumerating email code,
+accepts the 12-character single-use code plus a new password, preserves inline
+safe errors, and returns to login after success. Production delivery depends on
+the backend SMTP adapter and operational email evidence. Google login maps the
+explicit link-required backend response safely; same-email linking is available
+from the native student Settings flow.
 
 Supporting error-surface status (`implemented`): locale 404 and runtime error
 boundaries share a minimal, keyboard-accessible Gami status page. Temporary
@@ -49,16 +61,17 @@ generated `AppRoutes = never` and false 404 responses for valid locale routes.
 Proxy locale parsing now derives from `i18n/routing.ts`; production routing and
 cache behavior are unchanged.
 
-Supporting dashboard/profile status (`implemented`): paired dashboard cards
+Supporting dashboard/profile status (`implemented`): paired student dashboard cards
 stretch to a shared row height; the support card uses its additional space for
 a direct recovery-plan action. Global search combines role-permitted navigation
-with published education modules only after search is opened. Authenticated
+with published education modules only after search is opened for student or
+partner accounts. Authenticated
 users can crop/resize, upload, replace, and remove a square WebP profile avatar;
 the avatar is fetched only within authenticated sessions and removal restores
 the initials fallback. Password-backed accounts use the wired current-password
 change endpoint and reauthenticate after refresh-token revocation, while
 provider-only accounts do not receive an unusable password form. Settings hides
-student/partner-only destinations from operator roles and the local recovery
+student/partner-only destinations from the admin role and the local recovery
 sync preference immediately attempts the current active intention with an
 accessible retry state.
 
@@ -69,8 +82,9 @@ return path through login. Only completed, unexpired managed archives expose a
 download action; failed, expired, and legacy records without a real file explain
 their state and offer a replacement export.
 
-Supporting support-workspace status (`implemented`): `/support` presents two
-explicit recipient channels without merging their records. Connected students
+Supporting support-workspace status (`implemented`): `/support` is available
+only to `user` and `partner` requesters and presents two explicit recipient
+channels without merging their records. Connected students
 send encrypted structured contact requests to their partner and can inspect,
 cancel, close, or request follow-up according to status; partners acknowledge
 and close those requests. The Gamblock-AI team channel creates
@@ -163,10 +177,11 @@ and review/publish/archive transitions.
   Approval authority comes from that backend membership, not a client-side role
   label. Student protection-change requests start in the native client; quick
   tokens remain single-use secrets and never enter logs or analytics.
-- Operations: tabs and fetches are role-specific. Content creation is draft
-  only, artifact validation requires a real server-side file/checksum, and
+- Operations: each sidebar route and its scoped fetches require the unified
+  `admin` role. Content creation is draft only, artifact validation requires a
+  real server-side file/checksum, and
   user/device emergency requests require review and issuance by two distinct
-  platform administrators.
+  administrators.
 - Research sandbox: all fixtures are deterministic and explicitly synthetic;
   real enrollment/export stays locked until an approved protocol exists.
 - Post-intervention handoff: inspect
@@ -220,14 +235,14 @@ paths, or session-only notes in committed AI context.
 
 ## Current operational UI truth
 
-The locale-aware `/[locale]/admin` shell is implemented as role-specific
-workspaces rather than a cumulative super-admin dashboard. Content admins get
-CMS revision/rollback actions, support operators get claim-owned case threads
-and eligible data-request actions, release operators get managed artifact
-upload plus manual cohort rollout, and platform admins get specialist
-invitation/account management, safe social-link settings, audit history, and
-dual-control emergency access. Operator login defaults to this route and
-consumer dashboard navigation is hidden for operator roles.
+The locale-aware admin shell belongs to the unified `admin` role. Content,
+releases, tickets, emergency access, and platform settings are separate sidebar
+routes; research remains a separate destination. Together they expose CMS
+revision/rollback, claim-owned support replies, eligible data requests, managed
+artifact rollout, direct three-role account provisioning, safe social-link
+settings, audit history, and dual-control emergency access. An authoritative
+`/me` route guard keeps admin accounts out of consumer and requester-support
+pages while allowing dashboard, profile, settings, and data requests.
 
 The landing footer fetches `/v1/public/site-social-links` and renders enabled,
 non-null records only. The data-request UI supports encrypted export download

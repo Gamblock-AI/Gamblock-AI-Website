@@ -20,17 +20,7 @@ const DYNAMIC_LABEL_VALUES = {
     'privacy_request',
   ],
   priority: ['low', 'normal', 'high', 'urgent'],
-  role: [
-    'user',
-    'partner',
-    'content_admin',
-    'platform_admin',
-    'model_release_operator',
-    'support_operator',
-    'research_evaluator',
-    'organization_owner',
-    'organization_admin',
-  ],
+  role: ['user', 'partner', 'admin'],
   status: [
     'draft',
     'in_review',

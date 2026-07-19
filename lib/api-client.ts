@@ -130,8 +130,9 @@ async function performApiRequest<T>(
   if (response.status === 401 && typeof window !== 'undefined') {
     const authError = await apiErrorFromResponse(response.clone());
     if (authError.code === 'recent_auth_required') {
-      clearBrowserSession();
-      redirectToLogin();
+      // A recent-auth check protects a sensitive mutation, but it does not
+      // invalidate the current session. Let the caller show its safe error
+      // message instead of deleting the user's session and forcing a logout.
       throw authError;
     }
   }

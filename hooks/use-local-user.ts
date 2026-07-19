@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { apiClient } from '@/lib/api-client';
 
 export interface LocalUser {
@@ -111,4 +111,27 @@ export function useLocalUser() {
   }, []);
 
   return user;
+}
+
+export function useAuthoritativeUser() {
+  const user = useLocalUser();
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(
+    'loading'
+  );
+
+  useEffect(() => {
+    let active = true;
+    refreshCurrentUser()
+      .then(() => {
+        if (active) setStatus('ready');
+      })
+      .catch(() => {
+        if (active) setStatus('error');
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return { user, status };
 }

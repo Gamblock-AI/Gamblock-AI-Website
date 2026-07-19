@@ -266,7 +266,7 @@ export function StudentProgress() {
                   {[1, 2, 3].map((value) => (
                     <span
                       key={value}
-                      className={`flex size-10 items-center justify-center rounded-full border text-sm font-bold ${snapshot.data.check_in_count >= value ? 'border-sage bg-sage text-white' : 'border-border bg-card text-muted-foreground'}`}
+                      className={`flex size-10 items-center justify-center rounded-full border text-sm font-bold ${snapshot.data!.check_in_count >= value ? 'border-sage bg-sage text-white' : 'border-border bg-card text-muted-foreground'}`}
                     >
                       {value}
                     </span>
@@ -291,7 +291,7 @@ export function StudentProgress() {
                 {KEEPSAKES.map((Icon, index) => (
                   <div
                     key={index}
-                    className={`flex aspect-square items-center justify-center rounded-2xl border ${index < Math.min(snapshot.data.active_days, KEEPSAKES.length) ? 'border-sage/30 bg-card text-sage shadow-sm' : 'border-border text-muted-foreground/25 border-dashed'}`}
+                    className={`flex aspect-square items-center justify-center rounded-2xl border ${index < Math.min(snapshot.data!.active_days, KEEPSAKES.length) ? 'border-sage/30 bg-card text-sage shadow-sm' : 'border-border text-muted-foreground/25 border-dashed'}`}
                   >
                     <Icon
                       className="size-7"

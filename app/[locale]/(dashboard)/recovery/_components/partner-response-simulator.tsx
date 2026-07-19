@@ -95,18 +95,18 @@ export function PartnerResponseSimulator() {
           </div>
 
           <div className="mt-5 grid gap-5 sm:mt-6 lg:grid-cols-[0.75fr_1.25fr]">
-            <div className="flex min-h-64 flex-col overflow-hidden rounded-2xl border border-[#ded6c6] bg-[#f5f1e8] p-4 sm:min-h-80 sm:rounded-[2rem] sm:p-5">
-              <div className="flex items-center gap-3 border-b border-[#ded6c6] pb-4">
-                <span className="bg-cyan/20 text-navy flex size-11 items-center justify-center rounded-full">
+            <div className="border-navy/15 bg-azure/35 flex min-h-64 flex-col overflow-hidden rounded-2xl border p-4 sm:min-h-80 sm:rounded-[2rem] sm:p-5">
+              <div className="border-navy/10 flex items-center gap-3 border-b pb-4">
+                <span className="bg-navy flex size-11 items-center justify-center rounded-2xl text-white shadow-sm">
                   <MessageCircle className="size-5" aria-hidden="true" />
                 </span>
                 <div>
                   <p className="text-navy font-bold">{t('student')}</p>
-                  <p className="text-sage text-xs">{t('available')}</p>
+                  <p className="text-sage text-xs font-semibold">{t('available')}</p>
                 </div>
               </div>
-              <div className="mt-5 rounded-2xl rounded-tl-sm bg-white p-4 shadow-sm">
-                <p className="text-navy text-sm leading-6">{section.title}</p>
+              <div className="border-border/80 bg-card mt-5 rounded-2xl rounded-tl-xs border p-4 shadow-sm">
+                <p className="text-navy text-sm font-medium leading-6">{section.title}</p>
               </div>
               <p className="text-muted-foreground mt-auto pt-5 text-xs leading-5">
                 {t('fictional')}
@@ -119,23 +119,42 @@ export function PartnerResponseSimulator() {
                 {t('choose')}
               </p>
               <div className="mt-4 space-y-3">
-                {choices.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setChoice(item.id);
-                      setResult(null);
-                    }}
-                    className={`focus-visible:ring-navy/30 flex min-h-16 w-full cursor-pointer items-start gap-3 rounded-2xl border p-3 text-left text-sm leading-6 transition-colors outline-none focus-visible:ring-2 sm:p-4 ${choice === item.id ? 'border-cyan bg-cyan/8 text-navy' : 'border-border hover:border-navy/25'}`}
-                    aria-pressed={choice === item.id}
-                  >
-                    <span
-                      className={`mt-1 size-4 shrink-0 rounded-full border-2 ${choice === item.id ? 'border-cyan bg-cyan shadow-[inset_0_0_0_3px_white]' : 'border-muted-foreground/45'}`}
-                    />
-                    {item.text}
-                  </button>
-                ))}
+                {choices.map((item) => {
+                  const selected = choice === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setChoice(item.id);
+                        setResult(null);
+                      }}
+                      className={`flex min-h-14 w-full cursor-pointer items-center gap-3.5 rounded-2xl border px-4 py-3 text-left text-sm leading-6 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-navy/30 sm:px-5 ${
+                        selected
+                          ? 'border-navy bg-azure/50 font-bold text-navy shadow-sm ring-2 ring-navy/20'
+                          : 'border-border bg-card text-muted-foreground hover:border-navy/40 hover:bg-muted/40 hover:text-navy'
+                      }`}
+                      aria-pressed={selected}
+                    >
+                      <span
+                        className={`size-4 shrink-0 rounded-full border-2 transition-colors ${
+                          selected
+                            ? 'border-navy bg-navy shadow-[inset_0_0_0_3px_white]'
+                            : 'border-muted-foreground/40'
+                        }`}
+                      />
+                      <span
+                        className={
+                          selected
+                            ? 'font-bold text-navy'
+                            : 'font-medium text-foreground'
+                        }
+                      >
+                        {item.text}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
               <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
                 <Button
@@ -168,7 +187,16 @@ export function PartnerResponseSimulator() {
             {detail.module.sections.map((item, index) => (
               <span
                 key={item.id}
-                className={`h-2 flex-1 rounded-full ${index < sectionIndex || detail.module?.progress.correct_check_ids.includes(item.knowledge_check?.id ?? '') ? 'bg-sage' : index === sectionIndex ? 'bg-cyan' : 'bg-border'}`}
+                className={`h-2.5 flex-1 rounded-full transition-colors ${
+                  index < sectionIndex ||
+                  detail.module?.progress.correct_check_ids.includes(
+                    item.knowledge_check?.id ?? ''
+                  )
+                    ? 'bg-sage'
+                    : index === sectionIndex
+                      ? 'bg-navy ring-navy/20 shadow-sm ring-1'
+                      : 'bg-border/80'
+                }`}
               />
             ))}
           </div>

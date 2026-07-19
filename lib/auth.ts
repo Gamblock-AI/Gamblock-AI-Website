@@ -7,6 +7,16 @@ export async function login(email: string, password: string) {
   });
 }
 
+export async function completeInitialPasswordChange(
+  token: string,
+  newPassword: string
+) {
+  return apiClient('/auth/first-login/password', {
+    method: 'POST',
+    body: JSON.stringify({ token, new_password: newPassword }),
+  });
+}
+
 export async function register(
   email: string,
   password: string,
@@ -21,11 +31,12 @@ export async function register(
 
 export async function loginWithGoogle(
   idToken: string,
-  role?: 'user' | 'partner'
+  role?: 'user' | 'partner',
+  nonce?: string
 ) {
   return apiClient('/auth/google', {
     method: 'POST',
-    body: JSON.stringify({ id_token: idToken, role }),
+    body: JSON.stringify({ id_token: idToken, role, nonce }),
   });
 }
 

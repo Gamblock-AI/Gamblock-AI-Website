@@ -21,7 +21,7 @@ export function SupportRequestForm({
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('normal');
-  const [impact, setImpact] = useState('can_continue');
+  const [impact, setImpact] = useState('question');
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,6 +40,7 @@ export function SupportRequestForm({
       setSubject('');
       setDescription('');
       setPriority('normal');
+      setImpact('question');
       toastSuccess(t('success'));
     } catch (error) {
       toastError(error, t('error'));
@@ -91,10 +92,10 @@ export function SupportRequestForm({
             value={impact}
             onChange={setImpact}
           >
-            <option value="can_continue">{t('impacts.canContinue')}</option>
-            <option value="partly_blocked">{t('impacts.partlyBlocked')}</option>
-            <option value="fully_blocked">{t('impacts.fullyBlocked')}</option>
-            <option value="safety_concern">{t('impacts.safetyConcern')}</option>
+            <option value="question">{t('impacts.canContinue')}</option>
+            <option value="degraded">{t('impacts.partlyBlocked')}</option>
+            <option value="blocked">{t('impacts.fullyBlocked')}</option>
+            <option value="safety">{t('impacts.safetyConcern')}</option>
           </SupportSelect>
         </div>
         <div className="space-y-2">

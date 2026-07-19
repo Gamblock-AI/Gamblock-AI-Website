@@ -5,28 +5,31 @@ import { Link } from '@/i18n/routing';
 import {
   ArrowRight,
   AtSign,
-  BriefcaseBusiness,
-  Camera,
-  Code2,
-  Globe,
-  MessageCircle,
-  Music2,
-  Play,
 } from 'lucide-react';
+import {
+  FaFacebookF,
+  FaGithub,
+  FaInstagram,
+  FaLinkedinIn,
+  FaThreads,
+  FaTiktok,
+  FaXTwitter,
+  FaYoutube,
+} from 'react-icons/fa6';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/routes';
 import { useSiteSocialLinks } from '@/hooks/use-site-social-links';
 
 const SOCIAL_ICONS = {
-  instagram: Camera,
-  tiktok: Music2,
-  youtube: Play,
-  facebook: Globe,
-  linkedin: BriefcaseBusiness,
-  x: AtSign,
-  threads: MessageCircle,
-  github: Code2,
+  instagram: FaInstagram,
+  tiktok: FaTiktok,
+  youtube: FaYoutube,
+  facebook: FaFacebookF,
+  linkedin: FaLinkedinIn,
+  x: FaXTwitter,
+  threads: FaThreads,
+  github: FaGithub,
 } as const;
 
 const COLUMNS = [

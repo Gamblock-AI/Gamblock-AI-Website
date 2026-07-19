@@ -107,14 +107,14 @@ export default function SupportCaseDetailPage() {
                 <li
                   key={message.id}
                   className={`max-w-[90%] rounded-xl border p-4 ${
-                    message.author_role === 'support_operator'
+                    message.author_role === 'admin'
                       ? 'border-sage/30 bg-sage/[0.07]'
                       : 'border-border bg-muted/45 ml-auto'
                   }`}
                 >
                   <div className="text-muted-foreground flex flex-wrap justify-between gap-2 text-xs">
                     <span className="text-navy font-semibold">
-                      {message.author_role === 'support_operator'
+                      {message.author_role === 'admin'
                         ? t('supportTeam')
                         : t('you')}
                     </span>

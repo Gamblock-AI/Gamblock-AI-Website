@@ -32,19 +32,19 @@ export function SupportWorkspaceClient({
       />
       <nav
         aria-label={t('channelNavigationLabel')}
-        className="border-border bg-card shadow-soft grid gap-1 rounded-2xl border p-1.5 sm:grid-cols-2"
+        className="border-border/80 bg-muted/35 inline-flex min-h-11 w-full max-w-md items-center gap-1 rounded-2xl border p-1 shadow-inner sm:w-auto"
       >
-        <ChannelLink
-          active={channel === 'partner'}
-          href={`${ROUTES.SUPPORT}?channel=partner`}
-          icon={MessageCircleHeart}
-          title={t('partnerChannelTitle')}
-        />
         <ChannelLink
           active={channel === 'team'}
           href={`${ROUTES.SUPPORT}?channel=team`}
           icon={MessagesSquare}
           title={t('teamChannelTitle')}
+        />
+        <ChannelLink
+          active={channel === 'partner'}
+          href={`${ROUTES.SUPPORT}?channel=partner`}
+          icon={MessageCircleHeart}
+          title={t('partnerChannelTitle')}
         />
       </nav>
       {channel === 'partner' ? (
@@ -90,20 +90,23 @@ function ChannelLink({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`focus-visible:ring-navy/30 flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors duration-200 outline-none focus-visible:ring-2 motion-reduce:transition-none ${
+      className={`group focus-visible:ring-navy/30 relative flex h-9 flex-1 items-center justify-center gap-2.5 rounded-xl px-4 text-xs font-semibold transition-all duration-200 outline-none focus-visible:ring-2 motion-reduce:transition-none sm:flex-initial sm:text-sm ${
         active
-          ? 'border-navy bg-navy text-white shadow-sm'
-          : 'text-navy hover:bg-muted/55 border-transparent'
+          ? 'bg-navy font-bold text-white shadow-sm ring-1 ring-black/10'
+          : 'text-muted-foreground hover:bg-card/70 hover:text-navy'
       }`}
     >
       <span
-        className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
-          active ? 'bg-white/15 text-white' : 'bg-azure/75 text-navy'
+        className={`flex size-5 shrink-0 items-center justify-center rounded-md transition-colors ${
+          active ? 'text-white' : 'text-navy/70 group-hover:text-navy'
         }`}
       >
         <Icon className="size-4" aria-hidden="true" />
       </span>
-      <span className="min-w-0 text-sm font-bold">{title}</span>
+      <span className="whitespace-nowrap">{title}</span>
+      {active ? (
+        <span className="bg-sage size-1.5 shrink-0 rounded-full" />
+      ) : null}
     </Link>
   );
 }

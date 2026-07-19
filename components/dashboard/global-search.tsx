@@ -35,7 +35,11 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
   const user = useLocalUser();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const { modules: educationModules } = useEducationModules(locale, open);
+  const canSearchEducation = user.role === 'user' || user.role === 'partner';
+  const { modules: educationModules } = useEducationModules(
+    locale,
+    open && canSearchEducation
+  );
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -52,7 +56,7 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
     const allItems: SearchItem[] = [];
     dashboardNavigationGroups.forEach((group: DashboardNavGroup) => {
       group.items.forEach((item) => {
-        if (canShowNavigationItem(item, user?.role)) {
+        if (canShowNavigationItem(item, user.role)) {
           allItems.push({
             id: item.href,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,7 +70,7 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
       });
     });
     return allItems;
-  }, [t, user?.role]);
+  }, [t, user.role]);
 
   const educationItems = useMemo<SearchItem[]>(
     () =>

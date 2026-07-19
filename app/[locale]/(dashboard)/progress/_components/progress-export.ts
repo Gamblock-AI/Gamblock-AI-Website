@@ -128,11 +128,18 @@ function printHtmlDocument(html: string, title: string) {
       pointerEvents: 'none',
     });
 
-    const cleanup = () => iframe.remove();
+    let cleanedUp = false;
+    const cleanup = () => {
+      if (cleanedUp) return;
+      cleanedUp = true;
+      iframe.remove();
+    };
+
     iframe.onerror = () => {
       cleanup();
       reject(new Error('Printable progress document could not be loaded'));
     };
+
     iframe.onload = () => {
       const printWindow = iframe.contentWindow;
       if (!printWindow || typeof printWindow.print !== 'function') {
@@ -142,9 +149,18 @@ function printHtmlDocument(html: string, title: string) {
       }
       try {
         printWindow.focus();
-        printWindow.print();
-        cleanup();
-        resolve();
+        printWindow.addEventListener('afterprint', cleanup, { once: true });
+        setTimeout(cleanup, 60000);
+
+        setTimeout(() => {
+          try {
+            printWindow.print();
+            resolve();
+          } catch (error) {
+            cleanup();
+            reject(error);
+          }
+        }, 100);
       } catch (error) {
         cleanup();
         reject(error);

@@ -8,10 +8,29 @@ const eslintConfig = defineConfig([
   ...nextTs,
   ...tailwind.configs["flat/recommended"],
   {
+    rules: {
+      // eslint-plugin-tailwindcss v3 cannot parse Tailwind v4 CSS-first
+      // @theme tokens and repeatedly scans them for every source file.
+      // Tailwind v4 and prettier-plugin-tailwindcss remain responsible for
+      // utility generation and class ordering.
+      'tailwindcss/classnames-order': 'off',
+      'tailwindcss/enforces-negative-arbitrary-values': 'off',
+      'tailwindcss/enforces-shorthand': 'off',
+      'tailwindcss/no-custom-classname': 'off',
+      'tailwindcss/no-unnecessary-arbitrary-value': 'off',
+    },
     settings: {
       tailwindcss: {
         config: {},
       },
+    },
+  },
+  {
+    files: ["fix-messages.js", "scripts/download-placeholders.js"],
+    rules: {
+      // These local maintenance scripts intentionally use CommonJS because the
+      // package is not an ESM package.
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
   // Override default ignores of eslint-config-next.

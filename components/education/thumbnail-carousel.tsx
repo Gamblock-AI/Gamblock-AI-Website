@@ -12,12 +12,14 @@ export function ThumbnailCarousel({
   locale,
   title,
   compact = false,
+  fullHeight = false,
 }: {
   thumbnails: EducationThumbnail[];
   urls: Record<string, string>;
   locale: string;
   title: string;
   compact?: boolean;
+  fullHeight?: boolean;
 }) {
   const t = useTranslations('educationLibrary');
   const items = useMemo(
@@ -29,7 +31,11 @@ export function ThumbnailCarousel({
 
   if (!current) {
     return (
-      <div className="bg-azure/45 text-navy/45 flex aspect-video items-center justify-center">
+      <div
+        className={`bg-azure/45 text-navy/45 flex items-center justify-center ${
+          fullHeight ? 'h-full w-full min-h-full' : 'aspect-video'
+        }`}
+      >
         <ImageIcon className="size-8" aria-hidden="true" />
       </div>
     );
@@ -37,13 +43,23 @@ export function ThumbnailCarousel({
 
   const alt = current.alt_text?.[locale] || current.alt_text?.id || title;
   return (
-    <div className="bg-azure/40 relative overflow-hidden">
+    <div
+      className={`bg-azure/40 relative overflow-hidden ${
+        fullHeight ? 'h-full w-full min-h-full' : ''
+      }`}
+    >
       {/* Backend image responses are authenticated by the same-site session. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={resolveEducationMediaURL(urls[current.media_id])}
         alt={alt}
-        className={`w-full object-cover ${compact ? 'aspect-[16/9]' : 'aspect-[16/8]'}`}
+        className={`w-full object-cover ${
+          fullHeight
+            ? 'h-full min-h-full'
+            : compact
+              ? 'aspect-[16/9]'
+              : 'aspect-[16/8]'
+        }`}
       />
       {items.length > 1 ? (
         <>

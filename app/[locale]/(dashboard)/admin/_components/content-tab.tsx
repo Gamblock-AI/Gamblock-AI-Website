@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Archive,
   ArrowDown,
+  ArrowRight,
   ArrowUp,
-  BookOpen,
   ExternalLink,
   History,
+  ImageIcon,
   Plus,
   Save,
   Send,
@@ -27,20 +28,80 @@ import type {
 import type { EditorMediaSelection } from '@/components/education/rich-text-editor';
 import { RichTextEditor } from '@/components/education/rich-text-editor';
 import { ThumbnailCropper } from '@/components/education/thumbnail-cropper';
-import { config } from '@/lib/config';
+import { resolveEducationMediaURL } from '@/components/education/media-url';
+import { apiClientBlob } from '@/lib/api-client';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
   educationCategoryCodes,
 } from '@/lib/i18n/dynamic-labels';
+import { cn } from '@/lib/utils';
+import { useRouter } from '@/i18n/routing';
 import {
-  AdminSectionHeader,
   AdminStatusBadge,
   adminFieldClassName,
 } from './admin-shared';
 
 const emptyRichText = () => ({ type: 'doc', content: [{ type: 'paragraph' }] });
+
+function AdminMediaImage({
+  mediaId,
+  alt,
+  className,
+}: {
+  mediaId: string;
+  alt: string;
+  className?: string;
+}) {
+  const [src, setSrc] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl = '';
+
+    apiClientBlob(`/admin/content/media/${mediaId}`)
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setSrc(objectUrl);
+      })
+      .catch(() => {
+        if (!active) return;
+        setSrc(resolveEducationMediaURL(`/v1/education/media/${mediaId}`));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [mediaId]);
+
+  if (loading && !src) {
+    return (
+      <div
+        className={`bg-azure/45 flex items-center justify-center ${className ?? ''}`}
+      >
+        <ImageIcon className="size-6 text-navy/40 animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src || resolveEducationMediaURL(`/v1/education/media/${mediaId}`)}
+      alt={alt}
+      className={className}
+    />
+  );
+}
 const makeCheck = (id: string) => ({
   id,
   question: '',
@@ -121,6 +182,7 @@ function normalizeEducationDocument(document: AdminEducationDocument) {
 
 interface ContentTabProps {
   modules: AdminEducationModule[];
+  moduleID?: string;
   createModule: (module: AdminModuleDraft) => Promise<AdminEducationModule>;
   getModule: (id: string) => Promise<AdminEducationModule>;
   saveModule: (
@@ -151,6 +213,8 @@ interface ContentTabProps {
 export function ContentTab(props: ContentTabProps) {
   const t = useTranslations('adminPage');
   const tDynamic = useTranslations('dynamicLabels');
+  const router = useRouter();
+  const { getModule, moduleID } = props;
   const [selected, setSelected] = useState<AdminEducationModule | null>(null);
   const [slug, setSlug] = useState('');
   const [document, setDocument] = useState<AdminEducationDocument | null>(null);
@@ -160,22 +224,96 @@ export function ContentTab(props: ContentTabProps) {
   const [newSlug, setNewSlug] = useState('');
   const [newIDTitle, setNewIDTitle] = useState('');
   const [newENTitle, setNewENTitle] = useState('');
+  const [isSlugCustom, setIsSlugCustom] = useState(false);
+  const [isEditorSlugCustom, setIsEditorSlugCustom] = useState(false);
   const [revisions, setRevisions] = useState<AdminEducationRevision[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [isStuck, setIsStuck] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
 
-  const openModule = async (id: string) => {
-    setBusy(true);
-    try {
-      const educationModule = await props.getModule(id);
-      setSelected(educationModule);
-      setSlug(educationModule.slug);
-      setDocument(normalizeEducationDocument(educationModule.draft_document));
-    } catch (error) {
-      toastError(error, t('fetchError'));
-    } finally {
-      setBusy(false);
+  useEffect(() => {
+    if (!selected) return;
+
+    const updateHeight = () => {
+      if (stickyHeaderRef.current) {
+        setHeaderHeight(stickyHeaderRef.current.offsetHeight);
+      }
+    };
+    updateHeight();
+
+    const handleScroll = () => {
+      setIsStuck(window.scrollY > 95);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', updateHeight, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [selected]);
+
+  const slugify = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+  };
+
+  const handleIDTitleChange = (val: string) => {
+    setNewIDTitle(val);
+    if (!isSlugCustom) {
+      setNewSlug(slugify(val || newENTitle));
     }
   };
+
+  const handleENTitleChange = (val: string) => {
+    setNewENTitle(val);
+    if (!isSlugCustom && !newIDTitle) {
+      setNewSlug(slugify(val));
+    }
+  };
+
+  const handleSlugChange = (val: string) => {
+    setNewSlug(val);
+    setIsSlugCustom(true);
+  };
+
+  const resetNewModuleForm = () => {
+    setNewOpen(false);
+    setNewSlug('');
+    setNewIDTitle('');
+    setNewENTitle('');
+    setIsSlugCustom(false);
+  };
+
+  useEffect(() => {
+    if (!moduleID || selected?.id === moduleID) return;
+    let active = true;
+
+    void getModule(moduleID)
+      .then((educationModule) => {
+        if (!active) return;
+        setSelected(educationModule);
+        setSlug(educationModule.slug);
+        const idTitle = educationModule.draft_document?.translations?.id?.title || educationModule.title || '';
+        setIsEditorSlugCustom(educationModule.slug !== slugify(idTitle));
+        setDocument(normalizeEducationDocument(educationModule.draft_document));
+      })
+      .catch((error) => {
+        if (active) toastError(error, t('fetchError'));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [getModule, moduleID, selected?.id, t]);
   const mutate = (callback: (draft: AdminEducationDocument) => void) =>
     setDocument((current) => {
       if (!current) return current;
@@ -305,19 +443,28 @@ export function ContentTab(props: ContentTabProps) {
       }
     };
 
+  if (moduleID && selected?.id !== moduleID)
+    return (
+      <div className="border-border bg-card flex min-h-72 items-center justify-center rounded-2xl border">
+        <p className="text-muted-foreground text-sm">{t('loading')}</p>
+      </div>
+    );
+
   if (!selected || !document)
     return (
       <div className="space-y-4">
-        <AdminSectionHeader
-          title={t('contentTitle')}
-          description={t('contentDescription')}
-          action={
-            <Button size="sm" onClick={() => setNewOpen(true)}>
-              <Plus className="size-4" />
-              {t('newModule')}
-            </Button>
-          }
-        />
+        <div className="flex items-center justify-between pb-1">
+          <div>
+            <h3 className="text-navy text-base font-bold">Katalog Modul Edukasi</h3>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              {t('contentDescription')}
+            </p>
+          </div>
+          <Button size="sm" onClick={() => setNewOpen(true)}>
+            <Plus className="size-4" />
+            {t('newModule')}
+          </Button>
+        </div>
         {newOpen ? (
           <form
             className="border-border bg-card grid gap-4 rounded-2xl border p-5 sm:grid-cols-2"
@@ -329,8 +476,7 @@ export function ContentTab(props: ContentTabProps) {
                   slug: newSlug,
                   document: makeDocument(newIDTitle, newENTitle),
                 });
-                setNewOpen(false);
-                await openModule(educationModule.id);
+                router.push(`/admin/content/${educationModule.id}`);
                 toastSuccess(t('moduleCreated'));
               } catch (error) {
                 toastError(error, t('moduleCreateError'));
@@ -340,24 +486,14 @@ export function ContentTab(props: ContentTabProps) {
             }}
           >
             <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">{t('thSlug')}</span>
-              <input
-                className={adminFieldClassName}
-                pattern="[a-z0-9-]+"
-                value={newSlug}
-                onChange={(event) => setNewSlug(event.target.value)}
-                required
-              />
-            </label>
-            <div />
-            <label className="space-y-2">
               <span className="text-navy text-xs font-bold">
                 {t('titleIndonesian')}
               </span>
               <input
                 className={adminFieldClassName}
+                placeholder="Contoh: Memahami Siklus Dorongan"
                 value={newIDTitle}
-                onChange={(event) => setNewIDTitle(event.target.value)}
+                onChange={(event) => handleIDTitleChange(event.target.value)}
                 required
               />
             </label>
@@ -367,8 +503,34 @@ export function ContentTab(props: ContentTabProps) {
               </span>
               <input
                 className={adminFieldClassName}
+                placeholder="Contoh: Understanding the Impulse Cycle"
                 value={newENTitle}
-                onChange={(event) => setNewENTitle(event.target.value)}
+                onChange={(event) => handleENTitleChange(event.target.value)}
+                required
+              />
+            </label>
+            <label className="space-y-2 sm:col-span-2">
+              <div className="flex items-center justify-between">
+                <span className="text-navy text-xs font-bold">{t('thSlug')}</span>
+                {isSlugCustom ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSlugCustom(false);
+                      setNewSlug(slugify(newIDTitle || newENTitle));
+                    }}
+                    className="text-navy text-[0.7rem] hover:underline"
+                  >
+                    Otomatiskan dari judul
+                  </button>
+                ) : null}
+              </div>
+              <input
+                className={adminFieldClassName}
+                placeholder="contoh-memahami-siklus-dorongan"
+                pattern="[a-z0-9-]+"
+                value={newSlug}
+                onChange={(event) => handleSlugChange(event.target.value)}
                 required
               />
             </label>
@@ -376,38 +538,74 @@ export function ContentTab(props: ContentTabProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setNewOpen(false)}
+                onClick={resetNewModuleForm}
               >
                 {t('cancel')}
               </Button>
-              <Button disabled={busy}>{t('saveDraft')}</Button>
+              <Button type="submit" disabled={busy}>
+                {t('saveDraft')}
+              </Button>
             </div>
           </form>
         ) : null}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {props.modules.length ? (
-            props.modules.map((module) => (
-              <button
-                type="button"
-                key={module.id}
-                onClick={() => void openModule(module.id)}
-                className="border-border bg-card shadow-soft rounded-2xl border p-5 text-left outline-none hover:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-600/30"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <BookOpen className="size-5 text-blue-700" />
-                  <AdminStatusBadge status={module.status} />
-                </div>
-                <h3 className="text-navy mt-4 font-bold">
-                  {module.title || module.slug}
-                </h3>
-                <p className="text-muted-foreground mt-1 font-mono text-xs">
-                  {module.slug}
-                </p>
-                <p className="mt-4 text-xs font-semibold text-blue-700">
-                  {t('editModule')} →
-                </p>
-              </button>
-            ))
+            props.modules.map((module) => {
+              const firstThumb =
+                module.draft_document?.thumbnails?.[0] ||
+                module.published_document?.thumbnails?.[0];
+
+              return (
+                <button
+                  type="button"
+                  key={module.id}
+                  onClick={() => router.push(`/admin/content/${module.id}`)}
+                  className="group border-border/80 bg-card shadow-soft hover:shadow-md hover:border-navy/30 flex flex-col justify-between overflow-hidden rounded-2xl border text-left transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-navy/20"
+                >
+                  <div>
+                    {firstThumb?.media_id ? (
+                      <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                        <AdminMediaImage
+                          mediaId={firstThumb.media_id}
+                          alt={module.title || module.slug}
+                          className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute top-3 right-3 z-10">
+                          <AdminStatusBadge status={module.status} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative aspect-video w-full overflow-hidden border-b border-border/60 bg-gradient-to-br from-navy/10 via-azure/35 to-azure/60">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-card/85 border-navy/15 text-navy/40 flex size-11 items-center justify-center rounded-2xl border shadow-xs backdrop-blur-md transition-transform duration-300 group-hover:scale-110">
+                            <ImageIcon className="size-5" />
+                          </div>
+                        </div>
+                        <div className="absolute top-3 right-3 z-10">
+                          <AdminStatusBadge status={module.status} />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2 p-5">
+                      <h3 className="text-navy group-hover:text-navy-light text-base font-bold leading-snug transition-colors line-clamp-2">
+                        {module.title || module.slug}
+                      </h3>
+                      <span className="border-border/60 bg-muted/50 text-muted-foreground inline-block max-w-full truncate rounded-md border px-2 py-0.5 font-mono text-[0.7rem]">
+                        {module.slug}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="border-border/60 mx-5 mb-4 border-t pt-3">
+                    <span className="text-navy flex items-center gap-1.5 text-xs font-bold transition-transform duration-200 group-hover:translate-x-0.5">
+                      {t('editModule')}
+                      <ArrowRight className="size-3.5" />
+                    </span>
+                  </div>
+                </button>
+              );
+            })
           ) : (
             <p className="border-border text-muted-foreground col-span-full rounded-2xl border border-dashed p-10 text-center text-sm">
               {t('noModules')}
@@ -420,13 +618,23 @@ export function ContentTab(props: ContentTabProps) {
   const translation = document.translations[locale];
   return (
     <div className="space-y-5">
-      <div className="border-border bg-card/95 shadow-card sticky top-16 z-20 flex flex-col gap-3 rounded-2xl border p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+      {isStuck ? (
+        <div style={{ height: headerHeight || 64 }} aria-hidden="true" />
+      ) : null}
+      <div
+        ref={stickyHeaderRef}
+        className={cn(
+          'flex flex-col gap-3 backdrop-blur-md transition-all duration-300 ease-in-out sm:flex-row sm:items-center sm:justify-between',
+          isStuck
+            ? 'fixed top-[4.5rem] left-0 right-0 z-30 border-b border-border/80 bg-card/95 px-4 py-3.5 shadow-md shadow-navy/5 lg:left-[252px] sm:px-6 lg:px-8 xl:px-10'
+            : 'relative z-20 rounded-2xl border border-border bg-card/95 p-4 shadow-sm'
+        )}
+      >
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => {
-              setSelected(null);
-              setDocument(null);
+              router.push('/admin/content');
             }}
             className="hover:bg-muted flex size-10 items-center justify-center rounded-xl"
             aria-label={t('closeEditor')}
@@ -556,11 +764,48 @@ export function ContentTab(props: ContentTabProps) {
 
       <section className="border-border bg-card grid gap-4 rounded-2xl border p-5 sm:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-navy text-xs font-bold">{t('thSlug')}</span>
+          <span className="text-navy text-xs font-bold">
+            {t('moduleTitle')}
+          </span>
           <input
             className={adminFieldClassName}
+            placeholder="Contoh: Mengenali Perangkap Desain"
+            value={translation.title}
+            onChange={(event) => {
+              const newTitle = event.target.value;
+              mutate((draft) => {
+                draft.translations[locale].title = newTitle;
+              });
+              if (!isEditorSlugCustom) {
+                setSlug(slugify(newTitle));
+              }
+            }}
+          />
+        </label>
+        <label className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-navy text-xs font-bold">{t('thSlug')}</span>
+            {isEditorSlugCustom ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditorSlugCustom(false);
+                  setSlug(slugify(translation.title));
+                }}
+                className="text-navy text-[0.7rem] hover:underline"
+              >
+                Otomatiskan dari judul
+              </button>
+            ) : null}
+          </div>
+          <input
+            className={adminFieldClassName}
+            placeholder="mengenali-perangkap-desain"
             value={slug}
-            onChange={(event) => setSlug(event.target.value)}
+            onChange={(event) => {
+              setSlug(event.target.value);
+              setIsEditorSlugCustom(true);
+            }}
           />
         </label>
         <label className="space-y-2">
@@ -634,25 +879,12 @@ export function ContentTab(props: ContentTabProps) {
           </select>
         </label>
         <label className="space-y-2">
-          <span className="text-navy text-xs font-bold">
-            {t('moduleTitle')}
-          </span>
-          <input
-            className={adminFieldClassName}
-            value={translation.title}
-            onChange={(event) =>
-              mutate((draft) => {
-                draft.translations[locale].title = event.target.value;
-              })
-            }
-          />
-        </label>
-        <label className="space-y-2">
           <span className="text-navy text-xs font-bold">{t('thDuration')}</span>
           <input
             type="number"
             min={1}
             max={120}
+            placeholder="8"
             className={adminFieldClassName}
             value={document.estimated_minutes}
             onChange={(event) =>
@@ -668,6 +900,7 @@ export function ContentTab(props: ContentTabProps) {
           </span>
           <textarea
             className={`${adminFieldClassName} min-h-24 py-3`}
+            placeholder="Tuliskan ringkasan singkat modul di sini..."
             value={translation.summary}
             onChange={(event) =>
               mutate((draft) => {
@@ -682,6 +915,7 @@ export function ContentTab(props: ContentTabProps) {
           </span>
           <textarea
             className={`${adminFieldClassName} min-h-24 py-3`}
+            placeholder="Tuliskan tujuan pembelajaran modul di sini..."
             value={translation.learning_objective}
             onChange={(event) =>
               mutate((draft) => {
@@ -695,6 +929,7 @@ export function ContentTab(props: ContentTabProps) {
           <span className="text-navy text-xs font-bold">{t('disclaimer')}</span>
           <textarea
             className={`${adminFieldClassName} min-h-24 py-3`}
+            placeholder="Tuliskan catatan keselamatan atau penafian..."
             value={translation.disclaimer}
             onChange={(event) =>
               mutate((draft) => {
@@ -721,9 +956,9 @@ export function ContentTab(props: ContentTabProps) {
               key={thumb.media_id}
               className="border-border overflow-hidden rounded-2xl border"
             >
-              <img
-                src={`${config.apiUrl}/v1/admin/content/media/${thumb.media_id}`}
-                alt=""
+              <AdminMediaImage
+                mediaId={thumb.media_id}
+                alt={thumb.alt_text[locale] || ''}
                 className="aspect-video w-full object-cover"
               />
               <div className="space-y-2 p-3">
@@ -858,10 +1093,15 @@ export function ContentTab(props: ContentTabProps) {
                   onRequestMedia={requestContentMedia}
                 />
               </div>
-              <div className="mt-5 rounded-2xl bg-blue-50 p-4">
-                <h4 className="text-navy text-sm font-extrabold">
-                  {t('knowledgeCheck')}
-                </h4>
+              <div className="mt-5 rounded-2xl border border-navy/15 bg-blue-50/60 p-4 sm:p-5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-navy text-sm font-extrabold">
+                    {t('knowledgeCheck')}
+                  </h4>
+                  <span className="text-muted-foreground text-[0.7rem]">
+                    Pilih radio button untuk menentukan jawaban yang benar
+                  </span>
+                </div>
                 <input
                   className={`${adminFieldClassName} mt-3`}
                   placeholder={t('question')}
@@ -874,45 +1114,100 @@ export function ContentTab(props: ContentTabProps) {
                     })
                   }
                 />
-                {localized.knowledge_check.choices.map(
-                  (choice, choiceIndex) => (
-                    <label
-                      key={choice.id}
-                      className="mt-2 flex items-center gap-2"
-                    >
-                      <input
-                        type="radio"
-                        name={`${section.id}-${locale}`}
-                        checked={
-                          localized.knowledge_check.correct_choice_id ===
-                          choice.id
+                <div className="mt-3 space-y-2">
+                  {localized.knowledge_check.choices.map(
+                    (choice, choiceIndex) => (
+                      <div
+                        key={choice.id}
+                        className="flex items-center gap-2"
+                      >
+                        <input
+                          type="radio"
+                          name={`${section.id}-${locale}`}
+                          checked={
+                            localized.knowledge_check.correct_choice_id ===
+                            choice.id
+                          }
+                          onChange={() =>
+                            mutate((draft) => {
+                              draft.sections[sectionIndex].translations[
+                                locale
+                              ].knowledge_check.correct_choice_id = choice.id;
+                            })
+                          }
+                          className="size-4 accent-navy cursor-pointer"
+                        />
+                        <input
+                          className={`${adminFieldClassName} flex-1`}
+                          placeholder={`${t('answer')} ${choiceIndex + 1}`}
+                          value={choice.text}
+                          onChange={(event) =>
+                            mutate((draft) => {
+                              draft.sections[sectionIndex].translations[
+                                locale
+                              ].knowledge_check.choices[choiceIndex].text =
+                                event.target.value;
+                            })
+                          }
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={localized.knowledge_check.choices.length <= 2}
+                          onClick={() =>
+                            mutate((draft) => {
+                              const sec = draft.sections[sectionIndex];
+                              for (const loc of ['id', 'en'] as const) {
+                                const kc = sec.translations[loc]?.knowledge_check;
+                                if (kc && kc.choices.length > 2) {
+                                  kc.choices = kc.choices.filter(
+                                    (c) => c.id !== choice.id
+                                  );
+                                  if (kc.correct_choice_id === choice.id) {
+                                    kc.correct_choice_id =
+                                      kc.choices[0]?.id || '';
+                                  }
+                                }
+                              }
+                            })
+                          }
+                          className="size-9 shrink-0 rounded-xl text-muted-foreground hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+                          title="Hapus pilihan"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    )
+                  )}
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      mutate((draft) => {
+                        const sec = draft.sections[sectionIndex];
+                        const newId = `choice-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+                        for (const loc of ['id', 'en'] as const) {
+                          if (sec.translations[loc]?.knowledge_check) {
+                            sec.translations[loc].knowledge_check.choices.push({
+                              id: newId,
+                              text: '',
+                            });
+                          }
                         }
-                        onChange={() =>
-                          mutate((draft) => {
-                            draft.sections[sectionIndex].translations[
-                              locale
-                            ].knowledge_check.correct_choice_id = choice.id;
-                          })
-                        }
-                      />
-                      <input
-                        className={adminFieldClassName}
-                        placeholder={`${t('answer')} ${choiceIndex + 1}`}
-                        value={choice.text}
-                        onChange={(event) =>
-                          mutate((draft) => {
-                            draft.sections[sectionIndex].translations[
-                              locale
-                            ].knowledge_check.choices[choiceIndex].text =
-                              event.target.value;
-                          })
-                        }
-                      />
-                    </label>
-                  )
-                )}
+                      })
+                    }
+                    className="rounded-xl border-dashed border-navy/20 hover:border-navy/40 hover:bg-navy/5 text-navy text-xs font-bold"
+                  >
+                    <Plus className="mr-1.5 size-3.5" />
+                    Tambah pilihan
+                  </Button>
+                </div>
                 <textarea
-                  className={`${adminFieldClassName} mt-2 min-h-20 py-3`}
+                  className={`${adminFieldClassName} mt-3 min-h-20 py-3`}
                   placeholder={t('explanation')}
                   value={localized.knowledge_check.explanation}
                   onChange={(event) =>

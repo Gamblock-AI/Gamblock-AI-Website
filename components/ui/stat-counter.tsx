@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { gsap, ScrollTrigger } from '@/lib/gsap';
+import { gsap } from '@/lib/gsap';
 import { cn } from '@/lib/utils';
 
 interface StatCounterProps {
@@ -48,11 +48,7 @@ export function StatCounter({
   );
 
   useEffect(() => {
-    if (reduce) {
-      setDisplay(format(value, decimals, locale));
-      return;
-    }
-    if (!ref.current) return;
+    if (reduce || !ref.current) return;
     const obj = { n: 0 };
     const ctx = gsap.context(() => {
       gsap.to(obj, {
@@ -67,10 +63,12 @@ export function StatCounter({
     return () => ctx.revert();
   }, [reduce, value, decimals, locale, durationSec]);
 
+  const visibleDisplay = reduce ? format(value, decimals, locale) : display;
+
   return (
     <span ref={ref} className={cn('tabular-nums', className)}>
       {prefix}
-      {display}
+      {visibleDisplay}
       {suffix}
     </span>
   );

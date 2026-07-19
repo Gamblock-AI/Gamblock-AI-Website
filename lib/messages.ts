@@ -28,6 +28,18 @@ export const MESSAGES: Record<string, string> = {
   dev_login_failed: 'Gagal masuk sebagai pengguna demo.',
   google_token_required: 'Sesi Google belum tersedia. Silakan coba lagi.',
   google_verification_failed: 'Verifikasi Google gagal. Silakan coba lagi.',
+  google_link_required:
+    'Akun ini sudah terdaftar. Masuk dengan kata sandi lalu tautkan Google dari Pengaturan.',
+  google_link_failed:
+    'Akun Google belum dapat ditautkan. Pastikan email Google sama dengan email akun.',
+  password_reset_invalid:
+    'Kode pemulihan tidak valid, sudah digunakan, atau telah kedaluwarsa.',
+  password_reset_failed:
+    'Pemulihan kata sandi belum dapat diproses. Silakan coba lagi.',
+  initial_password_change_invalid:
+    'Tautan penggantian kata sandi awal tidak valid atau telah kedaluwarsa.',
+  email_verification_required:
+    'Verifikasi email diperlukan untuk menjalankan operasi admin.',
   invalid_refresh_token: 'Sesi tidak valid. Silakan masuk kembali.',
   refresh_token_required: 'Sesi telah berakhir. Silakan masuk kembali.',
   logout_failed: 'Gagal keluar. Silakan coba lagi.',
@@ -38,6 +50,11 @@ export const MESSAGES: Record<string, string> = {
   phone_verification_failed: 'Nomor atau kode verifikasi WhatsApp tidak valid.',
   recent_auth_required:
     'Silakan masuk kembali sebelum menyelesaikan keputusan sensitif ini.',
+  admin_accounts_fetch_failed: 'Gagal memuat daftar akun.',
+  admin_account_create_failed: 'Akun belum dapat dibuat.',
+  admin_account_update_failed: 'Status akun belum dapat diperbarui.',
+  operator_invitation_retired:
+    'Undangan operator sudah tidak digunakan. Hubungi admin untuk pembuatan akun.',
 
   // devices
   device_create_failed: 'Gagal mendaftarkan perangkat.',
@@ -112,7 +129,8 @@ export const MESSAGES: Record<string, string> = {
   mission_fetch_failed: 'Gagal memuat misi harian.',
   invalid_mission: 'Nomor misi harus 1-5.',
   mission_update_failed: 'Gagal memperbarui misi harian.',
-  mission_adjust_failed: 'Misi utama belum dapat disesuaikan. Coba pilihan lain.',
+  mission_adjust_failed:
+    'Misi utama belum dapat disesuaikan. Coba pilihan lain.',
 
   // reflections / psychoeducation
   fetch_reflections_failed: 'Gagal memuat jurnal refleksi.',
@@ -215,6 +233,14 @@ const MESSAGES_EN: Record<string, string> = {
     'Registration failed. This email may already be registered.',
   google_token_required: 'The Google session is unavailable. Please try again.',
   google_verification_failed: 'Google verification failed. Please try again.',
+  google_link_required:
+    'This account already exists. Sign in with your password, then link Google from Settings.',
+  google_link_failed:
+    'Google could not be linked. Use the same Google email as this account.',
+  password_reset_invalid:
+    'The recovery code is invalid, already used, or has expired.',
+  password_reset_failed:
+    'Password recovery could not be completed. Please try again.',
   invalid_refresh_token: 'Your session is invalid. Please sign in again.',
   refresh_token_required: 'Your session has ended. Please sign in again.',
   logout_failed: 'Could not sign out. Please try again.',

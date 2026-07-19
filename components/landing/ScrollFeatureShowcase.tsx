@@ -3,8 +3,7 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Brain, Shield, Users, Scan, Heart, Eye } from 'lucide-react';
-import Image from 'next/image';
+import { Shield, Users, Scan, Heart } from 'lucide-react';
 import { useTranslations } from "next-intl";
 
 if (typeof window !== 'undefined') {

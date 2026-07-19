@@ -26,7 +26,6 @@ import {
   AdminFormField,
   AdminSectionHeader,
   AdminStatusBadge,
-  AdminTableShell,
   adminFieldClassName,
 } from './admin-shared';
 
@@ -106,16 +105,18 @@ export function ReleaseTab({
 
   return (
     <div className="space-y-4">
-      <AdminSectionHeader
-        title={t('releaseTitle')}
-        description={t('releaseDescription')}
-        action={
-          <Button size="sm" onClick={() => setFormOpen((open) => !open)}>
-            <FileCheck2 className="mr-1.5 size-4" />
-            {t('validateArtifact')}
-          </Button>
-        }
-      />
+      <div className="flex items-center justify-between pb-1">
+        <div>
+          <h3 className="text-navy text-base font-bold">Validasi Artefak & Rollout</h3>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            {t('releaseDescription')}
+          </p>
+        </div>
+        <Button size="sm" onClick={() => setFormOpen((open) => !open)}>
+          <FileCheck2 className="mr-1.5 size-4" />
+          {t('validateArtifact')}
+        </Button>
+      </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {[t('gateArtifact'), t('gateChecksum'), t('gateContract')].map(
           (gate, index) => (
@@ -190,8 +191,13 @@ export function ReleaseTab({
             <input
               className={adminFieldClassName}
               value={form.artifact_path}
-              readOnly
-              placeholder={t('uploadArtifactFirst')}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  artifact_path: event.target.value,
+                }))
+              }
+              placeholder="uploads/YYYY/MM/artifact.onnx"
               required
             />
           </AdminFormField>
@@ -283,15 +289,22 @@ export function ReleaseTab({
           </div>
         </form>
       ) : null}
-      <AdminTableShell>
-        <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-12 [&_th]:px-4 sm:[&_th]:px-5">
+      {/* Registered Artifacts Catalog Card */}
+      <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
+        <div className="border-border border-b p-4 sm:p-5">
+          <h3 className="text-navy text-base font-bold">Katalog Artefak Terdaftar</h3>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            Daftar seluruh versi model AI, ruleset, dan konfigurasi jaringan yang divalidasi.
+          </p>
+        </div>
+        <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
           <TableHeader>
-            <TableRow>
-              <TableHead>{t('releaseKind')}</TableHead>
-              <TableHead>{t('thVersion')}</TableHead>
-              <TableHead>{t('platform')}</TableHead>
-              <TableHead>{t('contractVersion')}</TableHead>
-              <TableHead>{t('thStatus')}</TableHead>
+            <TableRow className="bg-muted/40">
+              <TableHead className="font-bold text-xs">{t('releaseKind')}</TableHead>
+              <TableHead className="font-bold text-xs">{t('thVersion')}</TableHead>
+              <TableHead className="font-bold text-xs">{t('platform')}</TableHead>
+              <TableHead className="font-bold text-xs">{t('contractVersion')}</TableHead>
+              <TableHead className="font-bold text-xs">{t('thStatus')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -300,16 +313,16 @@ export function ReleaseTab({
             ) : (
               releaseRows.map(({ kind, release }) => (
                 <TableRow key={release.id}>
-                  <TableCell className="capitalize">{kind}</TableCell>
-                  <TableCell className="text-navy font-semibold">
+                  <TableCell className="capitalize text-xs font-medium">{kind}</TableCell>
+                  <TableCell className="text-navy text-sm font-semibold">
                     {release.version}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-xs">
                     {tDynamic(dynamicLabelKey('platform', release.platform), {
                       value: dynamicLabelFallback(release.platform),
                     })}
                   </TableCell>
-                  <TableCell>{release.contract_version || '—'}</TableCell>
+                  <TableCell className="font-mono text-xs">{release.contract_version || '—'}</TableCell>
                   <TableCell>
                     <AdminStatusBadge status={release.status} />
                   </TableCell>
@@ -318,7 +331,7 @@ export function ReleaseTab({
             )}
           </TableBody>
         </Table>
-      </AdminTableShell>
+      </section>
 
       <div className="space-y-3 pt-2">
         <AdminSectionHeader
@@ -420,23 +433,32 @@ export function ReleaseTab({
               className={adminFieldClassName}
               value={rolloutReason}
               onChange={(event) => setRolloutReason(event.target.value)}
+              placeholder={t('changeReasonPlaceholder')}
               required
             />
           </AdminFormField>
           <div className="lg:col-span-3 lg:text-right">
-            <Button disabled={submitting}>{t('stageRollout')}</Button>
+            <Button type="submit" disabled={submitting}>
+              {t('stageRollout')}
+            </Button>
           </div>
         </form>
-        <AdminTableShell>
-          <Table>
+        <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
+          <div className="border-border border-b p-4 sm:p-5">
+            <h3 className="text-navy text-base font-bold">Status Cohort Rollout</h3>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              Pemantauan status distribusi bertahap dan tindakan penghentian darurat.
+            </p>
+          </div>
+          <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
             <TableHeader>
-              <TableRow>
-                <TableHead>{t('releaseKind')}</TableHead>
-                <TableHead>{t('thVersion')}</TableHead>
-                <TableHead>{t('platform')}</TableHead>
-                <TableHead>{t('cohortPercentage')}</TableHead>
-                <TableHead>{t('thStatus')}</TableHead>
-                <TableHead className="text-right">{t('actions')}</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="font-bold text-xs">{t('releaseKind')}</TableHead>
+                <TableHead className="font-bold text-xs">{t('thVersion')}</TableHead>
+                <TableHead className="font-bold text-xs">{t('platform')}</TableHead>
+                <TableHead className="font-bold text-xs">{t('cohortPercentage')}</TableHead>
+                <TableHead className="font-bold text-xs">{t('thStatus')}</TableHead>
+                <TableHead className="text-right font-bold text-xs">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -445,12 +467,12 @@ export function ReleaseTab({
               ) : (
                 rollouts.map((rollout) => (
                   <TableRow key={rollout.id}>
-                    <TableCell>{rollout.kind}</TableCell>
-                    <TableCell className="font-semibold">
+                    <TableCell className="capitalize text-xs font-medium">{rollout.kind}</TableCell>
+                    <TableCell className="text-navy text-sm font-semibold">
                       {rollout.release_version}
                     </TableCell>
-                    <TableCell>{rollout.platform}</TableCell>
-                    <TableCell>{rollout.percentage}%</TableCell>
+                    <TableCell className="text-xs">{rollout.platform}</TableCell>
+                    <TableCell className="font-mono text-xs font-bold text-navy">{rollout.percentage}%</TableCell>
                     <TableCell>
                       <AdminStatusBadge status={rollout.status} />
                     </TableCell>
@@ -541,7 +563,7 @@ export function ReleaseTab({
               )}
             </TableBody>
           </Table>
-        </AdminTableShell>
+        </section>
       </div>
     </div>
   );

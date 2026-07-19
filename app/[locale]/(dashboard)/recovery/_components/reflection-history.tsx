@@ -72,17 +72,24 @@ export function ReflectionHistory({
         </div>
       ) : (
         <div className="divide-border mt-3 divide-y">
-          {reflections.map((reflection) => (
-            <div key={reflection.id} className="py-4 first:pt-2 last:pb-0">
-              <p className="text-sage text-xs font-bold">{reflection.mood}</p>
-              <p className="text-navy mt-2 text-sm leading-6">
-                {reflection.text}
-              </p>
-              <p className="text-muted-foreground mt-2 text-xs">
-                {dateFormatter.format(new Date(reflection.created_at))}
-              </p>
-            </div>
-          ))}
+          {reflections.map((reflection) => {
+            const moodDisplay =
+              reflection.mood ??
+              (reflection.mood_score ? `${reflection.mood_score}/5` : undefined);
+            return (
+              <div key={reflection.id} className="py-4 first:pt-2 last:pb-0">
+                {moodDisplay ? (
+                  <p className="text-sage text-xs font-bold">{moodDisplay}</p>
+                ) : null}
+                <p className="text-navy mt-2 text-sm leading-6">
+                  {reflection.text}
+                </p>
+                <p className="text-muted-foreground mt-2 text-xs">
+                  {dateFormatter.format(new Date(reflection.created_at))}
+                </p>
+              </div>
+            );
+          })}
         </div>
       )}
     </aside>

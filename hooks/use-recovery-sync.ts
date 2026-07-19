@@ -40,7 +40,7 @@ export function useRecoverySync() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (user.role !== 'user') return;
 
     let active = true;
 

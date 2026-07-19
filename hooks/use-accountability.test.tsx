@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -24,16 +32,57 @@ function IntlTestProvider({ children }: PropsWithChildren) {
 
 const API = 'http://localhost:8080';
 const server = setupServer(
-  http.get(`${API}/v1/partners`, () =>
+  http.get(`${API}/v1/accountability/workspace`, () =>
     HttpResponse.json({
       data: {
-        active_partner: { id: 'pl_1', partner_email: 'suci@gmail.com', status: 'active' },
-        items: [],
+        role: 'user',
+        groups: [
+          {
+            id: 'grp_1',
+            owner_name: 'Suci',
+            name: 'Pendamping',
+            description: '',
+            join_code_hint: '4567',
+            status: 'active',
+            member_count: 1,
+            code_rotated_at: '2026-06-19T00:00:00Z',
+            created_at: '2026-06-19T00:00:00Z',
+          },
+        ],
+        membership: {
+          id: 'mbr_1',
+          group_id: 'grp_1',
+          student_id: 'usr_1',
+          student_name: 'Gading',
+          status: 'active',
+          sharing: {
+            protection_health: true,
+            protection_activity: true,
+            recovery_engagement: true,
+            education_progress: true,
+          },
+          aggregate: {},
+          joined_at: '2026-06-19T00:00:00Z',
+        },
+        members: [],
+        exit_requests: [],
+        contact_requests: [],
+        pending_actions: 0,
       },
     })
   ),
   http.get(`${API}/v1/approval-requests`, () =>
-    HttpResponse.json({ data: [{ id: 'APR-1', action: 'pause', status: 'pending', reason: 'x', created_at: '2026-06-19T00:00:00Z' }] })
+    HttpResponse.json({
+      data: [
+        {
+          id: 'APR-1',
+          action: 'pause',
+          status: 'pending',
+          reason: 'x',
+          created_at: '2026-06-19T00:00:00Z',
+        },
+      ],
+    })
   )
 );
 
@@ -46,9 +95,10 @@ describe('useAccountability', () => {
     const { result } = renderHook(() => useAccountability(), {
       wrapper: IntlTestProvider,
     });
-    await waitFor(() => expect(result.current.partnerStatus).toBe('active'));
-    expect(result.current.partnerEmail).toBe('suci@gmail.com');
-    expect(result.current.partnerLinkId).toBe('pl_1');
+    await waitFor(() =>
+      expect(result.current.workspace.membership?.status).toBe('active')
+    );
+    expect(result.current.workspace.groups[0].owner_name).toBe('Suci');
     await waitFor(() => expect(result.current.requests.length).toBe(1));
     expect(result.current.requests[0].id).toBe('APR-1');
   });
@@ -57,9 +107,10 @@ describe('useAccountability', () => {
     const { result } = renderHook(() => useAccountability(), {
       wrapper: IntlTestProvider,
     });
-    await waitFor(() => expect(result.current.partnerStatus).toBe('active'));
-    expect(typeof result.current.handleInvitePartner).toBe('function');
-    expect(result.current).not.toHaveProperty('setIsModalOpen');
-    expect(result.current).not.toHaveProperty('isModalOpen');
+    await waitFor(() =>
+      expect(result.current.workspace.membership?.status).toBe('active')
+    );
+    expect(typeof result.current.updateSharing).toBe('function');
+    expect(typeof result.current.requestLeave).toBe('function');
   });
 });

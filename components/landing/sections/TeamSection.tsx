@@ -10,7 +10,8 @@ import { Reveal } from '@/components/common/Reveal';
 /**
  * TeamSection — academic credibility: the cross-disciplinary PKM-KC team.
  * Photo-forward layout: each member and the advisor lead with a large portrait.
- * Photos use placeholders for now.
+ * Portraits are web-optimized versions of the approved team photos in
+ * assets/foto-anggota at the umbrella workspace root.
  */
 export function TeamSection() {
   const t = useTranslations('LandingPage');
@@ -18,25 +19,25 @@ export function TeamSection() {
   const members = [
     {
       name: 'Alfian Gading Saputra',
-      photo: '/images/team/member-1.jpg',
+      photo: '/images/team/member-1.webp',
       roleKey: 'teamMember1Role',
       taskKey: 'teamMember1Task',
     },
     {
       name: 'Dery Wahyu Perdana',
-      photo: '/images/team/member-2.jpg',
+      photo: '/images/team/member-2.webp',
       roleKey: 'teamMember2Role',
       taskKey: 'teamMember2Task',
     },
     {
       name: 'Nasywa Nurhaliza Prasetyo',
-      photo: '/images/team/member-3.jpg',
+      photo: '/images/team/member-3.webp',
       roleKey: 'teamMember3Role',
       taskKey: 'teamMember3Task',
     },
     {
       name: 'Suci Maisaa',
-      photo: '/images/team/member-4.jpg',
+      photo: '/images/team/member-4.webp',
       roleKey: 'teamMember4Role',
       taskKey: 'teamMember4Task',
     },
@@ -84,7 +85,7 @@ export function TeamSection() {
         <div className="group grid overflow-hidden rounded-3xl border border-border bg-card shadow-card sm:grid-cols-[minmax(0,16rem)_1fr]">
           <div className="relative aspect-[4/3] w-full overflow-hidden sm:aspect-auto sm:h-full">
             <Image
-              src="/images/team/advisor.jpg"
+              src="/images/team/advisor.webp"
               alt={`Foto ${advisorName}`}
               fill
               sizes="(max-width: 640px) 100vw, 16rem"

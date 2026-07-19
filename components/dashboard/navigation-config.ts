@@ -4,11 +4,15 @@ import {
   BookOpen,
   ChartNoAxesColumnIncreasing,
   CircleHelp,
+  FileCheck2,
+  FileText,
   Handshake,
   HeartHandshake,
+  KeyRound,
   LayoutDashboard,
   Microscope,
-  ShieldCheck,
+  Settings2,
+  Tickets,
   UsersRound,
 } from 'lucide-react';
 
@@ -24,6 +28,11 @@ export type DashboardNavKey =
   | 'settings'
   | 'dataRequests'
   | 'admin'
+  | 'adminContent'
+  | 'adminReleases'
+  | 'adminTickets'
+  | 'adminEmergency'
+  | 'adminPlatform'
   | 'researchSandbox';
 
 export interface DashboardNavItem {
@@ -50,13 +59,13 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         href: ROUTES.DASHBOARD,
         labelKey: 'dashboard',
         icon: LayoutDashboard,
-        roles: ['user', 'partner'],
+        roles: ['user', 'partner', 'admin'],
       },
       {
         href: ROUTES.RECOVERY,
         labelKey: 'recovery',
         icon: HeartHandshake,
-        roles: ['user'],
+        roles: ['user', 'partner'],
       },
       {
         href: ROUTES.PROGRESS,
@@ -99,32 +108,54 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
     titleKey: 'sectionOperations',
     items: [
       {
+        href: ROUTES.ADMIN_CONTENT,
+        labelKey: 'adminContent',
+        icon: FileText,
+        roles: ['admin'],
+      },
+      {
+        href: ROUTES.ADMIN_RELEASES,
+        labelKey: 'adminReleases',
+        icon: FileCheck2,
+        roles: ['admin'],
+      },
+      {
+        href: ROUTES.ADMIN_TICKETS,
+        labelKey: 'adminTickets',
+        icon: Tickets,
+        roles: ['admin'],
+      },
+      {
+        href: ROUTES.ADMIN_EMERGENCY,
+        labelKey: 'adminEmergency',
+        icon: KeyRound,
+        roles: ['admin'],
+      },
+      {
+        href: ROUTES.ADMIN_PLATFORM,
+        labelKey: 'adminPlatform',
+        icon: Settings2,
+        roles: ['admin'],
+      },
+      {
         href: ROUTES.RESEARCH_SANDBOX,
         labelKey: 'researchSandbox',
         icon: Microscope,
-        roles: ['research_evaluator'],
-      },
-      {
-        href: ROUTES.ADMIN,
-        labelKey: 'admin',
-        icon: ShieldCheck,
-        roles: [
-          'content_admin',
-          'model_release_operator',
-          'support_operator',
-          'platform_admin',
-        ],
+        roles: ['admin'],
       },
     ],
   },
 ];
 
-export const mobilePrimaryNavigation = [
-  dashboardNavigationGroups[0].items[0],
-  dashboardNavigationGroups[0].items[1],
-  dashboardNavigationGroups[0].items[2],
-  dashboardNavigationGroups[1].items[3],
-] as const;
+export function getMobilePrimaryNavigation(role?: string) {
+  const hrefs: readonly string[] =
+    role === 'admin'
+      ? [ROUTES.DASHBOARD, ROUTES.ADMIN_TICKETS, ROUTES.ADMIN_CONTENT]
+      : [ROUTES.DASHBOARD, ROUTES.RECOVERY, ROUTES.PROGRESS, ROUTES.SUPPORT];
+  return dashboardNavigationGroups.flatMap((group) => group.items).filter(
+    (item) => hrefs.includes(item.href)
+  );
+}
 
 export function canShowNavigationItem(item: DashboardNavItem, role?: string) {
   return !item.roles || (role ? item.roles.includes(role) : false);

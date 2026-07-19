@@ -59,6 +59,11 @@
     "settings": "Pengaturan",
     "dataRequests": "Permintaan data",
     "admin": "Admin",
+    "adminContent": "Konten",
+    "adminReleases": "Rilis AI",
+    "adminTickets": "Tiket",
+    "adminEmergency": "Akses darurat",
+    "adminPlatform": "Platform",
     "researchSandbox": "Sandbox riset",
     "more": "Lainnya",
     "moreTitle": "Menu lainnya",
@@ -73,7 +78,10 @@
     "logoutCancel": "Batal",
     "gamiSupportTitle": "Gami siap mendukungmu",
     "gamiSupportBody": "Temukan bantuan saat langkah berikutnya terasa sulit.",
-    "gamiSupportAction": "Buka bantuan"
+    "gamiSupportAction": "Buka bantuan",
+    "adminSupportTitle": "Antrean butuh perhatian",
+    "adminSupportBody": "Tinjau pelaporan pengguna dan balas melalui ruang tiket admin.",
+    "adminSupportAction": "Buka tiket"
   },
   "dynamicLabels": {
     "approvalAction": {
@@ -112,15 +120,9 @@
       "unknown": "Prioritas lainnya ({value})"
     },
     "role": {
-      "user": "Siswa",
+      "user": "Mahasiswa",
       "partner": "Pendamping",
-      "content_admin": "Admin konten",
-      "platform_admin": "Admin platform",
-      "model_release_operator": "Operator rilis model",
-      "support_operator": "Operator dukungan",
-      "research_evaluator": "Evaluator riset",
-      "organization_owner": "Pemilik organisasi",
-      "organization_admin": "Admin organisasi",
+      "admin": "Admin",
       "unknown": "Peran lainnya ({value})"
     },
     "status": {

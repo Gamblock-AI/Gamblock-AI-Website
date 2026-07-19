@@ -8,6 +8,11 @@ export const ROUTES = {
   SUPPORT: '/support',
   SUPPORT_HISTORY: '/support/history',
   ADMIN: '/admin',
+  ADMIN_CONTENT: '/admin/content',
+  ADMIN_RELEASES: '/admin/releases',
+  ADMIN_TICKETS: '/admin/tickets',
+  ADMIN_EMERGENCY: '/admin/emergency',
+  ADMIN_PLATFORM: '/admin/platform',
   PARTNERS: '/partners',
   ACCOUNTABILITY: '/accountability',
   DATA_REQUESTS: '/data-requests',
@@ -51,3 +56,37 @@ export const GUEST_ROUTES = [
   ROUTES.REGISTER,
   ROUTES.FORGOT_PASSWORD,
 ] as const;
+
+export type AccountRole = 'user' | 'partner' | 'admin';
+
+const consumerRoutes = [
+  ROUTES.DASHBOARD,
+  ROUTES.PROGRESS,
+  ROUTES.RECOVERY,
+  ROUTES.EDUCATION,
+  ROUTES.PARTNERS,
+  ROUTES.ACCOUNTABILITY,
+] as const;
+
+export function defaultRouteForRole(_role?: string) {
+  // All authenticated roles currently share the same dashboard landing route.
+  void _role;
+  return ROUTES.DASHBOARD;
+}
+
+export function canAccessDashboardRoute(pathname: string, role?: string) {
+  if (!role) return false;
+  const matches = (route: string) =>
+    pathname === route || pathname.startsWith(`${route}/`);
+  if (matches(ROUTES.DASHBOARD)) return true;
+  if (matches(ROUTES.ADMIN) || matches(ROUTES.RESEARCH_SANDBOX)) {
+    return role === 'admin';
+  }
+  if (matches(ROUTES.SUPPORT)) {
+    return role === 'user' || role === 'partner';
+  }
+  if (consumerRoutes.some(matches) || matches(ROUTES.CREATE_GROUP)) {
+    return role === 'user' || role === 'partner';
+  }
+  return role === 'user' || role === 'partner' || role === 'admin';
+}

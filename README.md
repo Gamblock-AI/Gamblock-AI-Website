@@ -30,7 +30,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-19.1`.
+`2026-07-20.3`.
 
 ## Structure
 
@@ -70,11 +70,15 @@ Dashboard route transitions are implemented by
 
 ## Recovery experience
 
-The student dashboard is insight-first: privacy-safe aggregate analytics,
-protection information, weekly check-in trends, education, help, and shortcuts.
-The authenticated support workspace separates two recipient channels. Partner
-contact requests remain scoped to the connected relationship, while Gamblock-AI
-team tickets show a newest-first three-ticket summary;
+Every authenticated role lands on a dedicated dashboard. The student dashboard
+remains insight-first with privacy-safe aggregate analytics, protection
+information, weekly check-in trends, education, help, and shortcuts. The partner
+dashboard highlights groups, pending decisions/contacts, and consented aggregate
+protection status. The admin dashboard centralizes operational attention counts
+and links to its separate workspaces. The requester support workspace is limited
+to `user` and `partner` and separates two recipient channels. Partner contact
+requests remain scoped to the connected relationship, while Gamblock-AI team
+tickets show a newest-first three-ticket summary;
 `/[locale]/support/history` provides the complete requester-scoped ticket
 history and `/[locale]/support/[id]` provides encrypted threaded replies and
 status actions. The partner page owns relationship/group setup, and the
@@ -190,18 +194,20 @@ Verified partners create multiple named groups with rotatable codes. Verified
 students preview and explicitly confirm one active membership, then control
 category-specific aggregate sharing and safe exit. Students initiate protection
 pause/removal requests in the native client; the website remains the scoped
-partner decision and history surface. The operations panel is strictly
-role-separated: content admins get revision/rollback authoring, support
-operators get claim-owned threads and eligible data-request actions, release
-operators upload managed artifacts and run manual cohort rollouts, while
-platform admins manage specialist invitations/accounts, safe social links,
-audit history, and dual-control emergency access. Enabled non-null social links
+partner decision and history surface. The unified `admin` operations panel
+provides separate Content, AI Releases, Tickets, Emergency Access, Platform,
+and Research destinations for revision/rollback authoring, claim-owned support
+replies, eligible data-request actions, managed artifact rollouts, research
+tools, direct three-role account provisioning, safe social links, audit history,
+and dual-control emergency access. Admins do not use the requester `/support`
+surface. Enabled non-null social links
 are rendered in the landing footer; empty settings produce no icon.
 
 Google Identity Services renders only when
-`NEXT_PUBLIC_GOOGLE_CLIENT_ID` is configured to match the backend. Self-service
-password reset is intentionally shown as unavailable until a verified email
-delivery adapter exists; the UI does not simulate a sent reset email. CI passes
+`NEXT_PUBLIC_GOOGLE_CLIENT_ID` is configured as one of the backend's allowed
+audiences. Self-service password reset uses the backend's non-enumerating
+email-code request and single-use confirmation endpoints; production delivery
+requires configured SMTP and does not expose whether an email is registered. CI passes
 both public settings as Docker build arguments; the Google value remains
 optional and its absence is treated as a normal disabled state rather than a
 runtime warning.

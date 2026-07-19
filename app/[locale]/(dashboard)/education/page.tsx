@@ -98,13 +98,14 @@ export default function EducationPage() {
                 <ArrowRight className="size-4" />
               </Link>
             </div>
-            <div className="hidden sm:block">
+            <div className="hidden h-full sm:block">
               <ThumbnailCarousel
                 thumbnails={continued.thumbnails}
                 urls={continued.thumbnail_urls}
                 locale={locale}
                 title={continued.title}
                 compact
+                fullHeight
               />
             </div>
           </div>

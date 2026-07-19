@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-07-19.1`
+**Context version:** `2026-07-20.3`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading
@@ -89,10 +89,11 @@ error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
 - Quick approval (`/approve/[token]`) is a supporting flow that is
   token-authenticated, not session-authenticated. Keep it reachable without
   login while preserving single-use/expiry checks.
-- Operator invitation acceptance is also token-authenticated and public; the
-  backend owns email/role/expiry validation. The `/admin` shell must keep
-  content, support, release, and platform capabilities non-cumulative and hide
-  consumer navigation for operator roles. Public social footer links come only
+- Legacy operator invitation pages are retired. The `/admin` shell belongs to
+  the unified `admin` role and exposes content, support queue, release,
+  research, emergency, and platform capabilities through separate sidebar
+  routes. `/support` is requester-only for `user` and `partner`; admins reply
+  through `/admin/tickets`. Public social footer links come only
   from the safe public endpoint and render no placeholder for null/disabled
   records.
 

@@ -17,6 +17,7 @@ export function Sidebar() {
   const t = useTranslations('dashboardNav');
   const pathname = usePathname();
   const user = useLocalUser();
+  const isAdmin = user.role === 'admin';
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-[252px] shrink-0 flex-col border-r border-sidebar-border bg-card/96 lg:flex">
@@ -80,17 +81,17 @@ export function Sidebar() {
             className="relative mx-auto block h-16 w-auto object-contain"
           />
           <p className="relative mt-1.5 text-center text-sm font-bold text-navy">
-            {t('gamiSupportTitle')}
+            {t(isAdmin ? 'adminSupportTitle' : 'gamiSupportTitle')}
           </p>
           <p className="relative mt-1 text-center text-xs leading-5 text-muted-foreground">
-            {t('gamiSupportBody')}
+            {t(isAdmin ? 'adminSupportBody' : 'gamiSupportBody')}
           </p>
           <Link
-            href={ROUTES.SUPPORT}
+            href={isAdmin ? ROUTES.ADMIN_TICKETS : ROUTES.SUPPORT}
             className="relative mt-3 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-navy px-3 text-xs font-bold text-white outline-none transition-[background-color,transform] duration-200 hover:bg-navy-light focus-visible:ring-2 focus-visible:ring-navy/35 focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none"
           >
             <MessageCircleMore className="size-4" aria-hidden="true" />
-            {t('gamiSupportAction')}
+            {t(isAdmin ? 'adminSupportAction' : 'gamiSupportAction')}
           </Link>
         </div>
       </div>

@@ -1,11 +1,16 @@
 'use client';
 
-import { ROUTES } from '@/routes';
+import { defaultRouteForRole, ROUTES } from '@/routes';
 import { Link } from '@/i18n/routing';
-import { useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-import { login, loginWithGoogle, persistAuthSession } from '@/lib/auth';
+import {
+  completeInitialPasswordChange,
+  login,
+  loginWithGoogle,
+  persistAuthSession,
+} from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthField, AuthDivider } from '@/components/auth/AuthField';
@@ -29,6 +34,8 @@ interface AuthResponse {
   token_type: string;
   expires_in: number;
   user: { id: string; email: string; display_name: string; role: string };
+  password_change_required?: boolean;
+  password_change_token?: string;
 }
 
 export default function LoginPage() {
@@ -36,6 +43,10 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passwordChangeToken, setPasswordChangeToken] = useState<string | null>(
+    null
+  );
+  const [newPassword, setNewPassword] = useState('');
   const loginSchema = z.object({
     email: z
       .string()
@@ -61,16 +72,7 @@ export default function LoginPage() {
     const nextPath =
       requestedNext?.startsWith('/') && !requestedNext.startsWith('//')
         ? requestedNext
-        : [
-              'content_admin',
-              'model_release_operator',
-              'support_operator',
-              'platform_admin',
-            ].includes(res.user.role)
-          ? ROUTES.ADMIN
-          : res.user.role === 'partner'
-            ? ROUTES.PARTNERS
-            : ROUTES.DASHBOARD;
+        : defaultRouteForRole(res.user.role);
     router.push(nextPath);
   };
 
@@ -79,7 +81,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = (await login(data.email, data.password)) as AuthResponse;
-      if (res?.access_token) {
+      if (res?.password_change_required && res.password_change_token) {
+        setPasswordChangeToken(res.password_change_token);
+      } else if (res?.access_token) {
         completeLogin(res);
       } else {
         reportDevelopmentError(
@@ -94,6 +98,71 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  const submitInitialPassword = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!passwordChangeToken || newPassword.length < 8) {
+      setError('Kata sandi baru minimal 8 karakter.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = (await completeInitialPasswordChange(
+        passwordChangeToken,
+        newPassword
+      )) as AuthResponse;
+      completeLogin(response);
+    } catch (requestError) {
+      setError(
+        friendlyMessage(requestError, 'Kata sandi awal belum dapat diganti.')
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (passwordChangeToken) {
+    return (
+      <AuthShell
+        heading="Buat kata sandi baru"
+        subheading="Kata sandi sementara hanya dapat digunakan untuk langkah ini."
+      >
+        {error ? (
+          <div
+            role="alert"
+            className="border-crimson/20 bg-crimson/5 text-crimson mb-6 rounded-xl border px-4 py-3 text-xs font-semibold"
+          >
+            {error}
+          </div>
+        ) : null}
+        <form
+          onSubmit={(event) => void submitInitialPassword(event)}
+          className="space-y-5"
+        >
+          <AuthField
+            label="Kata sandi baru"
+            icon={Lock}
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            minLength={8}
+            required
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="w-full rounded-xl py-6 font-semibold"
+            disabled={loading}
+          >
+            {loading ? t('processing') : 'Simpan dan masuk'}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </form>
+      </AuthShell>
+    );
+  }
 
   const handleGoogleCredential = async (credential: string) => {
     setError(null);

@@ -17,6 +17,7 @@ import {
   Pause,
   Play,
   RotateCcw,
+  Smile,
   Sparkles,
   Waves,
   X,
@@ -426,6 +427,15 @@ function ActivitySheet({
   saving: boolean;
 }) {
   const t = useTranslations('recoveryRoom');
+  const completeAndClose = async (input: {
+    practice_kind: RecoveryPracticeKind;
+    duration_seconds: number;
+    feedback?: RecoveryFeedback;
+  }) => {
+    await onComplete(input);
+    onClose();
+  };
+
   return (
     <Dialog
       open
@@ -475,15 +485,15 @@ function ActivitySheet({
                 <TimedPractice
                   kind="urge_surfing"
                   seconds={180}
-                  onComplete={onComplete}
+                  onComplete={completeAndClose}
                   saving={saving}
                 />
               ) : null}
               {activity === 'grounding' ? (
-                <GroundingPractice onComplete={onComplete} saving={saving} />
+                <GroundingPractice onComplete={completeAndClose} saving={saving} />
               ) : null}
               {activity === 'focus' ? (
-                <FocusPractice onComplete={onComplete} saving={saving} />
+                <FocusPractice onComplete={completeAndClose} saving={saving} />
               ) : null}
               {activity === 'journal' ? <RoomJournal /> : null}
               {activity === 'support' ? <SupportChoices /> : null}
@@ -647,7 +657,7 @@ function GroundingPractice({
         {GROUNDING_STEPS.map((item, index) => (
           <span
             key={item}
-            className={`h-2 flex-1 rounded-full ${index < step ? 'bg-sage' : index === step ? 'bg-cyan' : 'bg-muted'}`}
+            className={`h-2 flex-1 rounded-full transition-colors duration-200 motion-reduce:transition-none ${index < step ? 'bg-sage' : index === step ? 'bg-navy' : 'bg-muted'}`}
           />
         ))}
       </div>
@@ -780,7 +790,7 @@ function FeedbackPicker({
             key={item}
             type="button"
             onClick={() => onChange(item)}
-            className={`focus-visible:ring-navy/30 min-h-11 cursor-pointer rounded-xl border px-3 text-sm font-semibold outline-none focus-visible:ring-2 ${value === item ? 'border-cyan bg-cyan/10 text-navy' : 'border-border text-muted-foreground'}`}
+            className={`focus-visible:ring-navy/30 min-h-11 cursor-pointer rounded-xl border px-3 text-sm font-semibold outline-none transition-colors duration-200 focus-visible:ring-2 motion-reduce:transition-none ${value === item ? 'border-navy bg-navy text-white shadow-sm' : 'border-border text-muted-foreground'}`}
           >
             {t(`feedback.${item}`)}
           </button>
@@ -816,6 +826,7 @@ function RoomJournal() {
         is_focus: focus && Boolean(nextStep.trim()),
       });
       setText('');
+      setMood(undefined);
       setNextStep('');
       setFocus(false);
       toastSuccess(t('journalSaved'));
@@ -848,8 +859,14 @@ function RoomJournal() {
               <button
                 key={value}
                 type="button"
-                onClick={() => setMood(value)}
-                className={`min-h-11 rounded-xl border font-semibold ${mood === value ? 'border-cyan bg-cyan/10 text-navy' : 'border-border text-muted-foreground'}`}
+                onClick={() =>
+                  setMood((prev) => (prev === value ? undefined : value))
+                }
+                className={`min-h-11 cursor-pointer rounded-xl border font-semibold transition-all outline-none focus-visible:ring-2 focus-visible:ring-navy/30 ${
+                  mood === value
+                    ? 'border-navy bg-navy text-white shadow-sm ring-2 ring-navy/20'
+                    : 'border-border bg-card text-muted-foreground hover:border-navy/40 hover:bg-muted/40 hover:text-navy'
+                }`}
                 aria-pressed={mood === value}
               >
                 {value}
@@ -893,19 +910,32 @@ function RoomJournal() {
           {journal.reflections
             .filter((entry) => entry.status !== 'archived')
             .slice(0, 3)
-            .map((entry) => (
-              <article key={entry.id} className="bg-muted/40 rounded-2xl p-4">
-                <p className="text-navy line-clamp-3 text-sm leading-6">
-                  {entry.text}
-                </p>
-                {entry.next_step ? (
-                  <p className="text-sage mt-2 flex items-center gap-2 text-xs font-semibold">
-                    <Check className="size-3.5" aria-hidden="true" />
-                    {entry.next_step}
+            .map((entry) => {
+              const moodVal = entry.mood_score ?? entry.mood;
+              const moodDisplay =
+                typeof moodVal === 'number' ? `${moodVal}/5` : moodVal;
+              return (
+                <article key={entry.id} className="bg-muted/40 rounded-2xl p-4">
+                  {moodDisplay ? (
+                    <p className="text-cyan-dark mb-1 flex items-center gap-1.5 text-xs font-semibold">
+                      <Smile className="size-3.5 shrink-0" aria-hidden="true" />
+                      <span>
+                        {t('journalMoodScore', { score: moodDisplay })}
+                      </span>
+                    </p>
+                  ) : null}
+                  <p className="text-navy line-clamp-3 text-sm leading-6">
+                    {entry.text}
                   </p>
-                ) : null}
-              </article>
-            ))}
+                  {entry.next_step ? (
+                    <p className="text-sage mt-2 flex items-center gap-2 text-xs font-semibold">
+                      <Check className="size-3.5" aria-hidden="true" />
+                      {entry.next_step}
+                    </p>
+                  ) : null}
+                </article>
+              );
+            })}
           {!journal.loading && journal.reflections.length === 0 ? (
             <p className="text-muted-foreground text-sm">{t('journalEmpty')}</p>
           ) : null}
