@@ -46,8 +46,8 @@ Operational delivery status: production images bake
 `https://api.gamblock-ai.com` and the public web Google client ID through
 GitHub variables, then deploy to the pinned VPS as root over password SSH only
 when `ENABLE_VPS_DEPLOY=true`. The public site is `https://gamblock-ai.com`;
-deployment remains gated until infrastructure bootstrap and backend SMTP are
-ready.
+deployment no longer waits for SMTP/WhatsApp, but their email and messaging
+features remain unavailable until provider credentials are configured.
 
 Supporting error-surface status (`implemented`): locale 404 and runtime error
 boundaries share a minimal, keyboard-accessible Gami status page. Temporary
