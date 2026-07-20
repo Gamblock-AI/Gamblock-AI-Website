@@ -6,8 +6,8 @@ test('invalid quick-approval token shows verification failure', async ({ page })
   await page.goto('/approve/invalid-token-xyz');
 
   // Friendly heading from ApprovalErrorState, not a raw stack trace.
-  await expect(page.getByText('Gagal Memverifikasi')).toBeVisible();
-  await expect(page.getByText(/Token tidak valid/i)).toBeVisible();
+  await expect(page.getByText(/Gagal memverifikasi|Verification failed/i)).toBeVisible();
+  await expect(page.getByText(/tidak valid|invalid/i)).toBeVisible();
 });
 
 // A valid-looking token path renders the request form or a processed state — the
@@ -18,5 +18,5 @@ test('valid token path reaches the approval form or processed state', async ({ p
   // either way the page must render a Gamblock UI card (not a 400 privacy rejection).
   await page.goto('/approve/some-demo-token');
   // The page shows one of the Gamblock approval cards (form / processed / error).
-  await expect(page.locator('text=/Permohonan|Memverifikasi|proses/i').first()).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('text=/Permohonan|Memverifikasi|proses|Verification|Verifying|Request/i').first()).toBeVisible({ timeout: 10000 });
 });

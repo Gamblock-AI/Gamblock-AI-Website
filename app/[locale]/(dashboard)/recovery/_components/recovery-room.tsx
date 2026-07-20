@@ -185,7 +185,7 @@ export function RecoveryRoom() {
                     }}
                     onClick={() => openActivity(key)}
                     data-activity-trigger={key}
-                    className={`${config.hotspot} focus-visible:ring-cyan absolute z-10 flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-4 border-white/90 shadow-[0_10px_35px_rgba(23,38,77,0.45)] transition-transform outline-none hover:scale-105 focus-visible:ring-4 focus-visible:ring-offset-2 motion-reduce:transition-none ${config.tone}`}
+                    className={`${config.hotspot} focus-visible:ring-cyan absolute z-30 flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-4 border-white/90 shadow-[0_10px_35px_rgba(23,38,77,0.45)] transition-transform outline-none hover:scale-105 focus-visible:ring-4 focus-visible:ring-offset-2 motion-reduce:transition-none ${config.tone}`}
                     aria-label={t(`activities.${key}.label`)}
                   >
                     <Icon className="size-6" aria-hidden="true" />

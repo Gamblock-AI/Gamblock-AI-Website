@@ -82,6 +82,14 @@ export async function refreshCurrentUser() {
       notifyLocalUserChanged();
       return profile;
     })
+    .catch((err) => {
+      const cached = readUser();
+      if (cached.id || cached.role) {
+        loadedForToken = token;
+        return cached;
+      }
+      throw err;
+    })
     .finally(() => {
       currentProfileRequest = null;
     });

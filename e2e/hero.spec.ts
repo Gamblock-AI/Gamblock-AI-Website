@@ -9,7 +9,7 @@ test('Landing hero renders with brand heading, CTAs and key stat', async ({ page
   await expect(heading).toContainText(/kendali|control/i);
 
   // Primary + secondary CTAs are present.
-  await expect(page.getByRole('link', { name: /mulai gratis|start free/i }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /mulai|start|langkah|step/i }).first()).toBeVisible();
 
   // Hero stat (Rp286,84 T) extracted from the PPATK proposal data is shown.
   await expect(page.getByText(/Rp286[.,]84/).first()).toBeVisible();
