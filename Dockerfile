@@ -45,6 +45,6 @@ COPY --from=build --chown=nextjs:nodejs /app/public ./public
 USER nextjs
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=15s \
-  CMD wget -qO- --tries=1 --spider http://localhost:3000/ || exit 1
+  CMD wget -q -O /dev/null --tries=1 http://localhost:3000/ || exit 1
 
 CMD ["node", "server.js"]
