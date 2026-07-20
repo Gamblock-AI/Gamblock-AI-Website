@@ -21,7 +21,7 @@ interface GoogleIdentityAPI {
       theme: 'outline';
       size: 'large';
       text: 'continue_with';
-      shape: 'rectangular';
+      shape: 'pill' | 'rectangular';
       width: number;
       locale: string;
     }
@@ -45,6 +45,7 @@ export function GoogleIdentityButton({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const callbackRef = useRef(onCredential);
+  const initializedClientIdRef = useRef<string | null>(null);
   const [scriptFailed, setScriptFailed] = useState(false);
   const locale = useLocale();
 
@@ -61,38 +62,39 @@ export function GoogleIdentityButton({
     const render = () => {
       if (!window.google || !containerRef.current) return;
       containerRef.current.replaceChildren();
-      window.google.accounts.id.initialize({
-        client_id: clientID,
-        callback: (response) => {
-          if (response.credential) {
-            void callbackRef.current(response.credential);
-          }
-        },
-      });
+      if (initializedClientIdRef.current !== clientID) {
+        window.google.accounts.id.initialize({
+          client_id: clientID,
+          callback: (response) => {
+            if (response.credential) {
+              void callbackRef.current(response.credential);
+            }
+          },
+        });
+        initializedClientIdRef.current = clientID;
+      }
+      const measuredWidth = Math.floor(
+        containerRef.current.getBoundingClientRect().width
+      );
+      const targetWidth = Math.max(
+        200,
+        Math.min(measuredWidth > 0 ? measuredWidth : 320, 400)
+      );
+
       window.google.accounts.id.renderButton(containerRef.current, {
         type: 'standard',
         theme: 'outline',
         size: 'large',
         text: 'continue_with',
-        shape: 'rectangular',
-        width: Math.min(containerRef.current.clientWidth || 360, 400),
+        shape: 'pill',
+        width: targetWidth,
         locale,
       });
     };
 
-    if (window.google) {
-      render();
-      return;
-    }
-
-    const existing = document.getElementById(
+    const scriptElement = document.getElementById(
       SCRIPT_ID
     ) as HTMLScriptElement | null;
-    const script = existing ?? document.createElement('script');
-    script.id = SCRIPT_ID;
-    script.src = `https://accounts.google.com/gsi/client?hl=${locale}`;
-    script.async = true;
-    script.defer = true;
     const handleScriptError = () => {
       setScriptFailed(true);
       reportDevelopmentError(
@@ -100,25 +102,56 @@ export function GoogleIdentityButton({
         new Error('The Google Identity Services script could not be loaded.')
       );
     };
-    script.addEventListener('load', render);
-    script.addEventListener('error', handleScriptError);
-    if (!existing) document.head.appendChild(script);
+
+    if (window.google) {
+      render();
+    } else {
+      const script = scriptElement ?? document.createElement('script');
+      script.id = SCRIPT_ID;
+      script.src = `https://accounts.google.com/gsi/client?hl=${locale}`;
+      script.async = true;
+      script.defer = true;
+      script.addEventListener('load', render);
+      script.addEventListener('error', handleScriptError);
+      if (!scriptElement) document.head.appendChild(script);
+    }
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        if (window.google && containerRef.current) {
+          render();
+        }
+      });
+      resizeObserver.observe(containerRef.current);
+    }
 
     return () => {
-      script.removeEventListener('load', render);
-      script.removeEventListener('error', handleScriptError);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      const activeScript = document.getElementById(
+        SCRIPT_ID
+      ) as HTMLScriptElement | null;
+      if (activeScript) {
+        activeScript.removeEventListener('load', render);
+        activeScript.removeEventListener('error', handleScriptError);
+      }
     };
   }, [locale]);
 
   if (!config.googleClientId || scriptFailed) {
     return (
-      <div className="border-border bg-muted/25 text-muted-foreground rounded-xl border border-dashed px-4 py-3 text-center text-xs leading-5 font-medium">
+      <div className="border-border bg-muted/25 text-muted-foreground mx-auto w-full max-w-[400px] rounded-full border border-dashed px-4 py-3 text-center text-xs leading-5 font-medium">
         {unavailableLabel}
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="flex min-h-11 w-full justify-center" />
+    <div
+      ref={containerRef}
+      className="mx-auto flex min-h-11 w-full max-w-[400px] justify-center [&_*]:!max-w-full [&_iframe]:!max-w-full [&_iframe]:!w-full"
+    />
   );
 }

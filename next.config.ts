@@ -53,11 +53,14 @@ if (configuredApiOrigin) mediaSources.add(configuredApiOrigin);
 const imageSources = new Set(["'self'", 'data:', 'https:', 'blob:']);
 if (configuredApiOrigin) imageSources.add(configuredApiOrigin);
 
+const styleSources = new Set(["'self'", "'unsafe-inline'"]);
+if (googleIdentityEnabled) styleSources.add('https://accounts.google.com');
+
 const csp =
   [
     "default-src 'self'",
     `script-src ${Array.from(scriptSources).join(' ')}`,
-    "style-src 'self' 'unsafe-inline'",
+    `style-src ${Array.from(styleSources).join(' ')}`,
     `img-src ${Array.from(imageSources).join(' ')}`,
     "font-src 'self' data:",
     `connect-src ${Array.from(connectSources).join(' ')}`,

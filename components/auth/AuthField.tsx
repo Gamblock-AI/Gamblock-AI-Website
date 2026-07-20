@@ -38,14 +38,11 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
     const inputType = isPassword ? (show ? 'text' : 'password') : type;
 
     return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label htmlFor={inputId} className="text-navy text-sm font-semibold">
-            {label}
-          </label>
-          {labelAdornment}
-        </div>
-        <div className="group relative">
+      <div className="grid grid-cols-2 gap-y-2">
+        <label htmlFor={inputId} className="text-navy text-sm font-semibold">
+          {label}
+        </label>
+        <div className="group relative col-span-2">
           <Icon
             className="text-muted-foreground group-focus-within:text-navy absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 transition-colors"
             aria-hidden="true"
@@ -82,11 +79,16 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
             </button>
           )}
         </div>
+        {labelAdornment ? (
+          <div className="row-start-1 col-start-2 justify-self-end self-center">
+            {labelAdornment}
+          </div>
+        ) : null}
         {error ? (
           <p
             id={errorId}
             role="alert"
-            className="text-crimson text-xs font-medium"
+            className="text-crimson col-span-2 text-xs font-medium"
           >
             {error}
           </p>
@@ -119,7 +121,7 @@ export function GoogleButton({
     <button
       type="button"
       onClick={onClick}
-      className="border-input bg-card text-foreground hover:border-navy/30 hover:bg-muted/50 flex w-full items-center justify-center gap-2.5 rounded-xl border py-3.5 text-sm font-semibold shadow-sm transition-all active:scale-[0.99]"
+      className="border-input bg-card text-foreground hover:border-navy/30 hover:bg-muted/50 flex w-full items-center justify-center gap-2.5 rounded-full border py-3.5 text-sm font-semibold shadow-sm transition-all active:scale-[0.99]"
     >
       <svg
         viewBox="0 0 24 24"

@@ -59,7 +59,7 @@ export function AuthShell({
         </Link>
 
         {/* Card */}
-        <div className="border-border bg-card shadow-card w-full rounded-3xl border p-8 sm:p-10">
+        <div className="border-border bg-card shadow-card w-full rounded-3xl border px-5 py-8 sm:p-10">
           <div className="mb-6">
             <BackButton
               label={backLabel ?? t('backHome')}
