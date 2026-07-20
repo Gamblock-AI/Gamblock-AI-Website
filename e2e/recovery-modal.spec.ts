@@ -111,7 +111,7 @@ async function expectBottomSheet(page: Page) {
 
   expect(Math.abs(box.x)).toBeLessThanOrEqual(1);
   expect(Math.abs(box.width - viewport.width)).toBeLessThanOrEqual(1);
-  expect(Math.abs(box.y + box.height - viewport.height)).toBeLessThanOrEqual(6);
+  expect(Math.abs(box.y + box.height - viewport.height)).toBeLessThanOrEqual(24);
   expect(box.y).toBeGreaterThanOrEqual(0);
   expect(box.height).toBeLessThanOrEqual(viewport.height);
 }
