@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-20.4`
+**Context version:** `2026-07-20.5`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only

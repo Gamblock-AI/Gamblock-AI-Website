@@ -30,7 +30,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-20.4`.
+`2026-07-20.5`.
 
 ## Structure
 
