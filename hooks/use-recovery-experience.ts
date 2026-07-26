@@ -42,6 +42,11 @@ export interface WeeklyReview {
   updated_at?: string;
 }
 
+/** Narrow read-only practices query for surfaces that need nothing else. */
+export function useRecoveryPractices() {
+  return useApiQuery<RecoveryPracticeSession[]>('/recovery-practices');
+}
+
 export function useRecoveryExperience() {
   const space = useApiQuery<RecoverySpace>('/recovery-space');
   const practices = useApiQuery<RecoveryPracticeSession[]>(

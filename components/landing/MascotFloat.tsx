@@ -7,13 +7,14 @@ import { gsap } from '@/lib/gsap';
 import { cn } from '@/lib/utils';
 
 interface MascotFloatProps {
-  src?: string;
+  src: string;
   alt: string;
   width?: number;
   height?: number;
   className?: string;
   imgClassName?: string;
-  priority?: boolean;
+  preload?: boolean;
+  sizes?: string;
   /** Strength of scroll parallax in px (0 disables parallax). */
   parallax?: number;
 }
@@ -23,13 +24,14 @@ interface MascotFloatProps {
  * scroll-driven parallax drift (GSAP). Both are disabled under reduced motion.
  */
 export function MascotFloat({
-  src = '/images/mascot/gami-hero.png',
+  src,
   alt,
   width = 520,
   height = 520,
   className,
   imgClassName,
-  priority = false,
+  preload = false,
+  sizes,
   parallax = 60,
 }: MascotFloatProps) {
   const reduce = useReducedMotion();
@@ -59,7 +61,8 @@ export function MascotFloat({
         alt={alt}
         width={width}
         height={height}
-        priority={priority}
+        preload={preload}
+        sizes={sizes}
         className={cn('h-auto w-full select-none drop-shadow-[0_30px_60px_rgba(22,41,76,0.25)] animate-float', imgClassName)}
       />
     </div>

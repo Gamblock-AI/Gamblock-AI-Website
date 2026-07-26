@@ -34,7 +34,7 @@
     "eyebrow": "Your personal overview",
     "greetingMorning": "Good morning, {name}",
     "greetingNoon": "Good afternoon, {name}",
-    "greetingAfternoon": "Good evening, {name}",
+    "greetingAfternoon": "Good afternoon, {name}",
     "greetingEvening": "Good evening, {name}",
     "greetingHello": "Hello, {name}",
     "defaultName": "Friend",
@@ -97,7 +97,7 @@
     "checkInTitle": "Private check-in",
     "checkInDescription": "There is no right or wrong answer. Choose what is closest to how you feel.",
     "moodQuestion": "How are you feeling?",
-    "urgeQuestion": "How strong is the urge? (optional)",
+    "urgeQuestion": "How strong is your urge to gamble today?",
     "mood1": "Overwhelmed",
     "mood2": "Anxious",
     "mood3": "Neutral",
@@ -108,12 +108,11 @@
     "urge3": "Moderate",
     "urge4": "Strong",
     "urge5": "Very strong",
-    "urgePreferNotSay": "Prefer not to say",
     "memoryOnlyWarning": "Browser storage is unavailable. Private data will only last while this tab remains open.",
     "checkInSave": "Save check-in",
     "checkInSaving": "Saving...",
     "checkInSaved": "Today's check-in is saved",
-    "checkInIncomplete": "Choose your mood and a response for the urge section first.",
+    "checkInIncomplete": "Choose your mood and your gambling-urge level first.",
     "checkInSaveError": "Your check-in was not saved to your account. Check your connection and try again.",
     "missionTitle": "Today's mission",
     "missionDescription": "EXP can be claimed after the system verifies the activity.",
@@ -320,12 +319,41 @@
     "emergencyHelpCall": "Helpline",
     "emergencyHelpPlanTitle": "Plan your next recovery step",
     "emergencyHelpPlanBody": "Review your intention and personal steps so your next source of support is clearer.",
-    "emergencyHelpPlanAction": "Open recovery"
+    "emergencyHelpPlanAction": "Open recovery",
+    "urgeNone": "No urge today",
+    "moodSupport1": "Thank you for being honest about how you feel. You do not have to face this alone—I am here, and human support is ready for you.",
+    "moodSupport2": "It's okay, you are not alone. I am here to walk alongside you.",
+    "moodSupport3": "Thank you for taking time to check in. Even an ordinary day means you showed up for yourself.",
+    "moodSupport4": "It's good to hear you feel calm. Keep the habits that helped you get here.",
+    "moodSupport5": "That's wonderful to hear! Thank you for sharing this good news with me.",
+    "moodSupportHelp": "Reach support",
+    "levelTitle1": "First Step",
+    "levelTitle2": "Intention Keeper",
+    "levelTitle3": "Rhythm Builder",
+    "levelTitle4": "Calm Explorer",
+    "levelTitle5": "Focus Keeper",
+    "levelTitle6": "Habit Builder",
+    "levelTitle7": "Journey Companion",
+    "levelChipAria": "Level {count}, {title}. Open your progress page.",
+    "levelUpTitled": "A new level is open — you are now {title}. Keep going at your own pace.",
+    "biteFact1": "Pausing for 10 seconds before acting can weaken an impulsive urge.",
+    "biteFact2": "Urges work like waves: they rise, peak, then fade on their own within minutes.",
+    "biteFact3": "Naming a feeling (\"I feel restless\") helps your brain lower its intensity.",
+    "biteFact4": "Slow, deep breaths signal safety to your body and lower tension.",
+    "biteFact5": "Your environment shapes habits: keeping triggers out of reach makes healthy choices feel easier.",
+    "biteFact6": "Getting enough sleep strengthens your ability to manage urges the next day.",
+    "biteFact7": "Writing down what you feel helps your mind feel more organized.",
+    "biteFact8": "Progress is rarely a straight line. A hard day does not mean going backward.",
+    "biteFact9": "Switching activities for a few minutes is often enough to ride out a short urge.",
+    "biteFact10": "Talking to someone you trust can ease the weight of an urge almost immediately.",
+    "biteFact11": "Light movement like a short walk safely releases restless energy.",
+    "biteFact12": "A small, specific intention (\"I close my laptop at 9\") is easier to keep than a big resolution.",
+    "checkInGateSavedBody": "Thanks for showing up today. Your check-in is saved."
   },
   "recoveryHub": {
     "eyebrow": "Recovery space",
-    "title": "Build a recovery approach that fits you",
-    "description": "Manage your intention, practise skills, and choose support without sharing private notes with a partner.",
+    "title": "Daily self-control missions",
+    "description": "Pick today's small missions to practice self-control—plus reflective journaling and support when you need it.",
     "privateTitle": "This space is private",
     "privateBody": "Intentions and practice choices are stored locally first. Account sync can be enabled per category and never shares them with a partner.",
     "intentionTitle": "Recovery intention",
@@ -579,22 +607,22 @@
     "legacyImported": "The older goal was copied as your journal focus.",
     "activities": {
       "urge": {
-        "label": "Urge surfing",
-        "short": "Urge surfing · 3 minutes",
+        "label": "Mission: urge surfing",
+        "short": "Urge-surfing mission · 3 minutes",
         "dock": "Surfing",
-        "body": "Notice an urge like a wave: it arrives, grows, and passes without needing an immediate response."
+        "body": "Practice self-control by watching the urge like a wave: it rises, peaks, and passes—without you having to follow it. One session is one small mission done."
       },
       "grounding": {
-        "label": "5-4-3-2-1 grounding",
-        "short": "5-4-3-2-1 grounding",
+        "label": "Mission: 5-4-3-2-1 grounding",
+        "short": "5-4-3-2-1 grounding mission",
         "dock": "Grounding",
-        "body": "Bring your attention back to the room around you through five senses."
+        "body": "Take back control of your attention through your five senses. A small mission you can complete anywhere."
       },
       "focus": {
-        "label": "10-minute focus",
-        "short": "10-minute focus",
+        "label": "Mission: 10-minute focus",
+        "short": "10-minute focus mission",
         "dock": "Focus",
-        "body": "Choose one small task and give yourself ten minutes to begin."
+        "body": "Choose one small task and win ten minutes of focus for something you chose yourself."
       },
       "journal": {
         "label": "Reflection Journal",
@@ -683,7 +711,8 @@
     "trustedPerson": "Trusted partner",
     "trustedPersonBody": "Open your partner relationship and choose how to contact them.",
     "supportTeam": "Support team",
-    "supportTeamBody": "Create a support ticket or view urgent help."
+    "supportTeamBody": "Create a support ticket or view urgent help.",
+    "mobileDecorTitle": "Placed decor"
   },
   "partnerSimulator": {
     "eyebrow": "Partner practice",
@@ -824,6 +853,85 @@
     "noMembers": "No active members yet.",
     "privacyBoundary": "Privacy boundary",
     "privacyBoundaryBody": "A student's journal, mood, recovery room, focus task, practice sessions, URLs, and daily patterns never appear on a partner page.",
-    "managePartner": "Manage support relationship"
+    "managePartner": "Manage support relationship",
+    "encouragementTitle": "You're doing great!",
+    "encouragementBody": "You have saved {count} check-ins and showed up for yourself on {days} days. Every one of these small moments counts.",
+    "badgesEyebrow": "Journey badges",
+    "badgesTitle": "Marks of your journey",
+    "badgesBody": "Each badge records participation that already happened. Nothing can be lost or taken away.",
+    "badgesCount": "{earned} of {total} badges unlocked",
+    "badgesLocked": "Not yet unlocked",
+    "badgesUnavailable": "Badges cannot be loaded yet. Try again later.",
+    "rhythmLine": "Present {count} of the last 7 days",
+    "rhythmHint": "A rhythm of presence, not a record to protect.",
+    "badges": {
+      "first_check_in": {
+        "name": "First check-in",
+        "criteria": "Save one daily check-in."
+      },
+      "five_active_days": {
+        "name": "Five days present",
+        "criteria": "Be present with any activity on 5 days within the last 90 days."
+      },
+      "fifteen_active_days": {
+        "name": "Fifteen days present",
+        "criteria": "Be present on 15 days within the last 90 days."
+      },
+      "first_practice": {
+        "name": "First practice",
+        "criteria": "Complete one practice in the recovery room."
+      },
+      "practice_explorer": {
+        "name": "Practice explorer",
+        "criteria": "Try all three practice kinds: urge surfing, grounding, and focus sprint."
+      },
+      "first_journal": {
+        "name": "First journal",
+        "criteria": "Write one journal reflection."
+      },
+      "first_mission": {
+        "name": "First mission",
+        "criteria": "Claim one daily mission."
+      },
+      "mission_ten_days": {
+        "name": "Ten mission days",
+        "criteria": "Complete missions on 10 different days within the last 90 days."
+      },
+      "first_review": {
+        "name": "Weekly planner",
+        "criteria": "Complete one weekly review."
+      },
+      "first_education": {
+        "name": "Module reader",
+        "criteria": "Open and study one education module."
+      },
+      "module_complete": {
+        "name": "Module finished",
+        "criteria": "Finish one education module to the end."
+      },
+      "level_five": {
+        "name": "Reached Level 5",
+        "criteria": "Gather EXP from daily missions up to Level 5."
+      },
+      "level_ten": {
+        "name": "Reached Level 10",
+        "criteria": "Continue your daily-mission journey up to Level 10."
+      }
+    }
+  },
+  "skillsHub": {
+    "eyebrow": "Self development",
+    "title": "Skill development recommendations",
+    "description": "Practice short skills anytime, then continue with free courses and certifications from trusted platforms.",
+    "coursesTitle": "Free courses and certifications",
+    "coursesDescription": "Curated links to free learning platforms. They open in a new tab; none of your account data is shared.",
+    "freeBadge": "Free",
+    "openPlatform": "Open platform",
+    "opensNewTab": "Opens in a new tab",
+    "platformDicoding": "Indonesian-language coding and app-development classes with free learning paths.",
+    "platformCoursera": "Audit thousands of university and industry courses for free, without certificate fees.",
+    "platformGoogleSkillshop": "Official Google certifications for digital, marketing, and analytics skills.",
+    "platformFreeCodeCamp": "Learn web programming for free with project-based certifications.",
+    "platformSiapKerja": "Official Ministry of Manpower training and certification services for job readiness."
   }
 }

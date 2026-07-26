@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { apiClient } from '@/lib/api-client';
+import { publishExperience } from '@/lib/recovery/experience-store';
 import {
   DAILY_MISSION_CATALOG,
   type MissionCatalogItem,
@@ -120,6 +121,7 @@ export function useDailyMission(): UseDailyMissionResult {
           return;
         }
         setMission(data);
+        publishExperience(data.experience);
         setError(null);
         setLoading(false);
       },
@@ -154,6 +156,7 @@ export function useDailyMission(): UseDailyMissionResult {
         return;
       }
       setMission(data);
+      publishExperience(data.experience);
     } catch (requestError) {
       if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
         return;
@@ -187,11 +190,15 @@ export function useDailyMission(): UseDailyMissionResult {
             }),
           }
         );
-        if (mountedRef.current) setMission(updatedMission);
+        if (mountedRef.current) {
+          setMission(updatedMission);
+          publishExperience(updatedMission.experience);
+        }
         return true;
       } catch (requestError) {
         if (mountedRef.current) {
           setMission(previousMission);
+          publishExperience(previousMission.experience);
           setError(toError(requestError));
         }
         return false;
@@ -238,11 +245,15 @@ export function useDailyMission(): UseDailyMissionResult {
             }),
           }
         );
-        if (mountedRef.current) setMission(updatedMission);
+        if (mountedRef.current) {
+          setMission(updatedMission);
+          publishExperience(updatedMission.experience);
+        }
         return true;
       } catch (requestError) {
         if (mountedRef.current) {
           setMission(previousMission);
+          publishExperience(previousMission.experience);
           setError(toError(requestError));
         }
         return false;

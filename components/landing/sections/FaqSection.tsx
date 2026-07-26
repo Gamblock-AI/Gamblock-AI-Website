@@ -29,7 +29,7 @@ export function FaqSection() {
     <Section id="faq" tone="pastel" containerClassName="max-w-3xl">
       <Reveal className="mb-10 text-center">
         <Pill variant="navy" className="mb-4">
-          <HelpCircle className="h-3.5 w-3.5" />
+          <HelpCircle className="size-3.5" />
           {t('faqKicker')}
         </Pill>
         <h2 className="text-heading text-3xl text-navy md:text-4xl">{t('faqTitle')}</h2>

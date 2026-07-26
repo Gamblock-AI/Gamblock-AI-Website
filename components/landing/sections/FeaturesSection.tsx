@@ -66,20 +66,20 @@ export function FeaturesSection() {
           const Icon = feature.icon;
           return (
             <Reveal key={feature.kicker} delay={index * 0.04} className={feature.className}>
-              <article className="group grid h-full min-h-[31rem] overflow-hidden rounded-[2rem] border border-navy/8 bg-white shadow-soft transition-transform duration-300 hover:-translate-y-1 md:grid-rows-[15rem_1fr]">
+              <article className="group grid h-full min-h-[31rem] overflow-hidden rounded-2xl border border-navy/8 bg-white shadow-soft transition-transform duration-300 hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none md:grid-rows-[15rem_1fr]">
                 <div className="relative overflow-hidden bg-sky-light/35">
                   <Image
                     src={feature.image}
                     alt={feature.alt}
                     fill
                     sizes="(max-width: 1024px) 100vw, 55vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    className="object-cover transition-transform duration-700 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
                   />
                 </div>
                 <div className="p-6 md:p-7">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy text-white">
-                      <Icon className="h-5 w-5" />
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-navy text-white">
+                      <Icon className="size-5" />
                     </span>
                     <p className="text-label text-crimson">{t(feature.kicker)}</p>
                   </div>

@@ -8,7 +8,7 @@ import { friendlyMessage } from '@/lib/messages';
 import { toastSuccess } from '@/lib/feedback';
 import { usePasswordReset } from '@/hooks/use-password-reset';
 import { AuthField } from '@/components/auth/AuthField';
-import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/common/loading-button';
 
 type Copy = {
   email: string;
@@ -94,15 +94,15 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
           />
         </>
       ) : null}
-      <Button
+      <LoadingButton
         type="submit"
         variant="primary"
         size="lg"
-        className="w-full rounded-xl py-6 font-semibold"
-        disabled={loading}
+        className="w-full rounded-xl font-semibold"
+        loading={loading}
       >
         {requested ? copy.confirm : copy.request}
-      </Button>
+      </LoadingButton>
     </form>
   );
 }

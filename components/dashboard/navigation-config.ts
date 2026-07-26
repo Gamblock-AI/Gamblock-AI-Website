@@ -6,6 +6,7 @@ import {
   CircleHelp,
   FileCheck2,
   FileText,
+  GraduationCap,
   Handshake,
   HeartHandshake,
   KeyRound,
@@ -21,6 +22,7 @@ export type DashboardNavKey =
   | 'recovery'
   | 'progress'
   | 'education'
+  | 'skills'
   | 'accountability'
   | 'partners'
   | 'support'
@@ -83,6 +85,12 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         labelKey: 'education',
         icon: BookOpen,
         roles: ['user', 'partner'],
+      },
+      {
+        href: ROUTES.SKILLS,
+        labelKey: 'skills',
+        icon: GraduationCap,
+        roles: ['user'],
       },
       {
         href: ROUTES.ACCOUNTABILITY,

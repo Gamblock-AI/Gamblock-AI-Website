@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
@@ -25,9 +26,11 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const locale = useLocale();
   const t = useTranslations('dashboardNav');
+  const [pending, setPending] = useState(false);
 
   const switchTo = (code: (typeof LOCALES)[number]['code']) => {
-    if (code === locale) return;
+    if (code === locale || pending) return;
+    setPending(true);
 
     const { pathname, search, hash } = window.location;
     const localePrefix = /^\/(id|en)(?=\/|$)/;
@@ -49,8 +52,9 @@ export function LanguageSwitcher({
       )}
       role="group"
       aria-label={t('languageToggle')}
+      aria-busy={pending}
     >
-      {LOCALES.map(({ code, label }) => {
+      {LOCALES.map(({ code, label }, index) => {
         const active = code === locale;
         return (
           <button
@@ -58,8 +62,12 @@ export function LanguageSwitcher({
             type="button"
             onClick={() => switchTo(code)}
             aria-pressed={active}
+            disabled={pending}
             className={cn(
-              'focus-visible:ring-sky/70 flex size-8 cursor-pointer items-center justify-center rounded-[0.625rem] text-[0.625rem] font-bold transition-[background-color,color,box-shadow] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-1 motion-reduce:transition-none',
+              // The ::after overlay stretches the hit area to ~44px without
+              // growing the compact visual pill.
+              "focus-visible:ring-sky/70 relative flex size-8 cursor-pointer items-center justify-center rounded-[0.625rem] text-[0.625rem] font-bold transition-[background-color,color,box-shadow] duration-200 outline-none after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none",
+              index === 0 ? 'after:-left-1.5' : 'after:-right-1.5',
               active
                 ? tone === 'light'
                   ? 'bg-navy text-white shadow-sm'

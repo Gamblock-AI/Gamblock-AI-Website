@@ -21,7 +21,7 @@ export function HowItWorksSection() {
       <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
         <Reveal className="relative mx-auto w-full max-w-[34rem]">
           <div className="bg-sky-light absolute inset-8 rounded-full blur-3xl" aria-hidden />
-          <div className="border-navy/8 relative flex aspect-square items-center justify-center overflow-hidden rounded-[2.5rem] border bg-[radial-gradient(circle_at_50%_35%,#f9fdff,#d9f4ff)]">
+          <div className="border-navy/8 relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl border bg-[radial-gradient(circle_at_50%_35%,#f9fdff,#d9f4ff)]">
             <Image
               src="/images/landing/generated/gami-shield-feature.webp"
               alt="Gami memegang perisai perlindungan digital"
@@ -47,15 +47,15 @@ export function HowItWorksSection() {
             {STEPS.map(({ icon: Icon, titleKey, bodyKey }, index) => (
               <Reveal key={titleKey} delay={0.05 + index * 0.05}>
                 <li className="border-navy/8 shadow-soft grid grid-cols-[3rem_1fr] gap-4 rounded-2xl border bg-white/80 p-5 backdrop-blur">
-                  <span className="bg-navy flex h-12 w-12 items-center justify-center rounded-xl text-white">
-                    <Icon className="h-5 w-5" />
+                  <span className="bg-navy flex size-12 items-center justify-center rounded-xl text-white">
+                    <Icon className="size-5" />
                   </span>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-crimson text-[11px] font-extrabold tracking-[0.16em] uppercase">
                         0{index + 1}
                       </span>
-                      <Check className="text-sky h-3.5 w-3.5" />
+                      <Check className="text-sky size-3.5" />
                     </div>
                     <h3 className="text-navy mt-1 font-bold">{t(titleKey)}</h3>
                     <p className="text-muted-foreground mt-1.5 text-sm leading-6">{t(bodyKey)}</p>

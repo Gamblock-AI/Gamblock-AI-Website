@@ -1,6 +1,35 @@
+'use client';
+
 import { LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import { useSyncExternalStore } from 'react';
+import { FadeSwap } from '@/components/common/fade-swap';
+
+type GreetingKey =
+  | 'greetingHello'
+  | 'greetingMorning'
+  | 'greetingNoon'
+  | 'greetingAfternoon'
+  | 'greetingEvening';
+
+function greetingForHour(hour: number): GreetingKey {
+  if (hour >= 4 && hour <= 9) return 'greetingMorning';
+  if (hour >= 10 && hour <= 14) return 'greetingNoon';
+  if (hour >= 15 && hour <= 17) return 'greetingAfternoon';
+  return 'greetingEvening';
+}
+
+// SSR renders the neutral greeting; the client swaps in the time-of-day
+// variant (student's local clock) right after hydration. Cached so the
+// snapshot stays referentially stable for the session.
+const subscribeNever = () => () => {};
+let clientGreeting: GreetingKey | null = null;
+const getGreetingSnapshot = (): GreetingKey => {
+  clientGreeting ??= greetingForHour(new Date().getHours());
+  return clientGreeting;
+};
+const getGreetingServerSnapshot = (): GreetingKey => 'greetingHello';
 
 interface DashboardWelcomeProps {
   name: string;
@@ -13,6 +42,11 @@ export function DashboardWelcome({
 }: DashboardWelcomeProps) {
   const t = useTranslations('recoveryDashboard');
   const displayName = name || t('defaultName');
+  const greetingKey = useSyncExternalStore(
+    subscribeNever,
+    getGreetingSnapshot,
+    getGreetingServerSnapshot
+  );
 
   return (
     <header className="border-navy/15 bg-azure/45 shadow-soft relative isolate min-h-[18rem] overflow-hidden rounded-[1.75rem] border sm:min-h-[20rem]">
@@ -33,9 +67,11 @@ export function DashboardWelcome({
           <p className="text-navy-light text-xs font-bold tracking-[0.1em] uppercase">
             {t('eyebrow')}
           </p>
-          <h1 className="text-navy mt-2 text-[1.875rem] leading-tight font-extrabold tracking-[-0.03em] sm:text-[2.25rem]">
-            {t('greetingHello', { name: displayName })}
-          </h1>
+          <FadeSwap swapKey={greetingKey}>
+            <h1 className="text-navy mt-2 text-[1.875rem] leading-tight font-extrabold tracking-[-0.03em] sm:text-[2.25rem]">
+              {t(greetingKey, { name: displayName })}
+            </h1>
+          </FadeSwap>
           <p className="text-muted-foreground mt-2 text-sm leading-6 sm:text-base">
             {t('supportiveLine')}
           </p>

@@ -8,11 +8,9 @@ import {
   CircleAlert,
   Gamepad2,
   Lightbulb,
-  LockKeyhole,
   RefreshCw,
   ShieldCheck,
   Sparkles,
-  Star,
   Target,
   Trophy,
   X,
@@ -22,6 +20,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { MissionAdjustDialog } from '@/components/dashboard/gamification/mission-adjust-dialog';
+import { MissionTaskCard } from '@/components/dashboard/gamification/mission-task-card';
 import { MissionReflectionDialog } from '@/components/dashboard/gamification/mission-reflection-dialog';
 import {
   skillCopy,
@@ -39,18 +38,12 @@ import { useLocalUser } from '@/hooks/use-local-user';
 import { useRecoveryJourney } from '@/hooks/use-recovery-journey';
 import { Link, usePathname } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
+import { getLevelTitleKey } from '@/lib/recovery/level-titles';
 import type { MissionNumber } from '@/lib/recovery/types';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
 
 const GAMIFICATION_PANEL_ID = 'student-gamification-panel';
-const MISSION_ACTION_ROUTE: Record<MissionNumber, string> = {
-  1: ROUTES.DASHBOARD,
-  2: ROUTES.DASHBOARD,
-  3: ROUTES.EDUCATION,
-  4: ROUTES.PARTNERS,
-  5: ROUTES.EDUCATION,
-};
 
 export function StudentGamificationFab() {
   const user = useLocalUser();
@@ -99,7 +92,9 @@ function StudentGamificationContent() {
       return;
     }
     const message = willLevelUp
-      ? t('levelUp')
+      ? t('levelUpTitled', {
+          title: t(getLevelTitleKey((experience?.level ?? 0) + 1)),
+        })
       : t('expEarned', { count: task.expReward });
     setSuccessMessage(message);
     toastSuccess(message);
@@ -137,7 +132,7 @@ function StudentGamificationContent() {
             <div className="flex items-center gap-3">
               <div className="relative size-12 shrink-0 overflow-hidden rounded-2xl border border-navy/10 bg-gradient-to-br from-azure/40 to-sky/20 p-0.5 shadow-xs">
                 <Image
-                  src="/images/mascot/gami-peek.png"
+                  src="/images/mascot/gami-peek.webp"
                   alt=""
                   fill
                   sizes="48px"
@@ -166,9 +161,12 @@ function StudentGamificationContent() {
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-1.5 font-extrabold text-navy">
                     <span className="flex size-5 items-center justify-center rounded-md bg-navy text-[0.625rem] text-white">
-                      <Trophy className="size-3 text-amber-300" />
+                      <Trophy className="text-amber size-3" />
                     </span>
                     <span>{t('level', { count: experience.level })}</span>
+                    <span className="font-bold text-navy/70">
+                      · {t(getLevelTitleKey(experience.level))}
+                    </span>
                   </div>
                   <span className="text-[0.6875rem] font-bold text-navy/70">
                     {t('expProgress', {
@@ -370,7 +368,7 @@ function StudentGamificationContent() {
                 <div className="mt-3 rounded-2xl border border-navy/15 bg-gradient-to-br from-azure/20 via-card to-card p-3.5 shadow-xs">
                   <div className="flex items-start gap-3">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-xs">
-                      <Lightbulb className="size-4.5 text-amber-300" aria-hidden="true" />
+                      <Lightbulb className="text-amber size-4.5" aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-extrabold text-navy sm:text-sm">
@@ -476,132 +474,5 @@ function StudentGamificationContent() {
         />
       ) : null}
     </DialogPrimitive.Root>
-  );
-}
-
-interface MissionTaskCardProps {
-  task: DailyMissionItem;
-  label: string;
-  actionLabel: string;
-  claimLabel: string;
-  claimedLabel: string;
-  skippedLabel: string;
-  replacedLabel: string;
-  busy: boolean;
-  primary?: boolean;
-  onClaim: () => void;
-  onNavigate: () => void;
-}
-
-function MissionTaskCard({
-  task,
-  label,
-  actionLabel,
-  claimLabel,
-  claimedLabel,
-  skippedLabel,
-  replacedLabel,
-  busy,
-  primary = false,
-  onClaim,
-  onNavigate,
-}: MissionTaskCardProps) {
-  const resolved = task.completed || task.status === 'skipped';
-  return (
-    <article
-      className={cn(
-        'group relative overflow-hidden rounded-xl border transition-all duration-200',
-        primary ? 'p-3.5' : 'p-3',
-        task.claimable
-          ? 'border-amber/40 bg-gradient-to-br from-amber/10 via-azure/15 to-card shadow-xs'
-          : resolved
-            ? 'border-sage/35 bg-sage/8'
-            : 'border-border/80 bg-card hover:border-navy/20'
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <span
-          className={cn(
-            'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors',
-            resolved
-              ? 'bg-sage text-white shadow-xs'
-              : task.claimable
-                ? 'bg-navy text-amber-300 shadow-xs ring-2 ring-amber/30'
-                : 'bg-muted text-muted-foreground'
-          )}
-          aria-hidden="true"
-        >
-          {resolved ? (
-            <Check className="size-4.5 stroke-[2.5]" />
-          ) : task.claimable ? (
-            <Star className="size-4.5 fill-amber-300 text-amber-300" />
-          ) : (
-            <LockKeyhole className="size-4" />
-          )}
-        </span>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-xs font-bold leading-snug text-navy sm:text-sm">
-              {label}
-            </p>
-            <span
-              className={cn(
-                'inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[0.6875rem] font-extrabold',
-                resolved
-                  ? 'bg-sage/15 text-navy dark:text-sage'
-                  : task.claimable
-                    ? 'bg-amber/20 text-amber-900 border border-amber/35 dark:text-amber-300'
-                    : 'bg-muted text-muted-foreground'
-              )}
-            >
-              {task.replacedFrom ? (
-                replacedLabel
-              ) : (
-                <>
-                  <Sparkles className="size-3 text-amber-600" />
-                  {`+${task.expReward} EXP`}
-                </>
-              )}
-            </span>
-          </div>
-
-          <div className="mt-2.5">
-            {task.completed ? (
-              <div className="flex items-center gap-1.5 text-[0.75rem] font-bold text-sage">
-                <Check className="size-3.5 stroke-[2.5]" />
-                {claimedLabel}
-              </div>
-            ) : task.status === 'skipped' ? (
-              <p className="text-xs font-semibold text-muted-foreground">
-                {skippedLabel}
-              </p>
-            ) : task.claimable ? (
-              <Button
-                type="button"
-                className="w-full bg-navy hover:bg-navy-light font-extrabold text-amber-300 shadow-xs active:scale-[0.98]"
-                disabled={busy}
-                onClick={onClaim}
-              >
-                <Star className="size-4 fill-amber-300 text-amber-300" />
-                {claimLabel}
-              </Button>
-            ) : (
-              <Link
-                href={MISSION_ACTION_ROUTE[task.number]}
-                onClick={onNavigate}
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' }),
-                  'w-full justify-between font-semibold border-navy/15 text-navy hover:bg-navy/5'
-                )}
-              >
-                <span>{actionLabel}</span>
-                <ArrowRight className="size-3.5" />
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-    </article>
   );
 }

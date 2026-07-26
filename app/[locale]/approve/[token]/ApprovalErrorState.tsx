@@ -7,7 +7,7 @@ export function ApprovalErrorState({ message }: { message: string }) {
   return (
     <div className="bg-background flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md p-8 text-center">
-        <XCircle className="text-crimson mx-auto h-12 w-12" />
+        <XCircle className="text-crimson mx-auto size-12" />
         <h2 className="text-heading text-navy mt-4 text-xl">
           {t('errorTitle')}
         </h2>

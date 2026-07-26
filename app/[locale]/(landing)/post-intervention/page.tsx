@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   CircleHelp,
   LockKeyhole,
   Pause,
@@ -14,19 +16,22 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { FadeSwap } from '@/components/common/fade-swap';
+import { FixedBackground } from '@/components/landing/FixedBackground';
+import { SkipLink } from '@/components/landing/SkipLink';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
 
 const TOTAL_ROUNDS = 3;
 const phases = [
-  { key: 'phaseInhale', duration: 4 },
-  { key: 'phaseHold', duration: 2 },
-  { key: 'phaseExhale', duration: 6 },
+  { key: 'phaseInhale', duration: 4, scale: 1.18 },
+  { key: 'phaseHold', duration: 2, scale: 1.18 },
+  { key: 'phaseExhale', duration: 6, scale: 1 },
 ] as const;
 
 export default function PostInterventionPage() {
   const t = useTranslations('postIntervention');
+  const reduce = useReducedMotion();
   const [running, setRunning] = useState(false);
   const [started, setStarted] = useState(false);
   const [complete, setComplete] = useState(false);
@@ -79,131 +84,268 @@ export default function PostInterventionPage() {
   };
 
   const currentPhase = phases[phaseIndex];
+  const breathScale =
+    reduce || !started || complete ? 1 : currentPhase.scale;
+  const swapKey = complete
+    ? 'done'
+    : started
+      ? `${round}-${phaseIndex}`
+      : 'ready';
 
   return (
-    <main className="min-h-dvh bg-background px-5 py-6 sm:px-7 sm:py-10">
-      <div className="mx-auto w-full max-w-5xl">
-        <nav className="flex items-center justify-between gap-4" aria-label={t('leave')}>
-          <Link
-            href={ROUTES.HOME}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-semibold text-navy outline-none hover:underline focus-visible:ring-2 focus-visible:ring-navy/30"
+    <>
+      <SkipLink />
+      <FixedBackground />
+      <main
+        id="main-content"
+        className="min-h-dvh px-5 py-6 sm:px-7 sm:py-10"
+      >
+        <div className="mx-auto w-full max-w-5xl">
+          <nav
+            className="flex items-center justify-between gap-4"
+            aria-label={t('leave')}
           >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            {t('leave')}
-          </Link>
-          <span className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-sage/25 bg-sage/[0.06] px-3 text-xs font-semibold text-sage">
-            <ShieldCheck className="size-4" aria-hidden="true" />
-            Gamblock-AI
-          </span>
-        </nav>
+            <Link
+              href={ROUTES.HOME}
+              className="text-navy focus-visible:ring-navy/30 inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              {t('leave')}
+            </Link>
+            <span className="border-sage/25 bg-sage/[0.06] text-sage inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 text-xs font-semibold">
+              <ShieldCheck className="size-4" aria-hidden="true" />
+              Gamblock-AI
+            </span>
+          </nav>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-          <section className="rounded-[1.75rem] border border-navy/15 bg-azure/45 p-5 shadow-soft sm:p-8" aria-labelledby="post-intervention-title">
-            <p className="text-xs font-bold tracking-[0.12em] text-sage uppercase">{t('eyebrow')}</p>
-            <h1 id="post-intervention-title" className="mt-3 max-w-2xl text-3xl leading-tight font-extrabold tracking-tight text-navy sm:text-5xl">
-              {t('title')}
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-              {t('description')}
-            </p>
-
-            <div className="mt-7 flex items-start gap-3 rounded-2xl border border-sage/20 bg-white/80 p-4">
-              <LockKeyhole className="mt-0.5 size-5 shrink-0 text-sage" aria-hidden="true" />
-              <div>
-                <h2 className="text-sm font-bold text-navy">{t('privacyTitle')}</h2>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">{t('privacyBody')}</p>
+          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
+            {/* Breathing exercise leads on mobile — it is the reason the
+                student landed here. */}
+            <section
+              className="border-navy/15 shadow-soft overflow-hidden rounded-[1.75rem] border bg-white/85 backdrop-blur lg:order-2"
+              aria-labelledby="grounding-title"
+            >
+              <div className="border-border border-b p-5">
+                <h2
+                  id="grounding-title"
+                  className="text-navy text-xl font-bold"
+                >
+                  {t('groundingTitle')}
+                </h2>
+                <p className="text-muted-foreground mt-2 text-sm leading-6">
+                  {t('groundingDescription')}
+                </p>
               </div>
-            </div>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" nativeButton={false} className="h-12" render={<Link href={ROUTES.RECOVERY} />}>
-                {t('openRecovery')}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Button>
-              <Button variant="outline" size="lg" nativeButton={false} className="h-12" render={<Link href={ROUTES.HELP} />}>
-                <CircleHelp className="size-4" aria-hidden="true" />
-                {t('openHelp')}
-              </Button>
-            </div>
-          </section>
+              <div className="p-5 text-center">
+                <motion.div
+                  className={`border-navy/15 bg-azure/60 relative mx-auto flex size-40 items-center justify-center rounded-full border sm:size-48 ${
+                    complete ? 'ring-sage/25 ring-4' : ''
+                  }`}
+                  animate={{ scale: breathScale }}
+                  transition={{
+                    duration: reduce ? 0 : running ? currentPhase.duration : 0.4,
+                    ease: 'easeInOut',
+                  }}
+                >
+                  <Image
+                    src="/images/mascot/gami-meditate.webp"
+                    alt=""
+                    width={112}
+                    height={112}
+                    className="animate-float-slow size-28 object-contain"
+                    aria-hidden="true"
+                  />
+                  {complete ? (
+                    <motion.span
+                      className="bg-sage absolute right-1 bottom-1 flex size-10 items-center justify-center rounded-full text-white shadow-sm"
+                      initial={reduce ? false : { scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      aria-hidden="true"
+                    >
+                      <Check className="size-5" />
+                    </motion.span>
+                  ) : null}
+                </motion.div>
 
-          <Card className="overflow-hidden" aria-labelledby="grounding-title">
-            <div className="border-b border-border p-5">
-              <h2 id="grounding-title" className="text-xl font-bold text-navy">{t('groundingTitle')}</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('groundingDescription')}</p>
-            </div>
+                <div
+                  className="mt-6 min-h-24"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  <FadeSwap swapKey={swapKey}>
+                    {complete ? (
+                      <>
+                        <p className="text-sage text-lg font-bold">
+                          {t('completeTitle')}
+                        </p>
+                        <p className="text-muted-foreground mt-2 text-sm leading-6">
+                          {t('completeBody')}
+                        </p>
+                      </>
+                    ) : started ? (
+                      <>
+                        <p className="text-navy text-lg font-bold">
+                          {t(currentPhase.key)}
+                        </p>
+                        <p className="text-navy mt-1 text-3xl font-extrabold tabular-nums">
+                          {t('seconds', { count: remaining })}
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-xs font-medium">
+                          {t('round', { current: round, total: TOTAL_ROUNDS })}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-navy pt-5 text-lg font-bold">
+                        {t('phaseReady')}
+                      </p>
+                    )}
+                  </FadeSwap>
+                </div>
 
-            <div className="p-5 text-center">
-              <div className="relative mx-auto flex size-40 items-center justify-center rounded-full border border-navy/15 bg-azure/60 sm:size-48">
-                <Image
-                  src="/images/mascot/gami-meditate.png"
-                  alt=""
-                  width={112}
-                  height={112}
-                  className="size-28 object-contain"
+                <div
+                  className="mt-3 flex items-center justify-center gap-2"
                   aria-hidden="true"
-                />
-              </div>
+                >
+                  {Array.from({ length: TOTAL_ROUNDS }, (_, index) => (
+                    <span
+                      key={index}
+                      className={`size-2.5 rounded-full transition-colors duration-300 motion-reduce:transition-none ${
+                        complete || round > index + (started ? 0 : 1)
+                          ? 'bg-sage'
+                          : started && round === index + 1
+                            ? 'bg-navy/60'
+                            : 'bg-navy/15'
+                      }`}
+                    />
+                  ))}
+                </div>
 
-              <div className="mt-5 min-h-20" aria-live="polite" aria-atomic="true">
-                {complete ? (
-                  <>
-                    <p className="text-lg font-bold text-sage">{t('completeTitle')}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('completeBody')}</p>
-                  </>
-                ) : started ? (
-                  <>
-                    <p className="text-lg font-bold text-navy">{t(currentPhase.key)}</p>
-                    <p className="mt-1 text-3xl font-extrabold tabular-nums text-navy">
-                      {t('seconds', { count: remaining })}
-                    </p>
-                    <p className="mt-1 text-xs font-medium text-muted-foreground">
-                      {t('round', { current: round, total: TOTAL_ROUNDS })}
-                    </p>
-                  </>
-                ) : (
-                  <p className="pt-5 text-lg font-bold text-navy">{t('phaseReady')}</p>
-                )}
-              </div>
-
-              <div className="mt-5 grid gap-2">
-                {!started ? (
-                  <Button size="lg" className="h-12 w-full" onClick={start}>
-                    <Play className="size-4" aria-hidden="true" />
-                    {t('start')}
-                  </Button>
-                ) : complete ? (
-                  <Button size="lg" variant="outline" className="h-12 w-full" onClick={reset}>
-                    <RotateCcw className="size-4" aria-hidden="true" />
-                    {t('reset')}
-                  </Button>
-                ) : (
-                  <>
-                    <Button size="lg" className="h-12 w-full" onClick={() => setRunning((current) => !current)}>
-                      {running ? <Pause className="size-4" aria-hidden="true" /> : <Play className="size-4" aria-hidden="true" />}
-                      {running ? t('pause') : t('resume')}
+                <div className="mt-5 grid gap-2">
+                  {!started ? (
+                    <Button size="lg" className="h-12 w-full" onClick={start}>
+                      <Play className="size-4" aria-hidden="true" />
+                      {t('start')}
                     </Button>
-                    <Button variant="ghost" className="h-11 w-full" onClick={reset}>
+                  ) : complete ? (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="h-12 w-full"
+                      onClick={reset}
+                    >
                       <RotateCcw className="size-4" aria-hidden="true" />
                       {t('reset')}
                     </Button>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <Button
+                        size="lg"
+                        className="h-12 w-full"
+                        onClick={() => setRunning((current) => !current)}
+                      >
+                        {running ? (
+                          <Pause className="size-4" aria-hidden="true" />
+                        ) : (
+                          <Play className="size-4" aria-hidden="true" />
+                        )}
+                        {running ? t('pause') : t('resume')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="h-11 w-full"
+                        onClick={reset}
+                      >
+                        <RotateCcw className="size-4" aria-hidden="true" />
+                        {t('reset')}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section
+              className="border-navy/15 bg-azure/45 shadow-soft rounded-[1.75rem] border p-5 backdrop-blur sm:p-8 lg:order-1"
+              aria-labelledby="post-intervention-title"
+            >
+              <p className="text-sage text-xs font-bold tracking-[0.12em] uppercase">
+                {t('eyebrow')}
+              </p>
+              <h1
+                id="post-intervention-title"
+                className="text-navy mt-3 max-w-2xl text-3xl leading-tight font-extrabold tracking-tight sm:text-5xl"
+              >
+                {t('title')}
+              </h1>
+              <p className="text-muted-foreground mt-4 max-w-2xl text-sm leading-7 sm:text-base">
+                {t('description')}
+              </p>
+
+              <div className="border-sage/20 mt-7 flex items-start gap-3 rounded-2xl border bg-white/80 p-4">
+                <LockKeyhole
+                  className="text-sage mt-0.5 size-5 shrink-0"
+                  aria-hidden="true"
+                />
+                <div>
+                  <h2 className="text-navy text-sm font-bold">
+                    {t('privacyTitle')}
+                  </h2>
+                  <p className="text-muted-foreground mt-1 text-xs leading-5">
+                    {t('privacyBody')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Button
+                  size="lg"
+                  nativeButton={false}
+                  className="h-12"
+                  render={<Link href={ROUTES.RECOVERY} />}
+                >
+                  {t('openRecovery')}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  nativeButton={false}
+                  className="h-12"
+                  render={<Link href={ROUTES.HELP} />}
+                >
+                  <CircleHelp className="size-4" aria-hidden="true" />
+                  {t('openHelp')}
+                </Button>
+              </div>
+            </section>
+          </div>
+
+          <section
+            className="border-sage/20 bg-sage/[0.055] mt-6 rounded-[1.5rem] border p-5 backdrop-blur sm:p-6"
+            aria-labelledby="post-support-title"
+          >
+            <div className="flex items-start gap-4">
+              <CircleHelp
+                className="text-sage mt-0.5 size-6 shrink-0"
+                aria-hidden="true"
+              />
+              <div>
+                <h2
+                  id="post-support-title"
+                  className="text-navy text-lg font-bold"
+                >
+                  {t('supportTitle')}
+                </h2>
+                <p className="text-muted-foreground mt-2 max-w-3xl text-sm leading-6">
+                  {t('supportBody')}
+                </p>
               </div>
             </div>
-          </Card>
+          </section>
         </div>
-
-        <section className="mt-6 rounded-[1.5rem] border border-sage/20 bg-sage/[0.055] p-5 sm:p-6" aria-labelledby="post-support-title">
-          <div className="flex items-start gap-4">
-            <CircleHelp className="mt-0.5 size-6 shrink-0 text-sage" aria-hidden="true" />
-            <div>
-              <h2 id="post-support-title" className="text-lg font-bold text-navy">{t('supportTitle')}</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t('supportBody')}</p>
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }

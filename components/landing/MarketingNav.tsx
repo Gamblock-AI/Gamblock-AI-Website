@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Link } from '@/i18n/routing';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,37 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
   const t = useTranslations('Nav');
   const user = useLocalUser();
   const [open, setOpen] = useState(false);
+  const drawerAreaRef = useRef<HTMLDivElement>(null);
+  const drawerTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (
+        drawerAreaRef.current &&
+        !drawerAreaRef.current.contains(event.target as Node) &&
+        !drawerTriggerRef.current?.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        drawerTriggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePress);
+    document.addEventListener('keydown', closeOnEscape);
+
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePress);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open]);
+
   const isSignedIn = Boolean(user.id || user.email);
   const primaryHref = isSignedIn ? ROUTES.DASHBOARD : ROUTES.LOGIN;
   const primaryLabel = isSignedIn ? t('dashboard') : t('login');
@@ -43,7 +74,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
             alt="Logo Gamblock-AI"
             width={44}
             height={44}
-            className="h-10 w-10 object-contain"
+            className="size-10 object-contain"
             preload
           />
           <span className="text-navy text-base font-extrabold tracking-tight">
@@ -62,7 +93,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
                 <Link
                   key={link.key}
                   href={link.href}
-                  className="text-navy/70 hover:bg-navy/5 hover:text-navy rounded-full px-3.5 py-2 text-sm font-semibold transition-colors"
+                  className="text-navy/70 hover:bg-navy/5 hover:text-navy focus-visible:ring-navy/40 rounded-full px-3.5 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
                 >
                   {t(link.key)}
                 </Link>
@@ -72,28 +103,30 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
             {/* Right cluster */}
             <div className="flex items-center gap-2">
               <LanguageSwitcher className="hidden sm:inline-flex" />
-              <Link href={primaryHref} className="hidden md:block">
-                <Button
-                  variant="primary"
-                  size="default"
-                  className="rounded-full px-6"
-                >
-                  {primaryLabel}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </Link>
+              <Button
+                render={<Link href={primaryHref} />}
+                variant="primary"
+                size="default"
+                className="hidden rounded-full px-6 md:inline-flex"
+              >
+                {primaryLabel}
+                <ArrowRight className="size-3.5" />
+              </Button>
               <button
+                ref={drawerTriggerRef}
                 type="button"
                 onClick={() => setOpen((v) => !v)}
                 aria-label={open ? t('closeMenu') : t('openMenu')}
                 aria-expanded={open}
-                className="bg-navy/5 text-navy flex h-9 w-9 cursor-pointer items-center justify-center rounded-full lg:hidden"
+                className="focus-visible:ring-navy/40 -m-1 flex size-11 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 lg:hidden"
               >
-                {open ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
+                <span className="bg-navy/5 text-navy hover:bg-navy/10 flex size-9 items-center justify-center rounded-full transition-colors">
+                  {open ? (
+                    <X className="size-5" />
+                  ) : (
+                    <Menu className="size-5" />
+                  )}
+                </span>
               </button>
             </div>
           </>
@@ -102,14 +135,17 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
 
       {/* Mobile drawer */}
       {!minimal && open && (
-        <div className="border-border bg-card shadow-card pointer-events-auto absolute inset-x-4 top-20 rounded-3xl border p-4 lg:hidden">
+        <div
+          ref={drawerAreaRef}
+          className="border-border bg-card shadow-card animate-in fade-in slide-in-from-top-2 pointer-events-auto absolute inset-x-4 top-20 rounded-3xl border p-4 duration-200 motion-reduce:animate-none lg:hidden"
+        >
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.key}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="text-navy/80 hover:bg-navy/5 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors"
+                className="text-navy/80 hover:bg-navy/5 focus-visible:ring-navy/40 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
               >
                 {t(link.key)}
               </Link>
@@ -117,11 +153,14 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
           </div>
           <div className="border-border mt-3 flex items-center justify-between border-t pt-3">
             <LanguageSwitcher />
-            <Link href={primaryHref} onClick={() => setOpen(false)}>
-              <Button variant="primary" size="sm" className="rounded-full">
-                {primaryLabel}
-              </Button>
-            </Link>
+            <Button
+              render={<Link href={primaryHref} onClick={() => setOpen(false)} />}
+              variant="primary"
+              size="sm"
+              className="rounded-full"
+            >
+              {primaryLabel}
+            </Button>
           </div>
         </div>
       )}

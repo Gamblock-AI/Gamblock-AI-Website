@@ -97,7 +97,7 @@
     "checkInTitle": "Check-in pribadi",
     "checkInDescription": "Tidak ada jawaban benar atau salah. Pilih yang paling mendekati kondisimu.",
     "moodQuestion": "Bagaimana suasana hatimu?",
-    "urgeQuestion": "Seberapa kuat dorongannya? (opsional)",
+    "urgeQuestion": "Seberapa kuat dorongan untuk berjudi hari ini?",
     "mood1": "Terdesak",
     "mood2": "Cemas",
     "mood3": "Biasa saja",
@@ -108,12 +108,11 @@
     "urge3": "Sedang",
     "urge4": "Kuat",
     "urge5": "Sangat kuat",
-    "urgePreferNotSay": "Tidak ingin menjawab",
     "memoryOnlyWarning": "Penyimpanan browser tidak tersedia. Data privat hanya bertahan selama tab ini terbuka.",
     "checkInSave": "Simpan check-in",
     "checkInSaving": "Menyimpan...",
     "checkInSaved": "Check-in hari ini tersimpan",
-    "checkInIncomplete": "Pilih suasana hati dan jawaban untuk bagian dorongan terlebih dahulu.",
+    "checkInIncomplete": "Pilih suasana hati dan tingkat dorongan berjudi terlebih dahulu.",
     "checkInSaveError": "Check-in belum tersimpan ke akun. Periksa koneksi lalu coba lagi.",
     "missionTitle": "Misi hari ini",
     "missionDescription": "EXP dapat diklaim setelah aktivitas terverifikasi oleh sistem.",
@@ -320,12 +319,41 @@
     "emergencyHelpCall": "Hotline",
     "emergencyHelpPlanTitle": "Susun langkah pemulihanmu",
     "emergencyHelpPlanBody": "Tinjau niat dan langkah pribadi agar dukungan berikutnya terasa lebih jelas.",
-    "emergencyHelpPlanAction": "Buka pemulihan"
+    "emergencyHelpPlanAction": "Buka pemulihan",
+    "urgeNone": "Tidak ada dorongan",
+    "moodSupport1": "Terima kasih sudah jujur tentang kondisimu. Kamu tidak harus menghadapi ini sendirian—aku di sini, dan bantuan manusia juga siap untukmu.",
+    "moodSupport2": "Tidak apa-apa, kamu tidak sendiri. Ada aku yang akan mendampingi kamu.",
+    "moodSupport3": "Terima kasih sudah meluangkan waktu untuk check-in. Hari yang biasa saja pun berarti kamu tetap hadir untuk dirimu.",
+    "moodSupport4": "Senang mendengar kamu merasa tenang. Simpan cara yang membantumu sampai di titik ini, ya.",
+    "moodSupport5": "Wah, senang sekali mendengarnya! Terima kasih sudah berbagi kabar baik ini denganku.",
+    "moodSupportHelp": "Hubungi dukungan",
+    "levelTitle1": "Langkah Pertama",
+    "levelTitle2": "Penjaga Niat",
+    "levelTitle3": "Penata Ritme",
+    "levelTitle4": "Penjelajah Tenang",
+    "levelTitle5": "Penjaga Fokus",
+    "levelTitle6": "Pembangun Kebiasaan",
+    "levelTitle7": "Sahabat Perjalanan",
+    "levelChipAria": "Level {count}, {title}. Buka halaman progres.",
+    "levelUpTitled": "Level baru terbuka — kamu kini {title}. Lanjutkan dengan ritmemu sendiri.",
+    "biteFact1": "Memberi jeda 10 detik sebelum bertindak dapat menurunkan kekuatan dorongan impulsif.",
+    "biteFact2": "Dorongan bekerja seperti ombak: naik, memuncak, lalu mereda sendiri dalam beberapa menit.",
+    "biteFact3": "Menamai perasaan (\"aku sedang gelisah\") membantu otak menurunkan intensitasnya.",
+    "biteFact4": "Napas panjang dan lambat memberi sinyal aman pada tubuh dan menurunkan ketegangan.",
+    "biteFact5": "Lingkungan memengaruhi kebiasaan: menjauhkan pemicu membuat pilihan sehat terasa lebih mudah.",
+    "biteFact6": "Tidur yang cukup memperkuat kemampuanmu mengelola dorongan keesokan harinya.",
+    "biteFact7": "Menuliskan apa yang kamu rasakan membantu pikiran terasa lebih teratur.",
+    "biteFact8": "Kemajuan jarang berupa garis lurus. Hari yang berat bukan berarti mundur.",
+    "biteFact9": "Mengganti aktivitas selama beberapa menit sering cukup untuk melewati dorongan singkat.",
+    "biteFact10": "Bercerita pada orang yang dipercaya dapat meringankan beban dorongan hampir seketika.",
+    "biteFact11": "Gerakan ringan seperti berjalan singkat membantu melepaskan energi gelisah dengan aman.",
+    "biteFact12": "Niat kecil yang spesifik (\"aku menutup laptop pukul 9\") lebih mudah dijalani daripada tekad besar.",
+    "checkInGateSavedBody": "Terima kasih sudah hadir hari ini. Check-in kamu tersimpan."
   },
   "recoveryHub": {
     "eyebrow": "Ruang pemulihan",
-    "title": "Bangun cara pulih yang sesuai untukmu",
-    "description": "Kelola niat, latih keterampilan, dan pilih dukungan tanpa membagikan catatan pribadi ke pendamping.",
+    "title": "Misi harian mengendalikan diri",
+    "description": "Pilih misi kecil hari ini untuk melatih kendali diri—ditambah jurnal refleksi dan dukungan saat kamu membutuhkannya.",
     "privateTitle": "Ruang ini privat",
     "privateBody": "Niat dan pilihan latihan disimpan lokal lebih dulu. Sinkronisasi akun dapat dinyalakan per kategori dan tidak pernah membagikannya ke pendamping.",
     "intentionTitle": "Niat pemulihan",
@@ -579,22 +607,22 @@
     "legacyImported": "Tujuan lama disalin sebagai fokus jurnal.",
     "activities": {
       "urge": {
-        "label": "Surfing dorongan",
-        "short": "Surfing dorongan · 3 menit",
+        "label": "Misi: surfing dorongan",
+        "short": "Misi surfing dorongan · 3 menit",
         "dock": "Surfing",
-        "body": "Amati dorongan seperti gelombang: muncul, menguat, lalu berlalu tanpa harus langsung dituruti."
+        "body": "Latih kendali diri dengan mengamati dorongan seperti gelombang: muncul, memuncak, lalu mereda—tanpa harus kamu turuti. Satu sesi adalah satu misi kecil yang selesai."
       },
       "grounding": {
-        "label": "Grounding 5-4-3-2-1",
-        "short": "Grounding 5-4-3-2-1",
+        "label": "Misi: grounding 5-4-3-2-1",
+        "short": "Misi grounding 5-4-3-2-1",
         "dock": "Grounding",
-        "body": "Kembalikan perhatian ke ruang di sekitarmu melalui lima indra."
+        "body": "Ambil kembali kendali atas perhatianmu lewat lima indra. Misi kecil yang bisa kamu selesaikan di mana saja."
       },
       "focus": {
-        "label": "Fokus 10 menit",
-        "short": "Fokus 10 menit",
+        "label": "Misi: fokus 10 menit",
+        "short": "Misi fokus 10 menit",
         "dock": "Fokus",
-        "body": "Pilih satu tugas kecil dan beri dirimu ruang sepuluh menit untuk memulainya."
+        "body": "Pilih satu tugas kecil dan menangkan sepuluh menit fokus untuk hal yang kamu pilih sendiri."
       },
       "journal": {
         "label": "Jurnal Refleksi",
@@ -683,7 +711,8 @@
     "trustedPerson": "Pendamping tepercaya",
     "trustedPersonBody": "Buka hubungan pendamping dan pilih cara menghubungi mereka.",
     "supportTeam": "Tim dukungan",
-    "supportTeamBody": "Buat tiket dukungan atau lihat bantuan mendesak."
+    "supportTeamBody": "Buat tiket dukungan atau lihat bantuan mendesak.",
+    "mobileDecorTitle": "Dekorasi terpasang"
   },
   "partnerSimulator": {
     "eyebrow": "Latihan pendamping",
@@ -824,6 +853,85 @@
     "noMembers": "Belum ada anggota aktif.",
     "privacyBoundary": "Batas privasi",
     "privacyBoundaryBody": "Jurnal, mood, ruang pulih, tugas fokus, sesi latihan, URL, dan pola harian siswa tidak pernah tampil di halaman pendamping.",
-    "managePartner": "Kelola pendampingan"
+    "managePartner": "Kelola pendampingan",
+    "encouragementTitle": "Wah, kamu hebat!",
+    "encouragementBody": "Kamu sudah menyimpan {count} check-in dan hadir untuk dirimu pada {days} hari. Setiap kehadiran kecil ini berarti.",
+    "badgesEyebrow": "Lencana perjalanan",
+    "badgesTitle": "Tanda perjalananmu",
+    "badgesBody": "Setiap lencana mencatat partisipasi yang sudah kamu lakukan. Tidak ada yang bisa hilang atau hangus.",
+    "badgesCount": "{earned} dari {total} lencana terbuka",
+    "badgesLocked": "Belum terbuka",
+    "badgesUnavailable": "Lencana belum dapat dimuat. Coba lagi nanti.",
+    "rhythmLine": "Hadir {count} dari 7 hari terakhir",
+    "rhythmHint": "Ritme kehadiran, bukan rekor yang harus dijaga.",
+    "badges": {
+      "first_check_in": {
+        "name": "Check-in pertama",
+        "criteria": "Simpan satu check-in harian."
+      },
+      "five_active_days": {
+        "name": "Lima hari hadir",
+        "criteria": "Hadir dengan aktivitas apa pun pada 5 hari dalam 90 hari terakhir."
+      },
+      "fifteen_active_days": {
+        "name": "Lima belas hari hadir",
+        "criteria": "Hadir pada 15 hari dalam 90 hari terakhir."
+      },
+      "first_practice": {
+        "name": "Latihan pertama",
+        "criteria": "Selesaikan satu latihan di ruang pulih."
+      },
+      "practice_explorer": {
+        "name": "Penjelajah latihan",
+        "criteria": "Coba ketiga jenis latihan: ombak dorongan, grounding, dan sprint fokus."
+      },
+      "first_journal": {
+        "name": "Jurnal pertama",
+        "criteria": "Tulis satu refleksi jurnal."
+      },
+      "first_mission": {
+        "name": "Misi pertama",
+        "criteria": "Klaim satu misi harian."
+      },
+      "mission_ten_days": {
+        "name": "Sepuluh hari bermisi",
+        "criteria": "Selesaikan misi pada 10 hari berbeda dalam 90 hari terakhir."
+      },
+      "first_review": {
+        "name": "Perencana mingguan",
+        "criteria": "Selesaikan satu tinjauan mingguan."
+      },
+      "first_education": {
+        "name": "Pembaca modul",
+        "criteria": "Buka dan pelajari satu modul edukasi."
+      },
+      "module_complete": {
+        "name": "Modul tuntas",
+        "criteria": "Selesaikan satu modul edukasi sampai akhir."
+      },
+      "level_five": {
+        "name": "Mencapai Level 5",
+        "criteria": "Kumpulkan EXP dari misi harian hingga Level 5."
+      },
+      "level_ten": {
+        "name": "Mencapai Level 10",
+        "criteria": "Lanjutkan perjalanan misi harianmu hingga Level 10."
+      }
+    }
+  },
+  "skillsHub": {
+    "eyebrow": "Pengembangan diri",
+    "title": "Rekomendasi pengembangan keterampilan",
+    "description": "Latih keterampilan singkat kapan saja, lalu lanjutkan dengan kursus dan sertifikasi gratis dari platform tepercaya.",
+    "coursesTitle": "Kursus dan sertifikasi gratis",
+    "coursesDescription": "Tautan pilihan menuju platform belajar gratis. Terbuka di tab baru; tidak ada data akunmu yang dibagikan.",
+    "freeBadge": "Gratis",
+    "openPlatform": "Buka platform",
+    "opensNewTab": "Terbuka di tab baru",
+    "platformDicoding": "Kelas coding dan pengembangan aplikasi berbahasa Indonesia dengan jalur belajar gratis.",
+    "platformCoursera": "Audit gratis ribuan kursus universitas dan industri tanpa biaya sertifikat.",
+    "platformGoogleSkillshop": "Sertifikasi resmi Google untuk keterampilan digital, pemasaran, dan analitik.",
+    "platformFreeCodeCamp": "Belajar pemrograman web gratis dengan sertifikasi berbasis proyek.",
+    "platformSiapKerja": "Layanan pelatihan dan sertifikasi resmi Kemnaker untuk kesiapan kerja."
   }
 }

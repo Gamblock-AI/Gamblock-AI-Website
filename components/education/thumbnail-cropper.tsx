@@ -61,7 +61,7 @@ export function ThumbnailCropper({
 
   if (!source)
     return (
-      <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-dashed border-blue-400 bg-blue-50 px-4 text-sm font-bold text-blue-800 hover:bg-blue-100">
+      <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-navy-light/40 bg-azure/60 text-navy hover:bg-azure border-dashed px-4 text-sm font-bold">
         <ImageUp className="size-4" />
         {t('thumbnailChooseCrop')}
         <input

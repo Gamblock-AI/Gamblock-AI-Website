@@ -1,6 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  useMemo,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import { BookOpen, Search } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
@@ -35,6 +40,12 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
   const user = useLocalUser();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isApplePlatform] = useState(
+    () =>
+      typeof navigator !== 'undefined' &&
+      /Mac|iPhone|iPad/i.test(navigator.platform)
+  );
   const canSearchEducation = user.role === 'user' || user.role === 'partner';
   const { modules: educationModules } = useEducationModules(
     locale,
@@ -106,6 +117,34 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
     if (!nextOpen) setQuery('');
+    setActiveIndex(0);
+  };
+
+  const activeItem = filteredItems[activeIndex];
+
+  const moveActive = (delta: number) => {
+    if (filteredItems.length === 0) return;
+    setActiveIndex((current) => {
+      const next =
+        (current + delta + filteredItems.length) % filteredItems.length;
+      document
+        .getElementById(`global-search-option-${filteredItems[next].id}`)
+        ?.scrollIntoView({ block: 'nearest' });
+      return next;
+    });
+  };
+
+  const handleInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      moveActive(1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      moveActive(-1);
+    } else if (event.key === 'Enter' && activeItem) {
+      event.preventDefault();
+      handleSelect(activeItem.href);
+    }
   };
 
   return (
@@ -133,8 +172,11 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
             <span className="flex-1 truncate text-left font-medium">
               {t('searchPlaceholder')}
             </span>
-            <kbd className="border-navy/10 bg-muted text-navy/70 pointer-events-none hidden h-6 items-center rounded-md border px-2 font-mono text-[10px] font-semibold xl:flex">
-              Ctrl K
+            <kbd
+              suppressHydrationWarning
+              className="border-navy/10 bg-muted text-navy/70 pointer-events-none hidden h-6 items-center rounded-md border px-2 font-mono text-[10px] font-semibold xl:flex"
+            >
+              {isApplePlatform ? '⌘K' : 'Ctrl K'}
             </kbd>
           </>
         )}
@@ -153,11 +195,24 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
             <input
               autoFocus
               type="search"
+              role="combobox"
               aria-label={t('searchPlaceholder')}
+              aria-expanded="true"
+              aria-controls="global-search-listbox"
+              aria-activedescendant={
+                activeItem
+                  ? `global-search-option-${activeItem.id}`
+                  : undefined
+              }
+              aria-autocomplete="list"
               className="placeholder:text-muted-foreground flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder={t('searchPlaceholder')}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setActiveIndex(0);
+              }}
+              onKeyDown={handleInputKeyDown}
             />
           </div>
           <div className="max-h-[300px] overflow-y-auto p-2">
@@ -166,12 +221,24 @@ export function GlobalSearch({ variant = 'field' }: GlobalSearchProps) {
                 {t('searchEmpty')}
               </p>
             ) : (
-              <div className="space-y-1">
-                {filteredItems.map((item) => (
+              <div
+                id="global-search-listbox"
+                role="listbox"
+                aria-label={t('searchPlaceholder')}
+                className="space-y-1"
+              >
+                {filteredItems.map((item, index) => (
                   <button
                     key={item.id}
+                    id={`global-search-option-${item.id}`}
+                    role="option"
+                    aria-selected={index === activeIndex}
+                    tabIndex={-1}
                     onClick={() => handleSelect(item.href)}
-                    className="hover:bg-muted hover:text-navy focus:bg-muted focus:text-navy flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors outline-none"
+                    onMouseMove={() => setActiveIndex(index)}
+                    className={`hover:text-navy flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors outline-none ${
+                      index === activeIndex ? 'bg-muted text-navy' : ''
+                    }`}
                   >
                     <item.icon className="size-4 opacity-70" />
                     <span className="min-w-0 flex-1">

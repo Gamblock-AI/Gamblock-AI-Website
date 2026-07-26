@@ -222,6 +222,33 @@ export function RecoveryRoom() {
           </div>
         </div>
 
+        {/* Placed decor stays visible on mobile (the 2.5D scene is md+ only). */}
+        {Object.entries(experience.space.data?.placed_items ?? {}).some(
+          ([, placed]) => Boolean(placed)
+        ) ? (
+          <div className="px-3 pt-3 md:hidden">
+            <p className="text-xs font-bold tracking-[0.1em] text-white/70 uppercase">
+              {t('mobileDecorTitle')}
+            </p>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {Object.entries(experience.space.data?.placed_items ?? {})
+                .filter(([, placed]) => Boolean(placed))
+                .map(([item]) => {
+                  const Icon = DECOR_ICONS[item] ?? Sparkles;
+                  return (
+                    <li
+                      key={item}
+                      className="border-sage/30 bg-sage/10 flex min-h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold text-white"
+                    >
+                      <Icon className="size-3.5" aria-hidden="true" />
+                      {t(`decor.${item}`)}
+                    </li>
+                  );
+                })}
+            </ul>
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-2 gap-2 p-3 md:hidden">
           {(Object.keys(ACTIVITY_CONFIG) as RoomActivity[]).map((key) => {
             const config = ACTIVITY_CONFIG[key];

@@ -73,7 +73,7 @@ function ToolbarButton({
       aria-label={label}
       aria-pressed={active}
       onClick={onClick}
-      className={`flex size-9 items-center justify-center rounded-lg outline-none hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-600/30 ${active ? 'bg-blue-100 text-blue-800' : 'text-navy'}`}
+      className={`flex size-9 items-center justify-center rounded-lg outline-none hover:bg-azure/60 focus-visible:ring-2 focus-visible:ring-ring/30 ${active ? 'bg-azure text-navy' : 'text-navy'}`}
     >
       {children}
     </button>
@@ -112,7 +112,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          'prose prose-slate max-w-none min-h-56 px-4 py-4 outline-none prose-headings:text-navy prose-a:text-blue-700',
+          'prose prose-slate max-w-none min-h-56 px-4 py-4 outline-none prose-headings:text-navy prose-a:text-navy-light',
       },
     },
     onUpdate: ({ editor: current }) =>
@@ -125,7 +125,7 @@ export function RichTextEditor({
   if (!editor)
     return <div className="bg-muted min-h-64 animate-pulse rounded-xl" />;
   return (
-    <div className="border-input bg-card overflow-hidden rounded-xl border focus-within:ring-2 focus-within:ring-blue-600/20">
+    <div className="border-input bg-card overflow-hidden rounded-xl border focus-within:ring-2 focus-within:ring-ring/30">
       <div className="border-border bg-muted/60 flex flex-wrap gap-1 border-b p-2">
         <ToolbarButton
           label={t('editorUndo')}

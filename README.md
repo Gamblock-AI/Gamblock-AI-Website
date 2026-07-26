@@ -15,7 +15,8 @@ install source of truth.
 ```sh
 nvm use                    # reads .nvmrc (Node 20)
 npm ci
-cp .env.example .env.local   # set API URL and optional Google client ID
+cp .env.example .env.local   # set API URL, optional Google client ID, and
+                             # optional NEXT_PUBLIC_EDUCATION_EMBED_ORIGINS
 npm run verify:ai-context
 npm run dev                  # http://localhost:3000
 ```
@@ -30,7 +31,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-20.5`.
+`2026-07-27.1`.
 
 ## Structure
 
@@ -38,13 +39,17 @@ code. The context manifest is `docs/ai/manifest.yaml` and its current version is
 app/
   [locale]/
     (dashboard)/           # authenticated dashboard, recovery, progress,
-                           # education, accountability, admin, and settings
+                           # education, skills, accountability, partners,
+                           # support, profile, data-requests, research-sandbox,
+                           # admin, and settings
     (auth)/                # login, register, forgot-password
     (landing)/             # landing, post-intervention, impact, technology,
                            # and legal pages
     approve/[token]/       # supporting quick-approval deep link
-    partner/invitations/   # legacy redirect to the accountability workspace
+    partner/invitations/   # legacy redirect to the partner workspace
+    operator/invitations/  # retired-invitation notice for legacy links
     onboarding/            # authenticated onboarding flows
+    verify-email/          # email verification landing
 components/
   landing/                 # marketing sections and scroll animations
   dashboard/               # responsive shell, Today dashboard, and navigation
@@ -52,6 +57,7 @@ components/
   education/               # rich-text reader, checks, media, and admin editor
   common/                  # PageTransition and reusable cross-surface helpers
   auth/                    # authentication composition
+  error/                   # shared Gami error-status page for all boundaries
   ui/                      # shadcn-style primitives
 hooks/          # authenticated API hooks and browser-local recovery hooks
 i18n/           # locale routing plus explicit modular-catalog server loader
@@ -62,6 +68,7 @@ messages/
 proxy.ts        # route protection (cookie token)
 routes.ts       # route constants + PROTECTED/GUEST lists
 docs/ai/        # clone-portable AI context guide and manifest
+docs/           # landing-assets inventory and design-system references
 ```
 
 Dashboard route transitions are implemented by
@@ -87,15 +94,20 @@ protection decisions, and cancellable pending normal-exit requests. Unsafe
 exit remains immediate and routes recovery through the support team.
 The PKM recovery loop remains directly available through a student-only
 gamification FAB and a once-per-day check-in gate across authenticated
-dashboard pages. The gate uses the `Asia/Jakarta` calendar
-boundary, requires a mood choice, and keeps urge intensity optional through an
-explicit “prefer not to say” choice. UI feedback remains calm and avoids
-punitive streak or casino-like rewards.
+dashboard pages. The gate uses the `Asia/Jakarta` calendar boundary and
+requires a mood choice plus a gambling-urge answer on a scale that starts at an
+explicit “no urge” point; picking a mood shows a short supportive Gami reply,
+with a direct support link on the most distressed mood. UI feedback remains
+calm and avoids punitive streak or casino-like rewards. A student-only
+`/skills` page adds curated free-course links beside the internal skill
+practices.
 
-Recovery uses a calm, keyboard-accessible dorm-room workspace. The window
-opens three-minute urge surfing, the rug guides 5-4-3-2-1 grounding, the desk
-starts a ten-minute focus sprint, the notebook opens the encrypted reflection
-journal, and the phone opens partner/support choices. Active timers and focus
+Recovery is framed as daily self-control missions: the server-verified daily
+mission card leads the page above a calm, keyboard-accessible dorm-room
+workspace. The window opens three-minute urge surfing, the rug guides
+5-4-3-2-1 grounding, the desk starts a ten-minute focus sprint, the notebook
+opens the encrypted reflection journal, and the phone opens partner/support
+choices. Active timers and focus
 task labels stay browser-local. Completed practices and typed weekly reviews
 sync to the account for a rolling 12-month view; deterministic decor placement
 remains until account deletion and is included in export/deletion. Reflection
@@ -188,7 +200,7 @@ legacy-unavailable results.
 ## Quick approval (supporting feature)
 
 `/approve/[token]` resolves an uninstall request via a single-use token, without
-requiring the Kepala to log in on mobile.
+requiring the partner to log in on mobile.
 
 Verified partners create multiple named groups with rotatable codes. Verified
 students preview and explicitly confirm one active membership, then control

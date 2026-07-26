@@ -15,7 +15,7 @@ export function TechnologySection() {
       <div className="relative grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
         <Reveal>
           <Pill variant="ghost" className="mb-4 bg-white/10 text-white">
-            <LockKeyhole className="h-3.5 w-3.5" />
+            <LockKeyhole className="size-3.5" />
             {t('techKicker')}
           </Pill>
           <h2 className="max-w-xl text-heading text-3xl text-white md:text-5xl">
@@ -25,19 +25,19 @@ export function TechnologySection() {
             {t('techSubtitle')}
           </p>
           <div className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-white/75">
-            <EyeOff className="h-5 w-5 text-cyan-300" />
+            <EyeOff className="text-sky size-5" />
             {t('techMetric4Label')}
           </div>
         </Reveal>
 
         <Reveal delay={0.08}>
           <div className="grid gap-4 md:grid-cols-2">
-            <article className="rounded-[1.75rem] border border-cyan-200/20 bg-cyan-300/10 p-6 backdrop-blur">
+            <article className="rounded-2xl border-sky/20 bg-sky/10 border p-6 backdrop-blur">
               <div className="flex items-center justify-between">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-300 text-navy">
-                  <Smartphone className="h-5 w-5" />
+                <span className="flex size-11 items-center justify-center bg-sky text-navy rounded-xl">
+                  <Smartphone className="size-5" />
                 </span>
-                <span className="rounded-full bg-cyan-200/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-100">
+                <span className="rounded-full bg-sky/15 text-sky-light px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em]">
                   {t('localProcessingLabel')}
                 </span>
               </div>
@@ -49,10 +49,10 @@ export function TechnologySection() {
               </ul>
             </article>
 
-            <article className="rounded-[1.75rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur">
+            <article className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 backdrop-blur">
               <div className="flex items-center justify-between">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-white">
-                  <Server className="h-5 w-5" />
+                <span className="flex size-11 items-center justify-center rounded-xl bg-white/10 text-white">
+                  <Server className="size-5" />
                 </span>
                 <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
                   {t('accountDataLabel')}
@@ -75,7 +75,7 @@ export function TechnologySection() {
 function PrivacyItem({ icon: Icon, text }: { icon: typeof EyeOff; text: string }) {
   return (
     <li className="flex items-start gap-2.5">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+      <Icon className="text-sky mt-0.5 size-4 shrink-0" />
       <span>{text}</span>
     </li>
   );

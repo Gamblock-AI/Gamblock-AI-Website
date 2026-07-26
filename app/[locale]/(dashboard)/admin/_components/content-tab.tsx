@@ -1026,7 +1026,7 @@ export function ContentTab(props: ContentTabProps) {
                       })
                     }
                   >
-                    <Trash2 className="size-4 text-rose-600" />
+                    <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>
               </div>
@@ -1061,7 +1061,7 @@ export function ContentTab(props: ContentTabProps) {
                     })
                   }
                 >
-                  <Trash2 className="size-4 text-rose-600" />
+                  <Trash2 className="size-4 text-destructive" />
                   {t('remove')}
                 </Button>
               </div>
@@ -1093,7 +1093,7 @@ export function ContentTab(props: ContentTabProps) {
                   onRequestMedia={requestContentMedia}
                 />
               </div>
-              <div className="mt-5 rounded-2xl border border-navy/15 bg-blue-50/60 p-4 sm:p-5">
+              <div className="mt-5 rounded-2xl border border-navy/15 bg-azure/50 p-4 sm:p-5">
                 <div className="flex items-center justify-between">
                   <h4 className="text-navy text-sm font-extrabold">
                     {t('knowledgeCheck')}
@@ -1172,7 +1172,7 @@ export function ContentTab(props: ContentTabProps) {
                               }
                             })
                           }
-                          className="size-9 shrink-0 rounded-xl text-muted-foreground hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+                          className="size-9 shrink-0 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"
                           title="Hapus pilihan"
                         >
                           <Trash2 className="size-4" />
@@ -1352,7 +1352,7 @@ export function ContentTab(props: ContentTabProps) {
                   })
                 }
               >
-                <Trash2 className="size-4 text-rose-600" />
+                <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
           ))}

@@ -44,8 +44,8 @@ export function ApprovalRequestForm({
     <div className="bg-background flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md p-8">
         <div className="text-center">
-          <div className="bg-crimson/10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl">
-            <Shield className="text-crimson h-7 w-7" aria-hidden="true" />
+          <div className="bg-crimson/10 mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl">
+            <Shield className="text-crimson size-7" aria-hidden="true" />
           </div>
           <h2 className="text-heading text-navy text-xl">{t('title')}</h2>
           <p className="text-muted-foreground mt-2 text-sm">{t('body')}</p>
@@ -99,9 +99,9 @@ export function ApprovalRequestForm({
             disabled={submitting}
           >
             {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <XCircle className="h-4 w-4" />
+              <XCircle className="size-4" />
             )}
             {t('deny')}
           </Button>
@@ -112,9 +112,9 @@ export function ApprovalRequestForm({
             disabled={submitting}
           >
             {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <CheckCircle className="h-4 w-4" />
+              <CheckCircle className="size-4" />
             )}
             {t('approve')}
           </Button>

@@ -11,7 +11,7 @@ import {
   loginWithGoogle,
   persistAuthSession,
 } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/common/loading-button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthField, AuthDivider } from '@/components/auth/AuthField';
 import { GoogleIdentityButton } from '@/components/auth/google-identity-button';
@@ -102,7 +102,7 @@ export default function LoginPage() {
   const submitInitialPassword = async (event: FormEvent) => {
     event.preventDefault();
     if (!passwordChangeToken || newPassword.length < 8) {
-      setError('Kata sandi baru minimal 8 karakter.');
+      setError(t('initialPassword.minLengthError'));
       return;
     }
     setLoading(true);
@@ -114,9 +114,7 @@ export default function LoginPage() {
       )) as AuthResponse;
       completeLogin(response);
     } catch (requestError) {
-      setError(
-        friendlyMessage(requestError, 'Kata sandi awal belum dapat diganti.')
-      );
+      setError(friendlyMessage(requestError, t('initialPassword.errorFallback')));
     } finally {
       setLoading(false);
     }
@@ -125,8 +123,8 @@ export default function LoginPage() {
   if (passwordChangeToken) {
     return (
       <AuthShell
-        heading="Buat kata sandi baru"
-        subheading="Kata sandi sementara hanya dapat digunakan untuk langkah ini."
+        heading={t('initialPassword.heading')}
+        subheading={t('initialPassword.subheading')}
       >
         {error ? (
           <div
@@ -141,24 +139,25 @@ export default function LoginPage() {
           className="space-y-5"
         >
           <AuthField
-            label="Kata sandi baru"
+            label={t('initialPassword.newPasswordLabel')}
             icon={Lock}
             type="password"
+            autoComplete="new-password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
             minLength={8}
             required
           />
-          <Button
+          <LoadingButton
             type="submit"
             variant="primary"
             size="lg"
-            className="w-full rounded-xl py-6 font-semibold"
-            disabled={loading}
+            className="w-full rounded-xl font-semibold"
+            loading={loading}
           >
-            {loading ? t('processing') : 'Simpan dan masuk'}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+            {t('initialPassword.submit')}
+            <ArrowRight className="size-4" />
+          </LoadingButton>
         </form>
       </AuthShell>
     );
@@ -216,6 +215,7 @@ export default function LoginPage() {
           label={t('text_238')}
           icon={Mail}
           type="email"
+          autoComplete="email"
           placeholder={t('text_245')}
           error={errors.email?.message}
           {...formRegister('email')}
@@ -225,6 +225,7 @@ export default function LoginPage() {
           label={t('text_239')}
           icon={Lock}
           type="password"
+          autoComplete="current-password"
           placeholder={t('text_246')}
           error={errors.password?.message}
           labelAdornment={
@@ -238,16 +239,16 @@ export default function LoginPage() {
           {...formRegister('password')}
         />
 
-        <Button
+        <LoadingButton
           type="submit"
           variant="primary"
           size="lg"
-          className="w-full rounded-xl py-6 font-semibold"
-          disabled={loading}
+          className="w-full rounded-xl font-semibold"
+          loading={loading}
         >
-          {loading ? t('processing') : t('submit')}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
+          {t('submit')}
+          <ArrowRight className="size-4" />
+        </LoadingButton>
       </form>
 
       <AuthDivider label={t('orDivider')} />

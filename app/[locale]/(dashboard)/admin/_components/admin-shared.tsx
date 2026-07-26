@@ -8,7 +8,7 @@ import {
 } from '@/lib/i18n/dynamic-labels';
 
 export const adminFieldClassName =
-  'min-h-11 w-full rounded-xl border border-input bg-card px-3 text-base outline-none transition-[border-color,box-shadow] duration-200 focus:border-navy/40 focus:ring-2 focus:ring-navy/30 motion-reduce:transition-none sm:text-sm';
+  'min-h-11 w-full rounded-xl border border-input bg-card px-3 text-base outline-none transition-[border-color,box-shadow] duration-200 focus-visible:border-navy/40 focus-visible:ring-2 focus-visible:ring-navy/30 motion-reduce:transition-none sm:text-sm';
 
 export function AdminSectionHeader({
   title,

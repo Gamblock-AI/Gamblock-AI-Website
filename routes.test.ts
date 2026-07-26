@@ -19,4 +19,10 @@ describe('three-role dashboard access', () => {
     expect(canAccessDashboardRoute(ROUTES.SUPPORT, 'partner')).toBe(true);
     expect(defaultRouteForRole('partner')).toBe(ROUTES.DASHBOARD);
   });
+
+  it('keeps the skills hub student-only', () => {
+    expect(canAccessDashboardRoute(ROUTES.SKILLS, 'user')).toBe(true);
+    expect(canAccessDashboardRoute(ROUTES.SKILLS, 'partner')).toBe(false);
+    expect(canAccessDashboardRoute(ROUTES.SKILLS, 'admin')).toBe(false);
+  });
 });

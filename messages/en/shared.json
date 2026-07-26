@@ -52,6 +52,7 @@
     "recovery": "Recovery",
     "progress": "Progress",
     "education": "Education",
+    "skills": "Skills",
     "accountability": "Accountability",
     "partners": "Partners",
     "support": "Support",
@@ -193,5 +194,8 @@
   },
   "empty-state-test": {
     "text_331": "Belum ada member"
+  },
+  "commonUi": {
+    "close": "Close"
   }
 }

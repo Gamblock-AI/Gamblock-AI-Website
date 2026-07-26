@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-07-20.5`
+**Context version:** `2026-07-27.1`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading
@@ -70,8 +70,9 @@ error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
 - Marketing sections and scroll animations live under `components/landing/`.
 - Dashboard navigation lives under `components/dashboard/`; reusable app-wide
   helpers, including `PageTransition`, live under `components/common/`.
-- Data fetching goes through the hooks in `hooks/` (`use-api`, `use-dashboard`,
-  `use-progress`, `use-accountability`), which call `lib/api-client.ts`.
+- Data fetching goes through the hooks in `hooks/` (`use-api`,
+  `use-dashboard-summary`, `use-progress-snapshot`, `use-accountability`),
+  which call `lib/api-client.ts`.
 - Translation catalogs live in domain modules under `messages/<locale>/`.
   Keep each top-level next-intl namespace in exactly one module, mirror module
   names and nested keys across locales, register modules through the explicit

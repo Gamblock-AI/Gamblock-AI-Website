@@ -1,8 +1,9 @@
 # Gamblock-AI Recovery Dashboard Design System
 
-This file extends the authoritative product and UI context in `../context/`.
-If this document conflicts with the PKM proposal or a repository context file,
-the proposal and repository context win.
+This file extends the authoritative product and UI context maintained in the
+Gamblock-AI umbrella workspace under `context/` (not present in a standalone
+website clone). If this document conflicts with the PKM proposal or a
+repository context file, the proposal and repository context win.
 
 ## Experience principle
 

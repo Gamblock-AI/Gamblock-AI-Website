@@ -163,7 +163,7 @@ export function SupportTab(props: SupportTabProps) {
               value={modalReason}
               onChange={(event) => setModalReason(event.target.value)}
               placeholder="Contoh: Mengambil tiket untuk penanganan dan audit..."
-              className="border-input bg-card focus:border-navy/40 focus:ring-navy/30 min-h-[90px] w-full resize-none rounded-xl border p-3 text-sm outline-none transition-all focus:ring-2"
+              className="border-input bg-card focus-visible:border-navy/40 focus-visible:ring-navy/30 min-h-[90px] w-full resize-none rounded-xl border p-3 text-sm outline-none transition-all focus-visible:ring-2"
               required
               autoFocus
             />

@@ -22,7 +22,7 @@ export function PsychoeducationSection() {
         <div>
           <Reveal>
             <Pill variant="navy" className="mb-4">
-              <BookOpenCheck className="h-3.5 w-3.5" />
+              <BookOpenCheck className="size-3.5" />
               {t('psychoKicker')}
             </Pill>
             <h2 className="max-w-2xl text-heading text-3xl text-navy md:text-5xl">
@@ -33,12 +33,12 @@ export function PsychoeducationSection() {
             </p>
           </Reveal>
 
-          <div className="mt-8 divide-y divide-navy/8 rounded-[1.75rem] border border-navy/8 bg-white/82 px-5 shadow-soft backdrop-blur sm:px-6">
+          <div className="mt-8 divide-y divide-navy/8 rounded-2xl border border-navy/8 bg-white/82 px-5 shadow-soft backdrop-blur sm:px-6">
             {ITEMS.map(({ icon: Icon, titleKey, bodyKey }, index) => (
               <Reveal key={titleKey} delay={0.06 + index * 0.04}>
                 <div className="flex items-start gap-4 py-5">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy/8 text-navy">
-                    <Icon className="h-5 w-5" />
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy/8 text-navy">
+                    <Icon className="size-5" />
                   </span>
                   <div>
                     <h3 className="font-bold text-navy">{t(titleKey)}</h3>
@@ -61,7 +61,7 @@ export function PsychoeducationSection() {
               className="aspect-[4/3] w-full rounded-[1.7rem] object-cover"
             />
           </div>
-          <div className="absolute -bottom-8 -left-5 flex h-36 w-36 items-end justify-center overflow-hidden rounded-[1.75rem] border-4 border-white bg-sky-light shadow-card sm:h-44 sm:w-44">
+          <div className="absolute -bottom-8 -left-5 flex h-36 w-36 items-end justify-center overflow-hidden rounded-2xl border-4 border-white bg-sky-light shadow-card sm:h-44 sm:w-44">
             <Image
               src="/images/landing/generated/gami-reflect.webp"
               alt="Gami duduk tenang untuk menemani refleksi"

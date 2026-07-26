@@ -14,20 +14,25 @@ export interface SiteSocialLink {
 
 export function useSiteSocialLinks() {
   const [links, setLinks] = useState<SiteSocialLink[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
     void apiClient<SiteSocialLink[]>('/public/site-social-links')
       .then((items) => {
-        if (active) setLinks(items.filter((item) => item.enabled && item.url));
+        if (!active) return;
+        setLinks(items.filter((item) => item.enabled && item.url));
+        setLoaded(true);
       })
       .catch(() => {
-        if (active) setLinks([]);
+        if (!active) return;
+        setLinks([]);
+        setLoaded(true);
       });
     return () => {
       active = false;
     };
   }, []);
 
-  return links;
+  return { links, loaded };
 }

@@ -204,9 +204,9 @@ export function DashboardStatus({
 }) {
   const classes = {
     navy: 'border-navy/25 bg-azure/75 text-navy',
-    sage: 'border-sage/35 bg-sage/[0.12] text-sage',
-    amber: 'border-amber/40 bg-amber/[0.12] text-amber',
-    crimson: 'border-crimson/30 bg-crimson/[0.09] text-crimson',
+    sage: 'border-sage/35 bg-sage/15 text-sage-dark',
+    amber: 'border-amber/40 bg-amber/15 text-navy',
+    crimson: 'border-crimson/30 bg-crimson/10 text-crimson-dark',
     muted: 'border-border bg-muted text-muted-foreground',
   };
 

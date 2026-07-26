@@ -23,6 +23,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { notifyLocalUserChanged, useLocalUser } from '@/hooks/use-local-user';
 import { useRecoverySync } from '@/hooks/use-recovery-sync';
+import { ExperienceLevelChip } from './experience-level-chip';
 import { GlobalSearch } from './global-search';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { AvatarImage } from '@/components/account/avatar-image';
@@ -37,6 +38,7 @@ export function Navbar() {
   useRecoverySync();
   const [profileOpen, setProfileOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const profileAreaRef = useRef<HTMLDivElement>(null);
   const profileTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -83,6 +85,8 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
     const refreshToken = localStorage.getItem('gamblock_refresh_token');
     if (refreshToken) {
       try {
@@ -120,6 +124,7 @@ export function Navbar() {
           <div className="lg:hidden">
             <GlobalSearch variant="icon" />
           </div>
+          <ExperienceLevelChip />
           <LanguageSwitcher />
           <div className="relative" ref={profileAreaRef}>
             <button
@@ -228,6 +233,8 @@ export function Navbar() {
             <Button
               variant="destructive"
               size="lg"
+              disabled={loggingOut}
+              aria-busy={loggingOut}
               onClick={() => void handleLogout()}
             >
               {t('logoutConfirm')}

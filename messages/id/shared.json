@@ -52,6 +52,7 @@
     "recovery": "Pemulihan",
     "progress": "Progres",
     "education": "Edukasi",
+    "skills": "Keterampilan",
     "accountability": "Pendampingan",
     "partners": "Mitra",
     "support": "Bantuan",
@@ -193,5 +194,8 @@
   },
   "empty-state-test": {
     "text_331": "Belum ada member"
+  },
+  "commonUi": {
+    "close": "Tutup"
   }
 }

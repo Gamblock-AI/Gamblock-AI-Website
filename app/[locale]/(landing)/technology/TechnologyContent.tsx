@@ -20,6 +20,7 @@ import { Pill } from '@/components/ui/pill';
 import { GradientBlob } from '@/components/ui/gradient-blob';
 import { Reveal } from '@/components/common/Reveal';
 import { MarketingNav } from '@/components/landing/MarketingNav';
+import { SkipLink } from '@/components/landing/SkipLink';
 import { FixedBackground } from '@/components/landing/FixedBackground';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { ROUTES } from '@/routes';
@@ -46,8 +47,10 @@ export function TechnologyContent() {
 
   return (
     <div className="relative text-foreground">
+      <SkipLink />
       <FixedBackground />
       <MarketingNav />
+      <main id="main-content">
 
       {/* HERO */}
       <section className="relative overflow-hidden px-6 pt-32 pb-20 md:px-10 md:pt-40 md:pb-24">
@@ -62,17 +65,23 @@ export function TechnologyContent() {
               {t('heroBody')}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href={ROUTES.REGISTER}>
-                <Button variant="accent" size="lg" className="rounded-full">
-                  {t('ctaPrimary')}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/dampak">
-                <Button variant="outline" size="lg" className="rounded-full">
-                  {t('ctaSecondary')}
-                </Button>
-              </Link>
+              <Button
+                render={<Link href={ROUTES.REGISTER} />}
+                variant="accent"
+                size="lg"
+                className="rounded-full"
+              >
+                {t('ctaPrimary')}
+                <ArrowRight className="size-4" />
+              </Button>
+              <Button
+                render={<Link href="/dampak" />}
+                variant="outline"
+                size="lg"
+                className="rounded-full"
+              >
+                {t('ctaSecondary')}
+              </Button>
             </div>
           </Reveal>
         </div>
@@ -92,13 +101,13 @@ export function TechnologyContent() {
               className="relative flex-1 rounded-3xl border border-border bg-card p-6 shadow-soft"
             >
               <span className="font-mono text-xs tracking-widest text-navy/30">{n}</span>
-              <div className="mt-3 flex h-11 w-11 items-center justify-center rounded-xl bg-crimson/10">
-                <Icon className="h-5 w-5 text-crimson" />
+              <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-crimson/10">
+                <Icon className="size-5 text-crimson" />
               </div>
               <h3 className="mt-4 text-sm font-bold text-navy">{title}</h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{desc}</p>
               {i < pipeline.length - 1 && (
-                <ArrowRight className="absolute -right-2 top-1/2 hidden h-4 w-4 -translate-y-1/2 text-navy/20 md:block" />
+                <ArrowRight className="absolute -right-2 top-1/2 hidden size-4 -translate-y-1/2 text-navy/20 md:block" />
               )}
             </Reveal>
           ))}
@@ -115,8 +124,8 @@ export function TechnologyContent() {
           {pillars.map(({ icon: Icon, title, desc }, i) => (
             <Reveal key={title} delay={i * 0.05}>
               <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-card">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy/10">
-                  <Icon className="h-5 w-5 text-navy" />
+                <div className="flex size-11 items-center justify-center rounded-xl bg-navy/10">
+                  <Icon className="size-5 text-navy" />
                 </div>
                 <h3 className="mt-4 font-bold text-navy">{title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
@@ -133,15 +142,19 @@ export function TechnologyContent() {
             {t('finalTitle')} <span className="text-crimson-light">{t('finalTitleAccent')}</span>
           </h2>
           <p className="mt-4 text-white/70">{t('finalBody')}</p>
-          <Link href={ROUTES.REGISTER} className="mt-8 inline-block">
-            <Button variant="accent" size="lg" className="rounded-full">
-              {t('ctaPrimary')}
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-          </Link>
+          <Button
+            render={<Link href={ROUTES.REGISTER} />}
+            variant="accent"
+            size="lg"
+            className="mt-8 rounded-full"
+          >
+            {t('ctaPrimary')}
+            <ArrowRight className="size-5" />
+          </Button>
         </Reveal>
       </Section>
 
+      </main>
       <SiteFooter />
     </div>
   );

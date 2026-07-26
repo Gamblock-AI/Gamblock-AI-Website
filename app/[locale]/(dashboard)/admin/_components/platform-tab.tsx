@@ -120,41 +120,22 @@ function SocialIcon({
   }
 }
 
-function getPlatformBadgeStyle(platform: string) {
-  switch (platform) {
-    case 'instagram':
-      return 'bg-pink-50 text-pink-600 border-pink-200/60 dark:bg-pink-950/40 dark:text-pink-400 dark:border-pink-800/40';
-    case 'tiktok':
-      return 'bg-slate-900 text-cyan-400 border-slate-700 dark:bg-slate-950 dark:text-cyan-300';
-    case 'youtube':
-      return 'bg-red-50 text-red-600 border-red-200/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-800/40';
-    case 'facebook':
-      return 'bg-blue-50 text-blue-600 border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/40';
-    case 'linkedin':
-      return 'bg-sky-50 text-sky-700 border-sky-200/60 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800/40';
-    case 'x':
-      return 'bg-slate-900 text-white border-slate-700 dark:bg-slate-950';
-    case 'threads':
-      return 'bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700';
-    case 'github':
-      return 'bg-slate-800 text-white border-slate-700 dark:bg-slate-900';
-    default:
-      return 'bg-muted text-foreground border-border';
-  }
-}
+// The platform icon and name identify the vendor; badges stay on the brand
+// neutral tone instead of per-vendor marketing palettes.
+const platformBadgeStyle = 'bg-muted text-foreground border-border';
 
 function getRoleBadgeStyle(role: string) {
   const r = role.toLowerCase();
   if (r === 'admin' || r === 'platform_admin') {
-    return 'bg-purple-50 text-purple-700 border-purple-200/70 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/40';
+    return 'bg-navy/10 text-navy border-navy/25';
   }
   if (r === 'partner') {
-    return 'bg-emerald-50 text-emerald-700 border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40';
+    return 'bg-success/15 text-navy border-success/40';
   }
   if (r === 'user') {
-    return 'bg-sky-50 text-sky-700 border-sky-200/70 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/40';
+    return 'bg-sky-light/60 text-navy border-sky/40';
   }
-  return 'bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40';
+  return 'bg-amber/15 text-navy border-amber/40';
 }
 
 function formatAuditAction(action: string) {
@@ -319,9 +300,7 @@ export function PlatformTab({
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
                     <span
-                      className={`flex size-9 items-center justify-center rounded-xl border shadow-xs ${getPlatformBadgeStyle(
-                        link.platform
-                      )}`}
+                      className={`flex size-9 items-center justify-center rounded-xl border shadow-xs ${platformBadgeStyle}`}
                     >
                       <SocialIcon platform={link.platform} className="size-4" />
                     </span>
@@ -332,7 +311,7 @@ export function PlatformTab({
                   <label className="border-border bg-muted/40 hover:bg-muted/70 inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-1.5 transition-colors">
                     <input
                       type="checkbox"
-                      className="border-border text-navy focus:ring-navy/30 size-3.5 rounded"
+                      className="border-border text-navy focus-visible:ring-navy/30 size-3.5 rounded"
                       checked={link.enabled}
                       disabled={!link.url}
                       onChange={(event) =>
@@ -354,7 +333,7 @@ export function PlatformTab({
                 <div>
                   <input
                     type="url"
-                    className="border-input bg-background focus:border-navy/40 focus:ring-navy/20 min-h-9 w-full rounded-xl border px-3 text-xs transition-[border-color,box-shadow] duration-200 outline-none focus:ring-2"
+                    className="border-input bg-background focus-visible:border-navy/40 focus-visible:ring-navy/20 min-h-9 w-full rounded-xl border px-3 text-xs transition-[border-color,box-shadow] duration-200 outline-none focus-visible:ring-2"
                     placeholder={`https://${
                       link.platform === 'x'
                         ? 'x.com'
@@ -466,13 +445,13 @@ export function PlatformTab({
 
           {temporaryPassword ? (
             <div
-              className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200"
+              className="border-amber/40 bg-amber/15 text-navy rounded-xl border p-4 text-sm"
               role="status"
             >
               <p className="font-bold">
                 Kata sandi sementara — hanya ditampilkan sekali
               </p>
-              <code className="mt-2 block rounded-lg border border-amber-200 bg-white p-2.5 font-mono text-xs break-all select-all dark:border-amber-800 dark:bg-slate-900">
+              <code className="border-amber/30 bg-card mt-2 block rounded-lg border p-2.5 font-mono text-xs break-all select-all">
                 {temporaryPassword}
               </code>
               <Button
@@ -652,8 +631,8 @@ export function PlatformTab({
                   <span
                     className={`flex size-11 shrink-0 items-center justify-center rounded-2xl shadow-xs ${
                       accountActionModal.account.disabled_at
-                        ? 'border border-emerald-200/80 bg-emerald-50 text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/60 dark:text-emerald-300'
-                        : 'border border-red-200/80 bg-red-50 text-red-600 dark:border-red-800/40 dark:bg-red-950/60 dark:text-red-300'
+                        ? 'border-success/40 bg-success/15 text-sage-dark border'
+                        : 'border-destructive/40 bg-destructive/10 text-destructive border'
                     }`}
                   >
                     {accountActionModal.account.disabled_at ? (

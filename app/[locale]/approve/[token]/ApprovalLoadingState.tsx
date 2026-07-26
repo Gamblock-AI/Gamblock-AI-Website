@@ -6,7 +6,7 @@ export function ApprovalLoadingState() {
   return (
     <div className="bg-background flex min-h-screen items-center justify-center">
       <Loader2
-        className="text-navy h-8 w-8 animate-spin"
+        className="text-navy size-8 animate-spin"
         aria-label={t('loading')}
       />
     </div>

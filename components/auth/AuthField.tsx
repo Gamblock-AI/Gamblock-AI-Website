@@ -44,7 +44,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
         </label>
         <div className="group relative col-span-2">
           <Icon
-            className="text-muted-foreground group-focus-within:text-navy absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 transition-colors"
+            className="text-muted-foreground group-focus-within:text-navy absolute top-1/2 left-3.5 size-4 -translate-y-1/2 transition-colors"
             aria-hidden="true"
           />
           <input
@@ -54,11 +54,11 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errorId : undefined}
             className={cn(
-              'bg-card text-foreground placeholder:text-muted-foreground/50 w-full rounded-xl border py-3.5 pl-10 text-sm transition-all focus:ring-4 focus:outline-none',
+              'bg-card text-foreground placeholder:text-muted-foreground/50 w-full rounded-xl border py-3.5 pl-10 text-sm transition-all focus-visible:ring-4 focus-visible:outline-none',
               isPassword ? 'pr-11' : 'pr-4',
               error
-                ? 'border-crimson focus:border-crimson focus:ring-crimson/10'
-                : 'border-input hover:border-navy/40 focus:border-navy focus:ring-navy/10',
+                ? 'border-crimson focus-visible:border-crimson focus-visible:ring-crimson/10'
+                : 'border-input hover:border-navy/40 focus-visible:border-navy focus-visible:ring-navy/10',
               className
             )}
             {...props}
@@ -72,9 +72,9 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
               className="text-muted-foreground hover:bg-muted hover:text-navy absolute top-1/2 right-0.5 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg transition-colors"
             >
               {show ? (
-                <EyeOff className="h-4 w-4" />
+                <EyeOff className="size-4" />
               ) : (
-                <Eye className="h-4 w-4" />
+                <Eye className="size-4" />
               )}
             </button>
           )}
@@ -125,7 +125,7 @@ export function GoogleButton({
     >
       <svg
         viewBox="0 0 24 24"
-        className="h-5 w-5"
+        className="size-5"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import {
   Check,
   CircleAlert,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { GamiMoodResponse } from './gami-mood-response';
 import { cn } from '@/lib/utils';
 import type {
   DailyCheckIn,
@@ -35,13 +36,19 @@ const moodOptions = [
   { value: 5 as const, labelKey: 'mood5', icon: SunMedium },
 ] as const;
 
+// "No urge" is a first-class scale point (0), not an opt-out appended at the
+// end — the segmented control reads as one ascending 0→5 scale.
 const urgeOptions = [
-  { value: 1 as const, labelKey: 'urge1' },
-  { value: 2 as const, labelKey: 'urge2' },
-  { value: 3 as const, labelKey: 'urge3' },
-  { value: 4 as const, labelKey: 'urge4' },
-  { value: 5 as const, labelKey: 'urge5' },
+  { value: null, display: 0, labelKey: 'urgeNone' },
+  { value: 1 as const, display: 1, labelKey: 'urge1' },
+  { value: 2 as const, display: 2, labelKey: 'urge2' },
+  { value: 3 as const, display: 3, labelKey: 'urge3' },
+  { value: 4 as const, display: 4, labelKey: 'urge4' },
+  { value: 5 as const, display: 5, labelKey: 'urge5' },
 ] as const;
+
+const urgeOptionId = (value: UrgeLevel | null) =>
+  value === null ? 'check-in-urge-skip' : `check-in-urge-${value}`;
 
 export function PrivateCheckIn({
   initialMood,
@@ -71,6 +78,41 @@ export function PrivateCheckIn({
     setSaved(false);
     setShowIncomplete(false);
     setSaveError(false);
+  };
+
+  const focusRadio = (id: string) => {
+    document.getElementById(id)?.focus();
+  };
+
+  const moveMood = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const delta =
+      event.key === 'ArrowRight' || event.key === 'ArrowDown'
+        ? 1
+        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+          ? -1
+          : 0;
+    if (delta === 0) return;
+    event.preventDefault();
+    const next =
+      (index + delta + moodOptions.length) % moodOptions.length;
+    const value = moodOptions[next].value;
+    selectMood(value);
+    focusRadio(`check-in-mood-${value}`);
+  };
+
+  const moveUrge = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const delta =
+      event.key === 'ArrowRight' || event.key === 'ArrowDown'
+        ? 1
+        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+          ? -1
+          : 0;
+    if (delta === 0) return;
+    event.preventDefault();
+    const next = (index + delta + urgeOptions.length) % urgeOptions.length;
+    const option = urgeOptions[next];
+    selectUrge(option.value);
+    focusRadio(urgeOptionId(option.value));
   };
 
   const handleSave = async () => {
@@ -122,17 +164,25 @@ export function PrivateCheckIn({
 
       <fieldset className={showHeader ? 'mt-4' : undefined}>
         <legend className="text-foreground text-sm font-semibold">{t('moodQuestion')}</legend>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5" role="group">
-          {moodOptions.map(({ value, labelKey, icon: Icon }) => {
+        <div
+          className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5"
+          role="radiogroup"
+          aria-label={t('moodQuestion')}
+        >
+          {moodOptions.map(({ value, labelKey, icon: Icon }, index) => {
             const selected = mood === value;
             return (
               <button
                 key={value}
+                id={`check-in-mood-${value}`}
                 type="button"
-                aria-pressed={selected}
+                role="radio"
+                aria-checked={selected}
+                tabIndex={selected || (mood === null && index === 0) ? 0 : -1}
+                onKeyDown={(event) => moveMood(event, index)}
                 onClick={() => selectMood(value)}
                 className={cn(
-                  'flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-navy/30',
+                  'flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-navy/30 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none',
                   selected
                     ? 'border-navy bg-azure/80 text-navy shadow-soft'
                     : 'border-border bg-card text-muted-foreground hover:border-navy/45 hover:bg-azure/35 hover:text-navy',
@@ -146,77 +196,78 @@ export function PrivateCheckIn({
         </div>
       </fieldset>
 
+      {/* Persistent live region: Gami's supportive reply is announced on every
+          mood change; hidden again once the check-in is saved. */}
+      <div role="status" aria-live="polite" className="mt-3">
+        {!saved ? <GamiMoodResponse mood={mood} /> : null}
+      </div>
+
       <fieldset className="mt-4">
         <legend className="text-foreground text-sm font-semibold">{t('urgeQuestion')}</legend>
         <div
           className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 lg:gap-0"
-          role="group"
+          role="radiogroup"
+          aria-label={t('urgeQuestion')}
         >
-          {urgeOptions.map(({ value, labelKey }, index) => {
+          {urgeOptions.map(({ value, display, labelKey }, index) => {
             const selected = urge === value;
             return (
               <button
-                key={value}
+                key={labelKey}
+                id={urgeOptionId(value)}
                 type="button"
-                aria-pressed={selected}
+                role="radio"
+                aria-checked={selected}
+                tabIndex={selected || (urge === undefined && index === 0) ? 0 : -1}
+                onKeyDown={(event) => moveUrge(event, index)}
                 onClick={() => selectUrge(value)}
                 className={cn(
-                  'min-h-12 rounded-xl border px-2 py-2 text-xs font-semibold outline-none transition-colors focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-navy/30 lg:-ml-px lg:rounded-none',
+                  'min-h-12 rounded-xl border px-2 py-2 text-xs font-semibold outline-none transition focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-navy/30 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none lg:-ml-px lg:rounded-none',
                   index === 0 && 'lg:ml-0 lg:rounded-l-xl',
+                  index === urgeOptions.length - 1 && 'lg:rounded-r-xl',
                   selected
                     ? 'relative z-[1] border-navy bg-azure/80 text-navy shadow-soft'
                     : 'border-border bg-card text-muted-foreground hover:border-navy/45 hover:bg-azure/35 hover:text-navy',
                 )}
               >
-                <span className="block text-sm font-bold">{value}</span>
+                <span className="block text-sm font-bold">{display}</span>
                 <span className="mt-0.5 block">{t(labelKey)}</span>
               </button>
             );
           })}
-          <button
-            type="button"
-            aria-pressed={urge === null}
-            onClick={() => selectUrge(null)}
-            className={cn(
-              'min-h-12 rounded-xl border px-2 py-2 text-xs font-semibold outline-none transition-colors focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-navy/30 lg:-ml-px lg:rounded-l-none lg:rounded-r-xl',
-              urge === null
-                ? 'relative z-[1] border-navy bg-azure/80 text-navy shadow-soft'
-                : 'border-border bg-card text-muted-foreground hover:border-navy/45 hover:bg-azure/35 hover:text-navy',
-            )}
-          >
-            {t('urgePreferNotSay')}
-          </button>
         </div>
       </fieldset>
 
       <div className="border-border mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
-          <p
-            className={cn(
-              'flex items-center gap-2 text-sm font-medium text-amber',
-              !showIncomplete && 'hidden',
-            )}
-            role="alert"
-          >
-            <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
-            <span>{t('checkInIncomplete')}</span>
-          </p>
-          <p
-            className={cn(
-              'flex items-center gap-2 text-sm font-medium text-crimson',
-              !saveError && 'hidden',
-            )}
-            role="alert"
-          >
-            <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
-            <span>{t('checkInSaveError')}</span>
-          </p>
+          {showIncomplete ? (
+            <p
+              className="text-navy flex items-center gap-2 text-sm font-medium"
+              role="alert"
+            >
+              <CircleAlert
+                className="text-amber size-4 shrink-0"
+                aria-hidden="true"
+              />
+              <span>{t('checkInIncomplete')}</span>
+            </p>
+          ) : null}
+          {saveError ? (
+            <p
+              className="text-crimson flex items-center gap-2 text-sm font-medium"
+              role="alert"
+            >
+              <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+              <span>{t('checkInSaveError')}</span>
+            </p>
+          ) : null}
         </div>
         <Button
           onClick={() => void handleSave()}
           size="lg"
           className="h-11 w-full shrink-0 sm:w-auto"
           disabled={saving}
+          aria-busy={saving}
         >
           {saved ? <Check className="size-4" aria-hidden="true" /> : null}
           {saving

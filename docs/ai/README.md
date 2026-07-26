@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-20.5`
+**Context version:** `2026-07-27.1`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -17,22 +17,35 @@ and must preserve the on-device browsing-data boundary.
 Current dashboard status (`implemented`): every authenticated role lands on
 `/dashboard` with a distinct surface. The student dashboard preserves its
 own-account seven-day check-in trend, activity/protection aggregates, education
-continuation, help, and compact shortcuts. The partner dashboard shows group,
+continuation, help, and compact shortcuts; after psychologist review the
+education continuation and emergency-help row now leads the canvas directly
+below the greeting. The hero greeting varies by the student's local
+time of day, a deterministic daily psychoeducation fact card sits under the
+protection summary, and a student-only navbar level chip surfaces the
+account's journey level and title. The chip reads a passive shared experience
+store filled by every `/missions/today` response, so it converges after
+claims without any new endpoint. The partner dashboard shows group,
 pending-decision/contact, and consented protection aggregates without private
 recovery details. The admin dashboard shows operational attention counts and
 links to isolated work areas. Device/model implementation versions stay out of
 the student canvas.
 PKM core `PKM-WEB-004` is available as a once-per-`Asia/Jakarta`-day check-in
-gate across authenticated dashboard routes, with optional urge disclosure and
-an account-persistence acknowledgement;
+gate across authenticated dashboard routes with an account-persistence
+acknowledgement. The gate greets with the waving mascot, mood/urge buttons
+give press feedback, the supportive mood reply animates its height so the
+form never jumps, and a calm success moment (sage check + celebrating Gami)
+shows briefly after saving before the dialog closes. The urge question names gambling explicitly and its scale
+starts at an explicit “Tidak ada dorongan” (none) point instead of an appended
+opt-out; selecting a mood shows a short supportive Gami reply, and the most
+distressed mood also offers a direct support link without diagnostic claims.
 `PKM-WEB-005` and `PKM-WEB-006` remain available from the student-only FAB
 mounted by the authenticated dashboard layout. No browsing details enter these
 surfaces. Partner monitoring of raw check-in values remains `planned` until an
 explicit consent, visibility, and revocation design is implemented. This
-insight-first main canvas differs from the target “Today first” information
-architecture in `context/ui-context.md`; the mandatory gate and global FAB
-preserve direct access to the core recovery loop while that product-level gap
-remains open.
+insight-first main canvas still differs from the full target “Today first”
+information architecture in `context/ui-context.md`; the mandatory gate and
+global FAB preserve direct access to the core recovery loop while that
+product-level gap remains open.
 
 Supporting account recovery status (`implemented code-complete prototype`):
 the locale-aware forgot-password screen requests a non-enumerating email code,
@@ -48,6 +61,14 @@ GitHub variables, then deploy to the pinned VPS as root over password SSH only
 when `ENABLE_VPS_DEPLOY=true`. The public site is `https://gamblock-ai.com`;
 deployment no longer waits for SMTP/WhatsApp, but their email and messaging
 features remain unavailable until provider credentials are configured.
+
+Supporting post-intervention status (`implemented`): the public
+`/post-intervention` handoff page is now interactive — the box-breathing
+circle animates in sync with each 4-2-6 phase, phase labels crossfade through
+a shared `FadeSwap` primitive, three round-progress dots track the exercise,
+and completion shows a calm sage check with the mascot (no confetti). The
+breathing card leads the page on mobile, the mesh background and skip link
+are applied, and reduced motion falls back to static visuals with text cues.
 
 Supporting error-surface status (`implemented`): locale 404 and runtime error
 boundaries share a minimal, keyboard-accessible Gami status page. Temporary
@@ -113,15 +134,27 @@ rotate codes, inspect consented aggregates, remove members, archive empty
 groups, and resolve scoped protection/leave requests with recent auth.
 
 Supporting recovery/progress status (`implemented`, `WEB-SUP-REC-001` and
-`WEB-SUP-PROG-001`): the student uses a calm recovery-room workspace for urge
-surfing, 5-4-3-2-1 grounding, focus sprint, encrypted reflection, and support.
+`WEB-SUP-PROG-001`): the student recovery workspace is framed as daily
+self-control missions — the server-verified daily mission card leads the page
+and the urge-surfing, 5-4-3-2-1 grounding, and focus-sprint practices carry
+mission-oriented copy — alongside encrypted reflection and support routes.
+Placed room decor is also visible on mobile as a read-only chip strip.
 Active timers/task labels remain browser-local; completed practices and typed
 weekly reviews use a rolling 12-month account view, while deterministic room
 decor remains until account deletion. Reflection payload v2 carries the only
 recovery free text plus optional next-step/current-focus fields. Student
 progress provides inspectable 7/30/90-day activity calendars, suppresses trends
-below three check-ins, and generates CSV/print-to-PDF locally after a privacy
-warning. Partner progress uses only category-specific member aggregates and
+below three check-ins while showing a participation-focused Gami encouragement
+once three check-ins exist, and generates CSV/print-to-PDF locally after a
+privacy warning. The decorative "journey collection" card has been replaced by
+deterministic journey badges (fixed 90-day snapshot window, criteria always
+visible, additive-only) plus a non-punitive presence-rhythm line; the earlier
+dead "today workspace" component set was removed. A later interactivity pass
+added `FadeSwap` (AnimatePresence crossfade primitive), Reveal stagger on the
+dashboard blocks, StatCounter on the numeric summary tiles, a floating
+parallax hero mascot and supporters marquee on the landing page, and real
+generated mascot poses replacing the seven byte-identical placeholder PNGs
+(remaining dead landing set pieces and zero-reference assets were deleted). Partner progress uses only category-specific member aggregates and
 never the student trend endpoint. Partner recovery is a CMS-authored response
 simulator and never record access. The complete `PKM-WEB-002` focus-period and
 reminder lifecycle remains incomplete core work.
@@ -133,7 +166,18 @@ personal level progress, explicit locked/claimable/claimed/skipped states, one
 bounded primary replacement, and an optional encrypted 30-second reflection.
 Only the backend can mark a task claimable or persist adjustment state; the UI
 has no self-completion or undo control. There is no random reward, paid currency,
-leaderboard, punitive streak, casino celebration, or partner projection.
+leaderboard, punitive streak, casino celebration, or partner projection. The
+same primary/bonus task cards are also mounted on the recovery workspace via a
+shared mission card; both surfaces fetch `/missions/today` independently and
+converge after a claim. Deterministic journey titles (`levelTitle1..7`,
+shared verbatim with the Flutter client) name each level tier, and level-up
+feedback references the new title.
+
+Supporting skills status (`implemented`, around PKM core `PKM-WEB-006`): the
+student-only `/skills` page pairs the short internal skill practices with a
+curated list of free external course/certification platforms rendered as plain
+outbound links (new tab, `noreferrer noopener`, no account or browsing data).
+The curated list lives in `lib/skills/external-platforms.ts`.
 
 Current psychoeducation status (`implemented`, PKM core `PKM-WEB-003`): the
 library and direct reader consume only published, revisioned bilingual
@@ -178,7 +222,7 @@ and review/publish/archive transitions.
   `hooks/use-*.ts`, and their Vitest tests.
 - Dashboard/recovery UI: inspect `app/[locale]/(dashboard)/`,
   `components/dashboard/`, `lib/recovery/`, the relevant recovery hooks, and
-  `design-system/gamblock-ai-recovery-dashboard/`.
+  `docs/design-system/gamblock-ai-recovery-dashboard/`.
 - Accountability: group codes are hashed, rotatable, rate-limited discovery
   values; preview plus explicit confirmation creates the active membership.
   Approval authority comes from that backend membership, not a client-side role

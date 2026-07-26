@@ -37,7 +37,7 @@ export function BackButton({ label, fallbackHref = '/' }: BackButtonProps) {
       className="rounded-full px-5"
       onClick={handleBack}
     >
-      <ArrowLeft className="h-3.5 w-3.5" />
+      <ArrowLeft className="size-3.5" />
       {label}
     </Button>
   );

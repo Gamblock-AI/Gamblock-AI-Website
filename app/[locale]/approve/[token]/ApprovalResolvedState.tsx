@@ -13,9 +13,9 @@ export function ApprovalResolvedState({
     <div className="bg-background flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md p-8 text-center">
         {isApproved ? (
-          <CheckCircle className="text-sage mx-auto h-12 w-12" />
+          <CheckCircle className="text-sage mx-auto size-12" />
         ) : (
-          <XCircle className="text-crimson mx-auto h-12 w-12" />
+          <XCircle className="text-crimson mx-auto size-12" />
         )}
         <h2 className="text-heading text-navy mt-4 text-xl">
           {isApproved ? t('approvedTitle') : t('deniedTitle')}

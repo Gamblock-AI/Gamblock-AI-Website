@@ -30,8 +30,8 @@ export function KnowledgeCheck({
   const [submitting, setSubmitting] = useState(false);
 
   return (
-    <aside className="mt-7 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 sm:p-6">
-      <p className="flex items-center gap-2 text-xs font-extrabold tracking-[0.12em] text-blue-700 uppercase">
+    <aside className="mt-7 rounded-2xl border-sky/40 bg-azure/50 border p-5 sm:p-6">
+      <p className="flex items-center gap-2 text-xs font-extrabold tracking-[0.12em] text-navy-light uppercase">
         <CircleHelp className="size-4" aria-hidden="true" />
         {labels.eyebrow}
       </p>
@@ -43,7 +43,7 @@ export function KnowledgeCheck({
         {check.choices.map((option) => (
           <label
             key={option.id}
-            className="border-border bg-card text-navy flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm leading-6 has-checked:border-blue-600 has-checked:ring-2 has-checked:ring-blue-600/15"
+            className="border-border bg-card text-navy flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm leading-6 has-checked:border-navy-light has-checked:ring-2 has-checked:ring-navy-light/15"
           >
             <input
               type="radio"
@@ -59,7 +59,7 @@ export function KnowledgeCheck({
       </fieldset>
       {result ? (
         <div
-          className={`mt-4 flex items-start gap-2 rounded-xl p-3 text-sm ${result.correct ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'}`}
+          className={`mt-4 flex items-start gap-2 rounded-xl p-3 text-sm ${result.correct ? 'bg-success/15 text-sage-dark' : 'bg-amber/15 text-navy'}`}
           role="status"
         >
           {result.correct ? (
@@ -78,7 +78,7 @@ export function KnowledgeCheck({
         </div>
       ) : null}
       {completed ? (
-        <p className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-emerald-700">
+        <p className="mt-4 inline-flex items-center gap-2 text-sage-dark text-sm font-bold">
           <CheckCircle2 className="size-4" />
           {labels.completed}
         </p>

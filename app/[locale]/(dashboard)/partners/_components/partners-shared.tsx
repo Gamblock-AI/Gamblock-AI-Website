@@ -3,6 +3,8 @@ import type { LucideIcon } from 'lucide-react';
 import { ArrowRight, Check } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 
+export { EmptyLine } from '../../accountability/_components/accountability-shared';
+
 export interface Translation {
   (key: string, values?: Record<string, string | number>): string;
 }
@@ -12,15 +14,6 @@ export function Info({ label, value }: { label: string; value: string }) {
     <div className="bg-muted/45 rounded-lg px-3 py-2">
       <span className="text-muted-foreground block">{label}</span>
       <span className="text-navy mt-1 block font-semibold">{value}</span>
-    </div>
-  );
-}
-
-export function EmptyLine({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="border-border rounded-xl border border-dashed p-4">
-      <p className="text-navy font-semibold">{title}</p>
-      <p className="text-muted-foreground mt-1 text-sm leading-6">{body}</p>
     </div>
   );
 }

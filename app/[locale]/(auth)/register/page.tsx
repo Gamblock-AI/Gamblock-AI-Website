@@ -7,7 +7,7 @@ import { useRouter } from '@/i18n/routing';
 import { Mail, Lock, ArrowRight, User, Shield } from 'lucide-react';
 import { register } from '@/lib/auth';
 import { persistAuthSession } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/common/loading-button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthField } from '@/components/auth/AuthField';
 import { cn } from '@/lib/utils';
@@ -156,7 +156,7 @@ export default function RegisterPage() {
                   : 'border-border text-muted-foreground hover:border-navy/30'
               )}
             >
-              <Icon className="h-6 w-6" />
+              <Icon className="size-6" />
               <span className="text-xs font-bold">{title}</span>
               <span className="text-muted-foreground text-[10px]">{sub}</span>
             </button>
@@ -169,6 +169,7 @@ export default function RegisterPage() {
           label={t('text_252')}
           icon={User}
           type="text"
+          autoComplete="name"
           placeholder={t('text_263')}
           error={errors.name?.message}
           {...formRegister('name')}
@@ -177,6 +178,7 @@ export default function RegisterPage() {
           label={t('text_253')}
           icon={Mail}
           type="email"
+          autoComplete="email"
           placeholder={t('text_264')}
           error={errors.email?.message}
           {...formRegister('email')}
@@ -185,6 +187,7 @@ export default function RegisterPage() {
           label={t('text_254')}
           icon={Lock}
           type="password"
+          autoComplete="new-password"
           placeholder={t('text_265')}
           error={errors.password?.message}
           {...formRegister('password')}
@@ -196,7 +199,7 @@ export default function RegisterPage() {
               type="checkbox"
               id="terms"
               {...formRegister('terms')}
-              className="border-input accent-navy mt-0.5 h-4 w-4 rounded"
+              className="border-input accent-navy mt-0.5 size-4 rounded"
             />
             <label
               htmlFor="terms"
@@ -226,20 +229,16 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <Button
+        <LoadingButton
           type="submit"
           variant="primary"
           size="lg"
-          className="w-full rounded-xl py-6 font-semibold"
-          disabled={loading}
+          className="w-full rounded-xl font-semibold"
+          loading={loading}
         >
-          {loading
-            ? t('processing')
-            : role === 'partner'
-              ? t('submitPartner')
-              : t('submitMember')}
-          <ArrowRight className="ml-1.5 h-4 w-4" />
-        </Button>
+          {role === 'partner' ? t('submitPartner') : t('submitMember')}
+          <ArrowRight className="size-4" />
+        </LoadingButton>
       </form>
     </AuthShell>
   );

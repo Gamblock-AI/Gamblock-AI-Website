@@ -56,7 +56,7 @@ export function TeamSection() {
       {/* Intro */}
       <Reveal className="mx-auto max-w-2xl text-center">
         <Pill variant="navy" className="mb-4">
-          <GraduationCap className="h-3.5 w-3.5" />
+          <GraduationCap className="size-3.5" />
           {t('teamKicker')}
         </Pill>
         <h2 className="text-heading text-3xl text-navy md:text-4xl">{t('teamTitle')}</h2>
@@ -64,7 +64,8 @@ export function TeamSection() {
       </Reveal>
 
       {/* Stats */}
-      <div className="mx-auto mt-8 grid max-w-2xl grid-cols-3 gap-2.5 sm:gap-3">
+      <Reveal delay={0.08}>
+        <div className="mx-auto mt-8 grid max-w-2xl grid-cols-3 gap-2.5 sm:gap-3">
         {stats.map((s) => (
           <div
             key={s.labelKey}
@@ -78,7 +79,8 @@ export function TeamSection() {
             </p>
           </div>
         ))}
-      </div>
+        </div>
+      </Reveal>
 
       {/* Advisor — featured, same photo treatment as member cards */}
       <Reveal className="mx-auto mt-14 max-w-3xl">
@@ -89,12 +91,12 @@ export function TeamSection() {
               alt={`Foto ${advisorName}`}
               fill
               sizes="(max-width: 640px) 100vw, 16rem"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.05] motion-reduce:transform-none motion-reduce:transition-none"
             />
           </div>
           <div className="flex flex-col justify-center p-6 sm:p-7">
             <Pill variant="navy" className="mb-3 w-fit">
-              <GraduationCap className="h-3.5 w-3.5" />
+              <GraduationCap className="size-3.5" />
               {t('teamAdvisorRole')}
             </Pill>
             <h3 className="text-heading text-xl text-navy md:text-2xl">{advisorName}</h3>
@@ -120,7 +122,7 @@ export function TeamSection() {
                   alt={`Foto ${name}`}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.05] motion-reduce:transform-none motion-reduce:transition-none"
                 />
               </div>
               <div className="flex flex-1 flex-col p-5">

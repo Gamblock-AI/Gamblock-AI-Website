@@ -19,7 +19,7 @@ export default async function AppLayout({
       <div className="dashboard-theme dashboard-canvas min-h-dvh">
         <a
           href="#dashboard-content"
-          className="bg-navy shadow-card focus:ring-sky fixed top-4 left-4 z-[70] -translate-y-24 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-transform outline-none focus:translate-y-0 focus:ring-2 focus:ring-offset-2 motion-reduce:transition-none"
+          className="bg-navy shadow-card focus-visible:ring-sky fixed top-4 left-4 z-[70] -translate-y-24 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-transform outline-none focus-visible:translate-y-0 focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none"
         >
           {t('skipToContent')}
         </a>

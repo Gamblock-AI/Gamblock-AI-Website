@@ -81,8 +81,14 @@ export function LearningNextStep({
             {module.summary}
           </p>
           <div
+            role="progressbar"
+            aria-label={t('learningProgress', {
+              count: module.progress.progress_percent,
+            })}
+            aria-valuenow={module.progress.progress_percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
             className="bg-muted mt-4 h-2 overflow-hidden rounded-full"
-            aria-hidden="true"
           >
             <div
               className="bg-sky h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"

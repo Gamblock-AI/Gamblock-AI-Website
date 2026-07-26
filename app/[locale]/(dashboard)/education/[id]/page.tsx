@@ -111,9 +111,16 @@ export default function EducationDetailPage({
           {t('back')}
         </Link>
         <div className="flex min-w-64 items-center gap-3">
-          <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
+          <div
+            role="progressbar"
+            aria-label={t('progress')}
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            className="bg-muted h-2 flex-1 overflow-hidden rounded-full"
+          >
             <div
-              className="h-full rounded-full bg-blue-600"
+              className="bg-navy-light h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -128,9 +135,9 @@ export default function EducationDetailPage({
           locale={locale}
           title={module.title}
         />
-        <header className="border-border to-card border-b bg-gradient-to-b from-blue-50/90 px-5 py-7 sm:px-9 sm:py-9">
+        <header className="border-border to-card border-b bg-gradient-to-b from-azure/60 px-5 py-7 sm:px-9 sm:py-9">
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
-            <span className="rounded-full bg-blue-100 px-3 py-1.5 text-blue-800">
+            <span className="bg-azure text-navy rounded-full px-3 py-1.5">
               {tDynamic(dynamicLabelKey('educationCategory', module.category), {
                 value: dynamicLabelFallback(module.category),
               })}
@@ -140,7 +147,7 @@ export default function EducationDetailPage({
               {t('readTime', { count: module.estimated_minutes })}
             </span>
           </div>
-          <p className="mt-5 text-xs font-extrabold tracking-[0.12em] text-blue-700 uppercase">
+          <p className="mt-5 text-xs font-extrabold text-navy-light tracking-[0.12em] uppercase">
             {t('moduleEyebrow')}
           </p>
           <h1 className="text-navy mt-2 max-w-3xl text-3xl leading-tight font-extrabold tracking-tight sm:text-4xl">
@@ -149,10 +156,10 @@ export default function EducationDetailPage({
           <p className="text-muted-foreground mt-4 max-w-3xl text-base leading-7">
             {module.summary}
           </p>
-          <div className="bg-card mt-6 flex items-start gap-3 rounded-2xl border border-blue-200 p-4">
-            <Target className="mt-0.5 size-5 shrink-0 text-blue-700" />
+          <div className="bg-card mt-6 flex items-start gap-3 border-sky/40 rounded-2xl border p-4">
+            <Target className="text-navy-light mt-0.5 size-5 shrink-0" />
             <div>
-              <p className="text-xs font-bold tracking-wide text-blue-700 uppercase">
+              <p className="text-xs font-bold text-navy-light tracking-wide uppercase">
                 {t('objective')}
               </p>
               <p className="text-navy mt-1 text-sm leading-6">
@@ -174,7 +181,7 @@ export default function EducationDetailPage({
                 key={section.id}
                 className="border-border bg-card shadow-soft rounded-3xl border p-5 sm:p-8"
               >
-                <p className="text-xs font-extrabold tracking-[0.12em] text-blue-700 uppercase">
+                <p className="text-xs font-extrabold text-navy-light tracking-[0.12em] uppercase">
                   {t('sectionNumber', { number: index + 1 })}
                 </p>
                 <h2 className="text-navy mt-2 text-2xl font-extrabold">
@@ -225,7 +232,7 @@ export default function EducationDetailPage({
                     }
                   >
                     {completed ? (
-                      <CheckCircle2 className="size-4 text-emerald-600" />
+                      <CheckCircle2 className="text-sage-dark size-4" />
                     ) : null}
                     {completed
                       ? t('sectionCompleted')
@@ -238,7 +245,7 @@ export default function EducationDetailPage({
         </div>
         <aside className="space-y-4 lg:sticky lg:top-24">
           <Card className="rounded-2xl p-5">
-            <p className="flex items-center gap-2 text-xs font-extrabold tracking-wide text-blue-700 uppercase">
+            <p className="flex items-center gap-2 text-xs font-extrabold text-navy-light tracking-wide uppercase">
               <ShieldCheck className="size-4" />
               {t('reviewedBy')}
             </p>
@@ -258,7 +265,7 @@ export default function EducationDetailPage({
                     href={source.url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="group flex items-start gap-2 text-xs leading-5 text-blue-700 underline-offset-2 hover:underline"
+                    className="group flex items-start gap-2 text-navy-light text-xs leading-5 underline-offset-2 hover:underline"
                   >
                     <ExternalLink className="mt-0.5 size-3.5 shrink-0" />
                     <span>

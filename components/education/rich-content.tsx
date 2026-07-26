@@ -41,7 +41,7 @@ function markedText(node: RichTextDocument): ReactNode {
           href={href}
           target="_blank"
           rel="noreferrer noopener"
-          className="font-semibold text-blue-700 underline underline-offset-4"
+          className="text-navy-light font-semibold underline underline-offset-4"
         >
           {value}
         </a>
@@ -74,9 +74,9 @@ function ConsentMedia({
 
   if (!allowed) {
     return (
-      <div className="my-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-center">
+      <div className="my-5 rounded-2xl border-sky/40 bg-azure/50 border p-5 text-center">
         <ExternalLink
-          className="mx-auto size-6 text-blue-700"
+          className="text-navy-light mx-auto size-6"
           aria-hidden="true"
         />
         <p className="text-navy mt-2 text-sm font-semibold">
@@ -147,7 +147,7 @@ function ConsentMedia({
           target="_blank"
           rel="noreferrer"
           onClick={() => onOpened?.(mediaID)}
-          className="text-xs font-semibold text-blue-700 underline"
+          className="text-navy-light text-xs font-semibold underline"
         >
           {labels.pdfOpen}
         </a>
@@ -235,7 +235,7 @@ export function RichContent({
   labels?: MediaLabels;
 }) {
   return (
-    <div className="prose prose-slate prose-headings:text-navy prose-a:text-blue-700 prose-blockquote:border-blue-400 prose-blockquote:bg-blue-50 prose-blockquote:px-5 prose-blockquote:py-1 prose-blockquote:not-italic prose-li:marker:text-blue-700 max-w-none">
+    <div className="prose prose-slate prose-headings:text-navy prose-a:text-navy-light prose-blockquote:border-sky prose-blockquote:bg-azure/50 prose-blockquote:px-5 prose-blockquote:py-1 prose-blockquote:not-italic prose-li:marker:text-navy-light max-w-none">
       {renderNode(document, 'root', mediaURLs, onMediaOpened, labels)}
     </div>
   );

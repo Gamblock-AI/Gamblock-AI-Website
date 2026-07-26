@@ -41,7 +41,7 @@ export function ErrorStatusPage({
   };
 
   return (
-    <main className="text-navy relative isolate min-h-[100dvh] overflow-hidden bg-[#f5f9fd] dark:bg-[#101b30] dark:text-slate-50">
+    <main className="text-navy relative isolate min-h-[100dvh] overflow-hidden bg-background dark:bg-navy-dark dark:text-white">
       <div
         className="bg-sky-light/45 dark:bg-sky/10 pointer-events-none absolute -top-48 -right-48 size-[38rem] rounded-full blur-3xl"
         aria-hidden="true"
@@ -78,7 +78,7 @@ export function ErrorStatusPage({
             <h1 className="mt-8 max-w-xl text-3xl leading-tight font-extrabold tracking-[-0.035em] text-balance sm:text-4xl lg:text-5xl">
               {title}
             </h1>
-            <p className="text-muted-foreground mt-4 max-w-xl text-base leading-7 sm:text-lg dark:text-slate-300">
+            <p className="text-muted-foreground mt-4 max-w-xl text-base leading-7 sm:text-lg dark:text-white/70">
               {description}
             </p>
 
@@ -105,7 +105,7 @@ export function ErrorStatusPage({
               {onRetry ? (
                 <Link
                   href={homeHref}
-                  className="focus-visible:ring-navy/30 text-navy inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-bold whitespace-nowrap transition-colors hover:bg-white/80 focus-visible:ring-4 focus-visible:outline-none dark:text-slate-100 dark:hover:bg-white/10"
+                  className="focus-visible:ring-navy/30 text-navy inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-bold whitespace-nowrap transition-colors hover:bg-white/80 focus-visible:ring-4 focus-visible:outline-none dark:text-white/90 dark:hover:bg-white/10"
                 >
                   <House className="size-4" aria-hidden="true" />
                   {homeLabel}
@@ -114,7 +114,7 @@ export function ErrorStatusPage({
                 <button
                   type="button"
                   onClick={goBack}
-                  className="focus-visible:ring-navy/30 text-navy inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-bold whitespace-nowrap transition-colors hover:bg-white/80 focus-visible:ring-4 focus-visible:outline-none dark:text-slate-100 dark:hover:bg-white/10"
+                  className="focus-visible:ring-navy/30 text-navy inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-bold whitespace-nowrap transition-colors hover:bg-white/80 focus-visible:ring-4 focus-visible:outline-none dark:text-white/90 dark:hover:bg-white/10"
                 >
                   <ArrowLeft className="size-4" aria-hidden="true" />
                   {backLabel}

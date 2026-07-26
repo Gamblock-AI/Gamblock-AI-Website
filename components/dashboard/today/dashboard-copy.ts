@@ -13,6 +13,14 @@ export const moodCopy: Record<MoodLevel, `mood${MoodLevel}`> = {
   5: 'mood5',
 };
 
+export const moodSupportCopy: Record<MoodLevel, `moodSupport${MoodLevel}`> = {
+  1: 'moodSupport1',
+  2: 'moodSupport2',
+  3: 'moodSupport3',
+  4: 'moodSupport4',
+  5: 'moodSupport5',
+};
+
 export const missionMinutes: Record<MissionNumber, number> = {
   1: 2,
   2: 1,

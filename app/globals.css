@@ -28,6 +28,9 @@
   --color-sky-light: #bfe9f5;
   --color-azure: #dcebfb;
   --color-sage: #2f9e6f;
+  --color-sage-light: #3cb381;
+  --color-sage-dark: #20805c;
+  --color-cyan: #3dd6f5;
   --color-amber: #e0a516;
 
   /* --- Semantic Tokens (bound to CSS vars below) --- */
@@ -192,10 +195,9 @@
    get clearer borders, copy, controls, and focus states over the shared mesh.
    ============================================================ */
 .dashboard-theme {
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
-  --radius-3xl: 1.5rem;
+  /* Tighter product-surface radius scale; the marketing site keeps the larger
+     global --radius. Utilities derive every step from this one variable. */
+  --radius: 0.75rem;
   --secondary: oklch(0.955 0.012 245);
   --secondary-foreground: oklch(0.27 0.065 264);
   --muted: oklch(0.965 0.008 245);
@@ -271,7 +273,7 @@
   }
   ::selection {
     background: color-mix(in oklch, var(--accent) 22%, transparent);
-    color: var(--navy-dark, #0d1b35);
+    color: #0d1b35;
   }
 
   /* Make all interactive elements have a pointer cursor globally */

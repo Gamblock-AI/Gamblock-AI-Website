@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { Marquee } from '@/components/ui/marquee';
 
 const SUPPORTERS = [
   { name: 'Kemdiktisaintek', src: '/images/supporters/kemdiktisaintek-new.png' },
@@ -20,28 +21,28 @@ export function SupportersStrip() {
         <p className="text-label mb-7 text-center text-muted-foreground">
           {t('supportersLabel')}
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-5 lg:justify-between">
+        <Marquee gapRem={3} repeat={3} durationSec={45}>
           {SUPPORTERS.map((supporter) => (
             <span
               key={supporter.name}
               className="flex shrink-0 items-center gap-3"
               title={supporter.name}
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-soft ring-1 ring-navy/5">
+              <span className="shadow-soft ring-navy/5 flex size-11 shrink-0 items-center justify-center rounded-xl bg-white ring-1">
                 <Image
                   src={supporter.src}
                   alt={`Logo ${supporter.name}`}
                   width={36}
                   height={36}
-                  className="h-8 w-8 object-contain"
+                  className="size-8 object-contain"
                 />
               </span>
-              <span className="max-w-40 text-sm font-bold leading-tight tracking-tight text-navy/70">
+              <span className="text-navy/70 max-w-40 text-sm leading-tight font-bold tracking-tight">
                 {supporter.name}
               </span>
             </span>
           ))}
-        </div>
+        </Marquee>
       </div>
     </section>
   );

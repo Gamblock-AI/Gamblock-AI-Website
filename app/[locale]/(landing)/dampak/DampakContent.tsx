@@ -10,6 +10,7 @@ import { StatCounter } from '@/components/ui/stat-counter';
 import { GradientBlob } from '@/components/ui/gradient-blob';
 import { Reveal } from '@/components/common/Reveal';
 import { MarketingNav } from '@/components/landing/MarketingNav';
+import { SkipLink } from '@/components/landing/SkipLink';
 import { FixedBackground } from '@/components/landing/FixedBackground';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { ROUTES } from '@/routes';
@@ -37,8 +38,10 @@ export function DampakContent() {
 
   return (
     <div className="relative text-foreground">
+      <SkipLink />
       <FixedBackground />
       <MarketingNav />
+      <main id="main-content">
 
       {/* HERO */}
       <section className="relative overflow-hidden px-6 pt-32 pb-20 md:px-10 md:pt-40 md:pb-24">
@@ -58,8 +61,8 @@ export function DampakContent() {
             {crisis.map(({ icon: Icon, value, prefix, suffix, decimals, label, src }) => (
               <Reveal key={label}>
                 <div className="h-full rounded-3xl border border-border bg-card p-6 text-left shadow-soft">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-crimson/10">
-                    <Icon className="h-5 w-5 text-crimson" />
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-crimson/10">
+                    <Icon className="size-5 text-crimson" />
                   </div>
                   <p className="mt-5 text-3xl font-extrabold tracking-tight text-navy md:text-4xl">
                     <StatCounter value={value} prefix={prefix} suffix={suffix} decimals={decimals} />
@@ -122,13 +125,13 @@ export function DampakContent() {
               className="relative flex-1 rounded-3xl border border-white/10 bg-white/[0.06] p-6 backdrop-blur"
             >
               <span className="font-mono text-xs tracking-widest text-white/30">{n}</span>
-              <div className="mt-3 flex h-11 w-11 items-center justify-center rounded-xl bg-crimson text-white">
-                <Icon className="h-5 w-5" />
+              <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-crimson text-white">
+                <Icon className="size-5" />
               </div>
               <h3 className="mt-4 text-sm font-bold text-white">{title}</h3>
               <p className="mt-1 text-xs leading-relaxed text-white/65">{desc}</p>
               {i < arc.length - 1 && (
-                <ArrowRight className="absolute -right-2 top-1/2 hidden h-4 w-4 -translate-y-1/2 text-white/20 md:block" />
+                <ArrowRight className="absolute -right-2 top-1/2 hidden size-4 -translate-y-1/2 text-white/20 md:block" />
               )}
             </Reveal>
           ))}
@@ -143,15 +146,19 @@ export function DampakContent() {
             {t('ctaTitle')} <span className="text-crimson">{t('ctaTitleAccent')}</span>
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground md:text-lg">{t('ctaBody')}</p>
-          <Link href={ROUTES.REGISTER} className="mt-8 inline-block">
-            <Button variant="accent" size="lg" className="rounded-full px-8">
-              {t('ctaButton')}
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-          </Link>
+          <Button
+            render={<Link href={ROUTES.REGISTER} />}
+            variant="accent"
+            size="lg"
+            className="mt-8 rounded-full px-8"
+          >
+            {t('ctaButton')}
+            <ArrowRight className="size-5" />
+          </Button>
         </Reveal>
       </section>
 
+      </main>
       <SiteFooter />
     </div>
   );

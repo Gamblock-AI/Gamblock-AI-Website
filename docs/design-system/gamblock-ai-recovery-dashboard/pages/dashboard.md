@@ -1,5 +1,10 @@
 # Dashboard Page Specification
 
+**Status: target spec.** This document describes the intended "Hari ini"-first
+information architecture. The shipped student dashboard is insight-first (see
+`docs/ai/README.md`); this gap is a recorded product-level difference, not
+current implementation truth.
+
 This page specification overrides the master design system only where it is
 more specific.
 
@@ -29,9 +34,9 @@ browsing details, or inferred risk.
 
 ## Layout
 
-- The authenticated shell uses the canonical mesh page background, a 64px
-  sticky header, a 248px desktop navigation rail, and a maximum 1280px content
-  container.
+- The authenticated shell uses the canonical mesh page background, a 72px
+  sticky header (`h-[4.5rem]`), a 252px desktop navigation rail, and a bounded
+  content container.
 - Desktop student view uses a 12-column grid. The “Hari ini” workspace occupies
   eight columns and the supporting rail occupies four.
 - The primary workspace and routine cards use white or near-white surfaces.
@@ -46,20 +51,31 @@ browsing details, or inferred risk.
 
 ## Primary components
 
-- `TodayHeader`: greeting, date, truthful protection state, no fake notification.
-- `IntentionPanel`: editable intention with explicit local/private storage copy.
-- `PrivateCheckIn`: labeled mood and urge inputs, optional context tags, save
-  confirmation, and no free-text browsing detail prompt.
-- `DailyMission`: one primary mission, completion, skip/replace with a reason,
-  and non-punitive language.
-- `ReflectionJournal`: a labeled writing form beside recent entries on desktop,
-  stacked on mobile, with honest loading, empty, retry, saving, and saved states.
-- `SkillRecommendation`: skill title, short practice, “why this fits”, evidence
-  or review status, and another-option control.
-- `WeeklyReview`: sufficient-data summary, calm micro-chart when warranted, and
-  a reflective next-step prompt.
-- `ProtectionSummary`: mode, runtime status, last sync, and model/rules version in
-  a disclosure rather than dominant KPI cards.
+Implemented equivalents live in `components/dashboard/today/`; target-only
+concepts have no file yet.
+
+- Greeting/orientation header (implemented as
+  `today/dashboard-welcome.tsx`): greeting, date, truthful protection state,
+  no fake notification.
+- Intention panel (implemented as `today/intention-editor.tsx`): editable
+  intention with explicit local/private storage copy.
+- `PrivateCheckIn` (`today/private-check-in.tsx`): labeled mood and urge
+  inputs, optional context tags, save confirmation, and no free-text browsing
+  detail prompt.
+- `DailyMission` (`today/daily-mission.tsx`): one primary mission, completion,
+  skip/replace with a reason, and non-punitive language.
+- Reflection entry (implemented as `today/quick-reflection.tsx`; the full
+  journal lives in the recovery workspace): a labeled writing form with honest
+  loading, empty, retry, saving, and saved states.
+- `SkillRecommendation` (`today/skill-recommendation.tsx`): skill title, short
+  practice, “why this fits”, evidence or review status, and another-option
+  control.
+- Weekly review summary (implemented as `today/weekly-snapshot.tsx`):
+  sufficient-data summary, calm micro-chart when warranted, and a reflective
+  next-step prompt.
+- `ProtectionSummary` (`today/protection-summary.tsx`): mode, runtime status,
+  last sync, and model/rules version in a disclosure rather than dominant KPI
+  cards.
 
 ## Content rules
 

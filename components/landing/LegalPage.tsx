@@ -1,4 +1,5 @@
 import { MarketingNav } from '@/components/landing/MarketingNav';
+import { SkipLink } from '@/components/landing/SkipLink';
 import { FixedBackground } from '@/components/landing/FixedBackground';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 
@@ -21,10 +22,11 @@ interface LegalPageProps {
 export function LegalPage({ title, updatedLabel, intro, sections }: LegalPageProps) {
   return (
     <div className="relative text-foreground">
+      <SkipLink />
       <FixedBackground />
       <MarketingNav minimal />
 
-      <main className="px-6 pt-32 pb-20 md:px-10 md:pt-40">
+      <main id="main-content" className="px-6 pt-32 pb-20 md:px-10 md:pt-40">
         <article className="mx-auto max-w-3xl">
           <header className="mb-10 border-b border-border pb-8">
             <h1 className="text-display text-3xl text-navy md:text-5xl">{title}</h1>

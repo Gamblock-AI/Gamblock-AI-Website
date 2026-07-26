@@ -27,6 +27,7 @@ import {
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import { GamiCard } from '@/components/dashboard/gami-card';
 import { useProgressSnapshot } from '@/hooks/use-progress-snapshot';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { printProgressSnapshot } from './progress-export';
@@ -43,6 +44,7 @@ import {
   type ProgressCategory,
   type RangeDays,
 } from './progress-utils';
+import { JourneyBadges } from './journey-badges';
 import { WeeklyReviewSheet } from './weekly-review-sheet';
 
 const CATEGORY_ICONS: Record<ProgressCategory, LucideIcon> = {
@@ -77,7 +79,9 @@ export function StudentProgress() {
   );
   const selected = selectedDate ? activityMap.get(selectedDate) : undefined;
   const closeReview = () => setReviewOpen(false);
+  const [reviewVersion, setReviewVersion] = useState(0);
   const completeReview = () => {
+    setReviewVersion((version) => version + 1);
     setReviewOpen(false);
     void snapshot.refetch();
   };
@@ -206,7 +210,7 @@ export function StudentProgress() {
                     key={key}
                     type="button"
                     onClick={() => setSelectedDate(key)}
-                    className={`focus-visible:ring-cyan border-border/70 relative min-h-24 cursor-pointer border-r border-b p-2 text-left outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-28 sm:p-3 ${selectedDate === key ? 'bg-cyan/10 shadow-[inset_0_0_0_2px_#17264d]' : 'hover:bg-muted/35'}`}
+                    className={`focus-visible:ring-ring border-border/70 relative min-h-24 cursor-pointer border-r border-b p-2 text-left outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-28 sm:p-3 ${selectedDate === key ? 'bg-cyan/10 shadow-[inset_0_0_0_2px_#17264d]' : 'hover:bg-muted/35'}`}
                     aria-label={p('dayLabel', {
                       date: date.toLocaleDateString(),
                       count: total,
@@ -273,38 +277,21 @@ export function StudentProgress() {
                   ))}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="p-4 sm:p-5">
+                <GamiCard
+                  title={p('encouragementTitle')}
+                  message={p('encouragementBody', {
+                    count: snapshot.data.check_in_count,
+                    days: snapshot.data.active_days,
+                  })}
+                />
+              </div>
+            )}
           </section>
 
           <aside className="space-y-5">
-            <section className="border-border rounded-[2rem] border bg-[linear-gradient(150deg,rgba(37,196,232,0.12),rgba(114,184,154,0.08))] p-5 sm:p-6">
-              <p className="text-cyan-dark text-xs font-bold tracking-[0.14em] uppercase">
-                {p('collectionEyebrow')}
-              </p>
-              <h2 className="text-navy mt-2 text-xl font-bold">
-                {p('collectionTitle')}
-              </h2>
-              <p className="text-muted-foreground mt-2 text-sm leading-6">
-                {p('collectionBody')}
-              </p>
-              <div className="mt-6 grid grid-cols-3 gap-3">
-                {KEEPSAKES.map((Icon, index) => (
-                  <div
-                    key={index}
-                    className={`flex aspect-square items-center justify-center rounded-2xl border ${index < Math.min(snapshot.data!.active_days, KEEPSAKES.length) ? 'border-sage/30 bg-card text-sage shadow-sm' : 'border-border text-muted-foreground/25 border-dashed'}`}
-                  >
-                    <Icon
-                      className="size-7"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  </div>
-                ))}
-              </div>
-              <p className="text-navy mt-5 text-sm font-semibold">
-                {p('activeDays', { count: snapshot.data.active_days })}
-              </p>
-            </section>
+            <JourneyBadges key={reviewVersion} />
 
             <section className="border-border bg-card rounded-[2rem] border p-5 sm:p-6">
               <CalendarDays

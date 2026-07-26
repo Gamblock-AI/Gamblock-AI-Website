@@ -69,7 +69,7 @@ export default function EducationPage() {
         <section className="bg-navy shadow-card mb-5 overflow-hidden rounded-3xl text-white">
           <div className="grid sm:grid-cols-[minmax(0,1fr)_19rem]">
             <div className="p-6 sm:p-8">
-              <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-blue-200 uppercase">
+              <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-sky-light uppercase">
                 <Sparkles className="size-4" />
                 {t('continueEyebrow')}
               </p>
@@ -80,9 +80,16 @@ export default function EducationPage() {
                 {continued.summary}
               </p>
               <div className="mt-5 flex items-center gap-3">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/15">
+                <div
+                  role="progressbar"
+                  aria-label={t('progress')}
+                  aria-valuenow={continued.progress.progress_percent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  className="h-2 flex-1 overflow-hidden rounded-full bg-white/15"
+                >
                   <div
-                    className="h-full rounded-full bg-blue-400"
+                    className="bg-sky h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"
                     style={{ width: `${continued.progress.progress_percent}%` }}
                   />
                 </div>
@@ -92,7 +99,7 @@ export default function EducationPage() {
               </div>
               <Link
                 href={`/education/${continued.slug}`}
-                className="text-navy mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold outline-none hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-white/60"
+                className="text-navy mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold outline-none hover:bg-azure/60 focus-visible:ring-2 focus-visible:ring-white/60"
               >
                 {t('continueAction')}
                 <ArrowRight className="size-4" />
@@ -120,7 +127,7 @@ export default function EducationPage() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="border-input bg-background min-h-11 w-full rounded-xl border pr-3 pl-10 text-sm outline-none focus:ring-2 focus:ring-blue-600/25"
+            className="border-input bg-background min-h-11 w-full rounded-xl border pr-3 pl-10 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
           />
         </label>
         <label className="sr-only" htmlFor="education-category">
@@ -130,7 +137,7 @@ export default function EducationPage() {
           id="education-category"
           value={category}
           onChange={(event) => setCategory(event.target.value)}
-          className="border-input bg-background text-navy min-h-11 rounded-xl border px-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-600/25"
+          className="border-input bg-background text-navy min-h-11 rounded-xl border px-3 text-sm font-semibold outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
         >
           <option value="all">{t('allCategories')}</option>
           {categories.map((item) => (
@@ -192,7 +199,7 @@ export default function EducationPage() {
                 />
                 <div className="flex flex-1 flex-col p-5">
                   <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs font-semibold">
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
+                    <span className="bg-azure/70 text-navy-light rounded-full px-2.5 py-1">
                       {tDynamic(
                         dynamicLabelKey('educationCategory', module.category),
                         { value: dynamicLabelFallback(module.category) }
@@ -212,7 +219,7 @@ export default function EducationPage() {
                   <div className="mt-5 flex items-center justify-between text-xs font-semibold">
                     <span className="text-muted-foreground">
                       {progress === 100 ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-700">
+                        <span className="text-sage-dark inline-flex items-center gap-1">
                           <CheckCircle2 className="size-3.5" />
                           {t('completed')}
                         </span>
@@ -222,9 +229,16 @@ export default function EducationPage() {
                     </span>
                     <span className="text-navy">{progress}%</span>
                   </div>
-                  <div className="bg-muted mt-2 h-1.5 overflow-hidden rounded-full">
+                  <div
+                    role="progressbar"
+                    aria-label={t('progress')}
+                    aria-valuenow={progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    className="bg-muted mt-2 h-1.5 overflow-hidden rounded-full"
+                  >
                     <div
-                      className="h-full rounded-full bg-blue-600"
+                      className="bg-navy-light h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"
                       style={{ width: `${progress}%` }}
                     />
                   </div>

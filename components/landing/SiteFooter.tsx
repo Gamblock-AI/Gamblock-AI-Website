@@ -67,7 +67,7 @@ const COLUMNS = [
  */
 export function SiteFooter() {
   const t = useTranslations('Footer');
-  const socialLinks = useSiteSocialLinks();
+  const { links: socialLinks, loaded: socialLinksLoaded } = useSiteSocialLinks();
 
   return (
     <footer className="bg-footer-navy relative overflow-hidden text-white">
@@ -85,13 +85,13 @@ export function SiteFooter() {
           {/* Brand + CTA */}
           <div className="space-y-5">
             <div className="flex items-center gap-2.5">
-              <span className="shadow-soft flex h-10 w-10 items-center justify-center rounded-xl bg-white">
+              <span className="shadow-soft flex size-10 items-center justify-center rounded-xl bg-white">
                 <Image
                   src="/images/gamblock-1.png"
                   alt="Logo Gamblock-AI"
                   width={32}
                   height={32}
-                  className="h-7 w-7 object-contain"
+                  className="size-7 object-contain"
                 />
               </span>
               <span className="text-lg font-extrabold tracking-tight text-white">
@@ -101,9 +101,10 @@ export function SiteFooter() {
             <p className="max-w-xs text-sm leading-relaxed text-white/60">
               {t('tagline')}
             </p>
-            {socialLinks.length > 0 ? (
-              <div
-                className="flex flex-wrap gap-2"
+            {/* Height is reserved while loading so the columns below never shift. */}
+            {!socialLinksLoaded || socialLinks.length > 0 ? (
+              <nav
+                className="flex min-h-10 flex-wrap gap-2"
                 aria-label={t('socialLabel')}
               >
                 {socialLinks.map((social) => {
@@ -119,31 +120,30 @@ export function SiteFooter() {
                       rel="noreferrer noopener"
                       aria-label={social.label}
                       title={social.label}
-                      className="flex size-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/75 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+                      className="flex size-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/75 transition-colors outline-none hover:border-white/30 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/70"
                     >
                       <Icon className="size-4" aria-hidden="true" />
                     </a>
                   );
                 })}
-              </div>
+              </nav>
             ) : null}
             <div className="pt-2">
-              <Link href={ROUTES.REGISTER}>
-                <Button
-                  variant="primary"
-                  className="text-navy rounded-full border-white bg-white hover:bg-white/90"
-                >
-                  {t('ctaStart')}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
+              <Button
+                render={<Link href={ROUTES.REGISTER} />}
+                variant="primary"
+                className="text-navy rounded-full border-white bg-white hover:bg-white/90 focus-visible:ring-white/70"
+              >
+                {t('ctaStart')}
+                <ArrowRight className="size-4" />
+              </Button>
             </div>
           </div>
 
           {/* Link columns */}
           {COLUMNS.map((col) => (
             <div key={col.titleKey}>
-              <h4 className="text-label mb-4 text-white/45">
+              <h4 className="text-label mb-4 text-white/70">
                 {t(col.titleKey)}
               </h4>
               <ul className="space-y-3">
@@ -151,7 +151,7 @@ export function SiteFooter() {
                   <li key={l.labelKey}>
                     <Link
                       href={l.href}
-                      className="text-sm font-medium text-white/70 transition-colors hover:text-white"
+                      className="rounded-sm text-sm font-medium text-white/70 transition-colors outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white/70"
                     >
                       {t(l.labelKey)}
                     </Link>
@@ -163,7 +163,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 md:flex-row md:items-center">
-          <p className="text-xs text-white/45">{t('copyright')}</p>
+          <p className="text-xs text-white/70">{t('copyright')}</p>
           <div className="flex flex-wrap items-center gap-2">
             <span className="bg-crimson rounded-full px-3 py-1 text-[10px] font-bold tracking-wider text-white uppercase">
               {t('badgePkm')}

@@ -15,7 +15,7 @@ export function PlatformSection() {
 
   return (
     <Section tone="white" className="py-20 md:py-28">
-      <div className="border-navy/8 overflow-hidden rounded-[2.5rem] border bg-white shadow-[0_30px_90px_rgba(22,41,76,0.12)]">
+      <div className="border-navy/8 overflow-hidden rounded-3xl border bg-white shadow-[0_30px_90px_rgba(22,41,76,0.12)]">
         <div className="grid items-stretch lg:grid-cols-[0.82fr_1.18fr]">
           <Reveal className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
             <Pill variant="navy" className="mb-4">
@@ -29,12 +29,15 @@ export function PlatformSection() {
               <PlatformBadge icon={Smartphone} label={t('platformAndroid')} />
               <PlatformBadge icon={Monitor} label={t('platformWindows')} />
             </div>
-            <Link href={ROUTES.DOWNLOAD} className="mt-8 inline-block">
-              <Button variant="primary" size="lg" className="rounded-full">
-                {t('linkDownload')}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <Button
+              render={<Link href={ROUTES.DOWNLOAD} />}
+              variant="primary"
+              size="lg"
+              className="mt-8 rounded-full"
+            >
+              {t('linkDownload')}
+              <ArrowRight className="size-4" />
+            </Button>
           </Reveal>
 
           <Reveal
@@ -58,7 +61,7 @@ export function PlatformSection() {
 function PlatformBadge({ icon: Icon, label }: { icon: typeof Smartphone; label: string }) {
   return (
     <span className="border-navy/10 bg-navy/[0.04] text-navy inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold">
-      <Icon className="h-4 w-4" />
+      <Icon className="size-4" />
       {label}
     </span>
   );

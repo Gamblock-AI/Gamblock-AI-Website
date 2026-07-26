@@ -1,6 +1,7 @@
 import { Activity, CalendarCheck2, HeartPulse, ShieldPlus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatCounter } from '@/components/ui/stat-counter';
 import { moodCopy } from '@/components/dashboard/today/dashboard-copy';
 import type { DashboardSummary } from '@/hooks/use-dashboard-summary';
 import { RECOVERY_TIME_ZONE } from '@/lib/recovery/date';
@@ -54,22 +55,22 @@ export function DashboardSummaryStrip({
       key: 'active-days',
       icon: Activity,
       label: t('summaryActiveDays'),
-      value: summaryLoading
-        ? null
-        : summary
-          ? String(summary.active_days)
-          : t('summaryUnavailableValue'),
+      value: summaryLoading ? null : summary ? (
+        <StatCounter value={summary.active_days} locale={locale} />
+      ) : (
+        t('summaryUnavailableValue')
+      ),
       detail: summary ? t('summaryActiveDaysBody') : t('summaryUnavailable'),
     },
     {
       key: 'protection-help',
       icon: ShieldPlus,
       label: t('summaryProtectionHelp'),
-      value: summaryLoading
-        ? null
-        : summary
-          ? String(summary.blocked_attempts)
-          : t('summaryUnavailableValue'),
+      value: summaryLoading ? null : summary ? (
+        <StatCounter value={summary.blocked_attempts} locale={locale} />
+      ) : (
+        t('summaryUnavailableValue')
+      ),
       detail: summary
         ? t('summaryProtectionHelpBody')
         : t('summaryUnavailable'),
