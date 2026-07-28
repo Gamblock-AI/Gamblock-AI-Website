@@ -162,6 +162,7 @@ interface PlatformTabProps {
   ) => Promise<unknown>;
   createAccount: (
     email: string,
+    phone: string,
     displayName: string,
     role: string,
     reason: string
@@ -205,6 +206,7 @@ export function PlatformTab({
   const [links, setLinks] = useState(initialLinks);
   const [socialReason, setSocialReason] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState('user');
   const [inviteReason, setInviteReason] = useState('');
@@ -256,12 +258,14 @@ export function PlatformTab({
     try {
       const result = await createAccount(
         email,
+        phone,
         displayName,
         role,
         inviteReason
       );
       setTemporaryPassword(result.temporary_password);
       setEmail('');
+      setPhone('');
       setDisplayName('');
       setInviteReason('');
       toastSuccess(
@@ -401,6 +405,17 @@ export function PlatformTab({
                 placeholder="email@domain.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </AdminFormField>
+
+            <AdminFormField label="WhatsApp">
+              <input
+                className={adminFieldClassName}
+                type="tel"
+                placeholder="+6281234567890"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
                 required
               />
             </AdminFormField>

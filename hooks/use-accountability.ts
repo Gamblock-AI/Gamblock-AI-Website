@@ -394,11 +394,6 @@ export function useAccountability() {
           body: JSON.stringify({ supportive_response: supportiveResponse }),
         })
       ),
-    resendEmailVerification: () =>
-      apiClient<{ sent: boolean; preview_url?: string }>(
-        '/auth/email-verification/resend',
-        { method: 'POST' }
-      ),
     startPhoneVerification: (phone: string) =>
       apiClient<{ sent: boolean; preview_code?: string }>(
         '/auth/phone-verification/start',

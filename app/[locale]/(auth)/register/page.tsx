@@ -4,7 +4,7 @@ import { ROUTES } from '@/routes';
 import { Link } from '@/i18n/routing';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/routing';
-import { Mail, Lock, ArrowRight, User, Shield } from 'lucide-react';
+import { Mail, Lock, ArrowRight, User, Shield, Phone } from 'lucide-react';
 import { register } from '@/lib/auth';
 import { persistAuthSession } from '@/lib/auth';
 import { LoadingButton } from '@/components/common/loading-button';
@@ -23,6 +23,7 @@ type RegisterFormValues = {
   role: 'user' | 'partner';
   name: string;
   email: string;
+  phone: string;
   password: string;
   terms: true;
 };
@@ -48,6 +49,7 @@ export default function RegisterPage() {
       .string()
       .min(1, { message: t('validation.emailRequired') })
       .email({ message: t('validation.emailInvalid') }),
+    phone: z.string().min(8, { message: t('validation.phoneRequired') }),
     password: z.string().min(8, { message: t('validation.passwordMinimum') }),
     terms: z.literal(true, { error: t('validation.termsRequired') }),
   });
@@ -60,7 +62,7 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: 'user', name: '', email: '', password: '' },
+    defaultValues: { role: 'user', name: '', email: '', phone: '', password: '' },
   });
 
   const role = useWatch({ control, name: 'role' });
@@ -73,7 +75,8 @@ export default function RegisterPage() {
         data.email,
         data.password,
         data.name,
-        data.role
+        data.role,
+        data.phone
       )) as AuthResponse;
       if (res?.access_token) {
         persistAuthSession(res);
@@ -182,6 +185,15 @@ export default function RegisterPage() {
           placeholder={t('text_264')}
           error={errors.email?.message}
           {...formRegister('email')}
+        />
+        <AuthField
+          label={t('whatsappLabel')}
+          icon={Phone}
+          type="tel"
+          autoComplete="tel"
+          placeholder={t('whatsappPlaceholder')}
+          error={errors.phone?.message}
+          {...formRegister('phone')}
         />
         <AuthField
           label={t('text_254')}

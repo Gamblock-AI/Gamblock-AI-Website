@@ -31,7 +31,7 @@ import { ROUTES } from '@/routes';
 export function AdminDashboard({ name }: { name: string }) {
   const t = useTranslations('adminDashboard');
   const user = useLocalUser();
-  const verified = Boolean(user.email_verified_at);
+  const verified = Boolean(user.phone_verified_at);
   const operations = useAdminOperations(
     verified ? user.role : undefined,
     'overview'

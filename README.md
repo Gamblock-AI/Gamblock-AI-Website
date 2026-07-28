@@ -31,7 +31,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-27.2`.
+`2026-07-29.1`.
 
 ## Structure
 
@@ -219,7 +219,7 @@ Google Identity Services renders only when
 `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is configured as one of the backend's allowed
 audiences. Self-service password reset uses the backend's non-enumerating
 email-code request and single-use confirmation endpoints; production delivery
-requires configured SMTP and does not expose whether an email is registered. CI passes
+uses the configured Fonnte WhatsApp gateway and does not expose whether an email is registered. CI passes
 both public settings as Docker build arguments; the Google value remains
 optional and its absence is treated as a normal disabled state rather than a
 runtime warning.

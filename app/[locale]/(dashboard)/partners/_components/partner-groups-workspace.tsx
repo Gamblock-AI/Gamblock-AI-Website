@@ -58,7 +58,7 @@ export function PartnerGroupsWorkspace({
   const [revealedCodes, setRevealedCodes] = useState<Record<string, string>>(
     {}
   );
-  const verified = Boolean(user.email_verified_at && user.phone_verified_at);
+  const verified = Boolean(user.phone_verified_at);
   const liveStatuses = new Set([
     'active',
     'leave_pending',
@@ -95,19 +95,6 @@ export function PartnerGroupsWorkspace({
     try {
       await action;
       toastSuccess(message);
-    } catch (error) {
-      toastError(error);
-    }
-  };
-
-  const resendEmail = async () => {
-    try {
-      const result = await accountability.resendEmailVerification();
-      if (result.preview_url)
-        await navigator.clipboard.writeText(result.preview_url);
-      toastSuccess(
-        result.preview_url ? t('emailPreviewCopied') : t('emailSent')
-      );
     } catch (error) {
       toastError(error);
     }
@@ -213,22 +200,6 @@ export function PartnerGroupsWorkspace({
           description={t('verificationBody')}
         >
           <div className="grid gap-4 lg:grid-cols-2">
-            <VerificationCard
-              title={t('emailVerification')}
-              verified={Boolean(user.email_verified_at)}
-              verifiedLabel={t('verified')}
-              pendingLabel={t('notVerified')}
-            >
-              {!user.email_verified_at ? (
-                <Button
-                  variant="outline"
-                  className="mt-3 w-full"
-                  onClick={() => void resendEmail()}
-                >
-                  {t('resendEmail')}
-                </Button>
-              ) : null}
-            </VerificationCard>
             <VerificationCard
               title={t('phoneVerification')}
               verified={Boolean(user.phone_verified_at)}

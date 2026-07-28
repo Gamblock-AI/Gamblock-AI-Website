@@ -148,6 +148,7 @@ export interface AdminAccount {
   display_name: string;
   role: string;
   disabled_at?: string;
+  phone_e164?: string;
   email_verified_at?: string;
   must_change_password: boolean;
   created_at: string;
@@ -626,6 +627,7 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
       }),
     createAccount: (
       email: string,
+      phone: string,
       displayName: string,
       accountRole: string,
       reason: string
@@ -636,6 +638,7 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
           method: 'POST',
           body: JSON.stringify({
             email,
+            phone,
             display_name: displayName,
             role: accountRole,
             reason,

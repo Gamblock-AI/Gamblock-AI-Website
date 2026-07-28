@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MailCheck } from 'lucide-react';
+import { PhoneCall } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
@@ -15,7 +15,10 @@ export function AdminVerificationCard() {
   const resend = async () => {
     setState('sending');
     try {
-      await apiClient('/auth/email-verification/resend', { method: 'POST' });
+      await apiClient('/auth/phone-verification/start', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
       setState('sent');
     } catch {
       setState('error');
@@ -26,7 +29,7 @@ export function AdminVerificationCard() {
     <section className="border-amber/35 bg-amber/[0.08] rounded-2xl border p-5 sm:p-6">
       <div className="flex items-start gap-3">
         <span className="bg-amber/20 text-navy flex size-10 shrink-0 items-center justify-center rounded-xl">
-          <MailCheck className="size-5" aria-hidden="true" />
+          <PhoneCall className="size-5" aria-hidden="true" />
         </span>
         <div>
           <h2 className="text-navy font-bold">{t('verificationTitle')}</h2>

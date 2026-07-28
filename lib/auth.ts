@@ -21,11 +21,12 @@ export async function register(
   email: string,
   password: string,
   name: string,
-  role: 'user' | 'partner'
+  role: 'user' | 'partner',
+  phone: string
 ) {
   return apiClient('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password, name, role }),
+    body: JSON.stringify({ email, password, name, role, phone }),
   });
 }
 

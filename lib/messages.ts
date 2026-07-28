@@ -23,6 +23,7 @@ export const MESSAGES: Record<string, string> = {
   // auth
   email_required: 'Email wajib diisi.',
   validation_failed: 'Email dan nama wajib diisi.',
+  phone_required: 'Nomor WhatsApp wajib diisi.',
   invalid_credentials: 'Email atau kata sandi salah. Silakan periksa kembali.',
   registration_failed: 'Pendaftaran gagal. Email mungkin sudah terdaftar.',
   dev_login_failed: 'Gagal masuk sebagai pengguna demo.',
@@ -38,16 +39,16 @@ export const MESSAGES: Record<string, string> = {
     'Pemulihan kata sandi belum dapat diproses. Silakan coba lagi.',
   initial_password_change_invalid:
     'Tautan penggantian kata sandi awal tidak valid atau telah kedaluwarsa.',
-  email_verification_required:
-    'Verifikasi email diperlukan untuk menjalankan operasi admin.',
+  phone_verification_required:
+    'Verifikasi WhatsApp diperlukan untuk melanjutkan.',
   invalid_refresh_token: 'Sesi tidak valid. Silakan masuk kembali.',
   refresh_token_required: 'Sesi telah berakhir. Silakan masuk kembali.',
   logout_failed: 'Gagal keluar. Silakan coba lagi.',
-  email_verification_failed:
-    'Tautan verifikasi email tidak valid atau telah kedaluwarsa.',
-  email_verification_delivery_failed:
-    'Email verifikasi belum dapat dikirim. Silakan coba lagi.',
   phone_verification_failed: 'Nomor atau kode verifikasi WhatsApp tidak valid.',
+  email_verification_failed:
+    'Verifikasi kontak telah dipindahkan ke WhatsApp.',
+  email_verification_delivery_failed:
+    'Pengiriman verifikasi telah dipindahkan ke WhatsApp.',
   recent_auth_required:
     'Silakan masuk kembali sebelum menyelesaikan keputusan sensitif ini.',
   admin_accounts_fetch_failed: 'Gagal memuat daftar akun.',
@@ -94,7 +95,7 @@ export const MESSAGES: Record<string, string> = {
   accountability_workspace_failed:
     'Ruang akuntabilitas tidak dapat dimuat untuk akun ini.',
   accountability_group_create_failed:
-    'Grup belum dapat dibuat. Pastikan email dan WhatsApp pendamping telah terverifikasi.',
+    'Grup belum dapat dibuat. Pastikan nomor WhatsApp pendamping telah terverifikasi.',
   accountability_code_invalid: 'Kode grup tidak valid atau sudah diganti.',
   accountability_join_failed:
     'Belum dapat bergabung ke grup. Periksa konfirmasi dan keanggotaan aktif Anda.',
@@ -230,6 +231,7 @@ const MESSAGES_EN: Record<string, string> = {
   create_admin_module_failed: 'The admin module could not be created.',
   email_required: 'Email is required.',
   validation_failed: 'Email and name are required.',
+  phone_required: 'A WhatsApp number is required.',
   invalid_credentials: 'The email or password is incorrect. Please try again.',
   registration_failed:
     'Registration failed. This email may already be registered.',
@@ -246,12 +248,14 @@ const MESSAGES_EN: Record<string, string> = {
   invalid_refresh_token: 'Your session is invalid. Please sign in again.',
   refresh_token_required: 'Your session has ended. Please sign in again.',
   logout_failed: 'Could not sign out. Please try again.',
-  email_verification_failed:
-    'The email verification link is invalid or has expired.',
-  email_verification_delivery_failed:
-    'The verification email could not be sent. Please try again.',
+  phone_verification_required:
+    'WhatsApp verification is required to continue.',
   phone_verification_failed:
     'The WhatsApp number or verification code is invalid.',
+  email_verification_failed:
+    'Contact verification has moved to WhatsApp.',
+  email_verification_delivery_failed:
+    'Verification delivery has moved to WhatsApp.',
   recent_auth_required:
     'Please sign in again before completing this sensitive action.',
   profile_not_found: 'Your profile could not be found.',

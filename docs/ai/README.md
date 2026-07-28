@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-27.2`
+**Context version:** `2026-07-29.1`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -51,7 +51,7 @@ Supporting account recovery status (`implemented code-complete prototype`):
 the locale-aware forgot-password screen requests a non-enumerating email code,
 accepts the 12-character single-use code plus a new password, preserves inline
 safe errors, and returns to login after success. Production delivery depends on
-the backend SMTP adapter and operational email evidence. Google login maps the
+the backend Fonnte adapter and operational WhatsApp evidence. Google login maps the
 explicit link-required backend response safely; same-email linking is available
 from the native student Settings flow.
 

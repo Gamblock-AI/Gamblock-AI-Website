@@ -29,7 +29,7 @@ export function AdminAreaClient({
 }) {
   const t = useTranslations('adminPage');
   const user = useLocalUser();
-  const verifiedRole = user.email_verified_at ? user.role : undefined;
+  const verifiedRole = user.phone_verified_at ? user.role : undefined;
   const operations = useAdminOperations(verifiedRole, area);
   const header =
     area === 'content'
@@ -52,7 +52,7 @@ export function AdminAreaClient({
         description={header.description}
         role={user.role}
       />
-      {!user.email_verified_at ? (
+      {!user.phone_verified_at ? (
         <AdminVerificationCard />
       ) : operations.loading ? (
         <AdminLoadingState label={t('loading')} />
