@@ -1,6 +1,6 @@
 'use client';
 
-import { LockKeyhole, ShieldCheck } from 'lucide-react';
+import { CalendarHeart, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useSyncExternalStore } from 'react';
@@ -34,11 +34,16 @@ const getGreetingServerSnapshot = (): GreetingKey => 'greetingHello';
 interface DashboardWelcomeProps {
   name: string;
   protectionActive: boolean;
+  /** Non-punitive presence rhythm: consecutive days when >= 2, else null. */
+  currentStreak?: number | null;
+  activeDays?: number | null;
 }
 
 export function DashboardWelcome({
   name,
   protectionActive,
+  currentStreak,
+  activeDays,
 }: DashboardWelcomeProps) {
   const t = useTranslations('recoveryDashboard');
   const displayName = name || t('defaultName');
@@ -49,7 +54,7 @@ export function DashboardWelcome({
   );
 
   return (
-    <header className="border-navy/15 bg-azure/45 shadow-soft relative isolate min-h-[18rem] overflow-hidden rounded-[1.75rem] border sm:min-h-[20rem]">
+    <header className="border-navy/15 bg-azure/45 shadow-soft relative isolate overflow-hidden rounded-[1.75rem] border">
       <Image
         src="/images/mascot/gami-dashboard-companion.webp"
         alt=""
@@ -62,20 +67,20 @@ export function DashboardWelcome({
         className="absolute inset-0 -z-10 bg-gradient-to-r from-white via-white/95 to-white/35 sm:via-white/90 sm:to-white/15 lg:via-white/85 lg:to-transparent"
         aria-hidden="true"
       />
-      <div className="flex min-h-[18rem] items-center px-5 py-7 sm:min-h-[20rem] sm:px-8 lg:px-10">
+      <div className="flex min-h-[12rem] items-center px-5 py-5 sm:min-h-[13rem] sm:px-8 lg:px-10">
         <div className="max-w-xl">
           <p className="text-navy-light text-xs font-bold tracking-[0.1em] uppercase">
             {t('eyebrow')}
           </p>
           <FadeSwap swapKey={greetingKey}>
-            <h1 className="text-navy mt-2 text-[1.875rem] leading-tight font-extrabold tracking-[-0.03em] sm:text-[2.25rem]">
+            <h1 className="text-navy mt-2 text-[1.625rem] leading-tight font-extrabold tracking-[-0.03em] sm:text-[1.875rem]">
               {t(greetingKey, { name: displayName })}
             </h1>
           </FadeSwap>
           <p className="text-muted-foreground mt-2 text-sm leading-6 sm:text-base">
             {t('supportiveLine')}
           </p>
-          <div className="border-navy/15 bg-card text-navy shadow-soft mt-4 inline-flex min-h-10 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-xs leading-5 font-bold">
+          <div className="border-navy/15 bg-card text-navy shadow-soft mt-3 inline-flex min-h-10 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-xs leading-5 font-bold">
             {protectionActive ? (
               <ShieldCheck
                 className="text-sky size-4 shrink-0"
@@ -89,6 +94,14 @@ export function DashboardWelcome({
             )}
             {protectionActive ? t('privacyStatus') : t('privacyStatusUnknown')}
           </div>
+          {(currentStreak ?? 0) >= 2 || (activeDays ?? 0) >= 1 ? (
+            <p className="text-navy-light mt-2 flex items-center gap-1.5 text-xs font-semibold">
+              <CalendarHeart className="size-3.5 shrink-0" aria-hidden="true" />
+              {(currentStreak ?? 0) >= 2
+                ? `${t('streakDays', { days: currentStreak })} · ${t('streakDesc')}`
+                : t('streakStart', { days: activeDays })}
+            </p>
+          ) : null}
         </div>
       </div>
     </header>

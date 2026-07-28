@@ -1,38 +1,23 @@
 'use client';
 
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, RefreshCcw } from 'lucide-react';
 import Image from 'next/image';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { FadeSwap } from '@/components/common/fade-swap';
-import { useSyncExternalStore } from 'react';
+import { useDayOfYear } from '@/hooks/use-daily-rotation';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
 
-const BITE_FACT_COUNT = 12;
-
-// Deterministic per-date rotation; fact 1 during SSR, the dated fact swaps in
-// right after hydration (text-only, no motion). Cached per session.
-const subscribeNever = () => () => {};
-let clientFactIndex: number | null = null;
-const getFactIndexSnapshot = () => {
-  if (clientFactIndex === null) {
-    const now = new Date();
-    const dayOfYear = Math.floor(
-      (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86_400_000
-    );
-    clientFactIndex = dayOfYear % BITE_FACT_COUNT;
-  }
-  return clientFactIndex;
-};
-const getFactIndexServerSnapshot = () => 0;
+const BITE_FACT_COUNT = 36;
 
 export function BiteSizedLearning() {
   const t = useTranslations('recoveryDashboard');
-  const factIndex = useSyncExternalStore(
-    subscribeNever,
-    getFactIndexSnapshot,
-    getFactIndexServerSnapshot
-  );
+  const dayIndex = useDayOfYear();
+  // User-initiated offset over the deterministic daily base — still no
+  // randomness in render.
+  const [offset, setOffset] = useState(0);
+  const factIndex = (dayIndex + offset) % BITE_FACT_COUNT;
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
@@ -58,13 +43,23 @@ export function BiteSizedLearning() {
           {t(`biteFact${factIndex + 1}`)}
         </p>
       </FadeSwap>
-      <Link
-        href={ROUTES.EDUCATION}
-        className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-bold text-sage outline-none hover:text-navy focus-visible:ring-2 focus-visible:ring-navy/30"
-      >
-        {t('biteSizedLearningLink')}
-        <ArrowRight className="size-4" aria-hidden="true" />
-      </Link>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4">
+        <Link
+          href={ROUTES.EDUCATION}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg text-navy text-sm font-bold outline-none hover:text-navy-light focus-visible:ring-2 focus-visible:ring-navy/30"
+        >
+          {t('biteSizedLearningLink')}
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setOffset((value) => value + 1)}
+          className="text-muted-foreground hover:text-navy focus-visible:ring-navy/30 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg text-sm font-semibold outline-none focus-visible:ring-2"
+        >
+          <RefreshCcw className="size-3.5" aria-hidden="true" />
+          {t('biteSizedLearningMore')}
+        </button>
+      </div>
     </section>
   );
 }

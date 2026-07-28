@@ -24,10 +24,6 @@ export function TechnologySection() {
           <p className="mt-5 max-w-xl text-base leading-7 text-white/65">
             {t('techSubtitle')}
           </p>
-          <div className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-white/75">
-            <EyeOff className="text-sky size-5" />
-            {t('techMetric4Label')}
-          </div>
         </Reveal>
 
         <Reveal delay={0.08}>

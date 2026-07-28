@@ -2,7 +2,7 @@
 
 import { Link } from '@/i18n/routing';
 import { ArrowRight, TrendingUp, Users, UserX, ShieldX, Zap, Activity, HeartHandshake } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Section } from '@/components/ui/section';
 import { Pill } from '@/components/ui/pill';
@@ -17,16 +17,18 @@ import { ROUTES } from '@/routes';
 
 export function DampakContent() {
   const t = useTranslations('DampakContent');
+  const locale = useLocale();
+  const formatLocale = locale === 'en' ? 'en-US' : 'id-ID';
 
   const crisis = [
-    { icon: TrendingUp, value: 286.84, prefix: 'Rp', suffix: ' T', decimals: 2, label: t('crisis1'), src: 'PPATK, 2026' },
-    { icon: Users, value: 12.3, prefix: '', suffix: ' Jt', decimals: 1, label: t('crisis2'), src: 'PPATK, 2026' },
-    { icon: ShieldX, value: 5.5, prefix: '', suffix: ' Jt+', decimals: 1, label: t('crisis3'), src: 'Kemkomdigi, 2025' },
+    { icon: TrendingUp, value: 286.84, prefix: 'Rp', suffix: t('crisis1Suffix'), decimals: 2, label: t('crisis1'), src: 'PPATK, 2026' },
+    { icon: Users, value: 12.3, prefix: '', suffix: t('crisis2Suffix'), decimals: 1, label: t('crisis2'), src: 'PPATK, 2026' },
+    { icon: ShieldX, value: 5.5, prefix: '', suffix: t('crisis3Suffix'), decimals: 1, label: t('crisis3'), src: 'Kemkomdigi, 2025' },
   ];
 
   const demographics = [
-    { value: 440, suffix: ' Rb', label: t('demo1Label'), note: t('demo1Note') },
-    { value: 520, suffix: ' Rb', label: t('demo2Label'), note: t('demo2Note') },
+    { value: 440, suffix: t('demo1Suffix'), label: t('demo1Label'), note: t('demo1Note') },
+    { value: 520, suffix: t('demo2Suffix'), label: t('demo2Label'), note: t('demo2Note') },
   ];
 
   const arc = [
@@ -65,7 +67,7 @@ export function DampakContent() {
                     <Icon className="size-5 text-crimson" />
                   </div>
                   <p className="mt-5 text-3xl font-extrabold tracking-tight text-navy md:text-4xl">
-                    <StatCounter value={value} prefix={prefix} suffix={suffix} decimals={decimals} />
+                    <StatCounter value={value} prefix={prefix} suffix={suffix} decimals={decimals} locale={formatLocale} />
                   </p>
                   <p className="mt-2 text-sm leading-snug text-muted-foreground">{label}</p>
                   <p className="text-label mt-3 text-navy/40">{src}</p>
@@ -90,7 +92,7 @@ export function DampakContent() {
                 <div className="flex items-end justify-between rounded-3xl border border-border bg-card p-6 shadow-soft">
                   <div>
                     <p className="text-3xl font-extrabold tracking-tight text-navy md:text-4xl">
-                      <StatCounter value={value} suffix={suffix} />
+                      <StatCounter value={value} suffix={suffix} locale={formatLocale} />
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">{label}</p>
                   </div>

@@ -35,7 +35,7 @@ export function HowItWorksSection() {
 
         <div>
           <Reveal>
-            <Pill variant="navy" className="mb-4">
+            <Pill variant="navy" className="mb-4 w-fit">
               {t('howKicker')}
             </Pill>
             <h2 className="text-heading text-navy max-w-2xl text-3xl md:text-5xl">

@@ -1,24 +1,18 @@
 'use client';
 
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   Check,
   Clock3,
-  Focus,
   HandHeart,
   Headphones,
-  LampDesk,
   Leaf,
   LockKeyhole,
   MessageCircleMore,
   NotebookPen,
-  Pause,
-  Play,
-  RotateCcw,
   Smile,
-  Sparkles,
   Waves,
   X,
 } from 'lucide-react';
@@ -38,8 +32,24 @@ import {
   useRecoveryExperience,
   type RecoveryFeedback,
   type RecoveryPracticeKind,
+  type RecoveryRoomTheme,
 } from '@/hooks/use-recovery-experience';
+import { useExperienceProgress } from '@/hooks/use-experience-progress';
 import { useRecoveryJourney } from '@/hooks/use-recovery-journey';
+import {
+  DECOR_CATALOG,
+  DECOR_SLOT_POSITIONS,
+  decorIcon,
+  decorSlot,
+  ROOM_THEME_IMAGES,
+  type DecorCriteria,
+} from '@/lib/recovery/decor-catalog';
+import { PracticeHistory } from './practice-history';
+import {
+  FocusPractice,
+  GroundingPractice,
+  TimedPractice,
+} from './practice-timers';
 import { useReflections } from '@/hooks/use-reflections';
 import { Link } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
@@ -68,7 +78,7 @@ const ACTIVITY_CONFIG: Record<
   focus: {
     icon: Clock3,
     hotspot: 'left-[84%] top-[42%]',
-    tone: 'bg-amber text-navy',
+    tone: 'bg-navy-light text-white',
   },
   journal: {
     icon: NotebookPen,
@@ -82,23 +92,6 @@ const ACTIVITY_CONFIG: Record<
   },
 };
 
-const DECOR_ICONS: Record<string, typeof Leaf> = {
-  plant: Leaf,
-  curtain: Waves,
-  desk_lamp: LampDesk,
-  note_board: NotebookPen,
-  wall_art: Sparkles,
-  gami_figure: HandHeart,
-};
-
-const DECOR_PLACEMENTS: Record<string, string> = {
-  plant: 'left-[20%] top-[57%]',
-  curtain: 'left-[45%] top-[18%]',
-  desk_lamp: 'left-[80%] top-[47%]',
-  note_board: 'left-[70%] top-[33%]',
-  wall_art: 'left-[25%] top-[28%]',
-  gami_figure: 'left-[62%] top-[72%]',
-};
 
 export function RecoveryRoom() {
   const t = useTranslations('recoveryRoom');
@@ -139,7 +132,9 @@ export function RecoveryRoom() {
 
         <div className="relative aspect-[4/3] md:aspect-[16/9]">
           <Image
-            src="/images/recovery-room/calm-dorm-room.webp"
+            src={
+              ROOM_THEME_IMAGES[experience.space.data?.theme ?? 'dorm_room']
+            }
             alt={t('roomAlt')}
             fill
             priority
@@ -153,17 +148,18 @@ export function RecoveryRoom() {
 
           {Object.entries(experience.space.data?.placed_items ?? {})
             .filter(([, placed]) => Boolean(placed))
-            .map(([item]) => {
-              const Icon = DECOR_ICONS[item] ?? Sparkles;
+            .map(([item, value]) => {
+              const Icon = decorIcon(item);
+              const slot = decorSlot(item, value);
               return (
                 <motion.div
                   key={item}
                   initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`${DECOR_PLACEMENTS[item] ?? 'top-1/2 left-1/2'} bg-card/90 text-navy absolute z-[5] hidden size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-white/80 shadow-lg backdrop-blur md:flex`}
+                  className={`${slot ? DECOR_SLOT_POSITIONS[slot] : 'top-1/2 left-1/2'} bg-card/90 text-navy absolute z-[5] hidden size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-white/80 shadow-lg backdrop-blur md:flex`}
                   aria-label={t('placedDecor', { item: t(`decor.${item}`) })}
                 >
-                  <Icon className="text-sage size-5" aria-hidden="true" />
+                  <Icon className="text-navy-light size-5" aria-hidden="true" />
                 </motion.div>
               );
             })}
@@ -234,11 +230,11 @@ export function RecoveryRoom() {
               {Object.entries(experience.space.data?.placed_items ?? {})
                 .filter(([, placed]) => Boolean(placed))
                 .map(([item]) => {
-                  const Icon = DECOR_ICONS[item] ?? Sparkles;
+                  const Icon = decorIcon(item);
                   return (
                     <li
                       key={item}
-                      className="border-sage/30 bg-sage/10 flex min-h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold text-white"
+                      className="flex min-h-8 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 text-xs font-semibold text-white"
                     >
                       <Icon className="size-3.5" aria-hidden="true" />
                       {t(`decor.${item}`)}
@@ -273,12 +269,14 @@ export function RecoveryRoom() {
         </div>
       </section>
 
+      <PracticeHistory practices={experience.practices} />
       <RoomCollection
         unlockedItems={experience.space.data?.unlocked_items ?? []}
         placedItems={experience.space.data?.placed_items ?? {}}
+        theme={experience.space.data?.theme ?? 'dorm_room'}
         loading={experience.space.loading}
         saving={experience.saving}
-        onToggle={experience.updateSpace}
+        onUpdate={experience.updateSpace}
       />
       <LegacyIntentionOffer />
 
@@ -355,83 +353,205 @@ function LegacyIntentionOffer() {
   );
 }
 
+function decorCriteriaText(
+  t: ReturnType<typeof useTranslations<'recoveryRoom'>>,
+  criteria: DecorCriteria
+) {
+  switch (criteria.kind) {
+    case 'level':
+      return t('criteriaLevel', { level: criteria.value });
+    case 'practices':
+      return t('criteriaPractices', { count: criteria.value });
+    case 'activeDays':
+      return t('criteriaActiveDays', { count: criteria.value });
+    case 'reviews':
+      return t('criteriaReviews', { count: criteria.value });
+    case 'missions':
+      return t('criteriaMissions', { count: criteria.value });
+    case 'practiceKind':
+      return t(`criteriaPracticeKind.${criteria.value}`);
+    case 'journal':
+      return t('criteriaJournal');
+  }
+}
+
 function RoomCollection({
   unlockedItems,
   placedItems,
+  theme,
   loading,
   saving,
-  onToggle,
+  onUpdate,
 }: {
   unlockedItems: string[];
   placedItems: Record<string, unknown>;
+  theme: RecoveryRoomTheme;
   loading: boolean;
   saving: boolean;
-  onToggle: (items: Record<string, unknown>) => Promise<unknown>;
+  onUpdate: (
+    items: Record<string, unknown>,
+    theme?: RecoveryRoomTheme
+  ) => Promise<unknown>;
 }) {
   const t = useTranslations('recoveryRoom');
+  const experienceProgress = useExperienceProgress();
+  const themeUnlocked = (experienceProgress?.level ?? 1) >= 18;
+  const unlocked = new Set(unlockedItems);
 
-  const toggle = async (item: string) => {
-    const next = { ...placedItems };
-    if (next[item]) {
-      delete next[item];
-    } else {
-      next[item] = true;
-    }
+  const save = async (
+    next: Record<string, unknown>,
+    successKey: 'decorPlaced' | 'decorRemoved' | 'themeSwitched',
+    nextTheme?: RecoveryRoomTheme
+  ) => {
     try {
-      await onToggle(next);
-      toastSuccess(t(next[item] ? 'decorPlaced' : 'decorRemoved'));
+      await onUpdate(next, nextTheme);
+      toastSuccess(t(successKey));
     } catch (error) {
       toastError(error, t('decorSaveError'));
     }
   };
 
+  const toggle = (item: string) => {
+    const next = { ...placedItems };
+    const placing = !next[item];
+    if (placing) {
+      next[item] = true;
+    } else {
+      delete next[item];
+    }
+    void save(next, placing ? 'decorPlaced' : 'decorRemoved');
+  };
+
+  const moveToSlot = (item: string, slot: string) => {
+    const next = { ...placedItems, [item]: slot };
+    void save(next, 'decorPlaced');
+  };
+
   return (
-    <section className="border-border bg-card flex flex-col gap-4 rounded-2xl border p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
-      <div>
-        <h3 className="text-navy font-bold">{t('collectionTitle')}</h3>
-        <p className="text-muted-foreground mt-1 text-sm leading-6">
-          {t('collectionBody')}
-        </p>
-        <p className="text-navy/70 mt-1 text-xs">{t('collectionHint')}</p>
+    <section className="border-border bg-card rounded-2xl border p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-navy font-bold">{t('collectionTitle')}</h3>
+          <p className="text-muted-foreground mt-1 text-sm leading-6">
+            {t('collectionBody')}
+          </p>
+          <p className="text-navy/70 mt-1 text-xs">{t('collectionHint')}</p>
+        </div>
+        {themeUnlocked ? (
+          <div className="shrink-0">
+            <p className="text-muted-foreground text-xs font-semibold">
+              {t('themeTitle')}
+            </p>
+            <div className="border-border bg-muted/40 mt-1 inline-flex rounded-xl border p-1">
+              {(['dorm_room', 'sunrise_study'] as const).map((candidate) => (
+                <button
+                  key={candidate}
+                  type="button"
+                  disabled={saving || theme === candidate}
+                  onClick={() =>
+                    void save(placedItems, 'themeSwitched', candidate)
+                  }
+                  className={`focus-visible:ring-navy/30 min-h-9 cursor-pointer rounded-lg px-3 text-xs font-bold outline-none focus-visible:ring-2 disabled:cursor-default ${theme === candidate ? 'bg-navy text-white shadow-sm' : 'text-muted-foreground hover:text-navy'}`}
+                  aria-pressed={theme === candidate}
+                >
+                  {t(`theme.${candidate}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
-      <div
-        className="grid min-h-12 w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center"
+
+      <ul
+        className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3"
         aria-live="polite"
       >
         {loading ? (
-          <span className="text-muted-foreground col-span-2 text-sm">
-            {t('loading')}
-          </span>
-        ) : null}
-        {!loading && unlockedItems.length === 0 ? (
-          <span className="border-border bg-muted/35 text-muted-foreground col-span-2 rounded-xl border border-dashed px-3 py-2 text-xs">
-            {t('collectionEmpty')}
-          </span>
-        ) : null}
-        {unlockedItems.map((item) => {
-          const Icon = DECOR_ICONS[item] ?? Sparkles;
-          const placed = Boolean(placedItems[item]);
-          return (
-            <button
-              key={item}
-              type="button"
-              disabled={saving}
-              onClick={() => void toggle(item)}
-              className={`focus-visible:ring-navy/30 flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-start gap-2 rounded-xl border px-3 text-left text-xs font-semibold outline-none focus-visible:ring-2 disabled:cursor-wait disabled:opacity-60 sm:w-auto ${placed ? 'border-navy bg-navy text-white' : 'border-sage/30 bg-sage/10 text-navy'}`}
-              aria-pressed={placed}
-            >
-              <Icon
-                className={`size-4 ${placed ? 'text-cyan' : 'text-sage'}`}
-                aria-hidden="true"
-              />
-              {t(`decor.${item}`)}
-              <span className="sr-only">
-                {t(placed ? 'removeDecor' : 'placeDecor')}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+          <li className="text-muted-foreground text-sm">{t('loading')}</li>
+        ) : (
+          DECOR_CATALOG.map((item) => {
+            const Icon = item.icon;
+            const isUnlocked = unlocked.has(item.id);
+            const placedValue = placedItems[item.id];
+            const placed = Boolean(placedValue);
+            const currentSlot = decorSlot(item.id, placedValue);
+            return (
+              <li
+                key={item.id}
+                className={`flex items-center gap-2.5 rounded-xl border p-2.5 ${
+                  isUnlocked
+                    ? 'border-border bg-card'
+                    : 'border-border bg-card/50 border-dashed'
+                }`}
+              >
+                <span
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${
+                    isUnlocked
+                      ? 'border-navy/15 bg-azure/60 text-navy'
+                      : 'border-border text-muted-foreground/40 border-dashed'
+                  }`}
+                  aria-hidden="true"
+                >
+                  <Icon className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-xs font-bold ${isUnlocked ? 'text-navy' : 'text-muted-foreground'}`}
+                  >
+                    {t(`decor.${item.id}`)}
+                  </p>
+                  {isUnlocked && placed && item.slots.length > 1 ? (
+                    <label className="text-muted-foreground mt-0.5 flex items-center gap-1 text-[11px]">
+                      {t('slotLabel')}
+                      <select
+                        value={currentSlot ?? item.slots[0]}
+                        disabled={saving}
+                        onChange={(event) =>
+                          moveToSlot(item.id, event.target.value)
+                        }
+                        className="border-border bg-card text-navy cursor-pointer rounded-md border px-1 py-0.5 text-[11px] font-semibold"
+                      >
+                        {item.slots.map((slot) => (
+                          <option key={slot} value={slot}>
+                            {t(`slot.${slot}`)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <p className="text-muted-foreground mt-0.5 text-[11px] leading-4">
+                      {isUnlocked
+                        ? placed
+                          ? t(`slot.${currentSlot ?? item.slots[0]}`)
+                          : t('collectionHint')
+                        : decorCriteriaText(t, item.criteria)}
+                    </p>
+                  )}
+                </div>
+                {isUnlocked ? (
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => toggle(item.id)}
+                    className={`focus-visible:ring-navy/30 min-h-9 shrink-0 cursor-pointer rounded-lg border px-2.5 text-[11px] font-bold outline-none focus-visible:ring-2 disabled:cursor-wait disabled:opacity-60 ${
+                      placed
+                        ? 'border-navy bg-navy text-white'
+                        : 'border-navy/20 text-navy hover:bg-azure/45'
+                    }`}
+                    aria-pressed={placed}
+                  >
+                    {t(placed ? 'removeDecor' : 'placeDecor')}
+                  </button>
+                ) : (
+                  <span className="text-muted-foreground/70 shrink-0 text-[11px] font-semibold">
+                    {t('lockedBadge')}
+                  </span>
+                )}
+              </li>
+            );
+          })
+        )}
+      </ul>
     </section>
   );
 }
@@ -529,309 +649,6 @@ function ActivitySheet({
         </DialogPrimitive.Viewport>
       </DialogPortal>
     </Dialog>
-  );
-}
-
-function TimedPractice({
-  kind,
-  seconds,
-  onComplete,
-  saving,
-}: {
-  kind: RecoveryPracticeKind;
-  seconds: number;
-  onComplete: (input: {
-    practice_kind: RecoveryPracticeKind;
-    duration_seconds: number;
-    feedback?: RecoveryFeedback;
-  }) => Promise<unknown>;
-  saving: boolean;
-}) {
-  const t = useTranslations('recoveryRoom');
-  const [remaining, setRemaining] = useState(seconds);
-  const [running, setRunning] = useState(false);
-  const [feedback, setFeedback] = useState<RecoveryFeedback>('prefer_not_say');
-
-  useEffect(() => {
-    if (!running || remaining <= 0) return;
-    const interval = window.setInterval(() => {
-      setRemaining((value) => Math.max(0, value - 1));
-    }, 1000);
-    return () => window.clearInterval(interval);
-  }, [remaining, running]);
-
-  const progress = Math.round(((seconds - remaining) / seconds) * 100);
-  const active = running && remaining > 0;
-  const phase =
-    kind === 'urge_surfing'
-      ? t(
-          `urgePhases.${progress < 34 ? 'notice' : progress < 67 ? 'breathe' : 'observe'}`
-        )
-      : t('focusStay');
-
-  const save = async () => {
-    try {
-      await onComplete({
-        practice_kind: kind,
-        duration_seconds: seconds,
-        feedback,
-      });
-      toastSuccess(t('practiceSaved'));
-    } catch (error) {
-      toastError(error, t('practiceSaveError'));
-    }
-  };
-
-  return (
-    <div className="grid gap-6 md:grid-cols-[0.8fr_1.2fr] md:items-center">
-      <div className="bg-navy relative mx-auto flex aspect-square w-full max-w-52 items-center justify-center rounded-full p-5 text-center text-white shadow-[inset_0_0_0_12px_rgba(255,255,255,0.08)] sm:max-w-64">
-        <div
-          className="border-cyan/25 absolute inset-3 rounded-full border-4"
-          aria-hidden="true"
-        />
-        <div>
-          <p className="font-mono text-4xl font-bold tabular-nums">
-            {formatTimer(remaining)}
-          </p>
-          <p className="mt-2 text-xs text-white/70">{phase}</p>
-        </div>
-      </div>
-      <div>
-        <div className="bg-cyan/8 border-cyan/25 rounded-2xl border p-4">
-          <p className="text-navy font-semibold">{phase}</p>
-          <p className="text-muted-foreground mt-1 text-sm leading-6">
-            {kind === 'urge_surfing'
-              ? t('urgeInstruction')
-              : t('focusInstruction')}
-          </p>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          <Button
-            className="w-full sm:w-auto"
-            onClick={() => setRunning((value) => !value)}
-            disabled={remaining === 0}
-          >
-            {active ? (
-              <Pause className="size-4" aria-hidden="true" />
-            ) : (
-              <Play className="size-4" aria-hidden="true" />
-            )}
-            {active
-              ? t('pause')
-              : remaining === seconds
-                ? t('start')
-                : t('continue')}
-          </Button>
-          <Button
-            className="w-full sm:w-auto"
-            variant="outline"
-            onClick={() => {
-              setRemaining(seconds);
-              setRunning(false);
-            }}
-          >
-            <RotateCcw className="size-4" aria-hidden="true" />
-            {t('reset')}
-          </Button>
-        </div>
-        {remaining === 0 ? (
-          <FeedbackPicker
-            value={feedback}
-            onChange={setFeedback}
-            onSave={() => void save()}
-            saving={saving}
-          />
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-const GROUNDING_STEPS = ['see', 'touch', 'hear', 'smell', 'taste'] as const;
-
-function GroundingPractice({
-  onComplete,
-  saving,
-}: {
-  onComplete: (input: {
-    practice_kind: RecoveryPracticeKind;
-    duration_seconds: number;
-    feedback?: RecoveryFeedback;
-  }) => Promise<unknown>;
-  saving: boolean;
-}) {
-  const t = useTranslations('recoveryRoom');
-  const [step, setStep] = useState(0);
-  const [feedback, setFeedback] = useState<RecoveryFeedback>('prefer_not_say');
-  const completed = step >= GROUNDING_STEPS.length;
-
-  const save = async () => {
-    try {
-      await onComplete({
-        practice_kind: 'grounding_54321',
-        duration_seconds: 120,
-        feedback,
-      });
-      toastSuccess(t('practiceSaved'));
-    } catch (error) {
-      toastError(error, t('practiceSaveError'));
-    }
-  };
-
-  return (
-    <div>
-      <div className="flex gap-2" aria-label={t('stepProgress')}>
-        {GROUNDING_STEPS.map((item, index) => (
-          <span
-            key={item}
-            className={`h-2 flex-1 rounded-full transition-colors duration-200 motion-reduce:transition-none ${index < step ? 'bg-sage' : index === step ? 'bg-navy' : 'bg-muted'}`}
-          />
-        ))}
-      </div>
-      {!completed ? (
-        <div className="mt-6 grid gap-5 sm:grid-cols-[6rem_1fr] sm:items-center">
-          <div className="bg-sage/15 text-sage mx-auto flex size-24 items-center justify-center rounded-3xl text-4xl font-bold sm:mx-0">
-            {5 - step}
-          </div>
-          <div>
-            <p className="text-navy text-xl font-bold">
-              {t(`groundingSteps.${GROUNDING_STEPS[step]}.title`)}
-            </p>
-            <p className="text-muted-foreground mt-2 text-sm leading-6">
-              {t(`groundingSteps.${GROUNDING_STEPS[step]}.body`)}
-            </p>
-            <Button
-              className="mt-5 w-full sm:w-auto"
-              onClick={() => setStep((value) => value + 1)}
-            >
-              <Check className="size-4" aria-hidden="true" />
-              {t('groundingDone')}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <FeedbackPicker
-          value={feedback}
-          onChange={setFeedback}
-          onSave={() => void save()}
-          saving={saving}
-        />
-      )}
-    </div>
-  );
-}
-
-function FocusPractice({
-  onComplete,
-  saving,
-}: {
-  onComplete: (input: {
-    practice_kind: RecoveryPracticeKind;
-    duration_seconds: number;
-    feedback?: RecoveryFeedback;
-  }) => Promise<unknown>;
-  saving: boolean;
-}) {
-  const t = useTranslations('recoveryRoom');
-  const [task, setTask] = useState('');
-  const [started, setStarted] = useState(false);
-  const storageKey = 'gamblock_recovery_focus_task_v1';
-
-  const prepare = () => {
-    const saved = window.localStorage.getItem(storageKey) ?? '';
-    setTask(saved);
-    setStarted(true);
-  };
-
-  if (!started) {
-    return (
-      <div className="bg-amber/10 border-amber/35 rounded-2xl border p-4 sm:p-5">
-        <label htmlFor="focus-task" className="text-navy text-sm font-bold">
-          {t('focusTaskLabel')}
-        </label>
-        <input
-          id="focus-task"
-          value={task}
-          onChange={(event) => {
-            setTask(event.target.value);
-            window.localStorage.setItem(storageKey, event.target.value);
-          }}
-          placeholder={t('focusTaskPlaceholder')}
-          className="border-input bg-card focus-visible:ring-navy/30 mt-2 h-12 w-full rounded-xl border px-4 text-base outline-none focus-visible:ring-2"
-        />
-        <p className="text-muted-foreground mt-2 text-xs leading-5">
-          {t('focusLocal')}
-        </p>
-        <Button
-          className="mt-4 w-full sm:w-auto"
-          disabled={!task.trim()}
-          onClick={prepare}
-        >
-          <Focus className="size-4" aria-hidden="true" />
-          {t('focusPrepare')}
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="bg-muted/45 mb-4 flex items-center gap-3 rounded-xl px-4 py-3">
-        <Focus className="text-cyan-dark size-5" aria-hidden="true" />
-        <p className="text-navy font-semibold">{task}</p>
-      </div>
-      <TimedPractice
-        kind="focus_sprint"
-        seconds={600}
-        onComplete={onComplete}
-        saving={saving}
-      />
-    </div>
-  );
-}
-
-function FeedbackPicker({
-  value,
-  onChange,
-  onSave,
-  saving,
-}: {
-  value: RecoveryFeedback;
-  onChange: (value: RecoveryFeedback) => void;
-  onSave: () => void;
-  saving: boolean;
-}) {
-  const t = useTranslations('recoveryRoom');
-  const values: RecoveryFeedback[] = [
-    'lighter',
-    'same',
-    'heavier',
-    'prefer_not_say',
-  ];
-  return (
-    <div className="mt-5">
-      <p className="text-navy text-sm font-bold">{t('feedbackTitle')}</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {values.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => onChange(item)}
-            className={`focus-visible:ring-navy/30 min-h-11 cursor-pointer rounded-xl border px-3 text-sm font-semibold outline-none transition-colors duration-200 focus-visible:ring-2 motion-reduce:transition-none ${value === item ? 'border-navy bg-navy text-white shadow-sm' : 'border-border text-muted-foreground'}`}
-          >
-            {t(`feedback.${item}`)}
-          </button>
-        ))}
-      </div>
-      <Button
-        className="mt-4 w-full sm:w-auto"
-        disabled={saving}
-        onClick={onSave}
-      >
-        <Check className="size-4" aria-hidden="true" />
-        {saving ? t('saving') : t('savePractice')}
-      </Button>
-    </div>
   );
 }
 
@@ -1002,8 +819,4 @@ function SupportChoices() {
       </Link>
     </div>
   );
-}
-
-function formatTimer(seconds: number) {
-  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }

@@ -4,8 +4,10 @@ import { CircleAlert } from 'lucide-react';
 import { Reveal } from '@/components/common/Reveal';
 import { useLocale, useTranslations } from 'next-intl';
 import { DashboardWelcome } from '@/components/dashboard/today/dashboard-welcome';
+import { GamiCompanion } from '@/components/dashboard/today/gami-companion';
 import { DashboardSummaryStrip } from '@/components/dashboard/today/dashboard-summary-strip';
 import { BiteSizedLearning } from '@/components/dashboard/today/bite-sized-learning';
+import { MythFactCard } from '@/components/dashboard/today/myth-fact-card';
 import { DashboardShortcuts } from '@/components/dashboard/today/dashboard-shortcuts';
 import { EmergencyHelp } from '@/components/dashboard/today/emergency-help';
 import { LearningNextStep } from '@/components/dashboard/today/learning-next-step';
@@ -40,13 +42,16 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
     null;
 
   return (
-    <div className="mx-auto w-full max-w-[1360px] space-y-5 sm:space-y-6">
+    <div className="mx-auto w-full max-w-[1360px] space-y-4 sm:space-y-5">
       <Reveal y={12} duration={0.45}>
         <DashboardWelcome
           name={name}
           protectionActive={protection.status?.mode === 'active'}
+          currentStreak={summary?.current_streak ?? null}
+          activeDays={summary?.active_days ?? null}
         />
       </Reveal>
+      <GamiCompanion />
       {recovery.persistence === 'memory' ? (
         <div
           className="border-amber/40 bg-amber/[0.10] text-foreground flex items-start gap-3 rounded-2xl border p-4 text-sm leading-6"
@@ -62,7 +67,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
       {/* Education leads the canvas (psychologist-review request): the next
           learning step sits directly below the greeting. */}
       <Reveal y={12} duration={0.45} delay={0.05}>
-        <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch">
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
           <LearningNextStep
             module={learningModule}
             loading={education.loading}
@@ -80,22 +85,21 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         />
       </Reveal>
       <Reveal y={12} duration={0.45} delay={0.15}>
-        <div className="grid gap-5 xl:grid-cols-12 xl:items-stretch">
+        <div className="grid gap-4 xl:grid-cols-12 xl:items-start">
         <div className="xl:col-span-8">
           <WeeklySnapshot checkIns={recovery.state.checkIns} />
         </div>
         <aside
-          className="flex flex-col gap-5 xl:col-span-4"
+          className="flex flex-col gap-4 xl:col-span-4"
           aria-label={t('protectionTitle')}
         >
-          <div className="flex flex-1">
-            <ProtectionSummary
-              status={protection.status}
-              loading={protection.loading}
-              error={protection.error}
-              onRetry={() => void protection.refetch()}
-            />
-          </div>
+          <ProtectionSummary
+            status={protection.status}
+            loading={protection.loading}
+            error={protection.error}
+            onRetry={() => void protection.refetch()}
+          />
+          <MythFactCard />
           <BiteSizedLearning />
         </aside>
         </div>

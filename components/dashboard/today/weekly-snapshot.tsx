@@ -19,10 +19,10 @@ interface ChartPoint {
   mood: MoodLevel;
 }
 
-const CHART_LEFT = 112;
-const CHART_RIGHT = 612;
-const CHART_TOP = 40;
-const CHART_BOTTOM = 176;
+const CHART_LEFT = 96;
+const CHART_RIGHT = 616;
+const CHART_TOP = 28;
+const CHART_BOTTOM = 150;
 const MOOD_GUIDE_LEVELS = [5, 3, 1] as const;
 
 export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
@@ -71,7 +71,7 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
 
   return (
     <section
-      className="border-border bg-card shadow-soft h-full rounded-2xl border p-5"
+      className="border-border bg-card shadow-soft rounded-2xl border p-4 sm:p-5"
       aria-labelledby="weekly-snapshot-title"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -101,12 +101,12 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
         ) : null}
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-stretch">
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
         <div className="border-border bg-muted/45 rounded-2xl border p-2 sm:p-3">
           <p className="sr-only">{chartSummary}</p>
           <svg
-            viewBox="0 0 640 220"
-            className="h-auto min-h-48 w-full"
+            viewBox="0 0 640 188"
+            className="h-auto min-h-40 w-full"
             aria-hidden="true"
           >
             {[1, 2, 3, 4, 5].map((mood) => {
@@ -176,7 +176,7 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
               <text
                 key={day.dateKey}
                 x={CHART_LEFT + index * ((CHART_RIGHT - CHART_LEFT) / 6)}
-                y="207"
+                y="176"
                 textAnchor="middle"
                 className="fill-muted-foreground text-[10px] font-medium"
               >
@@ -200,13 +200,15 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
           </ul>
         </div>
         {enoughData ? (
-          <div className="border-navy/10 bg-azure/45 rounded-2xl border p-4">
-            <span className="bg-navy text-sky flex size-10 items-center justify-center rounded-xl">
-              <Sparkles className="size-[1.125rem]" aria-hidden="true" />
-            </span>
-            <h3 className="text-navy mt-4 text-sm font-bold">
-              {t('weeklyInsightTitle')}
-            </h3>
+          <div className="border-navy/10 bg-azure/45 rounded-2xl border p-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="bg-navy text-sky flex size-8 shrink-0 items-center justify-center rounded-lg">
+                <Sparkles className="size-4" aria-hidden="true" />
+              </span>
+              <h3 className="text-navy text-sm font-bold">
+                {t('weeklyInsightTitle')}
+              </h3>
+            </div>
             <p className="text-foreground mt-2 text-sm leading-6">
               {t('weeklyRecorded', { count: points.length })}
             </p>
@@ -220,13 +222,15 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
             ) : null}
           </div>
         ) : (
-          <div className="border-border bg-muted/30 flex flex-col justify-center rounded-2xl border border-dashed p-4">
-            <span className="bg-navy flex size-10 items-center justify-center rounded-xl text-white shadow-sm">
-              <BarChart3 className="size-[1.125rem]" aria-hidden="true" />
-            </span>
-            <h3 className="text-foreground mt-4 text-sm font-semibold">
-              {t('weeklyInsufficient')}
-            </h3>
+          <div className="border-border bg-muted/30 rounded-2xl border border-dashed p-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="bg-navy flex size-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm">
+                <BarChart3 className="size-4" aria-hidden="true" />
+              </span>
+              <h3 className="text-foreground text-sm font-semibold">
+                {t('weeklyInsufficient')}
+              </h3>
+            </div>
             <p className="text-muted-foreground mt-1 text-sm leading-6">
               {t('weeklyNeedMore', { count: needMore })}
             </p>

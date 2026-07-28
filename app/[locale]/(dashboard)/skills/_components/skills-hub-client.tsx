@@ -9,6 +9,7 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { EXTERNAL_SKILL_PLATFORMS } from '@/lib/skills/external-platforms';
 import { SkillsSection } from './skills-section';
+import { ScenarioPractice } from './scenario-practice';
 
 /**
  * Skills hub — internal short practices plus curated quick access to free
@@ -28,6 +29,7 @@ export function SkillsHubClient() {
       />
 
       <SkillsSection />
+      <ScenarioPractice />
 
       <section aria-labelledby="skills-courses-title">
         <div>
@@ -54,7 +56,7 @@ export function SkillsHubClient() {
                 <h3 className="text-navy text-base font-bold">
                   {platform.name}
                 </h3>
-                <DashboardStatus tone="sage">{t('freeBadge')}</DashboardStatus>
+                <DashboardStatus tone="navy">{t('freeBadge')}</DashboardStatus>
               </div>
               <p className="text-muted-foreground mt-2 flex-1 text-sm leading-6">
                 {t(platform.descriptionKey)}

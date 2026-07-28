@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-27.1`
+**Context version:** `2026-07-27.2`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -89,9 +89,9 @@ generated `AppRoutes = never` and false 404 responses for valid locale routes.
 Proxy locale parsing now derives from `i18n/routing.ts`; production routing and
 cache behavior are unchanged.
 
-Supporting dashboard/profile status (`implemented`): paired student dashboard cards
-stretch to a shared row height; the support card uses its additional space for
-a direct recovery-plan action. Global search combines role-permitted navigation
+Supporting dashboard/profile status (`implemented`): paired student dashboard
+cards size to their own content (compact density, no forced shared row
+height); the support card keeps its direct recovery-plan action. Global search combines role-permitted navigation
 with published education modules only after search is opened for student or
 partner accounts. Authenticated
 users can crop/resize, upload, replace, and remove a square WebP profile avatar;
@@ -148,13 +148,46 @@ below three check-ins while showing a participation-focused Gami encouragement
 once three check-ins exist, and generates CSV/print-to-PDF locally after a
 privacy warning. The decorative "journey collection" card has been replaced by
 deterministic journey badges (fixed 90-day snapshot window, criteria always
-visible, additive-only) plus a non-punitive presence-rhythm line; the earlier
+readable, additive-only) plus a non-punitive presence-rhythm line; the earlier
 dead "today workspace" component set was removed. A later interactivity pass
 added `FadeSwap` (AnimatePresence crossfade primitive), Reveal stagger on the
 dashboard blocks, StatCounter on the numeric summary tiles, a floating
 parallax hero mascot and supporters marquee on the landing page, and real
 generated mascot poses replacing the seven byte-identical placeholder PNGs
-(remaining dead landing set pieces and zero-reference assets were deleted). Partner progress uses only category-specific member aggregates and
+(remaining dead landing set pieces and zero-reference assets were deleted);
+the pose set was then regenerated against the canonical umbrella reference
+art so every pose matches the official Gami design. A subsequent compact-density
+pass removed the equal-height stretching and tall min-height floors from the
+student dashboard cards (hero, learning/support row, weekly snapshot, summary
+strip, shortcuts, protection rail), slimmed the shared page header, and moved
+`/recovery` and `/progress` onto the compact page density. Color semantics were
+tightened across the dashboard: sage now appears only for genuine
+success/completed states and amber only for genuine attention/pending states —
+mission rewards use navy/sky accents, informational surfaces (trend
+insufficient banner, badge rail, focus input) use azure/navy, the calendar
+marks active days with a single consistent navy check plus token-only category
+dots, and the journey-badge rail shows earned badges with locked badges
+collapsed into an expandable "up next" disclosure whose criteria remain
+readable. An engagement overhaul then made the progression economy live:
+levels now unlock cosmetic decor/pose/accent rewards (client mirror in
+`lib/recovery/level-rewards.ts`, authoritative list in the claim response's
+`newly_unlocked`), the recovery-room catalog grew to 20 tiered items with
+per-item placement slots and a level-18 second theme, practices grant a
+capped daily EXP and satisfy the new sixth mission, a dedicated calm
+level-up dialog replaced the toast, and the dashboard hero now surfaces the
+previously-unconsumed presence-rhythm summary as a non-punitive line. Content loops were extended: a 30-line mood-by-urge
+Gami dialog bank with deterministic daily variants and a practice follow-up
+chip, a contextual dashboard Gami companion, 36 bite facts with a
+user-advanced "another fact" button, a daily myth-vs-fact card, a local
+three-question daily quiz on the education page, three fictional
+response-practice scenarios on `/skills`, selectable breathing packs plus a
+phase-synced wave in the urge practice, a 10/15/25-minute focus-sprint
+picker, optional ephemeral grounding inputs, a private local-only
+"what you kept" estimator on `/progress`, and a private "your week's story"
+recap after the weekly review. All new daily state is deterministic
+(day-of-year rotation via `hooks/use-daily-rotation.ts`), local-only keys are
+cleared by the recovery clear-local-data flow, and no new personal fields
+reach any request body. Partner progress uses only category-specific member aggregates and
 never the student trend endpoint. Partner recovery is a CMS-authored response
 simulator and never record access. The complete `PKM-WEB-002` focus-period and
 reminder lifecycle remains incomplete core work.

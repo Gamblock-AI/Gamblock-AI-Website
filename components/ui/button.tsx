@@ -45,6 +45,8 @@ function Button({
   className,
   variant = 'primary',
   size = 'default',
+  render,
+  nativeButton,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   const reduce = useReducedMotion();
@@ -54,7 +56,8 @@ function Button({
   return (
     <ButtonPrimitive
       data-slot="button"
-      render={<motion.button {...motionProps} />}
+      render={render ?? <motion.button {...motionProps} />}
+      nativeButton={nativeButton ?? (render ? false : true)}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

@@ -19,6 +19,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { LevelUpMoment } from '@/components/dashboard/gamification/level-up-moment';
 import { MissionAdjustDialog } from '@/components/dashboard/gamification/mission-adjust-dialog';
 import { MissionTaskCard } from '@/components/dashboard/gamification/mission-task-card';
 import { MissionReflectionDialog } from '@/components/dashboard/gamification/mission-reflection-dialog';
@@ -62,6 +63,10 @@ function StudentGamificationContent() {
   const [reflectionOpen, setReflectionOpen] = useState(false);
   const [reflectionSaved, setReflectionSaved] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [levelUp, setLevelUp] = useState<{
+    level: number;
+    newlyUnlocked: string[];
+  } | null>(null);
 
   const recommendation = recovery.skillRecommendation;
   const recommendationCopy = recommendation
@@ -83,19 +88,20 @@ function StudentGamificationContent() {
 
   const claimTask = async (task: DailyMissionItem) => {
     if (!task.claimable || task.completed) return;
-    const willLevelUp = experience
-      ? experience.level_progress + task.expReward >= experience.level_target
-      : false;
-    const saved = await mission.claimMission(task.number);
-    if (!saved) {
+    const levelBefore = experience?.level ?? 1;
+    const updated = await mission.claimMission(task.number);
+    if (!updated) {
       toastError(mission.error, t('missionError'));
       return;
     }
-    const message = willLevelUp
-      ? t('levelUpTitled', {
-          title: t(getLevelTitleKey((experience?.level ?? 0) + 1)),
-        })
-      : t('expEarned', { count: task.expReward });
+    if (updated.level > levelBefore) {
+      setLevelUp({
+        level: updated.level,
+        newlyUnlocked: updated.newly_unlocked ?? [],
+      });
+      return;
+    }
+    const message = t('expEarned', { count: task.expReward });
     setSuccessMessage(message);
     toastSuccess(message);
   };
@@ -161,7 +167,7 @@ function StudentGamificationContent() {
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-1.5 font-extrabold text-navy">
                     <span className="flex size-5 items-center justify-center rounded-md bg-navy text-[0.625rem] text-white">
-                      <Trophy className="text-amber size-3" />
+                      <Trophy className="text-sky size-3" />
                     </span>
                     <span>{t('level', { count: experience.level })}</span>
                     <span className="font-bold text-navy/70">
@@ -368,7 +374,7 @@ function StudentGamificationContent() {
                 <div className="mt-3 rounded-2xl border border-navy/15 bg-gradient-to-br from-azure/20 via-card to-card p-3.5 shadow-xs">
                   <div className="flex items-start gap-3">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-xs">
-                      <Lightbulb className="text-amber size-4.5" aria-hidden="true" />
+                      <Lightbulb className="text-sky size-4.5" aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-extrabold text-navy sm:text-sm">
@@ -471,6 +477,13 @@ function StudentGamificationContent() {
           missionDate={mission.mission.date}
           onOpenChange={setReflectionOpen}
           onSaved={() => setReflectionSaved(true)}
+        />
+      ) : null}
+      {levelUp ? (
+        <LevelUpMoment
+          level={levelUp.level}
+          newlyUnlocked={levelUp.newlyUnlocked}
+          onClose={() => setLevelUp(null)}
         />
       ) : null}
     </DialogPrimitive.Root>

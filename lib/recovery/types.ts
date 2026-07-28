@@ -2,7 +2,7 @@ export const RECOVERY_STORAGE_VERSION = 1 as const;
 
 export type MoodLevel = 1 | 2 | 3 | 4 | 5;
 export type UrgeLevel = 1 | 2 | 3 | 4 | 5;
-export type MissionNumber = 1 | 2 | 3 | 4 | 5;
+export type MissionNumber = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type IntentionStatus = 'active' | 'paused' | 'archived';
 export type IntentionHistoryEventType =

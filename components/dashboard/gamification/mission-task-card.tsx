@@ -61,7 +61,7 @@ export function MissionTaskCard({
         'group relative overflow-hidden rounded-xl border transition-all duration-200',
         primary ? 'p-3.5' : 'p-3',
         task.claimable
-          ? 'border-amber/40 bg-gradient-to-br from-amber/10 via-azure/15 to-card shadow-xs'
+          ? 'border-navy/30 bg-gradient-to-br from-azure/60 via-azure/25 to-card shadow-xs'
           : resolved
             ? 'border-sage/35 bg-sage/8'
             : 'border-border/80 bg-card hover:border-navy/20'
@@ -74,7 +74,7 @@ export function MissionTaskCard({
             resolved
               ? 'bg-sage text-white shadow-xs'
               : task.claimable
-                ? 'bg-navy text-amber shadow-xs ring-2 ring-amber/30'
+                ? 'bg-navy text-sky shadow-xs ring-2 ring-sky/40'
                 : 'bg-muted text-muted-foreground'
           )}
           aria-hidden="true"
@@ -82,7 +82,7 @@ export function MissionTaskCard({
           {resolved ? (
             <Check className="size-4.5 stroke-[2.5]" />
           ) : task.claimable ? (
-            <Star className="fill-amber text-amber size-4.5" />
+            <Star className="fill-sky text-sky size-4.5" />
           ) : (
             <LockKeyhole className="size-4" />
           )}
@@ -99,7 +99,7 @@ export function MissionTaskCard({
                 resolved
                   ? 'bg-sage/15 text-navy dark:text-sage'
                   : task.claimable
-                    ? 'bg-amber/15 text-navy border border-amber/35'
+                    ? 'bg-azure/70 text-navy border border-navy/20'
                     : 'bg-muted text-muted-foreground'
               )}
             >
@@ -107,7 +107,7 @@ export function MissionTaskCard({
                 replacedLabel
               ) : (
                 <>
-                  <Sparkles className="text-amber size-3" />
+                  <Sparkles className="text-navy-light size-3" />
                   {`+${task.expReward} EXP`}
                 </>
               )}
@@ -127,11 +127,11 @@ export function MissionTaskCard({
             ) : task.claimable ? (
               <Button
                 type="button"
-                className="bg-navy hover:bg-navy-light text-amber w-full font-extrabold shadow-xs active:scale-[0.98]"
+                className="bg-navy hover:bg-navy-light w-full font-extrabold text-white shadow-xs"
                 disabled={busy}
                 onClick={onClaim}
               >
-                <Star className="fill-amber text-amber size-4" />
+                <Star className="fill-sky text-sky size-4" />
                 {claimLabel}
               </Button>
             ) : (

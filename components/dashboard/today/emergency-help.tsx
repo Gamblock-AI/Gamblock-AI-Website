@@ -14,7 +14,7 @@ export function EmergencyHelp() {
   const t = useTranslations('recoveryDashboard');
 
   return (
-    <section className="border-border bg-card shadow-soft flex h-full min-h-64 flex-col rounded-2xl border p-5">
+    <section className="border-border bg-card shadow-soft rounded-2xl border p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <span className="bg-crimson flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm">
           <ShieldAlert className="size-[1.125rem]" aria-hidden="true" />
@@ -23,14 +23,14 @@ export function EmergencyHelp() {
           {t('emergencyHelpTitle')}
         </h3>
       </div>
-      <p className="text-muted-foreground mt-4 text-sm leading-6">
+      <p className="text-muted-foreground mt-3 text-sm leading-6">
         {t('emergencyHelpDesc')}
       </p>
 
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <Link
           href={ROUTES.ACCOUNTABILITY}
-          className="bg-crimson hover:bg-crimson-light flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-colors"
+          className="bg-crimson hover:bg-crimson-light flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-colors"
         >
           <MessageCircleWarning className="size-4" />
           {t('emergencyHelpAction')}
@@ -44,7 +44,7 @@ export function EmergencyHelp() {
         </Link>
       </div>
 
-      <div className="border-border mt-auto border-t pt-4">
+      <div className="border-border mt-4 border-t pt-4">
         <p className="text-navy text-sm font-bold">
           {t('emergencyHelpPlanTitle')}
         </p>

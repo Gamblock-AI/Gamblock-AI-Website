@@ -44,7 +44,7 @@ export function DashboardPageHeader({
   aside?: ReactNode;
 }) {
   return (
-    <header className="border-navy/15 grid gap-4 border-b pb-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+    <header className="border-navy/15 grid gap-3 border-b pb-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
       <div>
         <div className="text-navy-light flex items-center gap-2 text-xs font-bold tracking-[0.1em] uppercase">
           <span className="bg-azure/75 text-navy flex size-8 items-center justify-center rounded-lg">
@@ -52,10 +52,10 @@ export function DashboardPageHeader({
           </span>
           <p>{eyebrow}</p>
         </div>
-        <h1 className="text-navy mt-3 max-w-3xl text-[1.875rem] leading-tight font-extrabold tracking-[-0.03em] sm:text-[2.25rem]">
+        <h1 className="text-navy mt-2 max-w-3xl text-2xl leading-tight font-extrabold tracking-[-0.03em] sm:text-[1.75rem]">
           {title}
         </h1>
-        <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-7 sm:text-base">
+        <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
           {description}
         </p>
       </div>

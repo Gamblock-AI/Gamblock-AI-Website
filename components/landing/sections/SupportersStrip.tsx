@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { Marquee } from '@/components/ui/marquee';
 
 const SUPPORTERS = [
   { name: 'Kemdiktisaintek', src: '/images/supporters/kemdiktisaintek-new.png' },
@@ -21,7 +20,7 @@ export function SupportersStrip() {
         <p className="text-label mb-7 text-center text-muted-foreground">
           {t('supportersLabel')}
         </p>
-        <Marquee gapRem={3} repeat={3} durationSec={45}>
+        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
           {SUPPORTERS.map((supporter) => (
             <span
               key={supporter.name}
@@ -42,7 +41,7 @@ export function SupportersStrip() {
               </span>
             </span>
           ))}
-        </Marquee>
+        </div>
       </div>
     </section>
   );

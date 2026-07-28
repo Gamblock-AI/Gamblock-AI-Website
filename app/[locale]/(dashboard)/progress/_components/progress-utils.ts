@@ -44,12 +44,12 @@ export function activityTotal(activity?: ActivityDay) {
 
 export function categoryTone(key: ProgressCategory) {
   return {
-    check_ins: 'bg-sage',
+    check_ins: 'bg-navy',
     practices: 'bg-cyan',
-    journals: 'bg-amber',
-    missions: 'bg-navy',
-    education: 'bg-[#7757c8]',
-    reviews: 'bg-[#dc7b63]',
+    journals: 'bg-navy-light',
+    missions: 'bg-sky-light',
+    education: 'bg-navy/50',
+    reviews: 'bg-cyan/50',
   }[key];
 }
 

@@ -79,7 +79,7 @@ export function ReflectionHistory({
             return (
               <div key={reflection.id} className="py-4 first:pt-2 last:pb-0">
                 {moodDisplay ? (
-                  <p className="text-sage text-xs font-bold">{moodDisplay}</p>
+                  <p className="text-navy-light text-xs font-bold">{moodDisplay}</p>
                 ) : null}
                 <p className="text-navy mt-2 text-sm leading-6">
                   {reflection.text}

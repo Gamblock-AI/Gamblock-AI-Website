@@ -30,7 +30,7 @@ export default function PartnersPage() {
           isPartner ? t('partnerDescription') : t('studentDescription')
         }
         aside={
-          <DashboardStatus tone={isPartner ? 'navy' : 'sage'}>
+          <DashboardStatus tone="navy">
             {isPartner ? t('partnerRole') : t('studentRole')}
           </DashboardStatus>
         }

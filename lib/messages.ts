@@ -127,7 +127,7 @@ export const MESSAGES: Record<string, string> = {
 
   // missions
   mission_fetch_failed: 'Gagal memuat misi harian.',
-  invalid_mission: 'Nomor misi harus 1-5.',
+  invalid_mission: 'Nomor misi harus 1-6.',
   mission_update_failed: 'Gagal memperbarui misi harian.',
   mission_adjust_failed:
     'Misi utama belum dapat disesuaikan. Coba pilihan lain.',
@@ -170,6 +170,8 @@ export const MESSAGES: Record<string, string> = {
     'Latihan belum dapat disimpan. Periksa jenis, durasi, atau umpan baliknya.',
   recovery_space_fetch_failed: 'Ruang pulih belum dapat dimuat.',
   recovery_space_update_failed: 'Tata ruang pulih belum dapat disimpan.',
+  recovery_space_item_locked:
+    'Item atau tema ini belum terbuka. Kriterianya bisa dilihat di koleksi ruang pulih.',
   weekly_review_fetch_failed: 'Tinjauan mingguan belum dapat dimuat.',
   weekly_review_save_failed: 'Tinjauan mingguan belum dapat disimpan.',
   fetch_data_requests_failed: 'Gagal memuat permintaan data.',

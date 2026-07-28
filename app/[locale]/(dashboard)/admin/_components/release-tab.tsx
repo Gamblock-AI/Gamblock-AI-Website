@@ -121,7 +121,7 @@ export function ReleaseTab({
         {[t('gateArtifact'), t('gateChecksum'), t('gateContract')].map(
           (gate, index) => (
             <Card key={gate} className="flex items-start gap-3 p-4">
-              <span className="bg-sage/10 text-sage flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold">
+              <span className="bg-azure/75 text-navy flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold">
                 {index + 1}
               </span>
               <p className="text-navy text-sm leading-5 font-semibold">

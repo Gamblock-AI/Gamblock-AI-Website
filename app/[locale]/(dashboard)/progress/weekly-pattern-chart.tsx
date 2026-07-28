@@ -33,7 +33,7 @@ export function WeeklyPatternChart({
           {moodLabel}
         </span>
         <span className="inline-flex items-center gap-2">
-          <span aria-hidden="true" className="size-2.5 rounded-full bg-sage" />
+          <span aria-hidden="true" className="size-2.5 rounded-full bg-amber" />
           {urgeLabel}
         </span>
       </div>
@@ -84,16 +84,16 @@ export function WeeklyPatternChart({
               {day.urge === null ? (
                 <span
                   aria-hidden="true"
-                  className="relative z-10 mb-1 h-0.5 w-2 rounded-full bg-sage/25 sm:w-3"
+                  className="relative z-10 mb-1 h-0.5 w-2 rounded-full bg-amber/25 sm:w-3"
                 />
               ) : (
                 <span
                   aria-hidden="true"
                   title={`${day.fullLabel}: ${urgeLabel} ${day.urge}/5`}
-                  className="relative z-10 w-2 rounded-full bg-sage sm:w-3"
+                  className="relative z-10 w-2 rounded-full bg-amber sm:w-3"
                   style={{ height: barHeight(day.urge) }}
                 >
-                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-bold tabular-nums text-sage sm:text-[10px]">
+                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-bold tabular-nums text-navy sm:text-[10px]">
                     {day.urge}
                   </span>
                 </span>

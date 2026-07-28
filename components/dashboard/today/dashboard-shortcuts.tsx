@@ -58,7 +58,7 @@ export function DashboardShortcuts() {
           <Link
             key={href}
             href={href}
-            className="group border-border bg-card shadow-soft hover:border-navy/30 hover:shadow-card focus-visible:ring-navy/35 grid min-h-28 grid-cols-[2.75rem_minmax(0,1fr)_1rem] items-center gap-3 rounded-2xl border p-4 transition-[transform,border-color,box-shadow] duration-200 outline-none hover:-translate-y-px focus-visible:ring-2 motion-reduce:transform-none motion-reduce:transition-none"
+            className="group border-border bg-card shadow-soft hover:border-navy/30 hover:shadow-card focus-visible:ring-navy/35 grid grid-cols-[2.75rem_minmax(0,1fr)_1rem] items-center gap-3 rounded-2xl border p-4 transition-[transform,border-color,box-shadow] duration-200 outline-none hover:-translate-y-px focus-visible:ring-2 motion-reduce:transform-none motion-reduce:transition-none"
           >
             <span className="bg-azure/70 text-navy group-hover:bg-navy flex size-11 items-center justify-center rounded-xl transition-colors group-hover:text-white">
               <Icon className="size-5" aria-hidden="true" />

@@ -16,6 +16,18 @@ export const LEGACY_STORAGE_KEYS = [
   'gamblock_target_days',
 ] as const;
 
+/**
+ * Local-only engagement state (day markers, daily answers, the private
+ * estimator baseline). Cleared together with the recovery state so the
+ * "clear local data" promise stays complete.
+ */
+export const ENGAGEMENT_STORAGE_KEYS = [
+  'gamblock:dashboard-seen:v1',
+  'gamblock:myth-fact:v1',
+  'gamblock:quick-quiz:v1',
+  'gamblock:estimator:v1',
+] as const;
+
 export const recoveryLimits = {
   intentions: 20,
   intentionEvents: 120,

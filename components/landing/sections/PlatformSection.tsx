@@ -18,7 +18,7 @@ export function PlatformSection() {
       <div className="border-navy/8 overflow-hidden rounded-3xl border bg-white shadow-[0_30px_90px_rgba(22,41,76,0.12)]">
         <div className="grid items-stretch lg:grid-cols-[0.82fr_1.18fr]">
           <Reveal className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
-            <Pill variant="navy" className="mb-4">
+            <Pill variant="navy" className="mb-4 w-fit">
               {t('platformKicker')}
             </Pill>
             <h2 className="text-heading text-navy text-3xl md:text-4xl">{t('platformTitle')}</h2>

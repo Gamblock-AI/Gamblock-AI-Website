@@ -24,7 +24,7 @@ function StudentRecoveryHub() {
   const t = useTranslations('recoveryHub');
 
   return (
-    <DashboardPage>
+    <DashboardPage density="compact">
       <DashboardPageHeader
         icon={HeartHandshake}
         eyebrow={t('eyebrow')}
@@ -41,7 +41,7 @@ function PartnerRecoveryGuide() {
   const t = useTranslations('partnerSimulator');
 
   return (
-    <DashboardPage>
+    <DashboardPage density="compact">
       <DashboardPageHeader
         icon={UsersRound}
         eyebrow={t('eyebrow')}

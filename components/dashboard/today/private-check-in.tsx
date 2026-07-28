@@ -39,7 +39,6 @@ const moodOptions = [
 // "No urge" is a first-class scale point (0), not an opt-out appended at the
 // end — the segmented control reads as one ascending 0→5 scale.
 const urgeOptions = [
-  { value: null, display: 0, labelKey: 'urgeNone' },
   { value: 1 as const, display: 1, labelKey: 'urge1' },
   { value: 2 as const, display: 2, labelKey: 'urge2' },
   { value: 3 as const, display: 3, labelKey: 'urge3' },
@@ -199,13 +198,13 @@ export function PrivateCheckIn({
       {/* Persistent live region: Gami's supportive reply is announced on every
           mood change; hidden again once the check-in is saved. */}
       <div role="status" aria-live="polite" className="mt-3">
-        {!saved ? <GamiMoodResponse mood={mood} /> : null}
+        {!saved ? <GamiMoodResponse mood={mood} urge={urge ?? null} /> : null}
       </div>
 
       <fieldset className="mt-4">
         <legend className="text-foreground text-sm font-semibold">{t('urgeQuestion')}</legend>
         <div
-          className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 lg:gap-0"
+          className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5 lg:grid-cols-5 lg:gap-0"
           role="radiogroup"
           aria-label={t('urgeQuestion')}
         >

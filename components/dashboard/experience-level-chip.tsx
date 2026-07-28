@@ -36,7 +36,7 @@ export function ExperienceLevelChip() {
           className="bg-navy flex size-6 items-center justify-center rounded-md"
           aria-hidden="true"
         >
-          <Trophy className="text-amber size-3.5" />
+          <Trophy className="text-sky size-3.5" />
         </span>
         <span className="text-xs font-extrabold">
           Lv {experience.level}

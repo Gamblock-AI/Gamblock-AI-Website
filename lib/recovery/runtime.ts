@@ -1,4 +1,5 @@
 import {
+  ENGAGEMENT_STORAGE_KEYS,
   LEGACY_STORAGE_KEYS,
   RECOVERY_STORAGE_KEY,
   recoveryLimits,
@@ -84,6 +85,9 @@ export function clearRecoveryRuntime(): void {
     try {
       window.localStorage.removeItem(RECOVERY_STORAGE_KEY);
       for (const key of LEGACY_STORAGE_KEYS) {
+        window.localStorage.removeItem(key);
+      }
+      for (const key of ENGAGEMENT_STORAGE_KEYS) {
         window.localStorage.removeItem(key);
       }
       persistence = 'local';

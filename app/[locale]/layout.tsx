@@ -21,7 +21,10 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const defaultBaseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gamblock.ai';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(defaultBaseUrl),
   title: {
     default: 'Gamblock-AI · Pemblokiran Judi Online Berbasis On-Device AI',
     template: '%s · Gamblock-AI',

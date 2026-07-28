@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { ChevronDown, RefreshCw, Target } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { LevelUpMoment } from '@/components/dashboard/gamification/level-up-moment';
 import { MissionTaskCard } from '@/components/dashboard/gamification/mission-task-card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +12,6 @@ import {
   useDailyMission,
 } from '@/hooks/use-daily-mission';
 import { toastError, toastSuccess } from '@/lib/feedback';
-import { getLevelTitleKey } from '@/lib/recovery/level-titles';
 
 /**
  * RecoveryMissionCard — surfaces today's server-verified self-control
@@ -25,29 +26,32 @@ export function RecoveryMissionCard() {
   const primaryTask = mission.items.find((item) => item.role === 'primary');
   const bonusTasks = mission.items.filter((item) => item.role === 'bonus');
   const experience = mission.mission?.experience;
+  const [levelUp, setLevelUp] = useState<{
+    level: number;
+    newlyUnlocked: string[];
+  } | null>(null);
 
   const claimTask = async (task: DailyMissionItem) => {
     if (!task.claimable || task.completed) return;
-    const willLevelUp = experience
-      ? experience.level_progress + task.expReward >= experience.level_target
-      : false;
-    const saved = await mission.claimMission(task.number);
-    if (!saved) {
+    const levelBefore = experience?.level ?? 1;
+    const updated = await mission.claimMission(task.number);
+    if (!updated) {
       toastError(mission.error, t('missionError'));
       return;
     }
-    toastSuccess(
-      willLevelUp
-        ? t('levelUpTitled', {
-            title: t(getLevelTitleKey((experience?.level ?? 0) + 1)),
-          })
-        : t('expEarned', { count: task.expReward })
-    );
+    if (updated.level > levelBefore) {
+      setLevelUp({
+        level: updated.level,
+        newlyUnlocked: updated.newly_unlocked ?? [],
+      });
+      return;
+    }
+    toastSuccess(t('expEarned', { count: task.expReward }));
   };
 
   return (
     <section
-      className="border-border bg-card shadow-soft rounded-2xl border p-5"
+      className="border-border bg-card shadow-soft rounded-2xl border p-4 sm:p-5"
       aria-labelledby="recovery-mission-title"
     >
       <div className="flex items-start gap-3">
@@ -133,6 +137,13 @@ export function RecoveryMissionCard() {
           </>
         ) : null}
       </div>
+      {levelUp ? (
+        <LevelUpMoment
+          level={levelUp.level}
+          newlyUnlocked={levelUp.newlyUnlocked}
+          onClose={() => setLevelUp(null)}
+        />
+      ) : null}
     </section>
   );
 }

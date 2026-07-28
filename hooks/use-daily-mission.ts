@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { apiClient } from '@/lib/api-client';
-import { publishExperience } from '@/lib/recovery/experience-store';
+import {
+  publishExperience,
+  publishMissionSummary,
+} from '@/lib/recovery/experience-store';
 import {
   DAILY_MISSION_CATALOG,
   type MissionCatalogItem,
@@ -42,6 +45,7 @@ export interface ExperienceProgress {
   level: number;
   level_progress: number;
   level_target: number;
+  newly_unlocked?: string[];
 }
 
 export interface DailyMission {
@@ -53,6 +57,7 @@ export interface DailyMission {
   mission_3: boolean;
   mission_4: boolean;
   mission_5: boolean;
+  mission_6: boolean;
   tasks: DailyMissionTask[];
   experience: ExperienceProgress;
   completed_count: number;
@@ -81,13 +86,25 @@ export interface UseDailyMissionResult {
   error: Error | null;
   updatingMissionNumber: MissionNumber | null;
   refetch: () => Promise<void>;
-  claimMission: (missionNumber: MissionNumber) => Promise<boolean>;
+  claimMission: (
+    missionNumber: MissionNumber
+  ) => Promise<ExperienceProgress | null>;
   adjustMission: (input: {
     missionNumber: MissionNumber;
     action: 'skip' | 'replace';
     reason: MissionAdjustmentReason;
     replacementNumber?: MissionNumber;
   }) => Promise<boolean>;
+}
+
+
+function publishMission(mission: DailyMission) {
+  publishExperience(mission.experience);
+  publishMissionSummary({
+    date: mission.date,
+    resolved: mission.resolved_count,
+    total: mission.total_count,
+  });
 }
 
 function requestTodayMission(): Promise<DailyMission> {
@@ -121,7 +138,7 @@ export function useDailyMission(): UseDailyMissionResult {
           return;
         }
         setMission(data);
-        publishExperience(data.experience);
+        publishMission(data);
         setError(null);
         setLoading(false);
       },
@@ -156,7 +173,7 @@ export function useDailyMission(): UseDailyMissionResult {
         return;
       }
       setMission(data);
-      publishExperience(data.experience);
+      publishMission(data);
     } catch (requestError) {
       if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
         return;
@@ -171,7 +188,7 @@ export function useDailyMission(): UseDailyMissionResult {
 
   const claimMission = useCallback(
     async (missionNumber: MissionNumber) => {
-      if (mutationInFlightRef.current || loading || !mission) return false;
+      if (mutationInFlightRef.current || loading || !mission) return null;
 
       mutationInFlightRef.current = true;
       loadSequenceRef.current += 1;
@@ -192,16 +209,16 @@ export function useDailyMission(): UseDailyMissionResult {
         );
         if (mountedRef.current) {
           setMission(updatedMission);
-          publishExperience(updatedMission.experience);
+          publishMission(updatedMission);
         }
-        return true;
+        return updatedMission.experience;
       } catch (requestError) {
         if (mountedRef.current) {
           setMission(previousMission);
-          publishExperience(previousMission.experience);
+          publishMission(previousMission);
           setError(toError(requestError));
         }
-        return false;
+        return null;
       } finally {
         mutationInFlightRef.current = false;
         if (mountedRef.current) setUpdatingMissionNumber(null);
@@ -247,13 +264,13 @@ export function useDailyMission(): UseDailyMissionResult {
         );
         if (mountedRef.current) {
           setMission(updatedMission);
-          publishExperience(updatedMission.experience);
+          publishMission(updatedMission);
         }
         return true;
       } catch (requestError) {
         if (mountedRef.current) {
           setMission(previousMission);
-          publishExperience(previousMission.experience);
+          publishMission(previousMission);
           setError(toError(requestError));
         }
         return false;

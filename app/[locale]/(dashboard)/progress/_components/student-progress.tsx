@@ -5,12 +5,11 @@ import {
   ArrowRight,
   BookOpen,
   CalendarDays,
+  Check,
   CircleHelp,
   Download,
   FileSpreadsheet,
   Footprints,
-  LampDesk,
-  Leaf,
   NotebookPen,
   ShieldCheck,
   Sprout,
@@ -44,7 +43,9 @@ import {
   type ProgressCategory,
   type RangeDays,
 } from './progress-utils';
+import { EstimatorCard } from './estimator-card';
 import { JourneyBadges } from './journey-badges';
+import { WeeklyRecap } from './weekly-recap';
 import { WeeklyReviewSheet } from './weekly-review-sheet';
 
 const CATEGORY_ICONS: Record<ProgressCategory, LucideIcon> = {
@@ -56,14 +57,13 @@ const CATEGORY_ICONS: Record<ProgressCategory, LucideIcon> = {
   reviews: CalendarDays,
 };
 
-const KEEPSAKES = [Sprout, LampDesk, NotebookPen, BookOpen, Leaf] as const;
-
 export function StudentProgress() {
   const p = useTranslations('progressExperience');
   const locale = useLocale();
   const [range, setRange] = useState<RangeDays>(30);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [recapOpen, setRecapOpen] = useState(false);
   const [confirmExport, setConfirmExport] = useState<'csv' | 'pdf' | null>(
     null
   );
@@ -83,6 +83,7 @@ export function StudentProgress() {
   const completeReview = () => {
     setReviewVersion((version) => version + 1);
     setReviewOpen(false);
+    setRecapOpen(true);
     void snapshot.refetch();
   };
 
@@ -139,7 +140,7 @@ export function StudentProgress() {
   };
 
   return (
-    <DashboardPage>
+    <DashboardPage density="compact">
       <DashboardPageHeader
         icon={Footprints}
         eyebrow={p('eyebrow')}
@@ -182,12 +183,12 @@ export function StudentProgress() {
       ) : null}
 
       {snapshot.data ? (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(19rem,0.5fr)]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(19rem,0.5fr)]">
           <section
             className="border-border bg-card overflow-hidden rounded-[2rem] border shadow-sm"
             aria-labelledby="calendar-title"
           >
-            <div className="border-border flex flex-col gap-3 border-b p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
+            <div className="border-border flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5">
               <div>
                 <h2 id="calendar-title" className="text-navy text-xl font-bold">
                   {p('calendarTitle')}
@@ -203,14 +204,12 @@ export function StudentProgress() {
                 const key = isoDate(date);
                 const activity = activityMap.get(key);
                 const total = activityTotal(activity);
-                const Keepsake =
-                  KEEPSAKES[(date.getDate() + total) % KEEPSAKES.length];
                 return (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setSelectedDate(key)}
-                    className={`focus-visible:ring-ring border-border/70 relative min-h-24 cursor-pointer border-r border-b p-2 text-left outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-28 sm:p-3 ${selectedDate === key ? 'bg-cyan/10 shadow-[inset_0_0_0_2px_#17264d]' : 'hover:bg-muted/35'}`}
+                    className={`focus-visible:ring-ring border-border/70 relative min-h-16 cursor-pointer border-r border-b p-1.5 text-left outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-20 sm:p-2 ${selectedDate === key ? 'bg-cyan/10 shadow-[inset_0_0_0_2px_var(--color-navy)]' : 'hover:bg-muted/35'}`}
                     aria-label={p('dayLabel', {
                       date: date.toLocaleDateString(),
                       count: total,
@@ -221,13 +220,13 @@ export function StudentProgress() {
                     </span>
                     {total > 0 ? (
                       <>
-                        <Keepsake
-                          className="text-sage mx-auto mt-2 size-7 sm:size-9"
-                          strokeWidth={1.6}
+                        <Check
+                          className="text-navy-light mx-auto mt-1.5 size-5 sm:size-6"
+                          strokeWidth={2}
                           aria-hidden="true"
                         />
                         <span
-                          className="mt-2 flex justify-center gap-1"
+                          className="mt-1.5 flex justify-center gap-1"
                           aria-hidden="true"
                         >
                           {activityCategories(activity)
@@ -249,10 +248,10 @@ export function StudentProgress() {
               })}
             </div>
             {snapshot.data.check_in_count < 3 ? (
-              <div className="bg-sage/[0.07] flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="bg-azure/40 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <div className="flex items-start gap-3">
                   <Sprout
-                    className="text-sage mt-0.5 size-6 shrink-0"
+                    className="text-navy-light mt-0.5 size-6 shrink-0"
                     aria-hidden="true"
                   />
                   <div>
@@ -270,7 +269,7 @@ export function StudentProgress() {
                   {[1, 2, 3].map((value) => (
                     <span
                       key={value}
-                      className={`flex size-10 items-center justify-center rounded-full border text-sm font-bold ${snapshot.data!.check_in_count >= value ? 'border-sage bg-sage text-white' : 'border-border bg-card text-muted-foreground'}`}
+                      className={`flex size-10 items-center justify-center rounded-full border text-sm font-bold ${snapshot.data!.check_in_count >= value ? 'border-navy bg-navy text-white' : 'border-border bg-card text-muted-foreground'}`}
                     >
                       {value}
                     </span>
@@ -290,21 +289,25 @@ export function StudentProgress() {
             )}
           </section>
 
-          <aside className="space-y-5">
+          <aside className="space-y-4">
+            <EstimatorCard
+              activeDays={snapshot.data.active_days}
+              rangeDays={range}
+            />
             <JourneyBadges key={reviewVersion} />
 
-            <section className="border-border bg-card rounded-[2rem] border p-5 sm:p-6">
+            <section className="border-border bg-card rounded-[2rem] border p-4 sm:p-5">
               <CalendarDays
-                className="text-cyan-dark size-7"
+                className="text-navy-light size-7"
                 aria-hidden="true"
               />
-              <h2 className="text-navy mt-4 text-xl font-bold">
+              <h2 className="text-navy mt-3 text-xl font-bold">
                 {p('reviewTitle')}
               </h2>
               <p className="text-muted-foreground mt-2 text-sm leading-6">
                 {p('reviewBody')}
               </p>
-              <div className="text-muted-foreground mt-5 flex items-center gap-2 text-xs">
+              <div className="text-muted-foreground mt-4 flex items-center gap-2 text-xs">
                 <span>{p('reviewStepReflect')}</span>
                 <ArrowRight className="size-3" aria-hidden="true" />
                 <span>{p('reviewStepLearn')}</span>
@@ -312,11 +315,18 @@ export function StudentProgress() {
                 <span>{p('reviewStepPlan')}</span>
               </div>
               <Button
-                className="mt-5 w-full"
+                className="mt-4 w-full"
                 onClick={() => setReviewOpen(true)}
               >
                 {p('startReview')}
                 <ArrowRight className="size-4" aria-hidden="true" />
+              </Button>
+              <Button
+                className="mt-2 w-full"
+                variant="outline"
+                onClick={() => setRecapOpen(true)}
+              >
+                {p('openRecap')}
               </Button>
             </section>
           </aside>
@@ -333,6 +343,7 @@ export function StudentProgress() {
       {reviewOpen ? (
         <WeeklyReviewSheet onClose={closeReview} onSaved={completeReview} />
       ) : null}
+      {recapOpen ? <WeeklyRecap onClose={() => setRecapOpen(false)} /> : null}
 
       <section className="border-border flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -412,7 +423,7 @@ function DayDetail({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-cyan-dark text-xs font-bold tracking-[0.14em] uppercase">
+          <p className="text-navy-light text-xs font-bold tracking-[0.14em] uppercase">
             {p('dayDetail')}
           </p>
           <h2 className="text-navy mt-1 text-lg font-bold">
@@ -436,7 +447,14 @@ function DayDetail({
             const Icon = CATEGORY_ICONS[key];
             return (
               <div key={key} className="bg-muted/40 rounded-xl p-3">
-                <Icon className="text-sage size-4" aria-hidden="true" />
+                <Icon
+                  className={
+                    activity[key] > 0
+                      ? 'text-navy-light size-4'
+                      : 'text-muted-foreground/50 size-4'
+                  }
+                  aria-hidden="true"
+                />
                 <p className="text-navy mt-2 text-sm font-bold">
                   {activity[key]}
                 </p>

@@ -99,7 +99,7 @@ export function SyncedRecoveryPlan() {
       icon={Cloud}
       title={t('title')}
       description={t('body')}
-      action={<DashboardStatus tone="sage">{t('encrypted')}</DashboardStatus>}
+      action={<DashboardStatus tone="navy">{t('encrypted')}</DashboardStatus>}
     >
       <div className="grid gap-5 xl:grid-cols-[minmax(20rem,0.8fr)_minmax(0,1.2fr)]">
         <form onSubmit={(event) => void submit(event)} className="space-y-4">

@@ -25,7 +25,7 @@ export function LearningNextStep({
 
   return (
     <section
-      className="border-border bg-card shadow-soft flex h-full min-h-64 flex-col rounded-2xl border p-5"
+      className="border-border bg-card shadow-soft rounded-2xl border p-4 sm:p-5"
       aria-labelledby="learning-next-step-title"
     >
       <div className="flex items-start gap-3">
@@ -46,14 +46,14 @@ export function LearningNextStep({
       </div>
 
       {loading ? (
-        <div className="mt-5 space-y-3" role="status">
+        <div className="mt-4 space-y-3" role="status">
           <Skeleton className="h-5 w-3/4" />
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-2 w-full" />
           <span className="sr-only">{t('learningLoading')}</span>
         </div>
       ) : error ? (
-        <div className="border-border bg-muted/30 mt-5 rounded-xl border border-dashed p-4">
+        <div className="border-border bg-muted/30 mt-4 rounded-xl border border-dashed p-4">
           <p className="text-muted-foreground text-sm leading-6">
             {t('learningError')}
           </p>
@@ -63,7 +63,7 @@ export function LearningNextStep({
           </Button>
         </div>
       ) : module ? (
-        <div className="mt-5 flex flex-1 flex-col">
+        <div className="mt-4">
           <div className="text-muted-foreground flex items-center justify-between gap-3 text-xs font-semibold">
             <span>
               {t('learningMinutes', { count: module.estimated_minutes })}
@@ -88,7 +88,7 @@ export function LearningNextStep({
             aria-valuenow={module.progress.progress_percent}
             aria-valuemin={0}
             aria-valuemax={100}
-            className="bg-muted mt-4 h-2 overflow-hidden rounded-full"
+            className="bg-muted mt-3 h-2 overflow-hidden rounded-full"
           >
             <div
               className="bg-sky h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"
@@ -97,7 +97,7 @@ export function LearningNextStep({
           </div>
           <Link
             href={`/education/${module.slug}`}
-            className="bg-navy hover:bg-navy/90 focus-visible:ring-navy/35 mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-xl px-4 text-sm font-bold text-white transition-colors outline-none focus-visible:ring-2"
+            className="bg-navy hover:bg-navy/90 focus-visible:ring-navy/35 mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-xl px-4 text-sm font-bold text-white transition-colors outline-none focus-visible:ring-2"
           >
             {module.progress.progress_percent > 0
               ? t('learningContinue')
@@ -106,7 +106,7 @@ export function LearningNextStep({
           </Link>
         </div>
       ) : (
-        <div className="border-border bg-muted/30 mt-5 flex flex-1 flex-col justify-between rounded-xl border border-dashed p-4">
+        <div className="border-border bg-muted/30 mt-4 rounded-xl border border-dashed p-4">
           <p className="text-muted-foreground text-sm leading-6">
             {t('learningEmpty')}
           </p>

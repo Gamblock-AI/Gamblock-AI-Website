@@ -74,7 +74,7 @@ export function Sidebar() {
         <div className="relative overflow-hidden rounded-2xl border border-navy/15 bg-azure/55 p-4">
           <div className="absolute -right-4 -bottom-6 size-28 rounded-full bg-sky-light/45" aria-hidden="true" />
           <Image
-            src="/images/mascot/gami-sidebar-support.png"
+            src="/images/mascot/gami-sidebar-support.webp"
             alt=""
             width={72}
             height={72}

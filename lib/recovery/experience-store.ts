@@ -33,3 +33,37 @@ export function getExperienceSnapshot(): ExperienceProgress | null {
 export function getServerExperienceSnapshot(): null {
   return null;
 }
+
+/**
+ * Passive daily mission summary, published beside every experience update so
+ * contextual surfaces (dashboard Gami) know today's resolved/total without
+ * their own fetch. Same convergence property as the experience cache.
+ */
+export interface MissionSummary {
+  date: string;
+  resolved: number;
+  total: number;
+}
+
+let cachedMissionSummary: MissionSummary | null = null;
+const missionListeners = new Set<() => void>();
+
+export function publishMissionSummary(summary: MissionSummary) {
+  cachedMissionSummary = summary;
+  missionListeners.forEach((listener) => listener());
+}
+
+export function subscribeMissionSummary(listener: () => void) {
+  missionListeners.add(listener);
+  return () => {
+    missionListeners.delete(listener);
+  };
+}
+
+export function getMissionSummarySnapshot(): MissionSummary | null {
+  return cachedMissionSummary;
+}
+
+export function getServerMissionSummarySnapshot(): null {
+  return null;
+}

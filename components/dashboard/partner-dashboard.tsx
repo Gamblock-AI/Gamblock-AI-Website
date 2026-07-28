@@ -69,7 +69,7 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
         eyebrow={t('eyebrow')}
         title={t('title', { name: name || t('defaultName') })}
         description={t('description')}
-        aside={<DashboardStatus tone="sage">{t('aggregateOnly')}</DashboardStatus>}
+        aside={<DashboardStatus tone="navy">{t('aggregateOnly')}</DashboardStatus>}
       />
 
       {accountability.error ? (

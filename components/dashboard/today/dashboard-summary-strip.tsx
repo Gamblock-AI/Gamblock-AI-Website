@@ -86,7 +86,7 @@ export function DashboardSummaryStrip({
         <div
           key={key}
           className={cn(
-            'shadow-soft flex min-h-36 flex-col rounded-2xl border p-4',
+            'shadow-soft flex flex-col rounded-2xl border p-4',
             featured
               ? 'border-navy bg-navy text-white'
               : 'border-border bg-card text-foreground'
@@ -113,14 +113,14 @@ export function DashboardSummaryStrip({
           {value === null ? (
             <Skeleton
               className={cn(
-                'mt-3 h-7 w-24',
+                'mt-2 h-7 w-24',
                 featured ? 'bg-white/20' : 'bg-muted'
               )}
             />
           ) : (
             <p
               className={cn(
-                'mt-3 text-2xl font-extrabold tracking-tight tabular-nums',
+                'mt-2 text-2xl font-extrabold tracking-tight tabular-nums',
                 featured ? 'text-white' : 'text-navy'
               )}
             >
@@ -129,7 +129,7 @@ export function DashboardSummaryStrip({
           )}
           <p
             className={cn(
-              'mt-1 min-h-10 text-xs leading-5',
+              'mt-1 text-xs leading-5',
               featured ? 'text-white/70' : 'text-muted-foreground'
             )}
           >

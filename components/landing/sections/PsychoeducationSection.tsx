@@ -21,7 +21,7 @@ export function PsychoeducationSection() {
       <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
         <div>
           <Reveal>
-            <Pill variant="navy" className="mb-4">
+            <Pill variant="navy" className="mb-4 w-fit">
               <BookOpenCheck className="size-3.5" />
               {t('psychoKicker')}
             </Pill>

@@ -37,7 +37,7 @@ export function PartnerProgress() {
         title={p('partnerTitle')}
         description={p('partnerBody')}
         aside={
-          <DashboardStatus tone="sage">{p('aggregateOnly')}</DashboardStatus>
+          <DashboardStatus tone="navy">{p('aggregateOnly')}</DashboardStatus>
         }
       />
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
