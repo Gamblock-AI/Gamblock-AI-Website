@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 
 /**
  * Deterministic day-of-year index shared by every daily-rotating surface
- * (bite facts, Gami dialog variants, myth-vs-fact, quick quiz). SSR renders
+ * (bite facts, Gami dialog variants, and myth-vs-fact). SSR renders
  * index 0; the client's local date swaps in right after hydration and stays
  * referentially stable for the session. No Math.random in render, ever.
  */

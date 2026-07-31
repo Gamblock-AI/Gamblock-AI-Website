@@ -1,5 +1,5 @@
 schema_version: 1
-context_version: "2026-07-29.1"
+context_version: "2026-07-31.15"
 component: "gamblock-ai-website"
 
 shared_contracts:
@@ -12,7 +12,7 @@ shared_contracts:
   accountability_state: 2
   emergency_two_operator: 1
   education_revisioned_content: 1
-  daily_mission_experience: 2
+  daily_mission_experience: 3
 
 canonical:
   instructions: "AGENTS.md"

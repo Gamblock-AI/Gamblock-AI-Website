@@ -4,7 +4,6 @@ import { CircleAlert } from 'lucide-react';
 import { Reveal } from '@/components/common/Reveal';
 import { useLocale, useTranslations } from 'next-intl';
 import { DashboardWelcome } from '@/components/dashboard/today/dashboard-welcome';
-import { GamiCompanion } from '@/components/dashboard/today/gami-companion';
 import { DashboardSummaryStrip } from '@/components/dashboard/today/dashboard-summary-strip';
 import { BiteSizedLearning } from '@/components/dashboard/today/bite-sized-learning';
 import { MythFactCard } from '@/components/dashboard/today/myth-fact-card';
@@ -51,7 +50,6 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
           activeDays={summary?.active_days ?? null}
         />
       </Reveal>
-      <GamiCompanion />
       {recovery.persistence === 'memory' ? (
         <div
           className="border-amber/40 bg-amber/[0.10] text-foreground flex items-start gap-3 rounded-2xl border p-4 text-sm leading-6"
@@ -67,7 +65,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
       {/* Education leads the canvas (psychologist-review request): the next
           learning step sits directly below the greeting. */}
       <Reveal y={12} duration={0.45} delay={0.05}>
-        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <div className="grid gap-4 lg:grid-cols-2 items-stretch">
           <LearningNextStep
             module={learningModule}
             loading={education.loading}
@@ -85,23 +83,24 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         />
       </Reveal>
       <Reveal y={12} duration={0.45} delay={0.15}>
-        <div className="grid gap-4 xl:grid-cols-12 xl:items-start">
-        <div className="xl:col-span-8">
-          <WeeklySnapshot checkIns={recovery.state.checkIns} />
+        <div className="grid gap-4 xl:grid-cols-12 items-stretch">
+          <div className="xl:col-span-7">
+            <WeeklySnapshot checkIns={recovery.state.checkIns} />
+          </div>
+          <div className="xl:col-span-5">
+            <ProtectionSummary
+              status={protection.status}
+              loading={protection.loading}
+              error={protection.error}
+              onRetry={() => void protection.refetch()}
+            />
+          </div>
         </div>
-        <aside
-          className="flex flex-col gap-4 xl:col-span-4"
-          aria-label={t('protectionTitle')}
-        >
-          <ProtectionSummary
-            status={protection.status}
-            loading={protection.loading}
-            error={protection.error}
-            onRetry={() => void protection.refetch()}
-          />
+      </Reveal>
+      <Reveal y={12} duration={0.45} delay={0.18}>
+        <div className="grid gap-4 lg:grid-cols-2 items-stretch">
           <MythFactCard />
           <BiteSizedLearning />
-        </aside>
         </div>
       </Reveal>
       <Reveal y={12} duration={0.45} delay={0.2}>

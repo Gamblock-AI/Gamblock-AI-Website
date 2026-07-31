@@ -71,10 +71,10 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
 
   return (
     <section
-      className="border-border bg-card shadow-soft rounded-2xl border p-4 sm:p-5"
+      className="border-border bg-card shadow-soft flex h-full flex-col justify-between rounded-2xl border p-4 sm:p-5"
       aria-labelledby="weekly-snapshot-title"
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between shrink-0">
         <div>
           <h2
             id="weekly-snapshot-title"
@@ -101,8 +101,8 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
         ) : null}
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
-        <div className="border-border bg-muted/45 rounded-2xl border p-2 sm:p-3">
+      <div className="mt-4 flex-1 grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem] items-stretch">
+        <div className="border-border bg-muted/45 flex h-full flex-col justify-between rounded-2xl border p-2 sm:p-3">
           <p className="sr-only">{chartSummary}</p>
           <svg
             viewBox="0 0 640 188"
@@ -200,7 +200,7 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
           </ul>
         </div>
         {enoughData ? (
-          <div className="border-navy/10 bg-azure/45 rounded-2xl border p-3.5">
+          <div className="border-navy/10 bg-azure/45 flex h-full flex-col justify-between rounded-2xl border p-3.5">
             <div className="flex items-center gap-2.5">
               <span className="bg-navy text-sky flex size-8 shrink-0 items-center justify-center rounded-lg">
                 <Sparkles className="size-4" aria-hidden="true" />
@@ -222,7 +222,7 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
             ) : null}
           </div>
         ) : (
-          <div className="border-border bg-muted/30 rounded-2xl border border-dashed p-3.5">
+          <div className="border-border bg-muted/30 flex h-full flex-col justify-between rounded-2xl border border-dashed p-3.5">
             <div className="flex items-center gap-2.5">
               <span className="bg-navy flex size-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm">
                 <BarChart3 className="size-4" aria-hidden="true" />

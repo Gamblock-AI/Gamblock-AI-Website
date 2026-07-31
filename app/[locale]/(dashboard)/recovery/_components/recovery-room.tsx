@@ -1,10 +1,9 @@
 'use client';
 
-import { type FormEvent, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
-  Check,
   Clock3,
   HandHeart,
   Headphones,
@@ -12,7 +11,6 @@ import {
   LockKeyhole,
   MessageCircleMore,
   NotebookPen,
-  Smile,
   Waves,
   X,
 } from 'lucide-react';
@@ -654,137 +652,17 @@ function ActivitySheet({
 
 function RoomJournal() {
   const t = useTranslations('recoveryRoom');
-  const journal = useReflections();
-  const [text, setText] = useState('');
-  const [mood, setMood] = useState<number | undefined>();
-  const [nextStep, setNextStep] = useState('');
-  const [focus, setFocus] = useState(false);
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    try {
-      await journal.createReflection({
-        text: text.trim(),
-        mood_score: mood,
-        next_step: nextStep.trim(),
-        is_focus: focus && Boolean(nextStep.trim()),
-      });
-      setText('');
-      setMood(undefined);
-      setNextStep('');
-      setFocus(false);
-      toastSuccess(t('journalSaved'));
-    } catch (error) {
-      toastError(error, t('journalSaveError'));
-    }
-  };
-
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      <form onSubmit={(event) => void submit(event)} className="space-y-4">
-        <div>
-          <label htmlFor="room-journal" className="text-navy text-sm font-bold">
-            {t('journalLabel')}
-          </label>
-          <textarea
-            id="room-journal"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            placeholder={t('journalPlaceholder')}
-            className="border-input focus-visible:ring-navy/30 bg-card mt-2 min-h-32 w-full rounded-2xl border p-4 text-base leading-6 outline-none focus-visible:ring-2"
-          />
-        </div>
-        <fieldset>
-          <legend className="text-navy text-sm font-bold">
-            {t('moodLabel')}
-          </legend>
-          <div className="mt-2 grid grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5].map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() =>
-                  setMood((prev) => (prev === value ? undefined : value))
-                }
-                className={`min-h-11 cursor-pointer rounded-xl border font-semibold transition-all outline-none focus-visible:ring-2 focus-visible:ring-navy/30 ${
-                  mood === value
-                    ? 'border-navy bg-navy text-white shadow-sm ring-2 ring-navy/20'
-                    : 'border-border bg-card text-muted-foreground hover:border-navy/40 hover:bg-muted/40 hover:text-navy'
-                }`}
-                aria-pressed={mood === value}
-              >
-                {value}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-        <div>
-          <label htmlFor="next-step" className="text-navy text-sm font-bold">
-            {t('nextStepLabel')}
-          </label>
-          <input
-            id="next-step"
-            value={nextStep}
-            onChange={(event) => setNextStep(event.target.value)}
-            placeholder={t('nextStepPlaceholder')}
-            className="border-input focus-visible:ring-navy/30 mt-2 h-12 w-full rounded-xl border px-4 text-base outline-none focus-visible:ring-2"
-          />
-          <label className="text-muted-foreground mt-3 flex min-h-11 cursor-pointer items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={focus}
-              onChange={(event) => setFocus(event.target.checked)}
-              disabled={!nextStep.trim()}
-              className="accent-navy size-4"
-            />
-            {t('focusNextStep')}
-          </label>
-        </div>
-        <Button
-          className="w-full sm:w-auto"
-          type="submit"
-          disabled={journal.submitting || !text.trim()}
-        >
-          {journal.submitting ? t('saving') : t('saveJournal')}
-        </Button>
-      </form>
-      <aside className="border-border border-t pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
-        <h3 className="text-navy font-bold">{t('recentJournal')}</h3>
-        <div className="mt-3 space-y-3">
-          {journal.reflections
-            .filter((entry) => entry.status !== 'archived')
-            .slice(0, 3)
-            .map((entry) => {
-              const moodVal = entry.mood_score ?? entry.mood;
-              const moodDisplay =
-                typeof moodVal === 'number' ? `${moodVal}/5` : moodVal;
-              return (
-                <article key={entry.id} className="bg-muted/40 rounded-2xl p-4">
-                  {moodDisplay ? (
-                    <p className="text-cyan-dark mb-1 flex items-center gap-1.5 text-xs font-semibold">
-                      <Smile className="size-3.5 shrink-0" aria-hidden="true" />
-                      <span>
-                        {t('journalMoodScore', { score: moodDisplay })}
-                      </span>
-                    </p>
-                  ) : null}
-                  <p className="text-navy line-clamp-3 text-sm leading-6">
-                    {entry.text}
-                  </p>
-                  {entry.next_step ? (
-                    <p className="text-sage mt-2 flex items-center gap-2 text-xs font-semibold">
-                      <Check className="size-3.5" aria-hidden="true" />
-                      {entry.next_step}
-                    </p>
-                  ) : null}
-                </article>
-              );
-            })}
-          {!journal.loading && journal.reflections.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('journalEmpty')}</p>
-          ) : null}
-        </div>
-      </aside>
+    <div className="space-y-4">
+      <p className="text-muted-foreground max-w-xl text-sm leading-6">
+        {t('journalRouteBody')}
+      </p>
+      <Link
+        href={ROUTES.JOURNAL}
+        className="bg-navy hover:bg-navy-light focus-visible:ring-navy/30 inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold text-white outline-none focus-visible:ring-2"
+      >
+        {t('journalRouteAction')}
+      </Link>
     </div>
   );
 }

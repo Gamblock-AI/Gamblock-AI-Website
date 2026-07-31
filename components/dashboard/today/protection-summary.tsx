@@ -44,10 +44,10 @@ export function ProtectionSummary({
 
   return (
     <section
-      className="border-border bg-card shadow-soft flex flex-col rounded-2xl border p-4 sm:p-5"
+      className="border-border bg-card shadow-soft flex h-full flex-col justify-between rounded-2xl border p-4 sm:p-5"
       aria-labelledby="protection-summary-title"
     >
-      <div>
+      <div className="shrink-0">
         <h2
           id="protection-summary-title"
           className="text-navy text-base font-bold"
@@ -77,10 +77,10 @@ export function ProtectionSummary({
           </Button>
         </div>
       ) : (
-        <>
+        <div className="mt-4 flex-1 flex flex-col justify-between">
           <div
             className={cn(
-              'mt-4 flex items-start gap-3 rounded-xl border p-4',
+              'flex items-start gap-3 rounded-xl border p-4',
               healthy
                 ? 'border-sage/30 bg-sage/[0.10]'
                 : 'border-amber/35 bg-amber/[0.10]'
@@ -145,7 +145,7 @@ export function ProtectionSummary({
             <Settings2 className="size-4" aria-hidden="true" />
             {t('protectionManage')}
           </Link>
-        </>
+        </div>
       )}
     </section>
   );

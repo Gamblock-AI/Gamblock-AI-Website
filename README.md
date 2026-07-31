@@ -31,7 +31,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-29.1`.
+`2026-07-31.15`.
 
 ## Structure
 
@@ -102,8 +102,9 @@ calm and avoids punitive streak or casino-like rewards. A student-only
 `/skills` page adds curated free-course links beside the internal skill
 practices.
 
-Recovery is framed as daily self-control missions: the server-verified daily
-mission card leads the page above a calm, keyboard-accessible dorm-room
+Recovery begins with a local-first intention manager for the student's reason,
+next action, and focus period, then continues into the server-verified daily
+mission card above a calm, keyboard-accessible dorm-room
 workspace. The window opens three-minute urge surfing, the rug guides
 5-4-3-2-1 grounding, the desk starts a ten-minute focus sprint, the notebook
 opens the encrypted reflection journal, and the phone opens partner/support
@@ -122,16 +123,15 @@ Trend language stays unavailable below three check-ins. Partner recovery uses
 a role-filtered CMS response simulator, while partner progress consumes only
 consented aggregate categories and never student recovery details.
 
-Mission eligibility uses `GET /v1/missions/today`; EXP claims use `POST
-/v1/missions/claim`, and bounded primary replacement/skip uses `POST
-/v1/missions/adjust` without changing EXP.
-The student-only FAB presents one primary and two optional bonus tasks, a
-gamepad trigger, fixed effort-based EXP, and personal level progress. Each task
-shows not-verified, ready-to-claim, or claimed state; its claim button activates
-only when the backend verifies existing account activity. There is no
-self-completion toggle or client-side EXP grant. The rotation follows the
-`Asia/Jakarta` date and contains no random reward, leaderboard, punitive streak,
-or partner-visible projection.
+`GET /v1/missions/today` supplies exactly five `Asia/Jakarta` daily slots.
+Every slot is worth 10 EXP. The website shows only default and custom mission
+sources: default tasks remain server-verified and never use a separate locked
+card, while custom tasks are private self-attestations and may be edited or
+deleted while pending. All available claims use “Klaim EXP”; no skip action or
+`/v1/missions/skip` call exists in the website. The website never awards EXP
+client-side. Custom titles and self-attestations are private and never shown to
+partners or admins. The experience contains no random reward, leaderboard, or
+punitive streak.
 Published psychoeducation comes from the backend as validated TipTap JSON; raw
 HTML is never rendered. The education library supports bilingual sections,
 single/multiple thumbnail carousels, click-to-load external media, uploaded

@@ -91,6 +91,7 @@ export function SupportRequestForm({
             label={t('impactLabel')}
             value={impact}
             onChange={setImpact}
+            className="sm:col-span-2"
           >
             <option value="question">{t('impacts.canContinue')}</option>
             <option value="degraded">{t('impacts.partlyBlocked')}</option>
@@ -158,16 +159,18 @@ function SupportSelect({
   label,
   value,
   onChange,
+  className,
   children,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className ?? ''}`}>
       <label htmlFor={id} className="text-navy text-sm font-semibold">
         {label}
       </label>

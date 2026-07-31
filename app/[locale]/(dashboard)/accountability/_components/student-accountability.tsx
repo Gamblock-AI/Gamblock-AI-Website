@@ -191,11 +191,14 @@ export function StudentAccountability({
 
   return (
     <>
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)] xl:items-start">
+      <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)]">
         <DashboardPanel
           icon={ShieldCheck}
           title={t('sharingTitle')}
           description={t('sharingBody')}
+          density="compact"
+          className="p-3 sm:p-3"
+          contentClassName="mt-3"
           action={
             <DashboardStatus tone={sharingDirty ? 'amber' : 'sage'}>
               {sharingDirty
@@ -204,7 +207,7 @@ export function StudentAccountability({
             </DashboardStatus>
           }
         >
-          <div className="space-y-3">
+          <div className="grid flex-1 grid-rows-4 gap-2">
             {(
               [
                 'protection_health',
@@ -215,7 +218,7 @@ export function StudentAccountability({
             ).map((key) => (
               <label
                 key={key}
-                className="border-border flex min-h-16 cursor-pointer items-center justify-between gap-4 rounded-xl border px-4 py-3"
+                className="border-border flex h-full min-h-0 cursor-pointer items-center justify-between gap-3 rounded-xl border px-3 py-1.5"
               >
                 <span>
                   <span className="text-navy block text-sm font-semibold">
@@ -243,7 +246,7 @@ export function StudentAccountability({
               </label>
             ))}
           </div>
-          <div className="border-border mt-5 grid gap-2 border-t pt-4 sm:grid-cols-2">
+          <div className="border-border mt-3 grid gap-2 border-t pt-3 sm:grid-cols-2">
             <Button
               variant="outline"
               size="lg"
@@ -270,14 +273,18 @@ export function StudentAccountability({
           </div>
         </DashboardPanel>
 
-        <div className="space-y-5">
+        <div className="flex flex-col gap-4">
           <DashboardPanel
             icon={Clock3}
             title={t('approvalStatusTitle')}
             description={t('approvalStatusBody')}
+            density="compact"
+            fullHeight={false}
+            className="p-3 sm:p-3"
+            contentClassName="mt-3"
           >
             {pendingApproval ? (
-              <article className="border-amber/35 bg-amber/[0.08] rounded-xl border p-4">
+              <article className="border-amber/35 bg-amber/[0.08] rounded-xl border p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-navy font-semibold">
                     {pendingApproval.action === 'pause_protection'
@@ -288,7 +295,7 @@ export function StudentAccountability({
                   </p>
                   <RequestStatus status="pending">{t('pending')}</RequestStatus>
                 </div>
-                <p className="text-muted-foreground mt-2 text-sm leading-6">
+                <p className="text-muted-foreground mt-1.5 text-sm leading-5">
                   {pendingApproval.reason || t('noReason')}
                 </p>
                 <RequestMeta
@@ -298,7 +305,7 @@ export function StudentAccountability({
                 />
                 <Button
                   variant="outline"
-                  className="mt-4 w-full"
+                  className="mt-3 w-full"
                   disabled={accountability.isMutating(
                     `approval:${pendingApproval.id}:cancel`
                   )}
@@ -316,6 +323,7 @@ export function StudentAccountability({
               <EmptyLine
                 title={t('noPendingApproval')}
                 body={t('nativeRequestBody')}
+                className="p-3 [&>p:last-child]:leading-5"
               />
             )}
           </DashboardPanel>
@@ -324,41 +332,51 @@ export function StudentAccountability({
             icon={CircleAlert}
             title={t('leaveTitle')}
             description={t('leaveBody')}
+            density="compact"
+            fullHeight={false}
+            className="p-3 sm:p-3"
+            contentClassName="mt-3"
           >
             {membership.status === 'active' ? (
               <>
-                <label
-                  htmlFor="leave-reason"
-                  className="text-navy text-sm font-semibold"
-                >
-                  {t('leaveReason')}
-                </label>
-                <Textarea
-                  id="leave-reason"
-                  value={leaveReason}
-                  maxLength={500}
-                  onChange={(event) => setLeaveReason(event.target.value)}
-                  placeholder={t('leaveReasonPlaceholder')}
-                  className="mt-2 min-h-20"
-                />
-                <Button
-                  variant="outline"
-                  className="mt-3 w-full"
-                  disabled={accountability.isMutating('leave:normal')}
-                  onClick={() => setDialog({ type: 'normal-leave' })}
-                >
-                  {t('requestNormalLeave')}
-                </Button>
-                <div className="border-crimson/25 bg-crimson/[0.05] mt-5 rounded-xl border p-4">
-                  <p className="text-navy font-semibold">
-                    {t('unsafeSectionTitle')}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    {t('unsafeHelp')}
-                  </p>
+                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                  <div>
+                    <label
+                      htmlFor="leave-reason"
+                      className="text-navy text-sm font-semibold"
+                    >
+                      {t('leaveReason')}
+                    </label>
+                    <Textarea
+                      id="leave-reason"
+                      value={leaveReason}
+                      maxLength={500}
+                      onChange={(event) => setLeaveReason(event.target.value)}
+                      placeholder={t('leaveReasonPlaceholder')}
+                      className="mt-1.5 min-h-14"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full sm:mb-2.5 sm:min-w-48 sm:w-auto"
+                    disabled={accountability.isMutating('leave:normal')}
+                    onClick={() => setDialog({ type: 'normal-leave' })}
+                  >
+                    {t('requestNormalLeave')}
+                  </Button>
+                </div>
+                <div className="border-crimson/25 bg-crimson/[0.05] mt-2.5 grid gap-2.5 rounded-xl border p-2.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div>
+                    <p className="text-navy font-semibold">
+                      {t('unsafeSectionTitle')}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs leading-4">
+                      {t('unsafeHelp')}
+                    </p>
+                  </div>
                   <Button
                     variant="destructive"
-                    className="mt-3 w-full"
+                    className="w-full sm:min-w-48 sm:w-auto"
                     disabled={accountability.isMutating('leave:unsafe')}
                     onClick={() => setDialog({ type: 'unsafe-leave' })}
                   >
@@ -498,16 +516,16 @@ function RequestMeta({
   expires: string | null;
 }) {
   return (
-    <dl className="bg-background/70 mt-3 grid gap-2 rounded-lg p-3 text-xs sm:grid-cols-2">
+    <dl className="bg-background/70 mt-2 grid gap-1.5 rounded-lg p-2.5 text-xs sm:grid-cols-2">
       <div>
         <dt className="text-muted-foreground">{t('createdAt')}</dt>
-        <dd className="text-navy mt-1 font-semibold">
+        <dd className="text-navy mt-0.5 font-semibold">
           {created ?? t('dateUnavailable')}
         </dd>
       </div>
       <div>
         <dt className="text-muted-foreground">{t('expiresAt')}</dt>
-        <dd className="text-navy mt-1 font-semibold">
+        <dd className="text-navy mt-0.5 font-semibold">
           {expires ?? t('dateUnavailable')}
         </dd>
       </div>

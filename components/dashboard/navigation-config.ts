@@ -12,7 +12,9 @@ import {
   KeyRound,
   LayoutDashboard,
   Microscope,
+  NotebookPen,
   Settings2,
+  Target,
   Tickets,
   UsersRound,
 } from 'lucide-react';
@@ -20,6 +22,8 @@ import {
 export type DashboardNavKey =
   | 'dashboard'
   | 'recovery'
+  | 'intentions'
+  | 'journal'
   | 'progress'
   | 'education'
   | 'skills'
@@ -68,6 +72,18 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         labelKey: 'recovery',
         icon: HeartHandshake,
         roles: ['user', 'partner'],
+      },
+      {
+        href: ROUTES.INTENTIONS,
+        labelKey: 'intentions',
+        icon: Target,
+        roles: ['user'],
+      },
+      {
+        href: ROUTES.JOURNAL,
+        labelKey: 'journal',
+        icon: NotebookPen,
+        roles: ['user'],
       },
       {
         href: ROUTES.PROGRESS,

@@ -20,33 +20,35 @@ export function BiteSizedLearning() {
   const factIndex = (dayIndex + offset) % BITE_FACT_COUNT;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-      <div className="flex items-center gap-3">
-        <span
-          className="bg-sky-light/45 flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
-          aria-hidden="true"
-        >
-          <Image
-            src="/images/mascot/gami-point.webp"
-            alt=""
-            width={40}
-            height={40}
-            className="size-9 object-contain"
-          />
-        </span>
-        <h3 className="min-w-0 text-[0.9375rem] leading-6 font-bold text-navy">
-          {t('biteSizedLearningTitle')}
-        </h3>
+    <section className="border-border bg-card shadow-soft flex h-full flex-col justify-between rounded-2xl border p-4">
+      <div>
+        <div className="flex items-center gap-3">
+          <span
+            className="bg-sky-light/45 flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+            aria-hidden="true"
+          >
+            <Image
+              src="/images/mascot/gami-point.webp"
+              alt=""
+              width={40}
+              height={40}
+              className="size-9 object-contain"
+            />
+          </span>
+          <h3 className="min-w-0 text-[0.9375rem] leading-6 font-bold text-navy">
+            {t('biteSizedLearningTitle')}
+          </h3>
+        </div>
+        <FadeSwap swapKey={factIndex}>
+          <p className="text-muted-foreground mt-3 text-sm leading-6">
+            &quot;{t(`biteFact${factIndex + 1}`)}&quot;
+          </p>
+        </FadeSwap>
       </div>
-      <FadeSwap swapKey={factIndex}>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          {t(`biteFact${factIndex + 1}`)}
-        </p>
-      </FadeSwap>
-      <div className="mt-2 flex flex-wrap items-center gap-x-4">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <Link
           href={ROUTES.EDUCATION}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg text-navy text-sm font-bold outline-none hover:text-navy-light focus-visible:ring-2 focus-visible:ring-navy/30"
+          className="text-navy hover:text-navy-light focus-visible:ring-navy/30 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-bold outline-none focus-visible:ring-2"
         >
           {t('biteSizedLearningLink')}
           <ArrowRight className="size-4" aria-hidden="true" />

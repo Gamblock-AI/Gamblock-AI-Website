@@ -25,6 +25,7 @@ import {
   DashboardPageHeader,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
+import { CompactTabNav } from '@/components/common/compact-tab-nav';
 import { Button } from '@/components/ui/button';
 import { GamiCard } from '@/components/dashboard/gami-card';
 import { useProgressSnapshot } from '@/hooks/use-progress-snapshot';
@@ -44,7 +45,6 @@ import {
   type RangeDays,
 } from './progress-utils';
 import { EstimatorCard } from './estimator-card';
-import { JourneyBadges } from './journey-badges';
 import { WeeklyRecap } from './weekly-recap';
 import { WeeklyReviewSheet } from './weekly-review-sheet';
 
@@ -68,6 +68,12 @@ export function StudentProgress() {
     null
   );
   const snapshot = useProgressSnapshot(range);
+  const desktopPanelHeight =
+    range === 90
+      ? 'xl:h-[56rem]'
+      : range === 7
+        ? 'xl:h-[32rem]'
+        : 'xl:h-[40rem]';
 
   const days = useMemo(() => buildCalendarDays(range), [range]);
   const activityMap = useMemo(
@@ -79,9 +85,7 @@ export function StudentProgress() {
   );
   const selected = selectedDate ? activityMap.get(selectedDate) : undefined;
   const closeReview = () => setReviewOpen(false);
-  const [reviewVersion, setReviewVersion] = useState(0);
   const completeReview = () => {
-    setReviewVersion((version) => version + 1);
     setReviewOpen(false);
     setRecapOpen(true);
     void snapshot.refetch();
@@ -149,25 +153,18 @@ export function StudentProgress() {
         aside={<DashboardStatus tone="navy">{p('private')}</DashboardStatus>}
       />
 
-      <div
-        className="border-border bg-card inline-flex w-fit rounded-2xl border p-1 shadow-sm"
-        aria-label={p('rangeLabel')}
-      >
-        {([7, 30, 90] as const).map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => {
-              setRange(value);
-              setSelectedDate(null);
-            }}
-            className={`focus-visible:ring-navy/30 min-h-11 cursor-pointer rounded-xl px-5 text-sm font-bold outline-none focus-visible:ring-2 ${range === value ? 'bg-navy text-white shadow-sm' : 'text-muted-foreground hover:text-navy'}`}
-            aria-pressed={range === value}
-          >
-            {p('days', { count: value })}
-          </button>
-        ))}
-      </div>
+      <CompactTabNav<RangeDays>
+        ariaLabel={p('rangeLabel')}
+        value={range}
+        items={([7, 30, 90] as const).map((value) => ({
+          value,
+          label: p('days', { count: value }),
+        }))}
+        onValueChange={(value) => {
+          setRange(value);
+          setSelectedDate(null);
+        }}
+      />
 
       {snapshot.loading ? (
         <p className="text-muted-foreground py-16 text-center text-sm">
@@ -183,23 +180,23 @@ export function StudentProgress() {
       ) : null}
 
       {snapshot.data ? (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(19rem,0.5fr)]">
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.75fr)] xl:items-stretch xl:gap-5">
           <section
-            className="border-border bg-card overflow-hidden rounded-[2rem] border shadow-sm"
+            className={`border-border bg-card flex h-full flex-col justify-between overflow-hidden rounded-[1.5rem] border shadow-sm ${desktopPanelHeight}`}
             aria-labelledby="calendar-title"
           >
-            <div className="border-border flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5">
+            <div className="shrink-0 border-border flex flex-col gap-2.5 border-b px-4 py-3.5 sm:flex-row sm:items-end sm:justify-between sm:px-5 sm:py-4">
               <div>
-                <h2 id="calendar-title" className="text-navy text-xl font-bold">
+                <h2 id="calendar-title" className="text-navy text-lg font-bold sm:text-xl">
                   {p('calendarTitle')}
                 </h2>
-                <p className="text-muted-foreground mt-1 text-sm leading-6">
+                <p className="text-muted-foreground mt-0.5 text-sm leading-5">
                   {p('calendarBody')}
                 </p>
               </div>
               <ActivityLegend />
             </div>
-            <div className="border-border/70 grid grid-cols-7 border-l">
+            <div className="border-border/70 grid min-h-0 flex-1 grid-cols-7 border-l">
               {days.map((date, index) => {
                 const key = isoDate(date);
                 const activity = activityMap.get(key);
@@ -209,7 +206,7 @@ export function StudentProgress() {
                     key={key}
                     type="button"
                     onClick={() => setSelectedDate(key)}
-                    className={`focus-visible:ring-ring border-border/70 relative min-h-16 cursor-pointer border-r border-b p-1.5 text-left outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-20 sm:p-2 ${selectedDate === key ? 'bg-cyan/10 shadow-[inset_0_0_0_2px_var(--color-navy)]' : 'hover:bg-muted/35'}`}
+                    className={`focus-visible:ring-ring border-border/70 relative min-h-14 cursor-pointer border-r border-b p-1 text-left outline-none focus-visible:z-10 focus-visible:ring-2 sm:p-1.5 ${selectedDate === key ? 'bg-cyan/10 shadow-[inset_0_0_0_2px_var(--color-navy)]' : 'hover:bg-muted/35'}`}
                     aria-label={p('dayLabel', {
                       date: date.toLocaleDateString(),
                       count: total,
@@ -221,12 +218,12 @@ export function StudentProgress() {
                     {total > 0 ? (
                       <>
                         <Check
-                          className="text-navy-light mx-auto mt-1.5 size-5 sm:size-6"
+                          className="text-navy-light mx-auto mt-1 size-4 sm:size-5"
                           strokeWidth={2}
                           aria-hidden="true"
                         />
                         <span
-                          className="mt-1.5 flex justify-center gap-1"
+                          className="mt-1 flex justify-center gap-1"
                           aria-hidden="true"
                         >
                           {activityCategories(activity)
@@ -248,17 +245,17 @@ export function StudentProgress() {
               })}
             </div>
             {snapshot.data.check_in_count < 3 ? (
-              <div className="bg-azure/40 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="bg-azure/40 mt-auto border-t border-border flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
                 <div className="flex items-start gap-3">
                   <Sprout
-                    className="text-navy-light mt-0.5 size-6 shrink-0"
+                    className="text-navy-light mt-0.5 size-5 shrink-0"
                     aria-hidden="true"
                   />
                   <div>
                     <p className="text-navy font-bold">
                       {p('insufficientTitle')}
                     </p>
-                    <p className="text-muted-foreground mt-1 text-sm leading-6">
+                    <p className="text-muted-foreground mt-0.5 text-sm leading-5">
                       {p('insufficientBody', {
                         count: snapshot.data.check_in_count,
                       })}
@@ -269,7 +266,7 @@ export function StudentProgress() {
                   {[1, 2, 3].map((value) => (
                     <span
                       key={value}
-                      className={`flex size-10 items-center justify-center rounded-full border text-sm font-bold ${snapshot.data!.check_in_count >= value ? 'border-navy bg-navy text-white' : 'border-border bg-card text-muted-foreground'}`}
+                      className={`flex size-8 items-center justify-center rounded-full border text-xs font-bold ${snapshot.data!.check_in_count >= value ? 'border-navy bg-navy text-white' : 'border-border bg-card text-muted-foreground'}`}
                     >
                       {value}
                     </span>
@@ -277,7 +274,7 @@ export function StudentProgress() {
                 </div>
               </div>
             ) : (
-              <div className="p-4 sm:p-5">
+              <div className="mt-auto border-t border-border px-4 py-3.5 sm:px-5 sm:py-4">
                 <GamiCard
                   title={p('encouragementTitle')}
                   message={p('encouragementBody', {
@@ -289,45 +286,49 @@ export function StudentProgress() {
             )}
           </section>
 
-          <aside className="space-y-4">
+          <aside
+            className={`grid gap-3.5 xl:grid-rows-[auto_minmax(0,1fr)] xl:gap-4 ${desktopPanelHeight}`}
+          >
             <EstimatorCard
               activeDays={snapshot.data.active_days}
               rangeDays={range}
             />
-            <JourneyBadges key={reviewVersion} />
-
-            <section className="border-border bg-card rounded-[2rem] border p-4 sm:p-5">
-              <CalendarDays
-                className="text-navy-light size-7"
-                aria-hidden="true"
-              />
-              <h2 className="text-navy mt-3 text-xl font-bold">
-                {p('reviewTitle')}
-              </h2>
-              <p className="text-muted-foreground mt-2 text-sm leading-6">
-                {p('reviewBody')}
-              </p>
-              <div className="text-muted-foreground mt-4 flex items-center gap-2 text-xs">
-                <span>{p('reviewStepReflect')}</span>
-                <ArrowRight className="size-3" aria-hidden="true" />
-                <span>{p('reviewStepLearn')}</span>
-                <ArrowRight className="size-3" aria-hidden="true" />
-                <span>{p('reviewStepPlan')}</span>
+            <section className="border-border bg-card flex flex-col justify-between rounded-[1.5rem] border p-4 sm:p-5">
+              <div>
+                <CalendarDays
+                  className="text-navy-light size-6"
+                  aria-hidden="true"
+                />
+                <h2 className="text-navy mt-2.5 text-lg font-bold">
+                  {p('reviewTitle')}
+                </h2>
+                <p className="text-muted-foreground mt-1.5 text-sm leading-5">
+                  {p('reviewBody')}
+                </p>
+                <div className="text-muted-foreground mt-3 flex items-center gap-2 text-xs">
+                  <span>{p('reviewStepReflect')}</span>
+                  <ArrowRight className="size-3" aria-hidden="true" />
+                  <span>{p('reviewStepLearn')}</span>
+                  <ArrowRight className="size-3" aria-hidden="true" />
+                  <span>{p('reviewStepPlan')}</span>
+                </div>
               </div>
-              <Button
-                className="mt-4 w-full"
-                onClick={() => setReviewOpen(true)}
-              >
-                {p('startReview')}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Button>
-              <Button
-                className="mt-2 w-full"
-                variant="outline"
-                onClick={() => setRecapOpen(true)}
-              >
-                {p('openRecap')}
-              </Button>
+              <div className="mt-3 pt-1.5 space-y-2">
+                <Button
+                  className="w-full"
+                  onClick={() => setReviewOpen(true)}
+                >
+                  {p('startReview')}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => setRecapOpen(true)}
+                >
+                  {p('openRecap')}
+                </Button>
+              </div>
             </section>
           </aside>
         </div>

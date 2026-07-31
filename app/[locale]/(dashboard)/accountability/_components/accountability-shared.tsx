@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { DashboardStatus } from '@/components/dashboard/dashboard-page';
+import { cn } from '@/lib/utils';
 
 export interface Translation {
   (key: string, values?: Record<string, string | number>): string;
@@ -36,9 +37,17 @@ export function RequestStatus({
   );
 }
 
-export function EmptyLine({ title, body }: { title: string; body: string }) {
+export function EmptyLine({
+  title,
+  body,
+  className,
+}: {
+  title: string;
+  body: string;
+  className?: string;
+}) {
   return (
-    <div className="border-border rounded-xl border border-dashed p-4">
+    <div className={cn('border-border rounded-xl border border-dashed p-4', className)}>
       <p className="text-navy font-semibold">{title}</p>
       <p className="text-muted-foreground mt-1 text-sm leading-6">{body}</p>
     </div>

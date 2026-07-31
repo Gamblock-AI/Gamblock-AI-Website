@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-29.1`
+**Context version:** `2026-07-31.15`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -22,9 +22,8 @@ education continuation and emergency-help row now leads the canvas directly
 below the greeting. The hero greeting varies by the student's local
 time of day, a deterministic daily psychoeducation fact card sits under the
 protection summary, and a student-only navbar level chip surfaces the
-account's journey level and title. The chip reads a passive shared experience
-store filled by every `/missions/today` response, so it converges after
-claims without any new endpoint. The partner dashboard shows group,
+account's journey level and title. Website recovery gamification is not
+mirrored in the native protection client. The partner dashboard shows group,
 pending-decision/contact, and consented protection aggregates without private
 recovery details. The admin dashboard shows operational attention counts and
 links to isolated work areas. Device/model implementation versions stay out of
@@ -39,10 +38,14 @@ starts at an explicit “Tidak ada dorongan” (none) point instead of an append
 opt-out; selecting a mood shows a short supportive Gami reply, and the most
 distressed mood also offers a direct support link without diagnostic claims.
 `PKM-WEB-005` and `PKM-WEB-006` remain available from the student-only FAB
-mounted by the authenticated dashboard layout. No browsing details enter these
-surfaces. Partner monitoring of raw check-in values remains `planned` until an
-explicit consent, visibility, and revocation design is implemented. This
-insight-first main canvas still differs from the full target “Today first”
+mounted by the authenticated dashboard layout. Daily missions now use exactly
+five `Asia/Jakarta` slots, all worth 10 EXP. The manager allows up to five
+private custom missions; they replace system slots one-for-one, are self-marked
+when complete, and can be edited/deleted while pending. System tasks remain
+server-verified. No browsing details, custom mission titles, or custom
+self-attestations enter partner/admin surfaces. Partner monitoring of raw check-in values remains `planned`
+until an explicit consent, visibility, and revocation design is implemented.
+This insight-first main canvas still differs from the full target “Today first”
 information architecture in `context/ui-context.md`; the mandatory gate and
 global FAB preserve direct access to the core recovery loop while that
 product-level gap remains open.
@@ -131,13 +134,20 @@ summaries, while `/accountability` owns confirmed protection and exit
 decisions, status/history visibility, and the support-review route after an
 unsafe exit. Verified partners create multiple groups,
 rotate codes, inspect consented aggregates, remove members, archive empty
-groups, and resolve scoped protection/leave requests with recent auth.
+groups, and resolve scoped protection/leave requests with recent auth. The
+student aggregate panel matches the total right-hand stack height while its
+four categories evenly fill the middle region above the fixed action row.
 
 Supporting recovery/progress status (`implemented`, `WEB-SUP-REC-001` and
-`WEB-SUP-PROG-001`): the student recovery workspace is framed as daily
-self-control missions — the server-verified daily mission card leads the page
-and the urge-surfing, 5-4-3-2-1 grounding, and focus-sprint practices carry
-mission-oriented copy — alongside encrypted reflection and support routes.
+`WEB-SUP-PROG-001`): the student recovery workspace keeps the urge-surfing,
+5-4-3-2-1 grounding, and focus-sprint practices alongside support routes.
+Student-only `/intentions` preserves the local-first intention manager, while
+student-only `/journal` provides one `Asia/Jakarta` daily encrypted rich-text
+entry with headings, lists, quotations, and up to five private images. The
+room notebook links to that journal rather than duplicating a text composer.
+The five-slot daily mission
+manager is available only through the persistent adaptive FAB, avoiding a
+redundant in-page mission card.
 Placed room decor is also visible on mobile as a read-only chip strip.
 Active timers/task labels remain browser-local; completed practices and typed
 weekly reviews use a rolling 12-month account view, while deterministic room
@@ -146,10 +156,15 @@ recovery free text plus optional next-step/current-focus fields. Student
 progress provides inspectable 7/30/90-day activity calendars, suppresses trends
 below three check-ins while showing a participation-focused Gami encouragement
 once three check-ins exist, and generates CSV/print-to-PDF locally after a
-privacy warning. The decorative "journey collection" card has been replaced by
-deterministic journey badges (fixed 90-day snapshot window, criteria always
-readable, additive-only) plus a non-punitive presence-rhythm line; the earlier
-dead "today workspace" component set was removed. A later interactivity pass
+privacy warning. The desktop calendar uses a compact shared-height grid/side
+rail, with an extra-short 7-day view, a compact 30-day default, and a readable
+90-day view; narrow screens stack the rail. Range and support-channel
+navigation share the reusable flat `CompactTabNav` component: thin border,
+compact height, no shadow/bevel/3D treatment. The private local-only estimator
+uses an explicit hours stepper, `Rp` field prefix, and full-width save action.
+The former progress-only journey-badge/presence-rhythm card
+and its unused model helper were removed, so the page keeps the recovery flow
+focused; the earlier dead "today workspace" component set was also removed. A later interactivity pass
 added `FadeSwap` (AnimatePresence crossfade primitive), Reveal stagger on the
 dashboard blocks, StatCounter on the numeric summary tiles, a floating
 parallax hero mascot and supporters marquee on the landing page, and real
@@ -157,18 +172,16 @@ generated mascot poses replacing the seven byte-identical placeholder PNGs
 (remaining dead landing set pieces and zero-reference assets were deleted);
 the pose set was then regenerated against the canonical umbrella reference
 art so every pose matches the official Gami design. A subsequent compact-density
-pass removed the equal-height stretching and tall min-height floors from the
-student dashboard cards (hero, learning/support row, weekly snapshot, summary
-strip, shortcuts, protection rail), slimmed the shared page header, and moved
+pass removed tall min-height floors from the student dashboard cards (hero,
+weekly snapshot, summary strip, shortcuts, protection rail), slimmed the
+shared page header, and moved
 `/recovery` and `/progress` onto the compact page density. Color semantics were
 tightened across the dashboard: sage now appears only for genuine
 success/completed states and amber only for genuine attention/pending states —
 mission rewards use navy/sky accents, informational surfaces (trend
-insufficient banner, badge rail, focus input) use azure/navy, the calendar
-marks active days with a single consistent navy check plus token-only category
-dots, and the journey-badge rail shows earned badges with locked badges
-collapsed into an expandable "up next" disclosure whose criteria remain
-readable. An engagement overhaul then made the progression economy live:
+insufficient banner and focus input) use azure/navy, and the calendar marks
+active days with a single consistent navy check plus token-only category dots.
+An engagement overhaul then made the progression economy live:
 levels now unlock cosmetic decor/pose/accent rewards (client mirror in
 `lib/recovery/level-rewards.ts`, authoritative list in the claim response's
 `newly_unlocked`), the recovery-room catalog grew to 20 tiered items with
@@ -177,32 +190,33 @@ capped daily EXP and satisfy the new sixth mission, a dedicated calm
 level-up dialog replaced the toast, and the dashboard hero now surfaces the
 previously-unconsumed presence-rhythm summary as a non-punitive line. Content loops were extended: a 30-line mood-by-urge
 Gami dialog bank with deterministic daily variants and a practice follow-up
-chip, a contextual dashboard Gami companion, 36 bite facts with a
-user-advanced "another fact" button, a daily myth-vs-fact card, a local
-three-question daily quiz on the education page, three fictional
-response-practice scenarios on `/skills`, selectable breathing packs plus a
+chip, 36 bite facts with a user-advanced "another fact" button, a daily
+myth-vs-fact card, selectable breathing packs plus a
 phase-synced wave in the urge practice, a 10/15/25-minute focus-sprint
 picker, optional ephemeral grounding inputs, a private local-only
 "what you kept" estimator on `/progress`, and a private "your week's story"
 recap after the weekly review. All new daily state is deterministic
 (day-of-year rotation via `hooks/use-daily-rotation.ts`), local-only keys are
-cleared by the recovery clear-local-data flow, and no new personal fields
-reach any request body. Partner progress uses only category-specific member aggregates and
+cleared by the recovery clear-local-data flow, and voluntary journal documents
+are encrypted by the backend before persistence. Partner progress uses only category-specific member aggregates and
 never the student trend endpoint. Partner recovery is a CMS-authored response
-simulator and never record access. The complete `PKM-WEB-002` focus-period and
-reminder lifecycle remains incomplete core work.
+simulator and never record access. The Recovery Hub now mounts the local-first
+`PKM-WEB-002` intention manager with title, required next action, focus period,
+pause/resume/archive controls, history, and weekly-review integration.
+Optional sync remains limited to title/status, and Android owns the opt-in
+local reminder delivery; the website does not claim browser notification
+delivery.
 
 Current mission gamification status (`implemented`, supporting PKM-WEB-005):
-the adaptive FAB dialog consumes the server's deterministic `Asia/Jakarta` set
-of one primary plus two compact optional bonus tasks. It displays fixed rewards,
-personal level progress, explicit locked/claimable/claimed/skipped states, one
-bounded primary replacement, and an optional encrypted 30-second reflection.
-Only the backend can mark a task claimable or persist adjustment state; the UI
-has no self-completion or undo control. There is no random reward, paid currency,
-leaderboard, punitive streak, casino celebration, or partner projection. The
-same primary/bonus task cards are also mounted on the recovery workspace via a
-shared mission card; both surfaces fetch `/missions/today` independently and
-converge after a claim. Deterministic journey titles (`levelTitle1..7`,
+the adaptive FAB is the single dedicated entry to the account-private,
+five-slot `Asia/Jakarta` mission snapshot. Every task is worth 10 EXP. The UI
+uses only default and custom mission sources: a default task remains a neutral
+default card before server verification, while a custom task is labelled as a
+private self-attestation. All available claims use “Klaim EXP”; skip controls
+and the website skip request are retired. The student can create up to five
+custom missions; each replaces a system slot and can be edited or deleted only
+while pending. There is no random reward, paid currency, leaderboard, punitive
+streak, casino celebration, or partner/admin projection. Deterministic journey titles (`levelTitle1..7`,
 shared verbatim with the Flutter client) name each level tier, and level-up
 feedback references the new title.
 
@@ -254,8 +268,8 @@ and review/publish/archive transitions.
 - API data: inspect `lib/api-client.ts`, `lib/config.ts`, the relevant
   `hooks/use-*.ts`, and their Vitest tests.
 - Dashboard/recovery UI: inspect `app/[locale]/(dashboard)/`,
-  `components/dashboard/`, `lib/recovery/`, the relevant recovery hooks, and
-  `docs/design-system/gamblock-ai-recovery-dashboard/`.
+  `components/dashboard/`, `lib/recovery/`, and the relevant recovery hooks.
+  When working from the umbrella workspace, also load `context/ui-context.md`.
 - Accountability: group codes are hashed, rotatable, rate-limited discovery
   values; preview plus explicit confirmation creates the active membership.
   Approval authority comes from that backend membership, not a client-side role

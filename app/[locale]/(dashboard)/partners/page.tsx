@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, Handshake, LockKeyhole, RefreshCw } from 'lucide-react';
+import { CircleAlert, Handshake, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
   DashboardNotice,
@@ -35,10 +35,6 @@ export default function PartnersPage() {
           </DashboardStatus>
         }
       />
-
-      <DashboardNotice icon={LockKeyhole} title={t('privacyTitle')}>
-        {t('privacyBody')}
-      </DashboardNotice>
 
       {accountability.error ? (
         <DashboardNotice

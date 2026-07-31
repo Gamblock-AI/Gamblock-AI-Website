@@ -22,7 +22,6 @@ import {
   DashboardPageHeader,
 } from '@/components/dashboard/dashboard-page';
 import { ThumbnailCarousel } from '@/components/education/thumbnail-carousel';
-import { QuickQuiz } from './_components/quick-quiz';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
@@ -119,10 +118,6 @@ export default function EducationPage() {
           </div>
         </section>
       ) : null}
-
-      <div className="mb-5">
-        <QuickQuiz />
-      </div>
 
       <div className="border-border bg-card mb-5 flex flex-col gap-3 rounded-2xl border p-3 sm:flex-row sm:items-center">
         <label className="relative flex-1">

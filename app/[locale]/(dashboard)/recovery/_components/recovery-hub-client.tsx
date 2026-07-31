@@ -8,7 +8,6 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { PartnerResponseSimulator } from './partner-response-simulator';
-import { RecoveryMissionCard } from './recovery-mission-card';
 import { RecoveryRoom } from './recovery-room';
 
 export function RecoveryHubClient() {
@@ -22,7 +21,6 @@ export function RecoveryHubClient() {
 
 function StudentRecoveryHub() {
   const t = useTranslations('recoveryHub');
-
   return (
     <DashboardPage density="compact">
       <DashboardPageHeader
@@ -31,7 +29,6 @@ function StudentRecoveryHub() {
         title={t('title')}
         description={t('description')}
       />
-      <RecoveryMissionCard />
       <RecoveryRoom />
     </DashboardPage>
   );

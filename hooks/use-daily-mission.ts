@@ -1,43 +1,26 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
 import { apiClient } from '@/lib/api-client';
 import {
   publishExperience,
   publishMissionSummary,
 } from '@/lib/recovery/experience-store';
-import {
-  DAILY_MISSION_CATALOG,
-  type MissionCatalogItem,
-} from '@/lib/recovery/mission-catalog';
-import type { MissionNumber } from '@/lib/recovery/types';
 
 export interface DailyMissionTask {
-  number: MissionNumber;
+  id: string;
+  number?: number;
   key: string;
-  role: 'primary' | 'bonus';
+  source: 'system' | 'custom';
+  system_key?: string;
+  title?: string;
   completed: boolean;
   claimable: boolean;
-  status: 'locked' | 'claimable' | 'claimed' | 'skipped';
-  verification_key: string;
+  status: 'locked' | 'claimable' | 'claimed' | 'completed' | 'skipped' | 'pending';
+  claim_mode: 'verified' | 'self_attested';
+  verification_key?: string;
   exp_reward: number;
-  replaced_from?: MissionNumber;
-}
-
-export type MissionAdjustmentReason =
-  | 'not_enough_time'
-  | 'not_a_good_fit'
-  | 'need_lower_effort'
-  | 'accessibility_need'
-  | 'prefer_not_to_say';
-
-export interface MissionAdjustment {
-  original_number: MissionNumber;
-  action: 'skip' | 'replace';
-  reason: MissionAdjustmentReason;
-  replacement_number?: MissionNumber;
-  adjusted_at: string;
 }
 
 export interface ExperienceProgress {
@@ -52,51 +35,45 @@ export interface DailyMission {
   id: string;
   user_id: string;
   date: string;
-  mission_1: boolean;
-  mission_2: boolean;
-  mission_3: boolean;
-  mission_4: boolean;
-  mission_5: boolean;
-  mission_6: boolean;
   tasks: DailyMissionTask[];
   experience: ExperienceProgress;
   completed_count: number;
   resolved_count: number;
   total_count: number;
-  adjustment?: MissionAdjustment;
-  replacement_options: MissionNumber[];
   created_at: string;
   updated_at: string;
 }
 
-export interface DailyMissionItem extends MissionCatalogItem {
-  role: DailyMissionTask['role'];
-  completed: boolean;
-  claimable: boolean;
-  status: DailyMissionTask['status'];
-  verificationKey: string;
-  expReward: number;
-  replacedFrom?: MissionNumber;
-}
+export type DailyMissionItem = DailyMissionTask;
 
 export interface UseDailyMissionResult {
   mission: DailyMission | null;
   items: DailyMissionItem[];
   loading: boolean;
   error: Error | null;
-  updatingMissionNumber: MissionNumber | null;
+  updatingMissionID: string | null;
   refetch: () => Promise<void>;
-  claimMission: (
-    missionNumber: MissionNumber
-  ) => Promise<ExperienceProgress | null>;
-  adjustMission: (input: {
-    missionNumber: MissionNumber;
-    action: 'skip' | 'replace';
-    reason: MissionAdjustmentReason;
-    replacementNumber?: MissionNumber;
-  }) => Promise<boolean>;
+  claimMission: (missionID: string) => Promise<ExperienceProgress | null>;
+  createCustomMission: (title: string) => Promise<boolean>;
+  updateCustomMission: (missionID: string, title: string) => Promise<boolean>;
+  deleteCustomMission: (missionID: string) => Promise<boolean>;
 }
 
+interface MissionSnapshot {
+  mission: DailyMission | null;
+  loading: boolean;
+  error: Error | null;
+}
+
+const initialSnapshot: MissionSnapshot = {
+  mission: null,
+  loading: true,
+  error: null,
+};
+
+let snapshot = initialSnapshot;
+let requestInFlight: Promise<void> | null = null;
+const listeners = new Set<() => void>();
 
 function publishMission(mission: DailyMission) {
   publishExperience(mission.experience);
@@ -107,208 +84,126 @@ function publishMission(mission: DailyMission) {
   });
 }
 
-function requestTodayMission(): Promise<DailyMission> {
-  return apiClient<DailyMission>('/missions/today');
+function setSnapshot(next: MissionSnapshot) {
+  snapshot = next;
+  listeners.forEach((listener) => listener());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 }
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error('Mission request failed');
 }
 
+async function loadToday(force = false) {
+  if (requestInFlight && !force) return requestInFlight;
+  setSnapshot({ ...snapshot, loading: true, error: null });
+  requestInFlight = apiClient<DailyMission>('/missions/today')
+    .then((mission) => {
+      publishMission(mission);
+      setSnapshot({ mission, loading: false, error: null });
+    })
+    .catch((error: unknown) => {
+      setSnapshot({ ...snapshot, loading: false, error: toError(error) });
+    })
+    .finally(() => {
+      requestInFlight = null;
+    });
+  return requestInFlight;
+}
+
 export function useDailyMission(): UseDailyMissionResult {
-  const [mission, setMission] = useState<DailyMission | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [updatingMissionNumber, setUpdatingMissionNumber] =
-    useState<MissionNumber | null>(null);
-  const mountedRef = useRef(true);
-  const mutationInFlightRef = useRef(false);
-  const loadSequenceRef = useRef(0);
+  const state = useSyncExternalStore(subscribe, () => snapshot, () => initialSnapshot);
+  const [updatingMissionID, setUpdatingMissionID] = useState<string | null>(null);
 
   useEffect(() => {
-    mountedRef.current = true;
-    const requestSequence = ++loadSequenceRef.current;
-
-    void requestTodayMission().then(
-      (data) => {
-        if (
-          !mountedRef.current ||
-          requestSequence !== loadSequenceRef.current
-        ) {
-          return;
-        }
-        setMission(data);
-        publishMission(data);
-        setError(null);
-        setLoading(false);
-      },
-      (requestError: unknown) => {
-        if (
-          !mountedRef.current ||
-          requestSequence !== loadSequenceRef.current
-        ) {
-          return;
-        }
-        setError(toError(requestError));
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      mountedRef.current = false;
-      loadSequenceRef.current += 1;
-    };
+    void loadToday();
   }, []);
 
-  const refetch = useCallback(async () => {
-    if (mutationInFlightRef.current) return;
-
-    const requestSequence = ++loadSequenceRef.current;
-    setLoading(true);
-    setError(null);
-
+  const applyMutation = useCallback(async <T extends DailyMission>(
+    missionID: string,
+    request: () => Promise<T>
+  ) => {
+    if (requestInFlight) return null;
+    setUpdatingMissionID(missionID);
+    setSnapshot({ ...snapshot, error: null });
     try {
-      const data = await requestTodayMission();
-      if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
-        return;
-      }
-      setMission(data);
-      publishMission(data);
-    } catch (requestError) {
-      if (!mountedRef.current || requestSequence !== loadSequenceRef.current) {
-        return;
-      }
-      setError(toError(requestError));
+      const mission = await request();
+      publishMission(mission);
+      setSnapshot({ mission, loading: false, error: null });
+      return mission;
+    } catch (error) {
+      setSnapshot({ ...snapshot, error: toError(error) });
+      return null;
     } finally {
-      if (mountedRef.current && requestSequence === loadSequenceRef.current) {
-        setLoading(false);
-      }
+      setUpdatingMissionID(null);
     }
   }, []);
 
   const claimMission = useCallback(
-    async (missionNumber: MissionNumber) => {
-      if (mutationInFlightRef.current || loading || !mission) return null;
-
-      mutationInFlightRef.current = true;
-      loadSequenceRef.current += 1;
-      const previousMission = mission;
-
-      setUpdatingMissionNumber(missionNumber);
-      setError(null);
-
-      try {
-        const updatedMission = await apiClient<DailyMission>(
-          '/missions/claim',
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              mission_number: missionNumber,
-            }),
-          }
-        );
-        if (mountedRef.current) {
-          setMission(updatedMission);
-          publishMission(updatedMission);
-        }
-        return updatedMission.experience;
-      } catch (requestError) {
-        if (mountedRef.current) {
-          setMission(previousMission);
-          publishMission(previousMission);
-          setError(toError(requestError));
-        }
-        return null;
-      } finally {
-        mutationInFlightRef.current = false;
-        if (mountedRef.current) setUpdatingMissionNumber(null);
-      }
+    async (missionID: string) => {
+      const updated = await applyMutation(missionID, () =>
+        apiClient<DailyMission>('/missions/claim', {
+          method: 'POST',
+          body: JSON.stringify({ mission_id: missionID }),
+        })
+      );
+      return updated?.experience ?? null;
     },
-    [loading, mission]
+    [applyMutation]
   );
 
-  const adjustMission = useCallback(
-    async ({
-      missionNumber,
-      action,
-      reason,
-      replacementNumber,
-    }: {
-      missionNumber: MissionNumber;
-      action: 'skip' | 'replace';
-      reason: MissionAdjustmentReason;
-      replacementNumber?: MissionNumber;
-    }) => {
-      if (mutationInFlightRef.current || loading || !mission) return false;
-
-      mutationInFlightRef.current = true;
-      loadSequenceRef.current += 1;
-      const previousMission = mission;
-      setUpdatingMissionNumber(missionNumber);
-      setError(null);
-
-      try {
-        const updatedMission = await apiClient<DailyMission>(
-          '/missions/adjust',
-          {
+  const createCustomMission = useCallback(
+    async (title: string) =>
+      Boolean(
+        await applyMutation('custom:create', () =>
+          apiClient<DailyMission>('/missions/custom', {
             method: 'POST',
-            body: JSON.stringify({
-              mission_number: missionNumber,
-              action,
-              reason,
-              ...(replacementNumber
-                ? { replacement_number: replacementNumber }
-                : {}),
-            }),
-          }
-        );
-        if (mountedRef.current) {
-          setMission(updatedMission);
-          publishMission(updatedMission);
-        }
-        return true;
-      } catch (requestError) {
-        if (mountedRef.current) {
-          setMission(previousMission);
-          publishMission(previousMission);
-          setError(toError(requestError));
-        }
-        return false;
-      } finally {
-        mutationInFlightRef.current = false;
-        if (mountedRef.current) setUpdatingMissionNumber(null);
-      }
-    },
-    [loading, mission]
+            body: JSON.stringify({ title }),
+          })
+        )
+      ),
+    [applyMutation]
   );
 
-  const items = (mission?.tasks ?? []).flatMap((task) => {
-    const catalogItem = DAILY_MISSION_CATALOG.find(
-      (item) => item.number === task.number
-    );
-    if (!catalogItem) return [];
-    return [
-      {
-        ...catalogItem,
-        role: task.role,
-        completed: task.completed,
-        claimable: task.claimable,
-        status: task.status,
-        verificationKey: task.verification_key,
-        expReward: task.exp_reward,
-        replacedFrom: task.replaced_from,
-      },
-    ];
-  });
+  const updateCustomMission = useCallback(
+    async (missionID: string, title: string) =>
+      Boolean(
+        await applyMutation(missionID, () =>
+          apiClient<DailyMission>(`/missions/custom/${encodeURIComponent(missionID)}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ title }),
+          })
+        )
+      ),
+    [applyMutation]
+  );
+
+  const deleteCustomMission = useCallback(
+    async (missionID: string) =>
+      Boolean(
+        await applyMutation(missionID, () =>
+          apiClient<DailyMission>(`/missions/custom/${encodeURIComponent(missionID)}`, {
+            method: 'DELETE',
+          })
+        )
+      ),
+    [applyMutation]
+  );
 
   return {
-    mission,
-    items,
-    loading,
-    error,
-    updatingMissionNumber,
-    refetch,
+    mission: state.mission,
+    items: state.mission?.tasks ?? [],
+    loading: state.loading,
+    error: state.error,
+    updatingMissionID,
+    refetch: () => loadToday(true),
     claimMission,
-    adjustMission,
+    createCustomMission,
+    updateCustomMission,
+    deleteCustomMission,
   };
 }

@@ -3,7 +3,6 @@
 import {
   CircleAlert,
   HeartHandshake,
-  LockKeyhole,
   RefreshCw,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -49,10 +48,6 @@ export default function AccountabilityPage() {
           </DashboardStatus>
         }
       />
-
-      <DashboardNotice icon={LockKeyhole} title={t('privacyTitle')}>
-        {t('privacyBody')}
-      </DashboardNotice>
 
       {accountability.error ? (
         <DashboardNotice

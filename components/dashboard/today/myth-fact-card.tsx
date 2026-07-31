@@ -69,8 +69,8 @@ export function MythFactCard() {
   };
 
   return (
-    <section className="border-border bg-card shadow-soft rounded-2xl border p-4">
-      <div className="flex items-center gap-3">
+    <section className="border-border bg-card shadow-soft flex h-full flex-col justify-between rounded-2xl border p-4">
+      <div className="flex items-center gap-3 shrink-0">
         <span
           className="bg-azure/65 text-navy flex size-10 shrink-0 items-center justify-center rounded-xl"
           aria-hidden="true"
@@ -83,11 +83,11 @@ export function MythFactCard() {
       </div>
       <FadeSwap swapKey={answered ? 'answer' : `statement-${entry.key}`}>
         {!answered ? (
-          <div className="mt-3">
+          <div className="mt-3 flex-1 flex flex-col justify-between">
             <p className="text-foreground text-sm leading-6 font-medium">
               {t(`${entry.key}Statement`)}
             </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-auto pt-3 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => answer('myth')}
@@ -105,20 +105,22 @@ export function MythFactCard() {
             </div>
           </div>
         ) : (
-          <div className="mt-3">
-            <p
-              className={`text-sm font-bold ${correct ? 'text-sage-dark' : 'text-navy'}`}
-            >
-              {t(correct ? 'resultRight' : 'resultWrong', {
-                answer: t(entry.answer === 'myth' ? 'answerMyth' : 'answerFact'),
-              })}
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm leading-6">
-              {t(`${entry.key}Explanation`)}
-            </p>
+          <div className="mt-3 flex-1 flex flex-col justify-between">
+            <div>
+              <p
+                className={`text-sm font-bold ${correct ? 'text-sage-dark' : 'text-navy'}`}
+              >
+                {t(correct ? 'resultRight' : 'resultWrong', {
+                  answer: t(entry.answer === 'myth' ? 'answerMyth' : 'answerFact'),
+                })}
+              </p>
+              <p className="text-muted-foreground mt-1 text-sm leading-6">
+                {t(`${entry.key}Explanation`)}
+              </p>
+            </div>
             <Link
               href={ROUTES.EDUCATION}
-              className="text-navy hover:text-navy-light focus-visible:ring-navy/30 mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-bold outline-none focus-visible:ring-2"
+              className="text-navy hover:text-navy-light focus-visible:ring-navy/30 mt-auto pt-3 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-bold outline-none focus-visible:ring-2"
             >
               {t('readMore')}
               <ArrowRight className="size-4" aria-hidden="true" />

@@ -115,7 +115,7 @@ export function PartnerAccountability({
 
   return (
     <>
-      <div className="grid gap-5 xl:grid-cols-2 xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-2">
         <DashboardPanel
           icon={ShieldCheck}
           title={t('decisionQueueTitle')}

@@ -72,6 +72,7 @@ export function DashboardPanel({
   accent = 'navy',
   density = 'comfortable',
   surface = 'default',
+  fullHeight = true,
   children,
   className,
   contentClassName,
@@ -84,6 +85,7 @@ export function DashboardPanel({
   accent?: Accent;
   density?: DashboardDensity;
   surface?: DashboardSurface;
+  fullHeight?: boolean;
   contentClassName?: string;
 }) {
   const surfaceClasses: Record<DashboardSurface, string> = {
@@ -97,13 +99,14 @@ export function DashboardPanel({
     <section
       className={cn(
         'rounded-2xl border',
+        fullHeight && 'flex h-full flex-col justify-between',
         surfaceClasses[surface],
         density === 'compact' ? 'p-4 sm:p-5' : 'p-5 sm:p-6',
         className
       )}
       {...props}
     >
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start shrink-0">
         <div className="flex min-w-0 items-center gap-3">
           {Icon ? (
             <span
@@ -126,13 +129,14 @@ export function DashboardPanel({
         ) : null}
       </div>
       {description ? (
-        <p className="text-muted-foreground mt-3 text-sm leading-6">
+        <p className="text-muted-foreground mt-3 text-sm leading-6 shrink-0">
           {description}
         </p>
       ) : null}
       {children ? (
         <div
           className={cn(
+            fullHeight && 'flex-1 flex flex-col justify-between',
             density === 'compact' ? 'mt-4' : 'mt-5',
             contentClassName
           )}

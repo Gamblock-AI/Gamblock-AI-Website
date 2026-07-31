@@ -128,10 +128,12 @@ export const MESSAGES: Record<string, string> = {
 
   // missions
   mission_fetch_failed: 'Gagal memuat misi harian.',
-  invalid_mission: 'Nomor misi harus 1-6.',
+  invalid_mission: 'Misi tidak valid.',
   mission_update_failed: 'Gagal memperbarui misi harian.',
-  mission_adjust_failed:
-    'Misi utama belum dapat disesuaikan. Coba pilihan lain.',
+  custom_mission_limit: 'Maksimal lima misi custom per hari.',
+  custom_mission_invalid: 'Isi misi custom belum valid.',
+  custom_mission_not_editable:
+    'Misi custom yang sudah selesai tidak dapat diubah.',
 
   // reflections / psychoeducation
   fetch_reflections_failed: 'Gagal memuat jurnal refleksi.',

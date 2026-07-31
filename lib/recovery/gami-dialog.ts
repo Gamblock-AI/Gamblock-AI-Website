@@ -35,23 +35,3 @@ export function gamiFollowUp(
   if (urgeBand(urge) !== 'None') return 'practice';
   return null;
 }
-
-export type DashboardGamiState = 'celebrate' | 'gentle' | 'wave' | null;
-
-/**
- * Contextual dashboard companion state, in priority order. All inputs are
- * already available client-side; `null` renders nothing (calm, no filler).
- */
-export function dashboardGamiState(input: {
-  missionsResolved: number;
-  missionsTotal: number;
-  todayMood: MoodLevel | null;
-  firstVisitToday: boolean;
-}): DashboardGamiState {
-  if (input.missionsTotal > 0 && input.missionsResolved >= input.missionsTotal) {
-    return 'celebrate';
-  }
-  if (input.todayMood !== null && input.todayMood <= 2) return 'gentle';
-  if (input.firstVisitToday) return 'wave';
-  return null;
-}
