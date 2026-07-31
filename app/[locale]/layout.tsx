@@ -1,6 +1,7 @@
 import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, Geist_Mono } from 'next/font/google';
+import { config } from '@/lib/config';
 import '../globals.css';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -21,7 +22,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gamblock.ai';
+const defaultBaseUrl = config.appUrl;
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultBaseUrl),

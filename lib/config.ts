@@ -18,6 +18,10 @@ export const config = {
   get googleClientId() {
     return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
   },
+  /** Public canonical website URL used for metadata and absolute links. */
+  get appUrl() {
+    return process.env.NEXT_PUBLIC_APP_URL || 'https://gamblock-ai.com';
+  },
   /** Space/comma separated public origins permitted for education iframes. */
   get educationEmbedOrigins() {
     return (

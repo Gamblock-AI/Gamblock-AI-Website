@@ -98,8 +98,8 @@ export function DashboardWelcome({
             <p className="text-navy-light mt-2 flex items-center gap-1.5 text-xs font-semibold">
               <CalendarHeart className="size-3.5 shrink-0" aria-hidden="true" />
               {(currentStreak ?? 0) >= 2
-                ? `${t('streakDays', { days: currentStreak })} · ${t('streakDesc')}`
-                : t('streakStart', { days: activeDays })}
+                ? `${t('streakDays', { days: currentStreak ?? 0 })} · ${t('streakDesc')}`
+                : t('streakStart', { days: activeDays ?? 0 })}
             </p>
           ) : null}
         </div>

@@ -18,13 +18,17 @@ COPY . .
 # Public website settings are baked into the client bundle at build time.
 # A production image must never silently fall back to a browser-local backend.
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN test -n "$NEXT_PUBLIC_API_URL" \
   && case "$NEXT_PUBLIC_API_URL" in http://*|https://*) ;; *) exit 1 ;; esac \
+  && test -n "$NEXT_PUBLIC_APP_URL" \
+  && case "$NEXT_PUBLIC_APP_URL" in http://*|https://*) ;; *) exit 1 ;; esac \
   && npm run build
 
 # ---- Runtime stage ----
