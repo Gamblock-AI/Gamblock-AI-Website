@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-context_version="2026-07-31.15"
+context_version="2026-08-02.23"
 allow_untracked=false
 
 usage() {
@@ -97,6 +97,7 @@ required_paths=(
   "app/[locale]/(auth)"
   "app/[locale]/(dashboard)"
   "app/[locale]/(landing)"
+  "app/[locale]/(landing)/pkm/page.tsx"
   "components/common/PageTransition.tsx"
   "components/dashboard"
   "components/landing"
@@ -106,6 +107,8 @@ required_paths=(
   "messages/README.md"
   "messages/en"
   "messages/id"
+  "messages/en/pkm.json"
+  "messages/id/pkm.json"
   "next.config.ts"
   "proxy.ts"
   "routes.ts"
@@ -127,10 +130,13 @@ for path in "${required_paths[@]}"; do
     fail "documented source path is missing: $path"
   fi
 
-  assert_contains \
-    "docs/ai/manifest.yaml" \
-    "- \"$path\"" \
-    "manifest inventories source path: $path"
+  if grep -Fqx -- "  - \"$path\"" "docs/ai/manifest.yaml" ||
+    grep -Fqx -- "  - '$path'" "docs/ai/manifest.yaml" ||
+    grep -Fqx -- "  - $path" "docs/ai/manifest.yaml"; then
+    pass "manifest inventories source path: $path"
+  else
+    fail "manifest inventories source path: $path"
+  fi
 done
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then

@@ -1,6 +1,6 @@
 schema_version: 1
-context_version: "2026-07-31.15"
-component: "gamblock-ai-website"
+context_version: '2026-08-02.23'
+component: 'gamblock-ai-website'
 
 shared_contracts:
   proposal_authority: 1
@@ -13,61 +13,69 @@ shared_contracts:
   emergency_two_operator: 1
   education_revisioned_content: 1
   daily_mission_experience: 3
+  weekly_review_experience: 1
+  phase5_evidence: 1
 
 canonical:
-  instructions: "AGENTS.md"
-  onboarding: "README.md"
-  ai_context: "docs/ai/README.md"
+  instructions: 'AGENTS.md'
+  onboarding: 'README.md'
+  ai_context: 'docs/ai/README.md'
 
 package_manager:
-  name: "npm"
-  node_version_file: ".nvmrc"
-  manifest: "package.json"
-  lockfile: "package-lock.json"
+  name: 'npm'
+  node_version_file: '.nvmrc'
+  manifest: 'package.json'
+  lockfile: 'package-lock.json'
 
 providers:
-  claude: "CLAUDE.md"
-  codex: "AGENTS.md"
-  cursor: ".cursor/rules/gamblock-ai.mdc"
-  gemini: "GEMINI.md"
-  github_copilot: ".github/copilot-instructions.md"
-  legacy_copilot: "COPILOT.md"
-  legacy_cursor: ".cursorrules"
+  claude: 'CLAUDE.md'
+  codex: 'AGENTS.md'
+  cursor: '.cursor/rules/gamblock-ai.mdc'
+  gemini: 'GEMINI.md'
+  github_copilot: '.github/copilot-instructions.md'
+  legacy_copilot: 'COPILOT.md'
+  legacy_cursor: '.cursorrules'
 
 skills:
-  verify_change: ".agents/skills/verify-gamblock-change/SKILL.md"
+  verify_change: '.agents/skills/verify-gamblock-change/SKILL.md'
 
 verification:
-  script: "scripts/verify-ai-context.sh"
-  command: "npm run verify:ai-context"
-  default_lint: "npm run lint -- <changed-source-files>"
+  script: 'scripts/verify-ai-context.sh'
+  command: 'npm run verify:ai-context'
+  default_lint: 'npm run lint -- <changed-source-files>'
   strict_in_ci: true
 
 proposal_requirements:
-  - "PKM-INT-004"
-  - "PKM-WEB-001"
-  - "PKM-WEB-002"
-  - "PKM-WEB-003"
-  - "PKM-WEB-004"
-  - "PKM-WEB-005"
-  - "PKM-WEB-006"
-  - "PKM-WEB-007"
-  - "PKM-PRIV-002"
+  - 'PKM-INT-004'
+  - 'PKM-WEB-001'
+  - 'PKM-WEB-002'
+  - 'PKM-WEB-003'
+  - 'PKM-WEB-004'
+  - 'PKM-WEB-005'
+  - 'PKM-WEB-006'
+  - 'PKM-WEB-007'
+  - 'PKM-PRIV-002'
+
+supporting_requirements:
+  - 'WEB-SUP-PUB-002'
 
 required_paths:
-  - "app/[locale]/(auth)"
-  - "app/[locale]/(dashboard)"
-  - "app/[locale]/(landing)"
-  - "components/common/PageTransition.tsx"
-  - "components/dashboard"
-  - "components/landing"
-  - "hooks"
-  - "i18n/messages.ts"
-  - "lib/api-client.ts"
-  - "messages/README.md"
-  - "messages/en"
-  - "messages/id"
-  - "next.config.ts"
-  - "proxy.ts"
-  - "routes.ts"
-  - "scripts/validate-messages.mjs"
+  - 'app/[locale]/(auth)'
+  - 'app/[locale]/(dashboard)'
+  - 'app/[locale]/(landing)'
+  - 'app/[locale]/(landing)/pkm/page.tsx'
+  - 'components/common/PageTransition.tsx'
+  - 'components/dashboard'
+  - 'components/landing'
+  - 'hooks'
+  - 'i18n/messages.ts'
+  - 'lib/api-client.ts'
+  - 'messages/README.md'
+  - 'messages/en'
+  - 'messages/id'
+  - 'messages/en/pkm.json'
+  - 'messages/id/pkm.json'
+  - 'next.config.ts'
+  - 'proxy.ts'
+  - 'routes.ts'
+  - 'scripts/validate-messages.mjs'

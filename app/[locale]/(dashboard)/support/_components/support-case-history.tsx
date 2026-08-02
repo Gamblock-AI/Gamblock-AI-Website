@@ -4,6 +4,7 @@ import {
   ArrowRight,
   CircleHelp,
   FileWarning,
+  Inbox,
   RefreshCw,
   ShieldCheck,
 } from 'lucide-react';
@@ -61,6 +62,7 @@ export function SupportCaseHistory({
   onRetry,
 }: SupportCaseHistoryProps) {
   const t = useTranslations('supportWorkspace');
+  const hasNoTickets = !loading && !error && cases.length === 0;
 
   return (
     <aside className="border-border bg-card shadow-soft flex h-full flex-col rounded-2xl border p-5 sm:p-6 xl:col-span-4">
@@ -71,7 +73,7 @@ export function SupportCaseHistory({
         </p>
       </section>
 
-      <section className="border-border mt-5 border-t pt-5">
+      <section className="border-border mt-5 flex flex-1 flex-col border-t pt-5">
         <SectionHeading
           icon={FileWarning}
           title={t('historyTitle')}
@@ -94,13 +96,17 @@ export function SupportCaseHistory({
             {t('historyRetry')}
           </Button>
         ) : null}
-        <div className="mt-4">
-          <SupportCaseList
-            cases={cases}
-            loading={loading}
-            error={error}
-            maxItems={3}
-          />
+        <div className={`mt-4 ${hasNoTickets ? 'mb-5 flex flex-1' : ''}`}>
+          {hasNoTickets ? (
+            <TicketHistoryEmptyState />
+          ) : (
+            <SupportCaseList
+              cases={cases}
+              loading={loading}
+              error={error}
+              maxItems={3}
+            />
+          )}
         </div>
       </section>
 
@@ -118,6 +124,24 @@ export function SupportCaseHistory({
         </Link>
       </section>
     </aside>
+  );
+}
+
+function TicketHistoryEmptyState() {
+  const t = useTranslations('supportWorkspace');
+
+  return (
+    <div className="border-border/70 bg-muted/25 flex min-h-40 flex-1 flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-8 text-center">
+      <span className="bg-azure text-navy flex size-12 items-center justify-center rounded-2xl">
+        <Inbox className="size-6" aria-hidden="true" />
+      </span>
+      <p className="text-navy mt-4 text-sm font-bold">
+        {t('historyEmptyTitle')}
+      </p>
+      <p className="text-muted-foreground mt-1 max-w-60 text-sm leading-6">
+        {t('historyEmptyBody')}
+      </p>
+    </div>
   );
 }
 

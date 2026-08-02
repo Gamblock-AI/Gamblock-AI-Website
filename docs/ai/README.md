@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-07-31.15`
+**Context version:** `2026-08-02.23`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -28,27 +28,20 @@ pending-decision/contact, and consented protection aggregates without private
 recovery details. The admin dashboard shows operational attention counts and
 links to isolated work areas. Device/model implementation versions stay out of
 the student canvas.
-PKM core `PKM-WEB-004` is available as a once-per-`Asia/Jakarta`-day check-in
-gate across authenticated dashboard routes with an account-persistence
-acknowledgement. The gate greets with the waving mascot, mood/urge buttons
-give press feedback, the supportive mood reply animates its height so the
-form never jumps, and a calm success moment (sage check + celebrating Gami)
-shows briefly after saving before the dialog closes. The urge question names gambling explicitly and its scale
-starts at an explicit “Tidak ada dorongan” (none) point instead of an appended
-opt-out; selecting a mood shows a short supportive Gami reply, and the most
-distressed mood also offers a direct support link without diagnostic claims.
-`PKM-WEB-005` and `PKM-WEB-006` remain available from the student-only FAB
-mounted by the authenticated dashboard layout. Daily missions now use exactly
-five `Asia/Jakarta` slots, all worth 10 EXP. The manager allows up to five
-private custom missions; they replace system slots one-for-one, are self-marked
-when complete, and can be edited/deleted while pending. System tasks remain
-server-verified. No browsing details, custom mission titles, or custom
-self-attestations enter partner/admin surfaces. Partner monitoring of raw check-in values remains `planned`
-until an explicit consent, visibility, and revocation design is implemented.
-This insight-first main canvas still differs from the full target “Today first”
-information architecture in `context/ui-context.md`; the mandatory gate and
-global FAB preserve direct access to the core recovery loop while that
-product-level gap remains open.
+PKM core `PKM-WEB-004` is available as the first non-blocking Today action
+when a student has not yet recorded a check-in for the `Asia/Jakarta` day. The
+mood/urge controls give press feedback, the supportive mood reply animates its
+height so the form never jumps, and the urge question names gambling explicitly
+with an explicit “Tidak ada dorongan” (none) scale point. This replaces the
+unclosable global check-in dialog while retaining direct access to the core
+recovery action.
+`PKM-WEB-005` is shown as one deterministic next action; its full five-slot
+plan and private custom missions are available in a secondary dialog. Every
+slot is worth 10 EXP and server verification/self-attestation rules remain
+unchanged. `PKM-WEB-006` is available from Learn & Grow. No browsing details,
+custom mission titles, or custom self-attestations enter partner/admin surfaces.
+Partner monitoring of raw check-in values remains `planned` until an explicit
+consent, visibility, and revocation design is implemented.
 
 Supporting account recovery status (`implemented code-complete prototype`):
 the locale-aware forgot-password screen requests a non-enumerating email code,
@@ -72,6 +65,14 @@ a shared `FadeSwap` primitive, three round-progress dots track the exercise,
 and completion shows a calm sage check with the mascot (no confetti). The
 breathing card leads the page on mobile, the mesh background and skip link
 are applied, and reduced motion falls back to static visuals with text cues.
+
+Supporting PKM transparency status (`implemented`, `WEB-SUP-PUB-002`): the
+public `/pkm` route presents project method, milestone, evidence maturity,
+ethical/privacy safeguards, limitations, and all six Phase 5 output states.
+It deliberately keeps report/video/article links closed while external
+approval, submission, evaluated release, ownership, and publication records
+are absent. The footer links to this route, and social-contact copy points to
+the dynamic official footer links instead of an inconsistent generic handle.
 
 Supporting error-surface status (`implemented`): locale 404 and runtime error
 boundaries share a minimal, keyboard-accessible Gami status page. Temporary
@@ -145,67 +146,26 @@ Student-only `/intentions` preserves the local-first intention manager, while
 student-only `/journal` provides one `Asia/Jakarta` daily encrypted rich-text
 entry with headings, lists, quotations, and up to five private images. The
 room notebook links to that journal rather than duplicating a text composer.
-The five-slot daily mission
-manager is available only through the persistent adaptive FAB, avoiding a
-redundant in-page mission card.
-Placed room decor is also visible on mobile as a read-only chip strip.
+The five-slot daily mission manager is available only through the persistent
+adaptive FAB, avoiding a redundant in-page mission card. Placed room decor is
+also visible on mobile as a read-only chip strip.
 Active timers/task labels remain browser-local; completed practices and typed
 weekly reviews use a rolling 12-month account view, while deterministic room
-decor remains until account deletion. Reflection payload v2 carries the only
-recovery free text plus optional next-step/current-focus fields. Student
-progress provides inspectable 7/30/90-day activity calendars, suppresses trends
+decor remains until account deletion. Journal reflection payload v2 carries
+encrypted journal text plus optional next-step/current-focus fields; the
+weekly-review record separately encrypts its bounded adjustment and
+next-mission text. Student progress provides inspectable 7/30/90-day activity
+calendars, suppresses trends
 below three check-ins while showing a participation-focused Gami encouragement
 once three check-ins exist, and generates CSV/print-to-PDF locally after a
-privacy warning. The desktop calendar uses a compact shared-height grid/side
-rail, with an extra-short 7-day view, a compact 30-day default, and a readable
-90-day view; narrow screens stack the rail. Range and support-channel
-navigation share the reusable flat `CompactTabNav` component: thin border,
-compact height, no shadow/bevel/3D treatment. The private local-only estimator
-uses an explicit hours stepper, `Rp` field prefix, and full-width save action.
-The former progress-only journey-badge/presence-rhythm card
-and its unused model helper were removed, so the page keeps the recovery flow
-focused; the earlier dead "today workspace" component set was also removed. A later interactivity pass
-added `FadeSwap` (AnimatePresence crossfade primitive), Reveal stagger on the
-dashboard blocks, StatCounter on the numeric summary tiles, a floating
-parallax hero mascot and supporters marquee on the landing page, and real
-generated mascot poses replacing the seven byte-identical placeholder PNGs
-(remaining dead landing set pieces and zero-reference assets were deleted);
-the pose set was then regenerated against the canonical umbrella reference
-art so every pose matches the official Gami design. A subsequent compact-density
-pass removed tall min-height floors from the student dashboard cards (hero,
-weekly snapshot, summary strip, shortcuts, protection rail), slimmed the
-shared page header, and moved
-`/recovery` and `/progress` onto the compact page density. Color semantics were
-tightened across the dashboard: sage now appears only for genuine
-success/completed states and amber only for genuine attention/pending states —
-mission rewards use navy/sky accents, informational surfaces (trend
-insufficient banner and focus input) use azure/navy, and the calendar marks
-active days with a single consistent navy check plus token-only category dots.
-An engagement overhaul then made the progression economy live:
-levels now unlock cosmetic decor/pose/accent rewards (client mirror in
-`lib/recovery/level-rewards.ts`, authoritative list in the claim response's
-`newly_unlocked`), the recovery-room catalog grew to 20 tiered items with
-per-item placement slots and a level-18 second theme, practices grant a
-capped daily EXP and satisfy the new sixth mission, a dedicated calm
-level-up dialog replaced the toast, and the dashboard hero now surfaces the
-previously-unconsumed presence-rhythm summary as a non-punitive line. Content loops were extended: a 30-line mood-by-urge
-Gami dialog bank with deterministic daily variants and a practice follow-up
-chip, 36 bite facts with a user-advanced "another fact" button, a daily
-myth-vs-fact card, selectable breathing packs plus a
-phase-synced wave in the urge practice, a 10/15/25-minute focus-sprint
-picker, optional ephemeral grounding inputs, a private local-only
-"what you kept" estimator on `/progress`, and a private "your week's story"
-recap after the weekly review. All new daily state is deterministic
-(day-of-year rotation via `hooks/use-daily-rotation.ts`), local-only keys are
-cleared by the recovery clear-local-data flow, and voluntary journal documents
-are encrypted by the backend before persistence. Partner progress uses only category-specific member aggregates and
-never the student trend endpoint. Partner recovery is a CMS-authored response
-simulator and never record access. The Recovery Hub now mounts the local-first
-`PKM-WEB-002` intention manager with title, required next action, focus period,
-pause/resume/archive controls, history, and weekly-review integration.
-Optional sync remains limited to title/status, and Android owns the opt-in
-local reminder delivery; the website does not claim browser notification
-delivery.
+privacy warning. Levels unlock deterministic cosmetic decor, poses, and themes;
+there is no chance-based reward. Partner progress uses only category-specific
+aggregates and never the student trend, room, journal, mood, or practice-detail
+endpoints. The Recovery Hub mounts the local-first `PKM-WEB-002` intention
+manager with title, next action, focus period, pause/resume/archive controls,
+history, and weekly-review integration. Optional sync remains limited to
+title/status, and Android owns opt-in local reminder delivery; the website does
+not claim browser notification delivery.
 
 Current mission gamification status (`implemented`, supporting PKM-WEB-005):
 the adaptive FAB is the single dedicated entry to the account-private,
@@ -220,11 +180,27 @@ streak, casino celebration, or partner/admin projection. Deterministic journey t
 shared verbatim with the Flutter client) name each level tier, and level-up
 feedback references the new title.
 
-Supporting skills status (`implemented`, around PKM core `PKM-WEB-006`): the
-student-only `/skills` page pairs the short internal skill practices with a
-curated list of free external course/certification platforms rendered as plain
-outbound links (new tab, `noreferrer noopener`, no account or browsing data).
-The curated list lives in `lib/skills/external-platforms.ts`.
+Learning Hub status (`implemented`, supporting product around `PKM-WEB-006`):
+the student-only `/skills` page keeps the short internal practices, then adds a
+UTY-program selector and a goal selector backed by the published Learning Hub
+catalog. The catalog covers 22 programs across five clusters with learning
+paths, courses, certifications, mini-projects, career snapshots, and toolkits.
+Progress is account-scoped (`saved`/`started`/`completed`); checkpoint text is
+submitted only through the encrypted backend workflow, and outbound sources
+open in a new tab without account or browsing context. Program and goal
+choices plus suggested starter time, difficulty, language, cost, and view
+filters remain transient page state.
+Verified admins additionally use `/admin/learning-hub` to manage bilingual
+catalog drafts, UTY clusters/programs, review/publish/archive transitions, and
+immutable revision rollback. That operational workspace never receives student
+progress, reflections, outcomes, provider accounts, or browsing data.
+
+Phase 3 self-regulation loop (`PKM-WEB-002`/`PKM-WEB-007`) is implemented for
+weekly reviews: the account-backed progress sheet reads and writes the current
+Jakarta week through `/weekly-reviews/current`, then publishes the
+server-authoritative EXP result to the shared level store. The encrypted review
+may contain bounded selections and length-limited adjustment/next-mission text,
+but no browsing data, and it never claims browser notification delivery.
 
 Current psychoeducation status (`implemented`, PKM core `PKM-WEB-003`): the
 library and direct reader consume only published, revisioned bilingual

@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-07-31.15`
+**Context version:** `2026-08-02.23`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading
@@ -92,7 +92,7 @@ error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
   login while preserving single-use/expiry checks.
 - Legacy operator invitation pages are retired. The `/admin` shell belongs to
   the unified `admin` role and exposes content, support queue, release,
-  research, emergency, and platform capabilities through separate sidebar
+  Learning Hub content, research, emergency, and platform capabilities through separate sidebar
   routes. `/support` is requester-only for `user` and `partner`; admins reply
   through `/admin/tickets`. Public social footer links come only
   from the safe public endpoint and render no placeholder for null/disabled
@@ -113,6 +113,12 @@ submits only completed practices, and stores reflection free text through the
 encrypted account workflow. Partner recovery/progress must use reviewed CMS
 guidance and consented aggregates, never student room, journal, mood, focus, or
 practice detail. Education audience checks remain server-authoritative.
+
+Supporting `WEB-SUP-PUB-002` lives at the public `/pkm` route. It may describe
+methods, milestones, limitations, and deliverable states, but report, video,
+article, and release links stay non-public until a real review/publication
+record exists. The page must never promote Phase 4 instrumentation into an
+evaluated result.
 
 Production Docker images receive `NEXT_PUBLIC_API_URL` and the public Google
 client ID at build time. CI deploys from `main` only when

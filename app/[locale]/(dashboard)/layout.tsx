@@ -1,8 +1,6 @@
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Navbar } from '@/components/dashboard/navbar';
 import { MobileNavigation } from '@/components/dashboard/mobile-navigation';
-import { StudentGamificationFab } from '@/components/dashboard/student-gamification-fab';
-import { StudentDailyCheckInGate } from '@/components/dashboard/student-daily-check-in-gate';
 import { PageTransition } from '@/components/common/PageTransition';
 import { getTranslations } from 'next-intl/server';
 import { DashboardAccessGate } from '@/components/dashboard/dashboard-access-gate';
@@ -39,8 +37,6 @@ export default async function AppLayout({
         </div>
 
         <MobileNavigation />
-        <StudentGamificationFab />
-        <StudentDailyCheckInGate />
       </div>
     </DashboardAccessGate>
   );

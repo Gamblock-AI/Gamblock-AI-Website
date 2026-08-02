@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { AdminHeader } from './admin-header';
 import { AdminErrorState, AdminLoadingState } from './admin-state';
 import { ContentTab } from './content-tab';
+import { LearningHubTab } from './learning-hub-tab';
 import { EmergencyTab } from './emergency-tab';
 import { PlatformTab } from './platform-tab';
 import { ReleaseTab } from './release-tab';
@@ -34,16 +35,24 @@ export function AdminAreaClient({
   const header =
     area === 'content'
       ? { title: t('tabContent'), description: t('contentDescription') }
-      : area === 'releases'
-        ? { title: t('tabReleases'), description: t('releaseDescription') }
-        : area === 'tickets'
-          ? { title: t('tabTickets'), description: t('supportDescription') }
-          : area === 'emergency'
-            ? {
-                title: t('tabEmergency'),
-                description: t('emergencyDescription'),
-              }
-            : { title: t('tabPlatform'), description: t('platformDescription') };
+      : area === 'learningHub'
+        ? {
+            title: t('tabLearningHub'),
+            description: t('learningHubDescription'),
+          }
+        : area === 'releases'
+          ? { title: t('tabReleases'), description: t('releaseDescription') }
+          : area === 'tickets'
+            ? { title: t('tabTickets'), description: t('supportDescription') }
+            : area === 'emergency'
+              ? {
+                  title: t('tabEmergency'),
+                  description: t('emergencyDescription'),
+                }
+              : {
+                  title: t('tabPlatform'),
+                  description: t('platformDescription'),
+                };
 
   return (
     <DashboardPage density="compact" className="max-w-none">
@@ -76,6 +85,22 @@ export function AdminAreaClient({
           getModuleRevisions={operations.getModuleRevisions}
           rollbackModule={operations.rollbackModule}
           moduleID={moduleID}
+        />
+      ) : area === 'learningHub' ? (
+        <LearningHubTab
+          items={operations.learningHubItems}
+          taxonomy={operations.learningHubTaxonomy}
+          createItem={operations.createLearningHubItem}
+          saveItem={operations.saveLearningHubItem}
+          transitionItem={operations.transitionLearningHubItem}
+          getRevisions={operations.getLearningHubRevisions}
+          rollbackItem={operations.rollbackLearningHubItem}
+          createCluster={operations.createLearningHubCluster}
+          updateCluster={operations.updateLearningHubCluster}
+          deleteCluster={operations.deleteLearningHubCluster}
+          createProgram={operations.createLearningHubProgram}
+          updateProgram={operations.updateLearningHubProgram}
+          deleteProgram={operations.deleteLearningHubProgram}
         />
       ) : area === 'releases' ? (
         <ReleaseTab

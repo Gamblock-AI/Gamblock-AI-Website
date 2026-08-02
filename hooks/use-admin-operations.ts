@@ -106,6 +106,65 @@ export interface AdminEducationRevision {
   created_at: string;
 }
 
+export interface AdminLearningHubItem {
+  id: string;
+  slug: string;
+  kind: string;
+  title: string;
+  title_id: string;
+  title_en: string;
+  summary: string;
+  summary_id: string;
+  summary_en: string;
+  provider?: string;
+  url?: string;
+  status: string;
+  draft_revision: number;
+  published_revision: number;
+  draft_document: Record<string, unknown>;
+  published_document?: Record<string, unknown>;
+  published_at?: string;
+  archived_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminLearningRevision {
+  id: string;
+  item_id: string;
+  revision: number;
+  document: Record<string, unknown>;
+  kind: string;
+  created_by: string;
+  created_at: string;
+}
+
+export interface AdminLearningTaxonomy {
+  institution: { id: string; slug: string; name: string; status: string };
+  clusters: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    title_id: string;
+    title_en: string;
+    description_id: string;
+    description_en: string;
+    sort_order: number;
+    active: boolean;
+  }>;
+  programs: Array<{
+    id: string;
+    institution_id: string;
+    slug: string;
+    name: string;
+    degree: string;
+    primary_cluster_slug: string;
+    sort_order: number;
+    active: boolean;
+  }>;
+}
+
 export interface AdminRelease {
   id: string;
   version: string;
@@ -202,6 +261,7 @@ export interface EmergencyKeyRequest {
 
 export interface AdminCapabilities {
   content: boolean;
+  learningHub: boolean;
   releases: boolean;
   support: boolean;
   emergency: boolean;
@@ -211,6 +271,7 @@ export interface AdminCapabilities {
 export type AdminArea =
   | 'overview'
   | 'content'
+  | 'learningHub'
   | 'releases'
   | 'tickets'
   | 'emergency'
@@ -235,6 +296,8 @@ export interface AdminModelReleaseDraft {
 interface AdminOperationsState {
   overview: AdminOverview | null;
   modules: AdminEducationModule[];
+  learningHubItems: AdminLearningHubItem[];
+  learningHubTaxonomy: AdminLearningTaxonomy | null;
   releases: Record<'model' | 'ruleset' | 'network', AdminRelease[]>;
   rollouts: AdminReleaseRollout[];
   cases: AdminSupportCase[];
@@ -248,6 +311,8 @@ interface AdminOperationsState {
 const EMPTY_STATE: AdminOperationsState = {
   overview: null,
   modules: [],
+  learningHubItems: [],
+  learningHubTaxonomy: null,
   releases: { model: [], ruleset: [], network: [] },
   rollouts: [],
   cases: [],
@@ -265,6 +330,8 @@ async function fetchAdminOperations(
   const [
     overview,
     modules,
+    learningHubItems,
+    learningHubTaxonomy,
     releasePayload,
     cases,
     dataRequests,
@@ -279,6 +346,12 @@ async function fetchAdminOperations(
     capabilities.content && (area === 'content' || area === 'all')
       ? apiClient<AdminEducationModule[]>('/admin/content/modules')
       : Promise.resolve([]),
+    capabilities.learningHub && (area === 'learningHub' || area === 'all')
+      ? apiClient<AdminLearningHubItem[]>('/admin/content/learning-hub/items')
+      : Promise.resolve([]),
+    capabilities.learningHub && (area === 'learningHub' || area === 'all')
+      ? apiClient<AdminLearningTaxonomy>('/admin/content/learning-hub/taxonomy')
+      : Promise.resolve(null),
     capabilities.releases && (area === 'releases' || area === 'all')
       ? apiClient<{
           releases: Record<'model' | 'ruleset' | 'network', AdminRelease[]>;
@@ -308,6 +381,8 @@ async function fetchAdminOperations(
   return {
     overview,
     modules: modules ?? [],
+    learningHubItems: learningHubItems ?? [],
+    learningHubTaxonomy,
     releases: releasePayload.releases,
     rollouts: releasePayload.rollouts ?? [],
     cases: cases ?? [],
@@ -323,6 +398,7 @@ export function getAdminCapabilities(role?: string): AdminCapabilities {
   const allowed = role === 'admin';
   return {
     content: allowed,
+    learningHub: allowed,
     releases: allowed,
     support: allowed,
     emergency: allowed,
@@ -419,19 +495,16 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
     [mutateAndReload]
   );
 
-  const createModule = useCallback(
-    async (module: AdminModuleDraft) => {
-      const created = await apiClient<AdminEducationModule>(
-        '/admin/content/modules',
-        {
-          method: 'POST',
-          body: JSON.stringify(module),
-        }
-      );
-      return created;
-    },
-    []
-  );
+  const createModule = useCallback(async (module: AdminModuleDraft) => {
+    const created = await apiClient<AdminEducationModule>(
+      '/admin/content/modules',
+      {
+        method: 'POST',
+        body: JSON.stringify(module),
+      }
+    );
+    return created;
+  }, []);
   const getModule = useCallback(
     (id: string) =>
       apiClient<AdminEducationModule>(`/admin/content/modules/${id}`),
@@ -480,6 +553,101 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
           body: JSON.stringify({ reason }),
         }
       ),
+    [mutateAndReload]
+  );
+
+  const createLearningHubItem = useCallback(
+    (draft: Record<string, unknown>) =>
+      mutateAndReload<AdminLearningHubItem>(
+        '/admin/content/learning-hub/items',
+        {
+          method: 'POST',
+          body: JSON.stringify(draft),
+        }
+      ),
+    [mutateAndReload]
+  );
+  const saveLearningHubItem = useCallback(
+    (item: AdminLearningHubItem, draft: Record<string, unknown>) =>
+      mutateAndReload<AdminLearningHubItem>(
+        `/admin/content/learning-hub/items/${item.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            expected_revision: item.draft_revision,
+            draft,
+          }),
+        }
+      ),
+    [mutateAndReload]
+  );
+  const transitionLearningHubItem = useCallback(
+    (id: string, action: 'submit-review' | 'publish' | 'archive') =>
+      mutateAndReload<AdminLearningHubItem>(
+        `/admin/content/learning-hub/items/${id}/${action}`,
+        { method: 'POST' }
+      ),
+    [mutateAndReload]
+  );
+  const getLearningHubRevisions = useCallback(
+    (id: string) =>
+      apiClient<AdminLearningRevision[]>(
+        `/admin/content/learning-hub/items/${id}/revisions`
+      ),
+    []
+  );
+  const rollbackLearningHubItem = useCallback(
+    (id: string, revisionID: string, reason: string) =>
+      mutateAndReload<AdminLearningHubItem>(
+        `/admin/content/learning-hub/items/${id}/revisions/${revisionID}/rollback`,
+        { method: 'POST', body: JSON.stringify({ reason }) }
+      ),
+    [mutateAndReload]
+  );
+  const createLearningHubCluster = useCallback(
+    (input: Record<string, unknown>) =>
+      mutateAndReload('/admin/content/learning-hub/taxonomy/clusters', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    [mutateAndReload]
+  );
+  const updateLearningHubCluster = useCallback(
+    (id: string, input: Record<string, unknown>) =>
+      mutateAndReload(`/admin/content/learning-hub/taxonomy/clusters/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(input),
+      }),
+    [mutateAndReload]
+  );
+  const deleteLearningHubCluster = useCallback(
+    (id: string) =>
+      mutateAndReload(`/admin/content/learning-hub/taxonomy/clusters/${id}`, {
+        method: 'DELETE',
+      }),
+    [mutateAndReload]
+  );
+  const createLearningHubProgram = useCallback(
+    (input: Record<string, unknown>) =>
+      mutateAndReload('/admin/content/learning-hub/taxonomy/programs', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    [mutateAndReload]
+  );
+  const updateLearningHubProgram = useCallback(
+    (id: string, input: Record<string, unknown>) =>
+      mutateAndReload(`/admin/content/learning-hub/taxonomy/programs/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(input),
+      }),
+    [mutateAndReload]
+  );
+  const deleteLearningHubProgram = useCallback(
+    (id: string) =>
+      mutateAndReload(`/admin/content/learning-hub/taxonomy/programs/${id}`, {
+        method: 'DELETE',
+      }),
     [mutateAndReload]
   );
 
@@ -569,6 +737,17 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
     transitionModule,
     getModuleRevisions,
     rollbackModule,
+    createLearningHubItem,
+    saveLearningHubItem,
+    transitionLearningHubItem,
+    getLearningHubRevisions,
+    rollbackLearningHubItem,
+    createLearningHubCluster,
+    updateLearningHubCluster,
+    deleteLearningHubCluster,
+    createLearningHubProgram,
+    updateLearningHubProgram,
+    deleteLearningHubProgram,
     uploadEducationMedia,
     registerExternalEducationMedia,
     createModelRelease,

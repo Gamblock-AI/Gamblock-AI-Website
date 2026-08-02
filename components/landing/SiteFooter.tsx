@@ -2,10 +2,7 @@
 
 import Image from 'next/image';
 import { Link } from '@/i18n/routing';
-import {
-  ArrowRight,
-  AtSign,
-} from 'lucide-react';
+import { ArrowRight, AtSign } from 'lucide-react';
 import {
   FaFacebookF,
   FaGithub,
@@ -55,6 +52,7 @@ const COLUMNS = [
     titleKey: 'colAcademic',
     links: [
       { labelKey: 'linkTeam', href: '/#tim' },
+      { labelKey: 'linkPkm', href: ROUTES.PKM },
       { labelKey: 'linkProposal', href: '/dampak' },
       { labelKey: 'linkTerms', href: ROUTES.TERMS },
       { labelKey: 'linkPrivacy', href: ROUTES.PRIVACY },
@@ -67,7 +65,8 @@ const COLUMNS = [
  */
 export function SiteFooter() {
   const t = useTranslations('Footer');
-  const { links: socialLinks, loaded: socialLinksLoaded } = useSiteSocialLinks();
+  const { links: socialLinks, loaded: socialLinksLoaded } =
+    useSiteSocialLinks();
 
   return (
     <footer className="bg-footer-navy relative overflow-hidden text-white">

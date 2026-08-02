@@ -26,6 +26,7 @@ const catalogLoaders = {
     () => import('../messages/id/account.json'),
     () => import('../messages/id/operations.json'),
     () => import('../messages/id/engagement.json'),
+    () => import('../messages/id/pkm.json'),
   ],
   en: [
     () => import('../messages/en/shared.json'),
@@ -37,6 +38,7 @@ const catalogLoaders = {
     () => import('../messages/en/account.json'),
     () => import('../messages/en/operations.json'),
     () => import('../messages/en/engagement.json'),
+    () => import('../messages/en/pkm.json'),
   ],
 } satisfies Record<Locale, readonly CatalogLoader[]>;
 

@@ -24,6 +24,7 @@ import {
   type PartnerContactRequest,
   usePartnerContactRequests,
 } from '@/hooks/use-accountability';
+import { useLocalUser } from '@/hooks/use-local-user';
 import { Link } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { ROUTES } from '@/routes';
@@ -37,7 +38,8 @@ export function PartnerContactWorkspace() {
   const [message, setMessage] = useState('');
   const [currentTime] = useState(() => Date.now());
   const workspace = contacts.workspace;
-  const isPartner = workspace?.role === 'partner';
+  const user = useLocalUser();
+  const isPartner = workspace?.role === 'partner' || user.role === 'partner';
   const membership = workspace?.membership;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -62,14 +64,19 @@ export function PartnerContactWorkspace() {
   };
 
   if (contacts.loading && !workspace) {
-    return <DashboardNotice icon={RefreshCw} title={t('partnerLoading')} />;
+    return (
+      <DashboardNotice
+        icon={RefreshCw}
+        title={isPartner ? t('incomingLoading') : t('partnerLoading')}
+      />
+    );
   }
 
   if (contacts.error && !workspace) {
     return (
       <DashboardNotice
         icon={CircleAlert}
-        title={t('partnerErrorTitle')}
+        title={isPartner ? t('incomingErrorTitle') : t('partnerErrorTitle')}
         tone="amber"
         role="alert"
         action={
@@ -79,7 +86,7 @@ export function PartnerContactWorkspace() {
           </Button>
         }
       >
-        {t('partnerErrorBody')}
+        {isPartner ? t('incomingErrorBody') : t('partnerErrorBody')}
       </DashboardNotice>
     );
   }
@@ -100,7 +107,7 @@ export function PartnerContactWorkspace() {
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </DashboardPanel>
-        <ContactBoundary />
+        <ContactBoundary isPartner={false} />
       </div>
     );
   }
@@ -129,7 +136,7 @@ export function PartnerContactWorkspace() {
             </DashboardStatus>
           }
         >
-          <ContactBoundary />
+          <ContactBoundary isPartner />
         </DashboardPanel>
       ) : (
         <DashboardPanel
@@ -200,8 +207,10 @@ export function PartnerContactWorkspace() {
 
       <DashboardPanel
         icon={Clock3}
-        title={t('partnerHistoryTitle')}
-        description={t('partnerHistoryBody')}
+        title={isPartner ? t('incomingHistoryTitle') : t('partnerHistoryTitle')}
+        description={
+          isPartner ? t('incomingHistoryBody') : t('partnerHistoryBody')
+        }
         className={`h-full ${isPartner ? 'xl:col-span-7' : 'xl:col-span-5'}`}
       >
         <ContactRequestList
@@ -217,7 +226,7 @@ export function PartnerContactWorkspace() {
   );
 }
 
-function ContactBoundary() {
+function ContactBoundary({ isPartner }: { isPartner: boolean }) {
   const t = useTranslations('supportWorkspace');
   return (
     <div className="border-sage/30 bg-sage/[0.07] rounded-xl border p-4">
@@ -228,10 +237,10 @@ function ContactBoundary() {
         />
         <div>
           <p className="text-navy text-sm font-bold">
-            {t('partnerBoundaryTitle')}
+            {isPartner ? t('incomingBoundaryTitle') : t('partnerBoundaryTitle')}
           </p>
           <p className="text-muted-foreground mt-1 text-sm leading-6">
-            {t('partnerBoundaryBody')}
+            {isPartner ? t('incomingBoundaryBody') : t('partnerBoundaryBody')}
           </p>
         </div>
       </div>
@@ -264,9 +273,13 @@ function ContactRequestList({
   if (!requests.length) {
     return (
       <div className="border-border rounded-xl border border-dashed p-4">
-        <p className="text-navy font-semibold">{t('partnerHistoryEmpty')}</p>
+        <p className="text-navy font-semibold">
+          {isPartner ? t('incomingHistoryEmpty') : t('partnerHistoryEmpty')}
+        </p>
         <p className="text-muted-foreground mt-1 text-sm leading-6">
-          {t('partnerHistoryEmptyBody')}
+          {isPartner
+            ? t('incomingHistoryEmptyBody')
+            : t('partnerHistoryEmptyBody')}
         </p>
       </div>
     );

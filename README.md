@@ -15,8 +15,8 @@ install source of truth.
 ```sh
 nvm use                    # reads .nvmrc (Node 20)
 npm ci
-cp .env.example .env.local   # set API URL, optional Google client ID, and
-                             # optional NEXT_PUBLIC_EDUCATION_EMBED_ORIGINS
+cp .env.example .env.local   # set API URL, public app URL, optional Google
+                             # client ID, and education-media origins
 npm run verify:ai-context
 npm run dev                  # http://localhost:3000
 ```
@@ -31,7 +31,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-07-31.15`.
+`2026-08-02.23`.
 
 ## Structure
 
@@ -44,7 +44,7 @@ app/
                            # admin, and settings
     (auth)/                # login, register, forgot-password
     (landing)/             # landing, post-intervention, impact, technology,
-                           # and legal pages
+                           # PKM transparency, and legal pages
     approve/[token]/       # supporting quick-approval deep link
     partner/invitations/   # legacy redirect to the partner workspace
     operator/invitations/  # retired-invitation notice for legacy links
@@ -82,7 +82,10 @@ remains insight-first with privacy-safe aggregate analytics, protection
 information, weekly check-in trends, education, help, and shortcuts. The partner
 dashboard highlights groups, pending decisions/contacts, and consented aggregate
 protection status. The admin dashboard centralizes operational attention counts
-and links to its separate workspaces. The requester support workspace is limited
+and links to its separate workspaces. The admin-only `/admin/learning-hub`
+workspace manages UTY catalog drafts, taxonomy, editorial transitions, and
+revision rollback without exposing student progress or reflections. The
+requester support workspace is limited
 to `user` and `partner` and separates two recipient channels. Partner contact
 requests remain scoped to the connected relationship, while Gamblock-AI team
 tickets show a newest-first three-ticket summary;
@@ -110,8 +113,10 @@ workspace. The window opens three-minute urge surfing, the rug guides
 opens the encrypted reflection journal, and the phone opens partner/support
 choices. Active timers and focus
 task labels stay browser-local. Completed practices and typed weekly reviews
-sync to the account for a rolling 12-month view; deterministic decor placement
-remains until account deletion and is included in export/deletion. Reflection
+sync to the account for a rolling 12-month view; each weekly review receives at
+most one server-authoritative 10-EXP grant under the shared daily cap.
+Deterministic decor placement remains until account deletion and is included
+in export/deletion. Reflection
 payload v2 is AES-256-GCM encrypted and can carry an optional next step and one
 current-focus marker. Legacy local intention text is never uploaded without a
 one-time opt-in import. The schema contains no URL, domain, DOM, browsing
@@ -119,9 +124,10 @@ history, or detected-page field.
 
 Student progress renders inspectable 7/30/90-day activity calendars across
 check-ins, practices, journal entries, missions, education, and weekly reviews.
-Trend language stays unavailable below three check-ins. Partner recovery uses
-a role-filtered CMS response simulator, while partner progress consumes only
-consented aggregate categories and never student recovery details.
+Trend language stays unavailable below three check-ins. `/recovery` is
+student-only; partner guidance uses role-filtered CMS response modules in a
+`/progress` dialog, while partner progress consumes only consented aggregate categories
+and never student recovery details.
 
 `GET /v1/missions/today` supplies exactly five `Asia/Jakarta` daily slots.
 Every slot is worth 10 EXP. The website shows only default and custom mission
@@ -147,6 +153,13 @@ check-ins can be restored across devices, while partner monitoring requires a
 separate, explicit sharing design before it is available. See
 `docs/ai/README.md` for current website capability status and the umbrella
 `context/proposal-requirements.md` for requirement-level targets.
+
+The public `/pkm` route implements supporting transparency
+`WEB-SUP-PUB-002`: it presents project method, milestone, evidence maturity,
+privacy/ethical safeguards, limitations, and the six Phase 5 output states.
+Draft reports, the video, article, and release artifacts are not exposed as
+approved downloads until their external review/submission/publication records
+exist. The landing footer provides the discoverable link.
 
 ## Error surfaces
 
@@ -225,8 +238,9 @@ optional and its absence is treated as a normal disabled state rather than a
 runtime warning.
 
 Production CI builds for `https://gamblock-ai.com` with
-`NEXT_PUBLIC_API_URL=https://api.gamblock-ai.com` and the public web Google
-client ID. Its SSH deploy step uses the pinned VPS host identity with
+`NEXT_PUBLIC_API_URL=https://api.gamblock-ai.com`,
+`NEXT_PUBLIC_APP_URL=https://gamblock-ai.com`, and the public web Google client
+ID. Its SSH deploy step uses the pinned VPS host identity with
 root/password authentication on port 22 and remains disabled until
 `ENABLE_VPS_DEPLOY=true` after infrastructure bootstrap.
 

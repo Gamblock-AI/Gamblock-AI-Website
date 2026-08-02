@@ -263,56 +263,61 @@ export function PartnerGroupsWorkspace({
         </DashboardPanel>
       ) : null}
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(20rem,0.75fr)_minmax(0,1.25fr)] xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-[minmax(20rem,0.75fr)_minmax(0,1.25fr)] xl:items-stretch">
         <DashboardPanel
           icon={UsersRound}
           title={t('createGroupTitle')}
           description={t('createGroupBody')}
+          density="compact"
         >
           <form
             onSubmit={(event) => void createGroup(event)}
-            className="space-y-4"
+            className="flex h-full flex-col gap-4"
           >
-            <label
-              htmlFor="group-name"
-              className="text-navy block text-sm font-semibold"
-            >
-              {t('groupName')}
-            </label>
-            <input
-              id="group-name"
-              value={groupName}
-              minLength={3}
-              maxLength={80}
-              onChange={(event) => setGroupName(event.target.value)}
-              placeholder={t('groupNamePlaceholder')}
-              className="border-input bg-background focus-visible:ring-navy/20 h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-              required
-            />
-            <label
-              htmlFor="group-description"
-              className="text-navy block text-sm font-semibold"
-            >
-              {t('groupDescription')}
-            </label>
-            <Textarea
-              id="group-description"
-              value={groupDescription}
-              maxLength={240}
-              onChange={(event) => setGroupDescription(event.target.value)}
-              placeholder={t('groupDescriptionPlaceholder')}
-            />
-            <Button
-              type="submit"
-              disabled={!verified || accountability.mutating}
-            >
-              {t('createGroup')}
-            </Button>
-            {!verified ? (
-              <p className="text-muted-foreground text-xs leading-5">
-                {t('createRequiresVerification')}
-              </p>
-            ) : null}
+            <div className="space-y-4">
+              <label
+                htmlFor="group-name"
+                className="text-navy block text-sm font-semibold"
+              >
+                {t('groupName')}
+              </label>
+              <input
+                id="group-name"
+                value={groupName}
+                minLength={3}
+                maxLength={80}
+                onChange={(event) => setGroupName(event.target.value)}
+                placeholder={t('groupNamePlaceholder')}
+                className="border-input bg-background focus-visible:ring-navy/20 h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+                required
+              />
+              <label
+                htmlFor="group-description"
+                className="text-navy block text-sm font-semibold"
+              >
+                {t('groupDescription')}
+              </label>
+              <Textarea
+                id="group-description"
+                value={groupDescription}
+                maxLength={240}
+                onChange={(event) => setGroupDescription(event.target.value)}
+                placeholder={t('groupDescriptionPlaceholder')}
+              />
+            </div>
+            <div className="mt-auto space-y-2.5">
+              <Button
+                type="submit"
+                disabled={!verified || accountability.mutating}
+              >
+                {t('createGroup')}
+              </Button>
+              {!verified ? (
+                <p className="text-muted-foreground text-xs leading-5">
+                  {t('createRequiresVerification')}
+                </p>
+              ) : null}
+            </div>
           </form>
         </DashboardPanel>
 
@@ -320,8 +325,9 @@ export function PartnerGroupsWorkspace({
           icon={KeyRound}
           title={t('groupsTitle')}
           description={t('groupsBody')}
+          density="compact"
         >
-          <div className="space-y-4">
+          <div className="flex-1 space-y-3">
             {accountability.workspace.groups.length ? (
               accountability.workspace.groups.map((group) => (
                 <GroupCard
@@ -361,6 +367,33 @@ export function PartnerGroupsWorkspace({
   );
 }
 
+const protectionStatusKey = {
+  ready: 'protectionState.ready',
+  attention: 'protectionState.attention',
+  unknown: 'protectionState.unknown',
+} as const;
+
+const educationProgressKey = {
+  not_started: 'educationProgress.notStarted',
+  starting: 'educationProgress.starting',
+  in_progress: 'educationProgress.inProgress',
+  near_complete: 'educationProgress.nearComplete',
+} as const;
+
+function formatProtectionStatus(
+  t: Translation,
+  status: AccountabilityMembership['aggregate']['protection_status']
+) {
+  return status ? t(protectionStatusKey[status]) : t('notShared');
+}
+
+function formatEducationProgress(
+  t: Translation,
+  progress: AccountabilityMembership['aggregate']['education_progress_band']
+) {
+  return progress ? t(educationProgressKey[progress]) : t('notShared');
+}
+
 function GroupCard({
   t,
   group,
@@ -391,7 +424,7 @@ function GroupCard({
   );
 
   return (
-    <article className="border-border rounded-xl border p-4">
+    <article className="border-border rounded-xl border p-3.5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-navy font-bold">{group.name}</p>
@@ -414,9 +447,15 @@ function GroupCard({
             {t('joinCode')}
           </p>
           <div className="mt-2 flex items-center justify-between gap-3">
-            <code className="text-navy font-semibold tracking-[0.14em]">
-              {code ?? t('codeHint', { hint: group.join_code_hint })}
-            </code>
+            {code ? (
+              <code className="text-navy font-mono text-sm font-semibold tracking-[0.06em]">
+                {code}
+              </code>
+            ) : (
+              <p className="text-navy text-sm font-semibold">
+                {t('codeHint', { hint: group.join_code_hint })}
+              </p>
+            )}
             {code ? (
               <Button
                 variant="ghost"
@@ -439,11 +478,11 @@ function GroupCard({
         </div>
       ) : null}
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-3 space-y-2.5">
         {activeMembers.map((membership) => (
           <div
             key={membership.id}
-            className="border-border bg-background rounded-xl border p-3"
+            className="border-border bg-background rounded-xl border p-2.5"
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <p className="text-navy font-semibold">
@@ -455,10 +494,13 @@ function GroupCard({
                 {t(`membershipStatus.${membership.status}`)}
               </DashboardStatus>
             </div>
-            <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+            <div className="mt-2.5 grid gap-2 text-xs sm:grid-cols-2">
               <Info
                 label={t('protectionStatus')}
-                value={membership.aggregate.protection_status ?? t('notShared')}
+                value={formatProtectionStatus(
+                  t,
+                  membership.aggregate.protection_status
+                )}
               />
               <Info
                 label={t('activeDevices')}
@@ -474,9 +516,10 @@ function GroupCard({
               />
               <Info
                 label={t('educationBand')}
-                value={
-                  membership.aggregate.education_progress_band ?? t('notShared')
-                }
+                value={formatEducationProgress(
+                  t,
+                  membership.aggregate.education_progress_band
+                )}
               />
             </div>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">

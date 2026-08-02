@@ -48,6 +48,13 @@ export interface WeeklyReview {
   updated_at?: string;
 }
 
+interface WeeklyReviewSaveResult {
+  review: WeeklyReview;
+  exp_granted: boolean;
+  cap_reached: boolean;
+  experience: ExperienceProgress;
+}
+
 /** Narrow read-only practices query for surfaces that need nothing else. */
 export function useRecoveryPractices() {
   return useApiQuery<RecoveryPracticeSession[]>('/recovery-practices');
@@ -89,12 +96,16 @@ export function useRecoveryExperience() {
     async (input: WeeklyReview) => {
       setSaving(true);
       try {
-        const item = await apiClient<WeeklyReview>('/weekly-reviews/current', {
-          method: 'PUT',
-          body: JSON.stringify(input),
-        });
+        const result = await apiClient<WeeklyReviewSaveResult>(
+          '/weekly-reviews/current',
+          {
+            method: 'PUT',
+            body: JSON.stringify(input),
+          }
+        );
+        publishExperience(result.experience);
         await Promise.all([weeklyReview.refetch(), space.refetch()]);
-        return item;
+        return result.review;
       } finally {
         setSaving(false);
       }
@@ -111,7 +122,9 @@ export function useRecoveryExperience() {
       try {
         const item = await apiClient<RecoverySpace>('/recovery-space', {
           method: 'PATCH',
-          body: JSON.stringify(theme ? { placed_items, theme } : { placed_items }),
+          body: JSON.stringify(
+            theme ? { placed_items, theme } : { placed_items }
+          ),
         });
         await space.refetch();
         return item;

@@ -12,6 +12,7 @@ export const ROUTES = {
   SUPPORT_HISTORY: '/support/history',
   ADMIN: '/admin',
   ADMIN_CONTENT: '/admin/content',
+  ADMIN_LEARNING_HUB: '/admin/learning-hub',
   ADMIN_RELEASES: '/admin/releases',
   ADMIN_TICKETS: '/admin/tickets',
   ADMIN_EMERGENCY: '/admin/emergency',
@@ -31,6 +32,8 @@ export const ROUTES = {
   HELP: '/help',
   CONTACT: '/contact',
   DOWNLOAD: '/download',
+  TECHNOLOGY: '/technology',
+  PKM: '/pkm',
   POST_INTERVENTION: '/post-intervention',
   RESEARCH_SANDBOX: '/research-sandbox',
 } as const;
@@ -67,7 +70,6 @@ export type AccountRole = 'user' | 'partner' | 'admin';
 const consumerRoutes = [
   ROUTES.DASHBOARD,
   ROUTES.PROGRESS,
-  ROUTES.RECOVERY,
   ROUTES.INTENTIONS,
   ROUTES.JOURNAL,
   ROUTES.EDUCATION,
@@ -91,6 +93,9 @@ export function canAccessDashboardRoute(pathname: string, role?: string) {
   }
   if (matches(ROUTES.SUPPORT)) {
     return role === 'user' || role === 'partner';
+  }
+  if (matches(ROUTES.RECOVERY)) {
+    return role === 'user';
   }
   if (matches(ROUTES.SKILLS)) {
     return role === 'user';

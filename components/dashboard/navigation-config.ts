@@ -35,6 +35,7 @@ export type DashboardNavKey =
   | 'dataRequests'
   | 'admin'
   | 'adminContent'
+  | 'adminLearningHub'
   | 'adminReleases'
   | 'adminTickets'
   | 'adminEmergency'
@@ -71,7 +72,7 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         href: ROUTES.RECOVERY,
         labelKey: 'recovery',
         icon: HeartHandshake,
-        roles: ['user', 'partner'],
+        roles: ['user'],
       },
       {
         href: ROUTES.INTENTIONS,
@@ -138,6 +139,12 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         roles: ['admin'],
       },
       {
+        href: ROUTES.ADMIN_LEARNING_HUB,
+        labelKey: 'adminLearningHub',
+        icon: GraduationCap,
+        roles: ['admin'],
+      },
+      {
         href: ROUTES.ADMIN_RELEASES,
         labelKey: 'adminReleases',
         icon: FileCheck2,
@@ -175,10 +182,12 @@ export function getMobilePrimaryNavigation(role?: string) {
   const hrefs: readonly string[] =
     role === 'admin'
       ? [ROUTES.DASHBOARD, ROUTES.ADMIN_TICKETS, ROUTES.ADMIN_CONTENT]
-      : [ROUTES.DASHBOARD, ROUTES.RECOVERY, ROUTES.PROGRESS, ROUTES.SUPPORT];
-  return dashboardNavigationGroups.flatMap((group) => group.items).filter(
-    (item) => hrefs.includes(item.href)
-  );
+      : role === 'partner'
+        ? [ROUTES.DASHBOARD, ROUTES.PARTNERS, ROUTES.PROGRESS, ROUTES.SUPPORT]
+        : [ROUTES.DASHBOARD, ROUTES.RECOVERY, ROUTES.PROGRESS, ROUTES.SUPPORT];
+  return dashboardNavigationGroups
+    .flatMap((group) => group.items)
+    .filter((item) => hrefs.includes(item.href));
 }
 
 export function canShowNavigationItem(item: DashboardNavItem, role?: string) {

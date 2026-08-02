@@ -451,6 +451,17 @@
     "activeDevices": "Perangkat aktif",
     "checkInDays": "Hari check-in",
     "educationBand": "Tahap edukasi",
+    "protectionState": {
+      "ready": "Siap",
+      "attention": "Perlu diperiksa",
+      "unknown": "Belum tersedia"
+    },
+    "educationProgress": {
+      "notStarted": "Belum dimulai",
+      "starting": "Baru dimulai",
+      "inProgress": "Sedang berlangsung",
+      "nearComplete": "Hampir selesai"
+    },
     "notShared": "Tidak dibagikan",
     "removalReason": "Alasan singkat",
     "remove": "Keluarkan",

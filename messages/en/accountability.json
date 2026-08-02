@@ -451,6 +451,17 @@
     "activeDevices": "Active devices",
     "checkInDays": "Check-in days",
     "educationBand": "Education stage",
+    "protectionState": {
+      "ready": "Ready",
+      "attention": "Needs attention",
+      "unknown": "Not available"
+    },
+    "educationProgress": {
+      "notStarted": "Not started",
+      "starting": "Just started",
+      "inProgress": "In progress",
+      "nearComplete": "Nearly complete"
+    },
     "notShared": "Not shared",
     "removalReason": "Brief reason",
     "remove": "Remove",

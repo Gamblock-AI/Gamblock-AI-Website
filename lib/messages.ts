@@ -45,8 +45,7 @@ export const MESSAGES: Record<string, string> = {
   refresh_token_required: 'Sesi telah berakhir. Silakan masuk kembali.',
   logout_failed: 'Gagal keluar. Silakan coba lagi.',
   phone_verification_failed: 'Nomor atau kode verifikasi WhatsApp tidak valid.',
-  email_verification_failed:
-    'Verifikasi kontak telah dipindahkan ke WhatsApp.',
+  email_verification_failed: 'Verifikasi kontak telah dipindahkan ke WhatsApp.',
   email_verification_delivery_failed:
     'Pengiriman verifikasi telah dipindahkan ke WhatsApp.',
   recent_auth_required:
@@ -134,6 +133,24 @@ export const MESSAGES: Record<string, string> = {
   custom_mission_invalid: 'Isi misi custom belum valid.',
   custom_mission_not_editable:
     'Misi custom yang sudah selesai tidak dapat diubah.',
+
+  // learning hub
+  learning_hub_fetch_failed: 'Gagal memuat Learning Hub.',
+  learning_hub_progress_failed: 'Gagal memuat progres Learning Hub.',
+  learning_hub_state_invalid: 'Status belajar belum valid.',
+  learning_hub_checkpoint_invalid:
+    'Checkpoint belajar membutuhkan refleksi atau hasil proyek.',
+  learning_hub_item_not_found: 'Materi belajar tidak ditemukan.',
+  learning_hub_mutation_failed: 'Progres Learning Hub belum dapat disimpan.',
+  learning_hub_admin_failed: 'CMS Learning Hub belum dapat diproses.',
+  learning_hub_admin_not_found:
+    'Materi atau taxonomy Learning Hub tidak ditemukan.',
+  learning_hub_admin_validation_failed:
+    'Periksa kembali metadata dan isian Learning Hub.',
+  learning_hub_admin_conflict:
+    'Draf Learning Hub berubah di sesi lain. Muat ulang sebelum menyimpan.',
+  learning_hub_taxonomy_conflict:
+    'Taxonomy masih digunakan oleh materi atau program lain.',
 
   // reflections / psychoeducation
   fetch_reflections_failed: 'Gagal memuat jurnal refleksi.',
@@ -250,12 +267,10 @@ const MESSAGES_EN: Record<string, string> = {
   invalid_refresh_token: 'Your session is invalid. Please sign in again.',
   refresh_token_required: 'Your session has ended. Please sign in again.',
   logout_failed: 'Could not sign out. Please try again.',
-  phone_verification_required:
-    'WhatsApp verification is required to continue.',
+  phone_verification_required: 'WhatsApp verification is required to continue.',
   phone_verification_failed:
     'The WhatsApp number or verification code is invalid.',
-  email_verification_failed:
-    'Contact verification has moved to WhatsApp.',
+  email_verification_failed: 'Contact verification has moved to WhatsApp.',
   email_verification_delivery_failed:
     'Verification delivery has moved to WhatsApp.',
   recent_auth_required:
@@ -290,6 +305,16 @@ const MESSAGES_EN: Record<string, string> = {
     'The release artifact is incomplete or its checksum does not match.',
   emergency_key_required: 'Emergency key is required.',
   invalid_key: 'The emergency key is invalid.',
+  learning_hub_admin_failed:
+    'The Learning Hub CMS could not complete the request.',
+  learning_hub_admin_not_found:
+    'The Learning Hub item or taxonomy was not found.',
+  learning_hub_admin_validation_failed:
+    'Review the Learning Hub metadata and fields.',
+  learning_hub_admin_conflict:
+    'The Learning Hub draft changed. Reload before saving.',
+  learning_hub_taxonomy_conflict:
+    'This taxonomy is still used by another item or program.',
 };
 
 const GENERIC: Record<SupportedLocale, string> = {

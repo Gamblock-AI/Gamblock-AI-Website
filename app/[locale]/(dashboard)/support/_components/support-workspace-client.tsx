@@ -7,6 +7,7 @@ import {
   DashboardPage,
   DashboardPageHeader,
 } from '@/components/dashboard/dashboard-page';
+import { useLocalUser } from '@/hooks/use-local-user';
 import { useSupportRequest } from '@/hooks/use-support-request';
 import { ROUTES } from '@/routes';
 import { PartnerContactWorkspace } from './partner-contact-workspace';
@@ -21,17 +22,25 @@ export function SupportWorkspaceClient({
   channel: SupportChannel;
 }) {
   const t = useTranslations('supportWorkspace');
+  const user = useLocalUser();
+  const isPartner = user.role === 'partner';
 
   return (
     <DashboardPage>
       <DashboardPageHeader
         icon={LifeBuoy}
-        eyebrow={t('eyebrow')}
-        title={t('title')}
-        description={t('description')}
+        eyebrow={isPartner ? t('partnerEyebrow') : t('eyebrow')}
+        title={isPartner ? t('partnerWorkspaceTitle') : t('title')}
+        description={
+          isPartner ? t('partnerWorkspaceDescription') : t('description')
+        }
       />
       <CompactTabNav<SupportChannel>
-        ariaLabel={t('channelNavigationLabel')}
+        ariaLabel={
+          isPartner
+            ? t('partnerChannelNavigationLabel')
+            : t('channelNavigationLabel')
+        }
         value={channel}
         className="w-full max-w-md sm:w-auto"
         items={[
@@ -40,14 +49,20 @@ export function SupportWorkspaceClient({
             href: `${ROUTES.SUPPORT}?channel=team`,
             icon: <MessagesSquare aria-hidden="true" />,
             label: t('teamChannelTitle'),
-            activeAdornment: <span className="bg-sage size-1.5 shrink-0 rounded-full" />,
+            activeAdornment: (
+              <span className="bg-sage size-1.5 shrink-0 rounded-full" />
+            ),
           },
           {
             value: 'partner',
             href: `${ROUTES.SUPPORT}?channel=partner`,
             icon: <MessageCircleHeart aria-hidden="true" />,
-            label: t('partnerChannelTitle'),
-            activeAdornment: <span className="bg-sage size-1.5 shrink-0 rounded-full" />,
+            label: isPartner
+              ? t('studentRequestsChannelTitle')
+              : t('partnerChannelTitle'),
+            activeAdornment: (
+              <span className="bg-sage size-1.5 shrink-0 rounded-full" />
+            ),
           },
         ]}
       />

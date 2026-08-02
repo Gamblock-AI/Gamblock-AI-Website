@@ -5,13 +5,11 @@ import { Reveal } from '@/components/common/Reveal';
 import { useLocale, useTranslations } from 'next-intl';
 import { DashboardWelcome } from '@/components/dashboard/today/dashboard-welcome';
 import { DashboardSummaryStrip } from '@/components/dashboard/today/dashboard-summary-strip';
-import { BiteSizedLearning } from '@/components/dashboard/today/bite-sized-learning';
-import { MythFactCard } from '@/components/dashboard/today/myth-fact-card';
-import { DashboardShortcuts } from '@/components/dashboard/today/dashboard-shortcuts';
 import { EmergencyHelp } from '@/components/dashboard/today/emergency-help';
 import { LearningNextStep } from '@/components/dashboard/today/learning-next-step';
 import { ProtectionSummary } from '@/components/dashboard/today/protection-summary';
 import { WeeklySnapshot } from '@/components/dashboard/today/weekly-snapshot';
+import { StudentNextAction } from '@/components/dashboard/today/student-next-action';
 import { useDashboardSummary } from '@/hooks/use-dashboard-summary';
 import { useEducationModules } from '@/hooks/use-education';
 import { useProtectionStatus } from '@/hooks/use-protection-status';
@@ -65,7 +63,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
       {/* Education leads the canvas (psychologist-review request): the next
           learning step sits directly below the greeting. */}
       <Reveal y={12} duration={0.45} delay={0.05}>
-        <div className="grid gap-4 lg:grid-cols-2 items-stretch">
+        <div className="grid items-stretch gap-4 lg:grid-cols-2">
           <LearningNextStep
             module={learningModule}
             loading={education.loading}
@@ -76,6 +74,9 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         </div>
       </Reveal>
       <Reveal y={12} duration={0.45} delay={0.1}>
+        <StudentNextAction />
+      </Reveal>
+      <Reveal y={12} duration={0.45} delay={0.12}>
         <DashboardSummaryStrip
           summary={summary}
           summaryLoading={summaryLoading}
@@ -83,7 +84,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         />
       </Reveal>
       <Reveal y={12} duration={0.45} delay={0.15}>
-        <div className="grid gap-4 xl:grid-cols-12 items-stretch">
+        <div className="grid items-stretch gap-4 xl:grid-cols-12">
           <div className="xl:col-span-7">
             <WeeklySnapshot checkIns={recovery.state.checkIns} />
           </div>
@@ -96,15 +97,6 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
             />
           </div>
         </div>
-      </Reveal>
-      <Reveal y={12} duration={0.45} delay={0.18}>
-        <div className="grid gap-4 lg:grid-cols-2 items-stretch">
-          <MythFactCard />
-          <BiteSizedLearning />
-        </div>
-      </Reveal>
-      <Reveal y={12} duration={0.45} delay={0.2}>
-        <DashboardShortcuts />
       </Reveal>
     </div>
   );
