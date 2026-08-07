@@ -8,7 +8,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-08-02.24`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading
@@ -98,23 +97,13 @@ error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
   from the safe public endpoint and render no placeholder for null/disabled
   records.
 
-## Proposal-derived website core
-
-The PKM proposal requires a post-block psychoeducation experience based on
-Self-Regulation Theory: intention setting, impulse-awareness education, mood
-tracking, daily self-control missions, and skill-development recommendations.
-Requirements `PKM-WEB-001`, `PKM-WEB-002`, `PKM-WEB-003`, `PKM-WEB-004`,
-`PKM-WEB-005`, `PKM-WEB-006`, and `PKM-WEB-007` outrank supporting dashboards,
-journals, admin portals, and marketing polish. The website never receives
-browsing context and is not the real-time Pattern Interrupt/blocking surface.
-
 The supporting recovery room keeps active timers and focus-task labels local,
 submits only completed practices, and stores reflection free text through the
 encrypted account workflow. Partner recovery/progress must use reviewed CMS
 guidance and consented aggregates, never student room, journal, mood, focus, or
 practice detail. Education audience checks remain server-authoritative.
 
-Supporting `WEB-SUP-PUB-002` lives at the public `/pkm` route. It may describe
+The public `/pkm` route may describe
 methods, milestones, limitations, and deliverable states, but report, video,
 article, and release links stay non-public until a real review/publication
 record exists. The page must never promote Phase 4 instrumentation into an

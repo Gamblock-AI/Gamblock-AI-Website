@@ -1,333 +1,75 @@
 # Website AI Context
 
-**Context version:** `2026-08-02.24`
 
-This directory makes the website repository self-contained for AI coding tools.
-`AGENTS.md` is the canonical instruction file; provider-specific files only
-point tools at that shared source. `manifest.yaml` is the machine-checkable
-inventory used by `scripts/verify-ai-context.sh`.
+`AGENTS.md` adalah file instruksi kanonik. File provider-specific hanya
+menunjuk ke sumber bersama. `manifest.yaml` adalah inventori machine-checkable.
 
-The PKM proposal is the product authority. Website core is `PKM-WEB-001`,
-`PKM-WEB-002`, `PKM-WEB-003`, `PKM-WEB-004`, `PKM-WEB-005`, `PKM-WEB-006`,
-and `PKM-WEB-007`: post-block psychoeducation, intention, impulse-awareness
-education, mood tracking, daily missions, skill recommendations, and a coherent
-self-regulation review loop. Other website surfaces are supporting/operational
-and must preserve the on-device browsing-data boundary.
+Jika ada pertentangan dengan `pkm_proposal.md`, proposal PKM adalah sumber mutlak.
 
-Current dashboard status (`implemented`): every authenticated role lands on
-`/dashboard` with a distinct surface. The student dashboard preserves its
-own-account seven-day check-in trend, activity/protection aggregates, education
-continuation, help, and compact shortcuts; after psychologist review the
-education continuation and emergency-help row now leads the canvas directly
-below the greeting. The hero greeting varies by the student's local
-time of day, a deterministic daily psychoeducation fact card sits under the
-protection summary, and a student-only navbar level chip surfaces the
-account's journey level and title. Website recovery gamification is not
-mirrored in the native protection client. The partner dashboard shows group,
-pending-decision/contact, and consented protection aggregates without private
-recovery details. Its responsive analytics panel reuses the accountability
-workspace response to show a fixed seven-day total and per-student count,
-active-group filtering, name search, coarse protection/support context, and a
-single relative bar without ranking or reconstructed daily history. A shared
-zero and an unshared category have separate states, and the interface explains
-that a local classification is not proof of intent. The admin dashboard shows operational attention counts and
-links to isolated work areas. Device/model implementation versions stay out of
-the student canvas.
-PKM core `PKM-WEB-004` is available as the first non-blocking Today action
-when a student has not yet recorded a check-in for the `Asia/Jakarta` day. The
-mood/urge controls give press feedback, the supportive mood reply animates its
-height so the form never jumps, and the urge question names gambling explicitly
-with an explicit “Tidak ada dorongan” (none) scale point. This replaces the
-unclosable global check-in dialog while retaining direct access to the core
-recovery action.
-`PKM-WEB-005` is shown as one deterministic next action; its full five-slot
-plan and private custom missions are available in a secondary dialog. Every
-slot is worth 10 EXP and server verification/self-attestation rules remain
-unchanged. `PKM-WEB-006` is available from Learn & Grow. No browsing details,
-custom mission titles, or custom self-attestations enter partner/admin surfaces.
-Partner monitoring of raw check-in values remains `planned` until an explicit
-consent, visibility, and revocation design is implemented.
+## Product capsule
 
-Supporting account recovery status (`implemented code-complete prototype`):
-the locale-aware forgot-password screen requests a non-enumerating email code,
-accepts the 12-character single-use code plus a new password, preserves inline
-safe errors, and returns to login after success. Production delivery depends on
-the backend Fonnte adapter and operational WhatsApp evidence. Google login maps the
-explicit link-required backend response safely; same-email linking is available
-from the native student Settings flow.
+Website adalah permukaan psychoeducation, self-regulation, accountability, dan
+public education. Core: post-block psychoeducation, intention, impulse-awareness, mood tracking,
+daily missions, skill recommendations, self-regulation review loop.
 
-Operational delivery status: production images bake
-`https://api.gamblock-ai.com` and the public web Google client ID through
-GitHub variables, then deploy to the pinned VPS as root over password SSH only
-when `ENABLE_VPS_DEPLOY=true`. The public site is `https://gamblock-ai.com`;
-deployment no longer waits for SMTP/WhatsApp, but their email and messaging
-features remain unavailable until provider credentials are configured.
+## Hard boundaries
 
-Supporting post-intervention status (`implemented`): the public
-`/post-intervention` handoff page is now interactive — the box-breathing
-circle animates in sync with each 4-2-6 phase, phase labels crossfade through
-a shared `FadeSwap` primitive, three round-progress dots track the exercise,
-and completion shows a calm sage check with the mascot (no confetti). The
-breathing card leads the page on mobile, the mesh background and skip link
-are applied, and reduced motion falls back to static visuals with text cues.
+- Tidak menerima URL, domain, DOM, browsing history
+- Pattern Interrupt dirender oleh client, bukan website
+- Tidak mengekspos raw recovery text ke partner/admin
+- Tidak ada browsing context di parameter URL, analytics, atau error reporting
 
-Supporting PKM transparency status (`implemented`, `WEB-SUP-PUB-002`): the
-public `/pkm` route presents project method, milestone, evidence maturity,
-ethical/privacy safeguards, limitations, and all six Phase 5 output states.
-It deliberately keeps report/video/article links closed while external
-approval, submission, evaluated release, ownership, and publication records
-are absent. The footer links to this route, and social-contact copy points to
-the dynamic official footer links instead of an inconsistent generic handle.
+## Current capability truth
 
-Supporting error-surface status (`implemented`): locale 404 and runtime error
-boundaries share a minimal, keyboard-accessible Gami status page. Temporary
-rendering failures provide Next.js retry plus a safe home route; unmatched URLs
-and root-layout failures use self-contained global fallbacks. User-facing copy
-never renders exception details, digests, URLs, form values, tokens, or recovery
-content, while unexpected errors reach the sanitized development-only logger.
-Expected 4xx values are detected structurally and never trigger the Next.js
-development console overlay; duplicate reports of the same unexpected object
-are suppressed. Stable error codes take precedence over generic action copy,
-and password/auth forms announce contextual errors without clearing user input.
-Stopped or unreachable local APIs are also treated as a recovery-focused UI
-state rather than exposing the browser's technical fetch exception.
-
-Operational routing status (`implemented`): development keeps Turbopack enabled
-but disables its cross-run filesystem persistence after reproduced stale graphs
-generated `AppRoutes = never` and false 404 responses for valid locale routes.
-Proxy locale parsing now derives from `i18n/routing.ts`; production routing and
-cache behavior are unchanged.
-
-Supporting dashboard/profile status (`implemented`): paired student dashboard
-cards size to their own content (compact density, no forced shared row
-height); the support card keeps its direct recovery-plan action. Global search combines role-permitted navigation
-with published education modules only after search is opened for student or
-partner accounts. Authenticated
-users can crop/resize, upload, replace, and remove a square WebP profile avatar;
-the avatar is fetched only within authenticated sessions and removal restores
-the initials fallback. Password-backed accounts use the wired current-password
-change endpoint and reauthenticate after refresh-token revocation, while
-provider-only accounts do not receive an unusable password form. Settings hides
-student/partner-only destinations from the admin role and the local recovery
-sync preference immediately attempts the current active intention with an
-accessible retry state.
-
-Operational data-request status (`implemented`): all authenticated accounts can
-create their own export, account deletion remains student/partner-only, active
-requests disable duplicate submission, and recent-auth download preserves the
-return path through login. Only completed, unexpired managed archives expose a
-download action; failed, expired, and legacy records without a real file explain
-their state and offer a replacement export.
-
-Supporting support-workspace status (`implemented`): `/support` is available
-only to `user` and `partner` requesters and presents two explicit recipient
-channels without merging their records. Connected students
-send encrypted structured contact requests to their partner and can inspect,
-cancel, close, or request follow-up according to status; partners acknowledge
-and close those requests. The Gamblock-AI team channel creates
-category/priority/impact cases, its rail shows the three newest cases,
-`/support/history` exposes the full requester-scoped ticket list, and
-`/support/[id]` provides encrypted threaded replies plus close/seven-day-reopen
-actions. Status badges accompany color in both channels.
-
-Supporting accountability status (`implemented`, `WEB-SUP-ACC-001` through
-`003`): backend-authoritative `user` and `partner` accounts share the same
-locale routes with different actions. Students preview/confirm one group,
-stage and explicitly save four aggregate-sharing categories, send structured
-contact requests, cancel a pending normal exit, and use immediate unsafe exit
-when needed. `/partners` owns relationship/group setup and privacy-safe status
-summaries, while `/accountability` owns confirmed protection and exit
-decisions, status/history visibility, and the support-review route after an
-unsafe exit. Verified partners create multiple groups,
-rotate codes, inspect consented aggregates, remove members, archive empty
-groups, and resolve scoped protection/leave requests with recent auth. The
-partner dashboard summarizes consented `block_count_sync` activity over the
-latest seven `Asia/Jakarta` calendar dates across selected active groups and
-per student; it never receives URLs, domains, exact event times, or a risk
-score. The student aggregate panel matches the total right-hand stack height while its
-four categories evenly fill the middle region above the fixed action row.
-
-Supporting recovery/progress status (`implemented`, `WEB-SUP-REC-001` and
-`WEB-SUP-PROG-001`): the student recovery workspace keeps the urge-surfing,
-5-4-3-2-1 grounding, and focus-sprint practices alongside support routes.
-Student-only `/intentions` preserves the local-first intention manager, while
-student-only `/journal` provides one `Asia/Jakarta` daily encrypted rich-text
-entry with headings, lists, quotations, and up to five private images. The
-room notebook links to that journal rather than duplicating a text composer.
-The five-slot daily mission manager is available only through the persistent
-adaptive FAB, avoiding a redundant in-page mission card. Placed room decor is
-also visible on mobile as a read-only chip strip.
-Active timers/task labels remain browser-local; completed practices and typed
-weekly reviews use a rolling 12-month account view, while deterministic room
-decor remains until account deletion. Journal reflection payload v2 carries
-encrypted journal text plus optional next-step/current-focus fields; the
-weekly-review record separately encrypts its bounded adjustment and
-next-mission text. Student progress provides inspectable 7/30/90-day activity
-calendars, suppresses trends
-below three check-ins while showing a participation-focused Gami encouragement
-once three check-ins exist, and generates CSV/print-to-PDF locally after a
-privacy warning. Levels unlock deterministic cosmetic decor, poses, and themes;
-there is no chance-based reward. Partner progress uses only category-specific
-aggregates and never the student trend, room, journal, mood, or practice-detail
-endpoints. The Recovery Hub mounts the local-first `PKM-WEB-002` intention
-manager with title, next action, focus period, pause/resume/archive controls,
-history, and weekly-review integration. Optional sync remains limited to
-title/status, and Android owns opt-in local reminder delivery; the website does
-not claim browser notification delivery.
-
-Current mission gamification status (`implemented`, supporting PKM-WEB-005):
-the adaptive FAB is the single dedicated entry to the account-private,
-five-slot `Asia/Jakarta` mission snapshot. Every task is worth 10 EXP. The UI
-uses only default and custom mission sources: a default task remains a neutral
-default card before server verification, while a custom task is labelled as a
-private self-attestation. All available claims use “Klaim EXP”; skip controls
-and the website skip request are retired. The student can create up to five
-custom missions; each replaces a system slot and can be edited or deleted only
-while pending. There is no random reward, paid currency, leaderboard, punitive
-streak, casino celebration, or partner/admin projection. Deterministic journey titles (`levelTitle1..7`,
-shared verbatim with the Flutter client) name each level tier, and level-up
-feedback references the new title.
-
-Learning Hub status (`implemented`, supporting product around `PKM-WEB-006`):
-the student-only `/skills` page keeps the short internal practices, then adds a
-UTY-program selector and a goal selector backed by the published Learning Hub
-catalog. The catalog covers 22 programs across five clusters with learning
-paths, courses, certifications, mini-projects, career snapshots, and toolkits.
-Progress is account-scoped (`saved`/`started`/`completed`); checkpoint text is
-submitted only through the encrypted backend workflow, and outbound sources
-open in a new tab without account or browsing context. Program and goal
-choices plus suggested starter time, difficulty, language, cost, and view
-filters remain transient page state.
-Verified admins additionally use `/admin/learning-hub` to manage bilingual
-catalog drafts, UTY clusters/programs, review/publish/archive transitions, and
-immutable revision rollback. That operational workspace never receives student
-progress, reflections, outcomes, provider accounts, or browsing data.
-
-Phase 3 self-regulation loop (`PKM-WEB-002`/`PKM-WEB-007`) is implemented for
-weekly reviews: the account-backed progress sheet reads and writes the current
-Jakarta week through `/weekly-reviews/current`, then publishes the
-server-authoritative EXP result to the shared level store. The encrypted review
-may contain bounded selections and length-limited adjustment/next-mission text,
-but no browsing data, and it never claims browser notification delivery.
-
-Current psychoeducation status (`implemented`, PKM core `PKM-WEB-003`): the
-library and direct reader consume only published, revisioned bilingual
-documents allowed for the caller's student/partner role and track required
-sections, media, and knowledge checks. Documents explicitly distinguish
-articles from response simulators. Rich text
-is rendered from an allowlisted JSON tree without raw HTML. Uploaded
-image/video/PDF media is served by the backend; external media remains
-click-to-load. The content-admin workspace supports WYSIWYG authoring,
-single/multiple 16:9 thumbnails with browser-side crop/resize, bilingual
-metadata and sections, source/reviewer evidence, optimistic draft revisions,
-and review/publish/archive transitions.
+| Area | State | Evidence/limit |
+|---|---|---|
+| Dashboard (student/partner/admin) | implemented | Per-role surface terpisah di `/dashboard` |
+| Mood/urge check-in | implemented | Form check-in harian dengan mood/urge scale, privacy-safe |
+| Daily missions | implemented | 5 slot harian `Asia/Jakarta`, 10 EXP/slot, custom missions |
+| Learning Hub / skills | implemented | Katalog UTY 22 program, 5 cluster, progress account-scoped |
+| Intention + weekly review | implemented | Intention manager local-first, weekly review terenkripsi |
+| Psychoeducation | implemented | Dokumen bilingual berversi, progress per-revision |
+| Post-intervention handoff | implemented | `/post-intervention` tanpa browsing context |
+| Accountability | implemented | Group/partner lifecycle, removal approval, aggregate dashboard |
+| Recovery/progress | implemented | Journal terenkripsi, grounding tools, recovery room, progress 7/30/90 |
+| Support workspace | implemented | Encrypted threaded support, requester + admin queue |
+| Account recovery | implemented | Non-enumerating email code, 12-character single-use |
+| PKM transparency | implemented | `/pkm` route dengan evidence maturity, deliverables state |
+| Admin control plane | implemented | Content CMS, releases, tickets, emergency, platform |
+| Onboarding | implemented | Registration/login, Google OAuth, partner invitation |
+| Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 
 ## Context load order
 
-1. Read `AGENTS.md` for invariants, architecture, paths, and verification.
-2. Read this guide to select only the context relevant to the task.
-3. Inspect adjacent implementation and tests before editing.
-4. For Next.js APIs or conventions, run `npm ci` only when dependencies are
-   absent, then read the relevant guide in `node_modules/next/dist/docs/`; do
-   not rely on older framework knowledge.
-5. For a cross-repository task launched from the Gamblock-AI umbrella, load its
-   shared contract context explicitly. A standalone website clone does not
-   require a parent checkout.
-
-## Provider map
-
-| Tool                         | Repository entry point            | Behavior                                        |
-| ---------------------------- | --------------------------------- | ----------------------------------------------- |
-| Codex and AGENTS-aware tools | `AGENTS.md`                       | Canonical instructions                          |
-| Claude Code                  | `CLAUDE.md`                       | Imports `AGENTS.md` and this guide              |
-| Gemini CLI                   | `GEMINI.md`                       | Imports `AGENTS.md` and this guide              |
-| GitHub Copilot               | `.github/copilot-instructions.md` | Thin repository adapter                         |
-| Cursor                       | `.cursor/rules/gamblock-ai.mdc`   | Always-applied rule importing canonical context |
-| Legacy tools                 | `COPILOT.md`, `.cursorrules`      | Compatibility pointers only                     |
+1. Baca `AGENTS.md` untuk invariants, arsitektur, paths, verifikasi
+2. Baca file ini untuk status implementasi
+3. Inspeksi implementasi dan test sebelum mengedit
 
 ## Task-specific context
 
-- Routes, locale handling, or auth redirects: inspect `app/[locale]/`,
-  `routes.ts`, `proxy.ts`, and relevant e2e specs.
-- API data: inspect `lib/api-client.ts`, `lib/config.ts`, the relevant
-  `hooks/use-*.ts`, and their Vitest tests.
-- Dashboard/recovery UI: inspect `app/[locale]/(dashboard)/`,
-  `components/dashboard/`, `lib/recovery/`, and the relevant recovery hooks.
-  When working from the umbrella workspace, also load `context/ui-context.md`.
-- Accountability: group codes are hashed, rotatable, rate-limited discovery
-  values; preview plus explicit confirmation creates the active membership.
-  Approval authority comes from that backend membership, not a client-side role
-  label. Student protection-change requests start in the native client; quick
-  tokens remain single-use secrets and never enter logs or analytics.
-- Operations: each sidebar route and its scoped fetches require the unified
-  `admin` role. Content creation is draft only, artifact validation requires a
-  real server-side file/checksum, and
-  user/device emergency requests require review and issuance by two distinct
-  administrators.
-- Research sandbox: all fixtures are deterministic and explicitly synthetic;
-  real enrollment/export stays locked until an approved protocol exists.
-- Post-intervention handoff: inspect
-  `app/[locale]/(landing)/post-intervention/`, `routes.ts`, and the umbrella
-  privacy/architecture contract when available. Never add browsing context to
-  its URL or client state.
-- Psychoeducation: inspect the education routes, `hooks/use-education.ts`,
-  `components/education/rich-content.tsx`, and the admin content workspace;
-  user views must not expose draft/archived content or render raw HTML.
-- Landing UI: inspect `app/[locale]/(landing)/` and `components/landing/`.
-- Messages or feedback: inspect `lib/messages.ts`, `lib/feedback.ts`,
-  `lib/diagnostics.ts`, `i18n/messages.ts`, the relevant domain JSON under
-  `messages/<locale>/`, and the backend/Flutter catalogs when the wider
-  monorepo is available. Locale module names and nested keys must stay aligned;
-  run `npm run i18n:check`. UI copy stays non-technical in development and
-  production; sanitized diagnostics are console-only in development.
-- AI-context maintenance: inspect every file listed in `manifest.yaml` and run
-  the verifier before and after editing.
+- Routes/locale/auth: `app/[locale]/`, `routes.ts`, `proxy.ts`
+- API data: `lib/api-client.ts`, `lib/config.ts`, `hooks/use-*.ts`
+- Dashboard/recovery UI: `app/[locale]/(dashboard)/`, `components/dashboard/`
+- Accountability: group codes hashed/rotatable, approval dari backend membership
+- Post-intervention: `app/[locale]/(landing)/post-intervention/` — tanpa browsing context
+- Psychoeducation: education routes, `hooks/use-education.ts`
+- Landing UI: `app/[locale]/(landing)/`, `components/landing/`
+- Messages/feedback: `lib/messages.ts`, `lib/feedback.ts`
+- AI-context maintenance: semua file di `manifest.yaml`
 
-Do not load unrelated source trees preemptively. Prefer the smallest relevant
-context set, while always retaining the privacy and API-boundary rules from
-`AGENTS.md`.
-
-## Fresh-clone workflow
+## Default AI validation
 
 ```sh
-npm ci
-cp .env.example .env.local # configure API and optional Google public client ID
-npm run verify:ai-context
-npm run i18n:check
-npm run lint
+npm run lint -- <changed-source-files>
+npm run verify:ai-context  # jika context berubah
 ```
 
-Use `npm run verify:ai-context -- --allow-untracked` while initially creating
-new context files. Strict mode is intentional in CI: every required context
-file must be committed so another clone receives the same instructions.
+Test, build, E2E hanya dijalankan jika user meminta eksplisit.
 
-## Updating context
+## Context maintenance
 
-1. Update `AGENTS.md` first when a durable rule, path, or command changes.
-2. Keep provider adapters thin; do not duplicate detailed architecture there.
-3. Bump `context_version` in `AGENTS.md`, this file, and `manifest.yaml` for a
-   meaningful context contract change.
-4. Update `README.md` when developer onboarding or the visible structure changes.
-5. Run the context verifier and lint. Typecheck, unit/E2E tests, and production
-   builds run only when the user explicitly requests them in the current
-   conversation.
-
-Never place secrets, personal instructions, credentials, machine-specific
-paths, or session-only notes in committed AI context.
-
-## Current operational UI truth
-
-The locale-aware admin shell belongs to the unified `admin` role. Content,
-releases, tickets, emergency access, and platform settings are separate sidebar
-routes; research remains a separate destination. Together they expose CMS
-revision/rollback, claim-owned support replies, eligible data requests, managed
-artifact rollout, direct three-role account provisioning, safe social-link
-settings, audit history, and dual-control emergency access. An authoritative
-`/me` route guard keeps admin accounts out of consumer and requester-support
-pages while allowing dashboard, profile, settings, and data requests.
-
-The landing footer fetches `/v1/public/site-social-links` and renders enabled,
-non-null records only. The data-request UI supports encrypted export download
-and a protected deletion-confirmation route. These are operational/supporting
-features; external delivery, release signing, automated rollout health, and
-research administration are not claimed complete.
+1. Update `AGENTS.md` jika aturan, path, atau command berubah
+2. Provider adapters tetap tipis
+3. Bump `context_version` di `AGENTS.md`, file ini, dan `manifest.yaml`
+4. Update `README.md` jika onboarding developer berubah
+5. Jalankan context verifier dan lint

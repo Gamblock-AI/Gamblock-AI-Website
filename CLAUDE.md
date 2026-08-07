@@ -1,6 +1,1 @@
-# Gamblock-AI Website — Claude Context
-
-The imported website instructions are canonical and clone-portable.
-
 @./AGENTS.md
-@./docs/ai/README.md

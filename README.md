@@ -153,12 +153,9 @@ opens it with only locale and `source=pattern_interrupt`.
 
 Browser-local state is not a claim of encrypted storage. Account-stored
 check-ins can be restored across devices, while partner monitoring requires a
-separate, explicit sharing design before it is available. See
-`docs/ai/README.md` for current website capability status and the umbrella
-`context/proposal-requirements.md` for requirement-level targets.
+separate, explicit sharing design before it is available. See `docs/ai/README.md` for current website capability status.
 
-The public `/pkm` route implements supporting transparency
-`WEB-SUP-PUB-002`: it presents project method, milestone, evidence maturity,
+The public `/pkm` route presents project method, milestone, evidence maturity,
 privacy/ethical safeguards, limitations, and the six Phase 5 output states.
 Draft reports, the video, article, and release artifacts are not exposed as
 approved downloads until their external review/submission/publication records
