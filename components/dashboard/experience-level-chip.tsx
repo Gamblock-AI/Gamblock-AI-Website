@@ -18,18 +18,19 @@ export function ExperienceLevelChip() {
   const user = useLocalUser();
   const experience = useExperienceProgress();
 
-  if (user.role !== 'user' || !experience) return null;
+  if (user.role !== 'user') return null;
 
-  const title = t(getLevelTitleKey(experience.level));
+  const currentLevel = experience?.level ?? 1;
+  const title = t(getLevelTitleKey(currentLevel));
 
   return (
     <Link
       href={ROUTES.PROGRESS}
-      aria-label={t('levelChipAria', { count: experience.level, title })}
+      aria-label={t('levelChipAria', { count: currentLevel, title })}
       className="border-border bg-card text-navy hover:border-navy/25 hover:bg-azure/45 focus-visible:ring-navy/35 flex min-h-11 items-center gap-2 rounded-xl border px-2 text-sm font-semibold transition-[background-color,border-color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none"
     >
       <span
-        key={experience.level}
+        key={currentLevel}
         className="animate-in fade-in zoom-in-95 flex items-center gap-2 duration-500 motion-reduce:animate-none"
       >
         <span
@@ -39,7 +40,7 @@ export function ExperienceLevelChip() {
           <Trophy className="text-sky size-3.5" />
         </span>
         <span className="text-xs font-extrabold">
-          Lv {experience.level}
+          Lv {currentLevel}
           <span className="text-navy/70 hidden font-bold sm:inline">
             {' · '}
             {title}

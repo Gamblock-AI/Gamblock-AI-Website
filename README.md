@@ -31,7 +31,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-08-02.23`.
+`2026-08-02.24`.
 
 ## Structure
 
@@ -80,8 +80,11 @@ Dashboard route transitions are implemented by
 Every authenticated role lands on a dedicated dashboard. The student dashboard
 remains insight-first with privacy-safe aggregate analytics, protection
 information, weekly check-in trends, education, help, and shortcuts. The partner
-dashboard highlights groups, pending decisions/contacts, and consented aggregate
-protection status. The admin dashboard centralizes operational attention counts
+dashboard highlights groups, pending decisions/contacts, and a consented
+seven-day analytics panel with total and per-student classified-and-held access
+counts, protection/support context, active-group filtering, and name search.
+Shared zero remains distinct from “not shared”; no browsing detail, risk score,
+or member ranking is rendered. The admin dashboard centralizes operational attention counts
 and links to its separate workspaces. The admin-only `/admin/learning-hub`
 workspace manages UTY catalog drafts, taxonomy, editorial transitions, and
 revision rollback without exposing student progress or reflections. The

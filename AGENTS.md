@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Gamblock-AI Website Agent Rules
 
-**Context version:** `2026-08-02.23`
+**Context version:** `2026-08-02.24`
 
 This file is the canonical, clone-portable instruction source for this Next.js
 app. Start with `docs/ai/README.md` for the provider map and context-loading

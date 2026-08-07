@@ -28,6 +28,65 @@
     "manageGroups": "Kelola pendampingan",
     "privacyTitle": "Batas privasi tetap berlaku",
     "privacyBody": "Pendamping tidak dapat melihat jurnal, suasana hati, URL, riwayat penjelajahan, atau rincian aktivitas harian mahasiswa.",
+    "analytics": {
+      "title": "Analitik dukungan tujuh hari",
+      "body": "Tinjau deteksi dan konteks dukungan yang setiap mahasiswa setujui untuk dibagikan, tanpa membuka detail penjelajahan.",
+      "groupFilter": "Grup pendampingan",
+      "allGroups": "Semua grup aktif",
+      "searchLabel": "Cari mahasiswa",
+      "searchPlaceholder": "Ketik nama mahasiswa",
+      "totalDetections": "Deteksi judi online",
+      "sevenDayPeriod": "Jumlah yang diklasifikasikan dan ditahan dalam 7 hari",
+      "sharingCoverage": "Cakupan izin aktivitas",
+      "sharingCoverageValue": "{shared}/{total}",
+      "sharingCoverageBody": "Mahasiswa aktif yang membagikan agregat perlindungan",
+      "readyProtection": "Perlindungan siap",
+      "needsAttention": "Perlu perhatian",
+      "consentedHealth": "Berdasarkan status perangkat yang dibagikan",
+      "tableCaption": "Analitik agregat per mahasiswa untuk tujuh hari terakhir",
+      "student": "Mahasiswa",
+      "detections": "Deteksi judi online",
+      "protectionColumn": "Perlindungan",
+      "supportColumn": "Keterlibatan dukungan",
+      "educationColumn": "Edukasi",
+      "sevenDayShort": "7 hari",
+      "notShared": "Tidak dibagikan",
+      "activeDevices": "{count} perangkat aktif",
+      "lastHeartbeat": "Heartbeat: {value}",
+      "checkInDays": "Check-in {count}/7 hari",
+      "missionsCompleted": "{count} misi sistem selesai (total)",
+      "noMembers": "Belum ada mahasiswa aktif pada grup yang dipilih.",
+      "noSearchResults": "Tidak ada mahasiswa yang cocok dengan pencarian ini.",
+      "classificationNote": "Deteksi berarti perangkat mengklasifikasikan dan menahan sebuah akses. Angka ini tidak membuktikan niat mahasiswa dan tidak menjamin setiap klasifikasi selalu benar.",
+      "barScaleNote": "Panjang bar dibandingkan dengan nilai tertinggi pada grup yang dipilih. Bar bukan skor risiko atau peringkat mahasiswa.",
+      "privacyNote": "Hanya jumlah periode tujuh hari yang ditampilkan. URL, domain, judul, waktu kunjungan, dan riwayat tidak dikirim atau ditampilkan.",
+      "membership": {
+        "active": "Aktif",
+        "leavePending": "Keluar menunggu",
+        "supportReview": "Tinjauan dukungan",
+        "safetySuspended": "Berbagi dihentikan",
+        "left": "Keluar",
+        "removed": "Dihapus"
+      },
+      "protection": {
+        "ready": "Siap",
+        "attention": "Perlu perhatian",
+        "unknown": "Belum diketahui"
+      },
+      "heartbeat": {
+        "today": "hari ini",
+        "oneToThree": "1–3 hari lalu",
+        "fourToSeven": "4–7 hari lalu",
+        "older": "lebih dari 7 hari",
+        "never": "belum tersedia"
+      },
+      "education": {
+        "notStarted": "Belum dimulai",
+        "starting": "Mulai belajar",
+        "inProgress": "Sedang berjalan",
+        "nearComplete": "Hampir selesai"
+      }
+    },
     "itemCount": "{count} item"
   },
   "recoveryDashboard": {

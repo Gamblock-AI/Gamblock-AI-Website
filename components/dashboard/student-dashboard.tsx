@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { CircleAlert } from 'lucide-react';
 import { Reveal } from '@/components/common/Reveal';
 import { useLocale, useTranslations } from 'next-intl';
@@ -10,6 +11,8 @@ import { LearningNextStep } from '@/components/dashboard/today/learning-next-ste
 import { ProtectionSummary } from '@/components/dashboard/today/protection-summary';
 import { WeeklySnapshot } from '@/components/dashboard/today/weekly-snapshot';
 import { StudentNextAction } from '@/components/dashboard/today/student-next-action';
+import { GamificationSummaryCard } from '@/components/dashboard/today/gamification-summary-card';
+import { StudentGamificationFab } from '@/components/dashboard/student-gamification-fab';
 import { useDashboardSummary } from '@/hooks/use-dashboard-summary';
 import { useEducationModules } from '@/hooks/use-education';
 import { useProtectionStatus } from '@/hooks/use-protection-status';
@@ -26,6 +29,8 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
   const protection = useProtectionStatus();
   const { summary, loading: summaryLoading } = useDashboardSummary();
   const education = useEducationModules(locale);
+  const [missionsOpen, setMissionsOpen] = useState(false);
+
   const learningModule =
     education.modules.find(
       (module) =>
@@ -48,6 +53,12 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
           activeDays={summary?.active_days ?? null}
         />
       </Reveal>
+
+      {/* Main Gamification Summary Card */}
+      <Reveal y={12} duration={0.45} delay={0.03}>
+        <GamificationSummaryCard onOpenMissions={() => setMissionsOpen(true)} />
+      </Reveal>
+
       {recovery.persistence === 'memory' ? (
         <div
           className="border-amber/40 bg-amber/[0.10] text-foreground flex items-start gap-3 rounded-2xl border p-4 text-sm leading-6"
@@ -60,8 +71,8 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
           {t('memoryOnlyWarning')}
         </div>
       ) : null}
-      {/* Education leads the canvas (psychologist-review request): the next
-          learning step sits directly below the greeting. */}
+
+      {/* Original Side-by-Side 2-Column Grid */}
       <Reveal y={12} duration={0.45} delay={0.05}>
         <div className="grid items-stretch gap-4 lg:grid-cols-2">
           <LearningNextStep
@@ -73,9 +84,11 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
           <EmergencyHelp />
         </div>
       </Reveal>
+
       <Reveal y={12} duration={0.45} delay={0.1}>
         <StudentNextAction />
       </Reveal>
+
       <Reveal y={12} duration={0.45} delay={0.12}>
         <DashboardSummaryStrip
           summary={summary}
@@ -83,6 +96,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
           checkIns={recovery.state.checkIns}
         />
       </Reveal>
+
       <Reveal y={12} duration={0.45} delay={0.15}>
         <div className="grid items-stretch gap-4 xl:grid-cols-12">
           <div className="xl:col-span-7">
@@ -98,6 +112,12 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
           </div>
         </div>
       </Reveal>
+
+      {/* Floating Action Button for Daily Missions & EXP Claim */}
+      <StudentGamificationFab
+        open={missionsOpen}
+        onOpenChange={setMissionsOpen}
+      />
     </div>
   );
 }

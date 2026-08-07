@@ -28,6 +28,65 @@
     "manageGroups": "Manage support groups",
     "privacyTitle": "The privacy boundary remains in place",
     "privacyBody": "Partners cannot see a student's journal, mood, URLs, browsing history, or detailed daily activity.",
+    "analytics": {
+      "title": "Seven-day support analytics",
+      "body": "Review only the detection and support context each student consented to share, without exposing browsing detail.",
+      "groupFilter": "Support group",
+      "allGroups": "All active groups",
+      "searchLabel": "Search students",
+      "searchPlaceholder": "Type a student name",
+      "totalDetections": "Online gambling detections",
+      "sevenDayPeriod": "Classified and held-back access during the last 7 days",
+      "sharingCoverage": "Activity-sharing coverage",
+      "sharingCoverageValue": "{shared}/{total}",
+      "sharingCoverageBody": "Active students sharing protection aggregates",
+      "readyProtection": "Protection ready",
+      "needsAttention": "Needs attention",
+      "consentedHealth": "Based on consented device status",
+      "tableCaption": "Per-student aggregate analytics for the last seven days",
+      "student": "Student",
+      "detections": "Online gambling detections",
+      "protectionColumn": "Protection",
+      "supportColumn": "Support engagement",
+      "educationColumn": "Education",
+      "sevenDayShort": "7 days",
+      "notShared": "Not shared",
+      "activeDevices": "{count} active devices",
+      "lastHeartbeat": "Heartbeat: {value}",
+      "checkInDays": "Check-ins on {count}/7 days",
+      "missionsCompleted": "{count} verified system missions completed (total)",
+      "noMembers": "There are no active students in the selected group.",
+      "noSearchResults": "No students match this search.",
+      "classificationNote": "A detection means the device classified and held back an access. It does not prove the student's intent or guarantee that every classification is correct.",
+      "barScaleNote": "Bar length is relative to the highest value in the selected group. It is not a risk score or student ranking.",
+      "privacyNote": "Only the seven-day count is shown. URLs, domains, titles, visit times, and browsing history are never sent or displayed.",
+      "membership": {
+        "active": "Active",
+        "leavePending": "Exit pending",
+        "supportReview": "Support review",
+        "safetySuspended": "Sharing stopped",
+        "left": "Left",
+        "removed": "Removed"
+      },
+      "protection": {
+        "ready": "Ready",
+        "attention": "Needs attention",
+        "unknown": "Unknown"
+      },
+      "heartbeat": {
+        "today": "today",
+        "oneToThree": "1–3 days ago",
+        "fourToSeven": "4–7 days ago",
+        "older": "more than 7 days ago",
+        "never": "unavailable"
+      },
+      "education": {
+        "notStarted": "Not started",
+        "starting": "Getting started",
+        "inProgress": "In progress",
+        "nearComplete": "Near completion"
+      }
+    },
     "itemCount": "{count} items"
   },
   "recoveryDashboard": {

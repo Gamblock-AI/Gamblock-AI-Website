@@ -1,6 +1,6 @@
 # Website AI Context
 
-**Context version:** `2026-08-02.23`
+**Context version:** `2026-08-02.24`
 
 This directory makes the website repository self-contained for AI coding tools.
 `AGENTS.md` is the canonical instruction file; provider-specific files only
@@ -25,7 +25,12 @@ protection summary, and a student-only navbar level chip surfaces the
 account's journey level and title. Website recovery gamification is not
 mirrored in the native protection client. The partner dashboard shows group,
 pending-decision/contact, and consented protection aggregates without private
-recovery details. The admin dashboard shows operational attention counts and
+recovery details. Its responsive analytics panel reuses the accountability
+workspace response to show a fixed seven-day total and per-student count,
+active-group filtering, name search, coarse protection/support context, and a
+single relative bar without ranking or reconstructed daily history. A shared
+zero and an unshared category have separate states, and the interface explains
+that a local classification is not proof of intent. The admin dashboard shows operational attention counts and
 links to isolated work areas. Device/model implementation versions stay out of
 the student canvas.
 PKM core `PKM-WEB-004` is available as the first non-blocking Today action
@@ -136,7 +141,10 @@ decisions, status/history visibility, and the support-review route after an
 unsafe exit. Verified partners create multiple groups,
 rotate codes, inspect consented aggregates, remove members, archive empty
 groups, and resolve scoped protection/leave requests with recent auth. The
-student aggregate panel matches the total right-hand stack height while its
+partner dashboard summarizes consented `block_count_sync` activity over the
+latest seven `Asia/Jakarta` calendar dates across selected active groups and
+per student; it never receives URLs, domains, exact event times, or a risk
+score. The student aggregate panel matches the total right-hand stack height while its
 four categories evenly fill the middle region above the fixed action row.
 
 Supporting recovery/progress status (`implemented`, `WEB-SUP-REC-001` and
