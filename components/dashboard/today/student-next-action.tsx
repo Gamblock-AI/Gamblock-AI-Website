@@ -11,27 +11,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DailyMissionManager } from '@/components/dashboard/gamification/daily-mission-manager';
-import { PrivateCheckIn } from '@/components/dashboard/today/private-check-in';
 import { useDailyMission } from '@/hooks/use-daily-mission';
-import { useRecoveryJourney } from '@/hooks/use-recovery-journey';
 import { SYSTEM_MISSION_COPY } from '@/lib/recovery/mission-catalog';
 import { Link } from '@/i18n/routing';
 
 export function StudentNextAction() {
   const t = useTranslations('recoveryDashboard');
   const mission = useDailyMission();
-  const recovery = useRecoveryJourney();
   const [open, setOpen] = useState(false);
-  if (!recovery.todayCheckIn) {
-    return (
-      <section
-        className="border-navy/15 bg-card shadow-soft rounded-2xl border"
-        aria-labelledby="next-action-title"
-      >
-        <PrivateCheckIn onSave={recovery.recordDailyCheckIn} />
-      </section>
-    );
-  }
   if (mission.loading) {
     return (
       <section className="border-border bg-card text-muted-foreground rounded-2xl border p-5 text-sm">

@@ -3,7 +3,6 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   PROGRESS: '/progress',
   RECOVERY: '/recovery',
-  INTENTIONS: '/intentions',
   JOURNAL: '/journal',
   EDUCATION: '/education',
   SKILLS: '/skills',
@@ -42,7 +41,6 @@ export const PROTECTED_ROUTES = [
   ROUTES.DASHBOARD,
   ROUTES.PROGRESS,
   ROUTES.RECOVERY,
-  ROUTES.INTENTIONS,
   ROUTES.JOURNAL,
   ROUTES.EDUCATION,
   ROUTES.SKILLS,
@@ -70,7 +68,6 @@ export type AccountRole = 'user' | 'partner' | 'admin';
 const consumerRoutes = [
   ROUTES.DASHBOARD,
   ROUTES.PROGRESS,
-  ROUTES.INTENTIONS,
   ROUTES.JOURNAL,
   ROUTES.EDUCATION,
   ROUTES.PARTNERS,
@@ -100,7 +97,7 @@ export function canAccessDashboardRoute(pathname: string, role?: string) {
   if (matches(ROUTES.SKILLS)) {
     return role === 'user';
   }
-  if (matches(ROUTES.INTENTIONS) || matches(ROUTES.JOURNAL)) {
+  if (matches(ROUTES.JOURNAL)) {
     return role === 'user';
   }
   if (consumerRoutes.some(matches) || matches(ROUTES.CREATE_GROUP)) {

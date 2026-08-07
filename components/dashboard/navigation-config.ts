@@ -14,7 +14,6 @@ import {
   Microscope,
   NotebookPen,
   Settings2,
-  Target,
   Tickets,
   UsersRound,
 } from 'lucide-react';
@@ -22,7 +21,6 @@ import {
 export type DashboardNavKey =
   | 'dashboard'
   | 'recovery'
-  | 'intentions'
   | 'journal'
   | 'progress'
   | 'education'
@@ -72,12 +70,6 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         href: ROUTES.RECOVERY,
         labelKey: 'recovery',
         icon: HeartHandshake,
-        roles: ['user'],
-      },
-      {
-        href: ROUTES.INTENTIONS,
-        labelKey: 'intentions',
-        icon: Target,
         roles: ['user'],
       },
       {

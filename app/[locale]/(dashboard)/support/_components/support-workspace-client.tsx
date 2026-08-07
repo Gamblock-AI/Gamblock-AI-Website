@@ -1,6 +1,6 @@
 'use client';
 
-import { LifeBuoy, MessageCircleHeart, MessagesSquare } from 'lucide-react';
+import { LifeBuoy, MessageCircleHeart, MessagesSquare, Phone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { CompactTabNav } from '@/components/common/compact-tab-nav';
 import {
@@ -10,11 +10,12 @@ import {
 import { useLocalUser } from '@/hooks/use-local-user';
 import { useSupportRequest } from '@/hooks/use-support-request';
 import { ROUTES } from '@/routes';
+import { HotlineWorkspace } from './hotline-workspace';
 import { PartnerContactWorkspace } from './partner-contact-workspace';
 import { SupportCaseHistory } from './support-case-history';
 import { SupportRequestForm } from './support-request-form';
 
-export type SupportChannel = 'team' | 'partner';
+export type SupportChannel = 'team' | 'partner' | 'hotline';
 
 export function SupportWorkspaceClient({
   channel,
@@ -42,17 +43,8 @@ export function SupportWorkspaceClient({
             : t('channelNavigationLabel')
         }
         value={channel}
-        className="w-full max-w-md sm:w-auto"
+        className="w-full sm:w-auto"
         items={[
-          {
-            value: 'team',
-            href: `${ROUTES.SUPPORT}?channel=team`,
-            icon: <MessagesSquare aria-hidden="true" />,
-            label: t('teamChannelTitle'),
-            activeAdornment: (
-              <span className="bg-sage size-1.5 shrink-0 rounded-full" />
-            ),
-          },
           {
             value: 'partner',
             href: `${ROUTES.SUPPORT}?channel=partner`,
@@ -64,10 +56,30 @@ export function SupportWorkspaceClient({
               <span className="bg-sage size-1.5 shrink-0 rounded-full" />
             ),
           },
+          {
+            value: 'team',
+            href: `${ROUTES.SUPPORT}?channel=team`,
+            icon: <MessagesSquare aria-hidden="true" />,
+            label: t('teamChannelTitle'),
+            activeAdornment: (
+              <span className="bg-sage size-1.5 shrink-0 rounded-full" />
+            ),
+          },
+          {
+            value: 'hotline',
+            href: `${ROUTES.SUPPORT}?channel=hotline`,
+            icon: <Phone aria-hidden="true" />,
+            label: t('hotlineChannelTitle'),
+            activeAdornment: (
+              <span className="bg-sage size-1.5 shrink-0 rounded-full" />
+            ),
+          },
         ]}
       />
       {channel === 'partner' ? (
         <PartnerContactWorkspace />
+      ) : channel === 'hotline' ? (
+        <HotlineWorkspace />
       ) : (
         <TeamSupportWorkspace />
       )}

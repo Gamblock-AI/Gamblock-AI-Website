@@ -6,7 +6,12 @@ export default async function SupportPage({
   searchParams: Promise<{ channel?: string | string[] }>;
 }) {
   const requestedChannel = (await searchParams).channel;
-  const channel = requestedChannel === 'partner' ? 'partner' : 'team';
+  const channel =
+    requestedChannel === 'partner'
+      ? 'partner'
+      : requestedChannel === 'hotline'
+        ? 'hotline'
+        : 'team';
 
   return <SupportWorkspaceClient channel={channel} />;
 }

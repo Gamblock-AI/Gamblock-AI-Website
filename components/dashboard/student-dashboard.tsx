@@ -11,6 +11,7 @@ import { LearningNextStep } from '@/components/dashboard/today/learning-next-ste
 import { ProtectionSummary } from '@/components/dashboard/today/protection-summary';
 import { WeeklySnapshot } from '@/components/dashboard/today/weekly-snapshot';
 import { StudentNextAction } from '@/components/dashboard/today/student-next-action';
+import { NiatPerubahanGate } from '@/components/dashboard/today/niat-perubahan-gate';
 import { GamificationSummaryCard } from '@/components/dashboard/today/gamification-summary-card';
 import { StudentGamificationFab } from '@/components/dashboard/student-gamification-fab';
 import { useDashboardSummary } from '@/hooks/use-dashboard-summary';
@@ -44,7 +45,8 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
     null;
 
   return (
-    <div className="mx-auto w-full max-w-[1360px] space-y-4 sm:space-y-5">
+    <NiatPerubahanGate>
+      <div className="mx-auto w-full max-w-[1360px] space-y-4 sm:space-y-5">
       <Reveal y={12} duration={0.45}>
         <DashboardWelcome
           name={name}
@@ -119,5 +121,6 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         onOpenChange={setMissionsOpen}
       />
     </div>
+    </NiatPerubahanGate>
   );
 }
