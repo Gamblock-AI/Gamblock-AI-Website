@@ -559,8 +559,6 @@
     "privacyLocal": "Stored locally first",
     "reminderAndroidTitle": "Set a daily reminder",
     "reminderAndroidBody": "Enable an opt-in daily reminder from Settings to keep your check-in rhythm. It is delivered to this site and your installed app at the time you choose.",
-    "skillsTitle": "Skills you can practise",
-    "skillsDescription": "Choose a short exercise before you need it.",
     "learnMore": "Open practice",
     "educationTitle": "Learn the recovery basics",
     "educationBody": "Use psychoeducation modules to understand urges and ways to respond.",
@@ -1208,7 +1206,13 @@
     "kindProject": "Mini-project",
     "kindCareer": "Career",
     "kindToolkit": "Toolkit",
-    "kindOpportunity": "Opportunity"
+    "kindOpportunity": "Opportunity",
+    "noProviders": "No learning services yet. Try again later.",
+    "courseCount": "{count} courses",
+    "openCourse": "Open course",
+    "backToDirections": "Back to learning directions",
+    "providerUnknown": "Learning service",
+    "noCourses": "No courses from this service yet."
   },
   "dashboardTour": {
     "tourLabel": "Dashboard guide",

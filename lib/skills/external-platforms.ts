@@ -9,6 +9,17 @@ export interface ExternalSkillPlatform {
 }
 
 /**
+ * Turns a provider display name into a URL-safe slug used by the learning
+ * direction cards and the `/skills/[providerSlug]` detail route.
+ */
+export function slugifyProvider(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
  * Curated free-course and certification platforms for the skills page
  * (supporting feature around PKM-WEB-006 skill recommendations). Links open
  * in a new tab and never carry any account or browsing data. Edit this array

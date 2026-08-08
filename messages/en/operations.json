@@ -46,6 +46,7 @@
     "learningHubPublished": "Learning Hub item published.",
     "learningHubArchived": "Learning Hub item archived.",
     "learningHubRolledBack": "Revision restored as a new draft.",
+    "learningHubThumbnailError": "The image could not be uploaded. Use a PNG, JPG, or WebP image.",
     "learningHubTransitionError": "The item lifecycle could not be changed.",
     "learningHubTaxonomyTitle": "UTY taxonomy",
     "learningHubTaxonomyDescription": "Manage clusters and study programs without deleting content history.",

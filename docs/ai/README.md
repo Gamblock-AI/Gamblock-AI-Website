@@ -26,7 +26,7 @@ daily missions, skill recommendations, self-regulation review loop.
 | Dashboard (student/partner/admin) | implemented | Per-role surface terpisah di `/dashboard` |
 | Mood/urge check-in | implemented | Form check-in harian dengan mood/urge scale, privacy-safe |
 | Daily missions | implemented | 5 slot harian `Asia/Jakarta`, 10 EXP/slot, custom missions |
-| Learning Hub / skills | implemented | Katalog UTY 22 program, 5 cluster, progress account-scoped |
+| Learning Hub / skills | implemented | Katalog UTY 22 program, 5 cluster, progress account-scoped; "Pilih arah belajar" = grid kartu layanan berlogo (provider dicari dari katalog) → `/skills/[providerSlug]` daftar kursus dengan thumbnail; section latihan singkat dihapus |
 | Intention + weekly review | implemented | Intention manager local-first, weekly review terenkripsi |
 | Psychoeducation | implemented | Dokumen bilingual berversi, progress per-revision |
 | Post-intervention handoff | implemented | `/post-intervention` tanpa browsing context |
@@ -41,7 +41,7 @@ daily missions, skill recommendations, self-regulation review loop.
 | PWA & daily reminder | implemented (supporting) | Installable PWA (manifest + service worker + Web Push); opt-in daily reminder di Settings, sinkron via `/v1/me/reminder-preference`; push dibuka ke `/{locale}/recovery` |
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 
-Context version: `2026-08-09.3`
+Context version: `2026-08-09.4`
 
 ## Context load order
 

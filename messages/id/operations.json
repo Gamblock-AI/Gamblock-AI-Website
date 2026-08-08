@@ -46,6 +46,7 @@
     "learningHubPublished": "Materi Learning Hub diterbitkan.",
     "learningHubArchived": "Materi Learning Hub diarsipkan.",
     "learningHubRolledBack": "Revisi dipulihkan sebagai draf baru.",
+    "learningHubThumbnailError": "Gambar belum dapat diunggah. Gunakan gambar PNG, JPG, atau WebP.",
     "learningHubTransitionError": "Lifecycle materi belum dapat diubah.",
     "learningHubTaxonomyTitle": "Taxonomy UTY",
     "learningHubTaxonomyDescription": "Kelola cluster dan program studi tanpa menghapus histori konten.",

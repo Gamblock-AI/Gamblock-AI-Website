@@ -30,7 +30,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-08-09.3`.
+`2026-08-09.4`.
 
 ## Structure
 
@@ -204,6 +204,12 @@ Students see a one-time, skippable dashboard tour on their first visit
 sidebar section, and each navbar control; the "seen" flag is stored under
 `gamblock:dashboard-tour:v1` and the tour adapts to the mobile bottom
 navigation.
+
+The skills page ("Pilih arah belajar") lists learning services as logo cards
+(providers derived from the Learning Hub catalog); selecting one opens
+`/skills/[providerSlug]` with that service's courses, each with a thumbnail
+(served from the backend media pipeline). The short-practice section was
+removed.
 
 The profile page crops/resizes a selected image in the browser before uploading
 a square WebP avatar. Avatar retrieval stays authenticated through the central

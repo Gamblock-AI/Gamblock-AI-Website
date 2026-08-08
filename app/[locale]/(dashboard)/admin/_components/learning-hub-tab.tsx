@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { NativeSelect } from '@/components/common/native-select';
+import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import type {
   AdminLearningHubItem,
@@ -127,6 +128,8 @@ function emptyDraft(): Draft {
     document: {
       provider: '',
       url: '',
+      provider_logo_media_id: '',
+      thumbnail_media_id: '',
       duration_minutes: 45,
       reviewer_name: '',
       reviewed_at: new Date().toISOString().slice(0, 10),
@@ -150,6 +153,75 @@ function editDocument(
   return { ...draft, document: { ...draft.document, [key]: value } };
 }
 
+function LearningMediaField({
+  label,
+  help,
+  mediaID,
+  uploading,
+  onUpload,
+  onChange,
+}: {
+  label: string;
+  help?: string;
+  mediaID: string;
+  uploading: boolean;
+  onUpload: (file: File) => Promise<void>;
+  onChange: (value: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const source = mediaID ? resolveEducationMediaURL(`/v1/education/media/${mediaID}`) : '';
+  return (
+    <label className="space-y-2">
+      <span className="text-navy text-xs font-bold">{label}</span>
+      {help ? <span className="text-muted-foreground block text-xs">{help}</span> : null}
+      <div className="flex items-center gap-3">
+        {source ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={source}
+            alt=""
+            className="border-border h-14 w-20 rounded-lg border object-cover"
+          />
+        ) : (
+          <span className="border-border text-muted-foreground flex h-14 w-20 items-center justify-center rounded-lg border text-xs">
+            -
+          </span>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void onUpload(file);
+            event.target.value = '';
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={uploading}
+          onClick={() => inputRef.current?.click()}
+        >
+          {uploading ? '...' : 'Unggah'}
+        </Button>
+        {mediaID ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => onChange('')}
+          >
+            <Trash2 className="size-4" aria-hidden="true" />
+          </Button>
+        ) : null}
+      </div>
+    </label>
+  );
+}
+
 export function LearningHubTab({
   items,
   taxonomy,
@@ -164,6 +236,7 @@ export function LearningHubTab({
   createProgram,
   updateProgram,
   deleteProgram,
+  uploadEducationMedia,
 }: {
   items: AdminLearningHubItem[];
   taxonomy: AdminLearningTaxonomy | null;
@@ -194,6 +267,10 @@ export function LearningHubTab({
     input: Record<string, unknown>
   ) => Promise<unknown>;
   deleteProgram: (id: string) => Promise<unknown>;
+  uploadEducationMedia: (
+    file: File,
+    purpose: 'thumbnail' | 'content'
+  ) => Promise<{ id: string }>;
 }) {
   const t = useTranslations('adminPage');
   const [filter, setFilter] = useState('');
@@ -201,6 +278,7 @@ export function LearningHubTab({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState<Draft>(() => emptyDraft());
+  const [mediaUploading, setMediaUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revisions, setRevisions] = useState<AdminLearningRevision[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -625,6 +703,46 @@ export function LearningHubTab({
                     onChange={(event) => updateDoc('url', event.target.value)}
                   />
                 </label>
+                <LearningMediaField
+                  label="Logo penyedia"
+                  help="Gambar logo layanan (mis. Dicoding)."
+                  mediaID={text(draft.document, 'provider_logo_media_id')}
+                  uploading={mediaUploading}
+                  onUpload={async (file) => {
+                    setMediaUploading(true);
+                    try {
+                      const media = await uploadEducationMedia(file, 'thumbnail');
+                      updateDoc('provider_logo_media_id', media.id);
+                    } catch {
+                      toastError(t('learningHubThumbnailError'));
+                    } finally {
+                      setMediaUploading(false);
+                    }
+                  }}
+                  onChange={(value) =>
+                    updateDoc('provider_logo_media_id', value)
+                  }
+                />
+                <LearningMediaField
+                  label="Thumbnail kursus"
+                  help="Gambar sampul kartu kursus (16:9)."
+                  mediaID={text(draft.document, 'thumbnail_media_id')}
+                  uploading={mediaUploading}
+                  onUpload={async (file) => {
+                    setMediaUploading(true);
+                    try {
+                      const media = await uploadEducationMedia(file, 'thumbnail');
+                      updateDoc('thumbnail_media_id', media.id);
+                    } catch {
+                      toastError(t('learningHubThumbnailError'));
+                    } finally {
+                      setMediaUploading(false);
+                    }
+                  }}
+                  onChange={(value) =>
+                    updateDoc('thumbnail_media_id', value)
+                  }
+                />
                 <label className="space-y-2">
                   <span className="text-navy text-xs font-bold">
                     Durasi (menit)

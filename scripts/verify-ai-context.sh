@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-context_version="2026-08-09.3"
+context_version="2026-08-09.4"
 allow_untracked=false
 
 usage() {

@@ -101,6 +101,7 @@ export function AdminAreaClient({
           createProgram={operations.createLearningHubProgram}
           updateProgram={operations.updateLearningHubProgram}
           deleteProgram={operations.deleteLearningHubProgram}
+          uploadEducationMedia={operations.uploadEducationMedia}
         />
       ) : area === 'releases' ? (
         <ReleaseTab

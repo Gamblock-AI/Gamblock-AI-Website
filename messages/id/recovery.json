@@ -559,8 +559,6 @@
     "privacyLocal": "Disimpan lokal lebih dulu",
     "reminderAndroidTitle": "Atur pengingat harian",
     "reminderAndroidBody": "Aktifkan pengingat harian yang opt-in dari Settings untuk menjaga ritme check-in Anda. Pengingat dikirim ke situs ini dan aplikasi terpasang pada waktu yang Anda pilih.",
-    "skillsTitle": "Keterampilan yang bisa dilatih",
-    "skillsDescription": "Pilih latihan singkat sebelum kamu membutuhkannya.",
     "learnMore": "Buka latihan",
     "educationTitle": "Pelajari dasar pemulihan",
     "educationBody": "Gunakan modul psikoedukasi untuk memahami dorongan dan cara meresponsnya.",
@@ -1208,7 +1206,13 @@
     "kindProject": "Mini-project",
     "kindCareer": "Karier",
     "kindToolkit": "Toolkit",
-    "kindOpportunity": "Kesempatan"
+    "kindOpportunity": "Kesempatan",
+    "noProviders": "Belum ada layanan belajar. Coba lagi nanti.",
+    "courseCount": "{count} kursus",
+    "openCourse": "Buka kursus",
+    "backToDirections": "Kembali ke pilih arah belajar",
+    "providerUnknown": "Layanan belajar",
+    "noCourses": "Belum ada kursus dari layanan ini."
   },
   "dashboardTour": {
     "tourLabel": "Panduan dashboard",
