@@ -27,7 +27,16 @@
     "syncErrorTitle": "The active plan has not synced yet",
     "syncErrorBody": "The preference remains enabled and future changes will be retried. Check your connection or retry now.",
     "syncRetry": "Retry sync",
-    "syncRetrying": "Syncing..."
+    "syncRetrying": "Syncing...",
+    "reminderTitle": "Daily reminder",
+    "reminderBody": "Get an opt-in daily nudge that helps you keep your check-in rhythm, the same way you would keep a habit streak.",
+    "reminderEnabledLabel": "Daily check-in reminder",
+    "reminderEnabledDesc": "A private reminder that helps you stay consistent without pressuring you.",
+    "reminderTimeLabel": "Reminder time",
+    "reminderTimeDesc": "Your local time. The reminder is sent to your installed app and this site.",
+    "reminderErrorTitle": "The reminder could not be saved",
+    "reminderErrorBody": "Check your connection and browser notification permission, then try again.",
+    "reminderPrivateNote": "The reminder stores only the time and your notification delivery endpoint. No browsing data is ever sent."
   },
   "supportWorkspace": {
     "eyebrow": "Support",
@@ -235,8 +244,6 @@
     "loadingSecurity": "Loading security settings",
     "securityUnavailableTitle": "Security settings are unavailable",
     "securityUnavailableBody": "Reload the profile so the system can confirm the account's sign-in method before offering a password change.",
-    "providerSecurityTitle": "Security is managed by Google",
-    "providerSecurityBody": "This account does not have a Gamblock-AI password. Use your Google Account security settings to manage sign-in methods.",
     "currentPasswordLabel": "Current password",
     "newPasswordLabel": "New password",
     "confirmPasswordLabel": "Confirm new password",

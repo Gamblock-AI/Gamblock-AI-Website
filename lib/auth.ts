@@ -30,17 +30,6 @@ export async function register(
   });
 }
 
-export async function loginWithGoogle(
-  idToken: string,
-  role?: 'user' | 'partner',
-  nonce?: string
-) {
-  return apiClient('/auth/google', {
-    method: 'POST',
-    body: JSON.stringify({ id_token: idToken, role, nonce }),
-  });
-}
-
 export function persistAuthSession(response: {
   access_token: string;
   refresh_token: string;

@@ -109,8 +109,8 @@ article, and release links stay non-public until a real review/publication
 record exists. The page must never promote Phase 4 instrumentation into an
 evaluated result.
 
-Production Docker images receive `NEXT_PUBLIC_API_URL` and the public Google
-client ID at build time. CI deploys from `main` only when
+Production Docker images receive `NEXT_PUBLIC_API_URL` and
+`NEXT_PUBLIC_APP_URL` at build time. CI deploys from `main` only when
 `ENABLE_VPS_DEPLOY=true`, using the pinned root/password/port-22 contract; do
 not move these public build values into runtime Ansible templates or
 reintroduce deploy-user SSH keys.
@@ -136,9 +136,6 @@ reintroduce deploy-user SSH keys.
   scope, but do not run them by default.
 - `lib/config.ts` reads `NODE_ENV` live (getters) so tests can flip
   `config.isProduction` by setting `process.env.NODE_ENV`.
-- Google Identity Services is optional and uses public
-  `NEXT_PUBLIC_GOOGLE_CLIENT_ID`; it must match backend `GOOGLE_CLIENT_ID`.
-  Do not add OAuth client secrets to `NEXT_PUBLIC_*` variables.
 
 ## Micro-interactions & messaging
 
@@ -194,7 +191,7 @@ new authenticated flows under `e2e/`.
 - `AGENTS.md` is canonical. `CLAUDE.md`, `GEMINI.md`,
   `.github/copilot-instructions.md`, and `.cursor/rules/gamblock-ai.mdc` are
   provider adapters and must remain thin.
-- Context version: `2026-08-02.24`.
+- Context version: `2026-08-09.2`.
 - `docs/ai/manifest.yaml` inventories every required context surface. Keep its
   `context_version` synchronized with this file and `docs/ai/README.md`.
 - When paths, commands, architecture, or invariants change, update the canonical

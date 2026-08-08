@@ -14,6 +14,7 @@ import {
   DashboardPanel,
 } from '@/components/dashboard/dashboard-page';
 import { RecoverySyncSettings } from '@/components/dashboard/recovery-sync-settings';
+import { DailyReminderSettings } from '@/components/dashboard/daily-reminder-settings';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/i18n/routing';
 import { useLocalUser } from '@/hooks/use-local-user';
@@ -47,6 +48,7 @@ export function SettingsClient() {
       ) : (
         <>
           {isStudent ? <RecoverySyncSettings /> : null}
+          {isStudent ? <DailyReminderSettings /> : null}
 
           <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
             {isConsumer ? (

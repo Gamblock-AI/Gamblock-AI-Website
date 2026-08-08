@@ -8,13 +8,11 @@ import { Mail, Lock, ArrowRight } from 'lucide-react';
 import {
   completeInitialPasswordChange,
   login,
-  loginWithGoogle,
   persistAuthSession,
 } from '@/lib/auth';
 import { LoadingButton } from '@/components/common/loading-button';
 import { AuthShell } from '@/components/auth/AuthShell';
-import { AuthField, AuthDivider } from '@/components/auth/AuthField';
-import { GoogleIdentityButton } from '@/components/auth/google-identity-button';
+import { AuthField } from '@/components/auth/AuthField';
 import { reportDevelopmentError } from '@/lib/diagnostics';
 import { useTranslations } from 'next-intl';
 import { friendlyMessage } from '@/lib/messages';
@@ -121,7 +119,7 @@ export default function LoginPage() {
   };
 
   if (passwordChangeToken) {
-    return (
+  return (
       <AuthShell
         heading={t('initialPassword.heading')}
         subheading={t('initialPassword.subheading')}
@@ -162,27 +160,6 @@ export default function LoginPage() {
       </AuthShell>
     );
   }
-
-  const handleGoogleCredential = async (credential: string) => {
-    setError(null);
-    setLoading(true);
-    try {
-      const res = (await loginWithGoogle(credential)) as AuthResponse;
-      if (!res?.access_token) {
-        reportDevelopmentError(
-          'Google sign-in returned an invalid response',
-          new Error('Authentication response did not include an access token.')
-        );
-        setError(t('googleError'));
-        return;
-      }
-      completeLogin(res);
-    } catch (error) {
-      setError(friendlyMessage(error, t('googleError')));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <AuthShell
@@ -250,12 +227,6 @@ export default function LoginPage() {
           <ArrowRight className="size-4" />
         </LoadingButton>
       </form>
-
-      <AuthDivider label={t('orDivider')} />
-      <GoogleIdentityButton
-        onCredential={handleGoogleCredential}
-        unavailableLabel={t('googleUnavailable')}
-      />
     </AuthShell>
   );
 }

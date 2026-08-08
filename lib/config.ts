@@ -14,13 +14,13 @@ export const config = {
   get apiUrl() {
     return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   },
-  /** Public OAuth client identifier used by Google Identity Services. */
-  get googleClientId() {
-    return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-  },
   /** Public canonical website URL used for metadata and absolute links. */
   get appUrl() {
     return process.env.NEXT_PUBLIC_APP_URL || 'https://gamblock-ai.com';
+  },
+  /** Public VAPID key used to subscribe the browser to Web Push. */
+  get vapidPublicKey() {
+    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
   },
   /** Space/comma separated public origins permitted for education iframes. */
   get educationEmbedOrigins() {

@@ -36,10 +36,11 @@ daily missions, skill recommendations, self-regulation review loop.
 | Account recovery | implemented | Non-enumerating email code, 12-character single-use |
 | PKM transparency | implemented | `/pkm` route dengan evidence maturity, deliverables state |
 | Admin control plane | implemented | Content CMS, releases, tickets, emergency, platform |
-| Onboarding | implemented | Registration/login, Google OAuth, partner invitation |
+| Onboarding | implemented | Registration/login, partner invitation |
+| PWA & daily reminder | implemented (supporting) | Installable PWA (manifest + service worker + Web Push); opt-in daily reminder di Settings, sinkron via `/v1/me/reminder-preference`; push dibuka ke `/{locale}/recovery` |
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 
-Context version: `2026-08-02.24`
+Context version: `2026-08-09.2`
 
 ## Context load order
 

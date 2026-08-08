@@ -1,5 +1,5 @@
 import { Toaster } from 'sonner';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Inter, Geist_Mono } from 'next/font/google';
 import { config } from '@/lib/config';
 import '../globals.css';
@@ -61,12 +61,32 @@ export const metadata: Metadata = {
       'Deteksi cerdas, intervensi psikologis otomatis, dan rehabilitasi mandiri untuk melawan darurat judi online.',
     images: ['/images/landing/generated/og-home.webp'],
   },
+  manifest: '/manifest.webmanifest',
+  themeColor: '#16294C',
+  appleWebApp: {
+    capable: true,
+    title: 'Gamblock-AI',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#16294C',
 };
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
-import { LegacyServiceWorkerCleanup } from '@/components/common/legacy-service-worker-cleanup';
+import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register';
 
 export default async function RootLayout({
   children,
@@ -87,7 +107,7 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider messages={messages}>
-          <LegacyServiceWorkerCleanup />
+          <ServiceWorkerRegister />
           {children}
         </NextIntlClientProvider>
         <Toaster

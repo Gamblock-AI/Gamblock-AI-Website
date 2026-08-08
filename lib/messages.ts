@@ -27,12 +27,6 @@ export const MESSAGES: Record<string, string> = {
   invalid_credentials: 'Email atau kata sandi salah. Silakan periksa kembali.',
   registration_failed: 'Pendaftaran gagal. Email mungkin sudah terdaftar.',
   dev_login_failed: 'Gagal masuk sebagai pengguna demo.',
-  google_token_required: 'Sesi Google belum tersedia. Silakan coba lagi.',
-  google_verification_failed: 'Verifikasi Google gagal. Silakan coba lagi.',
-  google_link_required:
-    'Akun ini sudah terdaftar. Masuk dengan kata sandi lalu tautkan Google dari Pengaturan.',
-  google_link_failed:
-    'Akun Google belum dapat ditautkan. Pastikan email Google sama dengan email akun.',
   password_reset_invalid:
     'Kode pemulihan tidak valid, sudah digunakan, atau telah kedaluwarsa.',
   password_reset_failed:
@@ -76,6 +70,11 @@ export const MESSAGES: Record<string, string> = {
   password_update_failed: 'Gagal memperbarui kata sandi.',
   analytics_period_invalid: 'Periode analitik harus 7 atau 30 hari.',
   protection_analytics_failed: 'Gagal memuat analitik perlindungan.',
+  reminder_preference_load_failed: 'Preferensi pengingat belum dapat dimuat.',
+  reminder_preference_update_failed: 'Preferensi pengingat belum dapat disimpan.',
+  reminder_preference_invalid: 'Waktu atau zona waktu pengingat tidak valid.',
+  push_subscription_invalid: 'Langganan notifikasi tidak valid.',
+  push_subscription_update_failed: 'Langganan notifikasi belum dapat disimpan.',
 
   // partners / accountability
   partner_email_required: 'Email pendamping wajib diisi.',
@@ -262,12 +261,6 @@ const MESSAGES_EN: Record<string, string> = {
   invalid_credentials: 'The email or password is incorrect. Please try again.',
   registration_failed:
     'Registration failed. This email may already be registered.',
-  google_token_required: 'The Google session is unavailable. Please try again.',
-  google_verification_failed: 'Google verification failed. Please try again.',
-  google_link_required:
-    'This account already exists. Sign in with your password, then link Google from Settings.',
-  google_link_failed:
-    'Google could not be linked. Use the same Google email as this account.',
   password_reset_invalid:
     'The recovery code is invalid, already used, or has expired.',
   password_reset_failed:
@@ -330,6 +323,16 @@ const MESSAGES_EN: Record<string, string> = {
   translation_unavailable: 'The AI translation service is unavailable.',
   translation_rate_limited:
     'The translation service is busy. Please try again shortly.',
+
+  // daily reminder & web push
+  reminder_preference_load_failed:
+    'The reminder preference could not be loaded.',
+  reminder_preference_update_failed:
+    'The reminder preference could not be saved.',
+  reminder_preference_invalid: 'The reminder time or timezone is invalid.',
+  push_subscription_invalid: 'The notification subscription is invalid.',
+  push_subscription_update_failed:
+    'The notification subscription could not be saved.',
 };
 
 const GENERIC: Record<SupportedLocale, string> = {

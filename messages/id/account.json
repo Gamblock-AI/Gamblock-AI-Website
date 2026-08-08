@@ -27,7 +27,16 @@
     "syncErrorTitle": "Rencana aktif belum tersinkron",
     "syncErrorBody": "Preferensi tetap aktif dan perubahan berikutnya akan dicoba lagi. Periksa koneksi Anda atau ulangi sekarang.",
     "syncRetry": "Coba sinkronkan",
-    "syncRetrying": "Menyinkronkan..."
+    "syncRetrying": "Menyinkronkan...",
+    "reminderTitle": "Pengingat harian",
+    "reminderBody": "Dapatkan pengingat harian opsional yang membantu Anda menjaga ritme check-in, seperti menjaga streak kebiasaan.",
+    "reminderEnabledLabel": "Pengingat check-in harian",
+    "reminderEnabledDesc": "Pengingat pribadi yang membantu Anda tetap konsisten tanpa tekanan.",
+    "reminderTimeLabel": "Waktu pengingat",
+    "reminderTimeDesc": "Waktu lokal Anda. Pengingat dikirim ke aplikasi terpasang dan situs ini.",
+    "reminderErrorTitle": "Pengingat belum dapat disimpan",
+    "reminderErrorBody": "Periksa koneksi dan izin notifikasi browser Anda, lalu coba lagi.",
+    "reminderPrivateNote": "Pengingat hanya menyimpan waktu dan titik pengiriman notifikasi Anda. Tidak ada data penjelajahan yang pernah dikirim."
   },
   "supportWorkspace": {
     "eyebrow": "Bantuan",
@@ -235,8 +244,6 @@
     "loadingSecurity": "Memuat pengaturan keamanan",
     "securityUnavailableTitle": "Pengaturan keamanan belum tersedia",
     "securityUnavailableBody": "Muat ulang profil agar sistem dapat memastikan metode masuk akun sebelum menampilkan perubahan kata sandi.",
-    "providerSecurityTitle": "Keamanan dikelola oleh Google",
-    "providerSecurityBody": "Akun ini tidak memiliki kata sandi Gamblock-AI. Gunakan keamanan akun Google untuk mengelola metode masuk Anda.",
     "currentPasswordLabel": "Kata sandi saat ini",
     "newPasswordLabel": "Kata sandi baru",
     "confirmPasswordLabel": "Konfirmasi kata sandi baru",

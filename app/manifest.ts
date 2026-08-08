@@ -1,0 +1,28 @@
+import type { MetadataRoute } from 'next';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'Gamblock-AI',
+    short_name: 'Gamblock',
+    description:
+      'Pemblokiran judi online berbasis on-device AI, pattern interrupt, dan accountability partner.',
+    start_url: '/',
+    scope: '/',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#F4F9FE',
+    theme_color: '#16294C',
+    lang: 'id',
+    categories: ['productivity', 'health'],
+    icons: [
+      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      {
+        src: '/icons/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+    ],
+  };
+}

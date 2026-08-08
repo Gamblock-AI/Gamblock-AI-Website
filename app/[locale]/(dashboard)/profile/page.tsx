@@ -389,14 +389,6 @@ export default function ProfilePage() {
               <Skeleton className="h-11 w-full rounded-xl" />
               <span className="sr-only">{t('loadingSecurity')}</span>
             </div>
-          ) : user.password_enabled === false ? (
-            <DashboardNotice
-              icon={BadgeCheck}
-              title={t('providerSecurityTitle')}
-              tone="navy"
-            >
-              {t('providerSecurityBody')}
-            </DashboardNotice>
           ) : (
             <form
               onSubmit={handlePasswordSubmit(savePassword)}

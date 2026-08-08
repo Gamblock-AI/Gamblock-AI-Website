@@ -36,16 +36,12 @@ if (!isProd) {
 const scriptSources = new Set(["'self'", "'unsafe-inline'"]);
 if (!isProd) scriptSources.add("'unsafe-eval'");
 
-const googleIdentityEnabled = Boolean(config.googleClientId.trim());
-if (googleIdentityEnabled) scriptSources.add('https://accounts.google.com');
-
 const frameSources = new Set(["'self'"]);
 if (configuredApiOrigin) frameSources.add(configuredApiOrigin);
 for (const value of config.educationEmbedOrigins.split(/[\s,]+/)) {
   const origin = getHttpOrigin(value);
   if (origin?.startsWith('https://')) frameSources.add(origin);
 }
-if (googleIdentityEnabled) frameSources.add('https://accounts.google.com');
 
 const mediaSources = new Set(["'self'", 'https:', 'blob:']);
 if (configuredApiOrigin) mediaSources.add(configuredApiOrigin);
@@ -54,7 +50,6 @@ const imageSources = new Set(["'self'", 'data:', 'https:', 'blob:']);
 if (configuredApiOrigin) imageSources.add(configuredApiOrigin);
 
 const styleSources = new Set(["'self'", "'unsafe-inline'"]);
-if (googleIdentityEnabled) styleSources.add('https://accounts.google.com');
 
 const csp =
   [
@@ -83,13 +78,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // This no-op worker replaces and retires service workers left behind
-        // by older PWA builds. Never cache the retirement script.
+        // The service worker must never be cached; browsers always re-fetch it
+        // so updates (including Web Push handlers) apply on the next visit.
         source: '/sw.js',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store, max-age=0',
+            value: 'no-cache, no-store, max-age=0, must-revalidate',
           },
           {
             key: 'Service-Worker-Allowed',

@@ -15,8 +15,7 @@ install source of truth.
 ```sh
 nvm use                    # reads .nvmrc (Node 20)
 npm ci
-cp .env.example .env.local   # set API URL, public app URL, optional Google
-                             # client ID, and education-media origins
+cp .env.example .env.local   # set API URL, public app URL, and education-media origins
 npm run verify:ai-context
 npm run dev                  # http://localhost:3000
 ```
@@ -31,7 +30,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-08-02.24`.
+`2026-08-09.2`.
 
 ## Structure
 
@@ -187,18 +186,25 @@ Development additionally permits loopback HTTP/WebSocket origins for Next.js
 and local API tooling. Docker production builds require an explicit
 `NEXT_PUBLIC_API_URL`, so an image cannot silently ship with a localhost API.
 
-The current website does not install a service worker. `public/sw.js` and
-`LegacyServiceWorkerCleanup` only retire root-scoped workers left by older PWA
-builds; the cleanup does not clear authentication, recovery records, or other
-browser storage.
+The website is a Progressive Web App: `app/manifest.ts` provides the install
+manifest, `public/sw.js` is a real service worker (app-shell precache, runtime
+asset caching, network-first navigations, and Web Push handling), and
+`components/pwa/service-worker-register.tsx` registers it in the root layout.
+The service worker never intercepts or stores account credentials; browser
+storage for authentication and recovery records is untouched.
+
+The opt-in daily reminder is delivered to the PWA through Web Push
+(`NEXT_PUBLIC_VAPID_PUBLIC_KEY` must match the backend `VAPID_PUBLIC_KEY`).
+Notification clicks open `/{locale}/recovery`. Reminder preferences sync through
+`/v1/me/reminder-preference` so the same time applies on Android and Windows
+native apps.
 
 The profile page crops/resizes a selected image in the browser before uploading
 a square WebP avatar. Avatar retrieval stays authenticated through the central
 API client and is only shown in authenticated website sessions; removing it
 returns the interface to its initials fallback. Password-backed accounts can
 change their password by confirming the current value and are signed out after
-backend session revocation; provider-only accounts receive provider-specific
-guidance. Dashboard search combines
+backend session revocation. Dashboard search combines
 role-permitted navigation with published education modules after the search is
 opened.
 
@@ -228,19 +234,14 @@ and dual-control emergency access. Admins do not use the requester `/support`
 surface. Enabled non-null social links
 are rendered in the landing footer; empty settings produce no icon.
 
-Google Identity Services renders only when
-`NEXT_PUBLIC_GOOGLE_CLIENT_ID` is configured as one of the backend's allowed
-audiences. Self-service password reset uses the backend's non-enumerating
+Self-service password reset uses the backend's non-enumerating
 email-code request and single-use confirmation endpoints; production delivery
 uses the configured Fonnte WhatsApp gateway and does not expose whether an email is registered. CI passes
-both public settings as Docker build arguments; the Google value remains
-optional and its absence is treated as a normal disabled state rather than a
-runtime warning.
+both public settings as Docker build arguments.
 
 Production CI builds for `https://gamblock-ai.com` with
 `NEXT_PUBLIC_API_URL=https://api.gamblock-ai.com`,
-`NEXT_PUBLIC_APP_URL=https://gamblock-ai.com`, and the public web Google client
-ID. Its SSH deploy step uses the pinned VPS host identity with
+`NEXT_PUBLIC_APP_URL=https://gamblock-ai.com`. Its SSH deploy step uses the pinned VPS host identity with
 root/password authentication on port 22 and remains disabled until
 `ENABLE_VPS_DEPLOY=true` after infrastructure bootstrap.
 
