@@ -186,9 +186,9 @@ Development additionally permits loopback HTTP/WebSocket origins for Next.js
 and local API tooling. Docker production builds require an explicit
 `NEXT_PUBLIC_API_URL`, so an image cannot silently ship with a localhost API.
 
-The website is a Progressive Web App: `app/manifest.ts` provides the install
-manifest, `public/sw.js` is a real service worker (app-shell precache, runtime
-asset caching, network-first navigations, and Web Push handling), and
+The website is a Progressive Web App: `public/manifest.webmanifest` provides the
+install manifest, `public/sw.js` is a real service worker (app-shell precache,
+runtime asset caching, network-first navigations, and Web Push handling), and
 `components/pwa/service-worker-register.tsx` registers it in the root layout.
 The service worker never intercepts or stores account credentials; browser
 storage for authentication and recovery records is untouched.
