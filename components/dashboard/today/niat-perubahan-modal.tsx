@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import {
   ArrowLeft,
@@ -18,16 +19,10 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient } from '@/lib/api-client';
+import { toastError } from '@/lib/feedback';
 
 interface QuizAnswers {
   school_impact: string;
@@ -43,11 +38,15 @@ interface NiatPerubahanModalProps {
 
 type Step = 1 | 2 | 3;
 
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
   const t = useTranslations('recoveryDashboard');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(false);
 
   const [quiz, setQuiz] = useState<QuizAnswers>({
     school_impact: '',
@@ -60,10 +59,43 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
 
   useEffect(() => {
     document.documentElement.style.overflow = 'hidden';
+    previouslyFocusedRef.current = document.activeElement as HTMLElement;
+    containerRef.current?.focus();
+
     return () => {
       document.documentElement.style.removeProperty('overflow');
+      previouslyFocusedRef.current?.focus();
     };
   }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const focusable = container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
 
   const answeredCount = Object.values(quiz).filter((v) => v !== '').length;
   const quizCompleted = answeredCount === 5;
@@ -75,7 +107,6 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
 
   const handleSave = async () => {
     setSaving(true);
-    setSaveError(false);
     try {
       await apiClient('/intentions', {
         method: 'POST',
@@ -90,8 +121,8 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
         }),
       });
       onCompleted();
-    } catch {
-      setSaveError(true);
+    } catch (err) {
+      toastError(err, t('niatSaveError'));
     } finally {
       setSaving(false);
     }
@@ -159,21 +190,27 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
     },
   ];
 
-  return (
-    <Dialog
-      open
-      modal
-      disablePointerDismissal
-      onOpenChange={(nextOpen, eventDetails) => {
-        if (!nextOpen) eventDetails.cancel();
-      }}
-    >
-      <DialogContent
-        showCloseButton={false}
-        className="shadow-float border-border/80 bg-card/98 flex h-[min(92dvh,640px)] w-full max-h-[min(92dvh,640px)] flex-col gap-0 overflow-hidden rounded-3xl p-0 backdrop-blur-xl sm:max-w-[38rem]"
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="animate-in fade-in-0 motion-reduce:animate-none absolute inset-0 bg-black/10 duration-200 supports-backdrop-filter:backdrop-blur-xs"
+        aria-hidden="true"
+      />
+
+      {/* Modal container */}
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="niat-perubahan-title"
+        aria-describedby="niat-perubahan-desc"
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="ring-foreground/10 shadow-float border-border/80 bg-card/98 animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none relative flex h-[min(92dvh,640px)] w-full max-h-[min(92dvh,640px)] flex-col gap-0 overflow-hidden rounded-3xl border p-0 text-sm backdrop-blur-xl ring-1 duration-200 outline-none focus:outline-none sm:max-w-[38rem]"
       >
         {/* Header with Gamblock logo */}
-        <DialogHeader className="border-border/70 bg-gradient-to-r from-azure/40 via-sky-light/20 to-card shrink-0 border-b px-5 py-3.5 sm:px-6">
+        <div className="border-border/70 bg-gradient-to-r from-azure/40 via-sky-light/20 to-card shrink-0 border-b px-5 py-3.5 sm:px-6">
           <div className="flex items-center gap-3.5">
             <span
               className="border-border/80 bg-white/95 dark:bg-card flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-xs ring-1 ring-navy/10"
@@ -188,15 +225,21 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
               />
             </span>
             <div className="min-w-0">
-              <DialogTitle className="text-navy text-base leading-tight font-bold sm:text-lg">
+              <h2
+                id="niat-perubahan-title"
+                className="text-navy text-base leading-tight font-bold sm:text-lg"
+              >
                 {t('niatPerubahanTitle')}
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+              </h2>
+              <p
+                id="niat-perubahan-desc"
+                className="text-muted-foreground mt-0.5 text-xs leading-relaxed"
+              >
                 {t('niatPerubahanDescription')}
-              </DialogDescription>
+              </p>
             </div>
           </div>
-        </DialogHeader>
+        </div>
 
         {/* Stepper with progress bar - horizontally centered */}
         <div className="border-border/60 bg-muted/20 shrink-0 border-b px-5 py-2.5 sm:px-6">
@@ -243,8 +286,9 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
           </div>
         </div>
 
-        {/* Modal Scrollable Body - rigid min-h-0 and overscroll-contain */}
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6">
+        {/* Modal Scrollable Body */}
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6">
           {/* STEP 1: Assessment Quiz */}
           {step === 1 && (
             <div className="space-y-3.5">
@@ -475,95 +519,92 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                   })}
                 </div>
               </div>
-
-              {saveError && (
-                <div className="border-crimson/30 bg-crimson/10 text-crimson rounded-xl border p-3 text-xs leading-relaxed">
-                  {t('niatSaveError')}
-                </div>
-              )}
             </div>
           )}
-        </div>
-
-        {/* Modal Action Footer - pinned and always visible */}
-        <div className="border-border/70 bg-card/98 shrink-0 z-10 flex items-center justify-between border-t px-5 py-3 sm:px-6">
-          <div>
-            {step > 1 ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setStep((s) => (s - 1) as Step)}
-                className="text-muted-foreground hover:text-foreground gap-1.5 rounded-xl text-xs"
-              >
-                <ArrowLeft className="size-3.5" />
-                {t('niatBack')}
-              </Button>
-            ) : (
-              <div />
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {step === 1 && (
-              <Button
-                type="button"
-                size="sm"
-                disabled={!quizCompleted}
-                onClick={() => setStep(2)}
-                className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-              >
-                {t('niatNext')}
-                <ArrowRight className="size-3.5" />
-              </Button>
-            )}
-
-            {step === 2 && (
-              <Button
-                type="button"
-                size="sm"
-                disabled={!step2Completed}
-                onClick={() => setStep(3)}
-                className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-              >
-                {t('niatNext')}
-                <ArrowRight className="size-3.5" />
-              </Button>
-            )}
-
-            {step === 3 && (
-              <Button
-                type="button"
-                size="sm"
-                disabled={saving}
-                onClick={handleSave}
-                className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-6 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-              >
-                {saving ? (
-                  <>
-                    <span className="size-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    {t('niatSaving')}
-                  </>
-                ) : (
-                  <>
-                    <Check className="size-3.5" />
-                    {t('niatSave')}
-                  </>
-                )}
-              </Button>
-            )}
           </div>
         </div>
 
-        {/* Security & Privacy Banner */}
-        <p className="border-border/60 bg-muted/40 text-muted-foreground shrink-0 flex items-center justify-center gap-1.5 border-t px-4 py-2 text-center text-[0.6875rem] leading-none sm:px-6">
-          <LockKeyhole
-            className="text-navy/70 size-3 shrink-0"
-            aria-hidden="true"
-          />
-          <span>{t('niatPerubahanStorage')}</span>
-        </p>
-      </DialogContent>
-    </Dialog>
+        {/* Combined Footer — single shrink-0 unit */}
+        <div className="shrink-0">
+          {/* Action row */}
+          <div className="border-border/70 bg-card/98 z-10 flex min-h-[3.25rem] items-center justify-between border-t px-5 py-3 sm:px-6">
+            <div>
+              {step > 1 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStep((s) => (s - 1) as Step)}
+                  className="text-muted-foreground hover:text-foreground gap-1.5 rounded-xl text-xs"
+                >
+                  <ArrowLeft className="size-3.5" />
+                  {t('niatBack')}
+                </Button>
+              ) : null}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {step === 1 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!quizCompleted}
+                  onClick={() => setStep(2)}
+                  className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                >
+                  {t('niatNext')}
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              )}
+
+              {step === 2 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!step2Completed}
+                  onClick={() => setStep(3)}
+                  className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                >
+                  {t('niatNext')}
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              )}
+
+              {step === 3 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={saving}
+                  onClick={handleSave}
+                  className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-6 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <span className="size-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      {t('niatSaving')}
+                    </>
+                  ) : (
+                    <>
+                      <Check className="size-3.5" />
+                      {t('niatSave')}
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Privacy row */}
+          <p className="border-border/60 bg-muted/40 text-muted-foreground flex items-center justify-center gap-1.5 border-t px-4 py-2 text-center text-[0.6875rem] leading-tight sm:px-6">
+            <LockKeyhole
+              className="text-navy/70 size-3 shrink-0"
+              aria-hidden="true"
+            />
+            <span>{t('niatPerubahanStorage')}</span>
+          </p>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
