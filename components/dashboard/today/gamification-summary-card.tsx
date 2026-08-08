@@ -16,14 +16,14 @@ export function GamificationSummaryCard({ onOpenMissions }: GamificationSummaryC
 
   const exp = mission.mission?.experience ?? {
     level: 1,
-    current_exp: 0,
-    target_exp: 100,
+    level_progress: 0,
+    level_target: 100,
     total_exp: 0,
   };
   const levelTitle = t(getLevelTitleKey(exp.level));
   const completedCount = mission.mission?.completed_count ?? 0;
-  const targetExp = exp.target_exp || 100;
-  const progressPercent = Math.min(100, Math.round((exp.current_exp / targetExp) * 100));
+  const targetExp = exp.level_target || 100;
+  const progressPercent = Math.min(100, Math.round((exp.level_progress / targetExp) * 100));
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-navy/15 bg-gradient-to-br from-azure/50 via-card to-azure/20 p-5 shadow-sm">
@@ -43,7 +43,7 @@ export function GamificationSummaryCard({ onOpenMissions }: GamificationSummaryC
               </span>
             </div>
             <p className="mt-0.5 text-sm font-semibold text-foreground">
-              {exp.current_exp} / {exp.target_exp} EXP
+              {exp.level_progress} / {exp.level_target} EXP
             </p>
           </div>
         </div>
@@ -79,7 +79,7 @@ export function GamificationSummaryCard({ onOpenMissions }: GamificationSummaryC
           aria-valuenow={progressPercent}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label={t('expProgress', { current: exp.current_exp, target: exp.target_exp })}
+          aria-label={t('expProgress', { current: exp.level_progress, target: exp.level_target })}
         >
           <div
             className="h-full rounded-full bg-navy transition-all duration-500"

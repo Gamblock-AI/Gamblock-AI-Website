@@ -45,7 +45,7 @@ export function HotlineWorkspace() {
       dialNumber: '129',
       description: t('hotlineSapaDescription'),
     },
-  ];
+  ] as const;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">

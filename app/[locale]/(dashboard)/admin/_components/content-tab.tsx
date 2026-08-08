@@ -220,6 +220,7 @@ const makeDocument = (idTitle = '', enTitle = ''): AdminEducationDocument => ({
   },
   sections: [makeSection(0)],
   thumbnails: [],
+  videos: [],
   sources: [
     {
       title: '',
@@ -880,9 +881,9 @@ export function ContentTab(props: ContentTabProps) {
           targetLang={locale === 'en' ? 'en' : 'id'}
           sourceTexts={collectDocTexts(document, locale === 'en' ? 'id' : 'en')}
           onTranslated={(translations) => {
-            applyDocTranslations(document, locale === 'en' ? 'en' : 'id', translations);
-            const draft = structuredClone(document);
-            mutate({ document: draft });
+            mutate((doc) => {
+              applyDocTranslations(doc, locale === 'en' ? 'en' : 'id', translations);
+            });
           }}
         />
       </div>
