@@ -117,16 +117,23 @@ export function Navbar() {
         </div>
 
         <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-start">
-          <GlobalSearch />
+          <div data-tour="tour-search">
+            <GlobalSearch />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="lg:hidden">
+          <div className="lg:hidden" data-tour="tour-search">
             <GlobalSearch variant="icon" />
           </div>
-          <ExperienceLevelChip />
-          <LanguageSwitcher />
-          <div className="relative" ref={profileAreaRef}>
+          <div
+            data-tour="tour-navbar-extra"
+            className="flex items-center gap-2 sm:gap-3"
+          >
+            <ExperienceLevelChip />
+            <LanguageSwitcher />
+          </div>
+          <div className="relative" ref={profileAreaRef} data-tour="tour-profile">
             <button
               ref={profileTriggerRef}
               type="button"

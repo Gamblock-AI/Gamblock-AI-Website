@@ -10,10 +10,9 @@ import { EmergencyHelp } from '@/components/dashboard/today/emergency-help';
 import { LearningNextStep } from '@/components/dashboard/today/learning-next-step';
 import { ProtectionSummary } from '@/components/dashboard/today/protection-summary';
 import { WeeklySnapshot } from '@/components/dashboard/today/weekly-snapshot';
-import { StudentNextAction } from '@/components/dashboard/today/student-next-action';
 import { NiatPerubahanGate } from '@/components/dashboard/today/niat-perubahan-gate';
-import { GamificationSummaryCard } from '@/components/dashboard/today/gamification-summary-card';
 import { StudentGamificationFab } from '@/components/dashboard/student-gamification-fab';
+import { DashboardTour } from '@/components/dashboard/tour/dashboard-tour';
 import { useDashboardSummary } from '@/hooks/use-dashboard-summary';
 import { useEducationModules } from '@/hooks/use-education';
 import { useProtectionStatus } from '@/hooks/use-protection-status';
@@ -48,17 +47,14 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
     <NiatPerubahanGate>
       <div className="mx-auto w-full max-w-[1360px] space-y-4 sm:space-y-5">
       <Reveal y={12} duration={0.45}>
-        <DashboardWelcome
-          name={name}
-          protectionActive={protection.status?.mode === 'active'}
-          currentStreak={summary?.current_streak ?? null}
-          activeDays={summary?.active_days ?? null}
-        />
-      </Reveal>
-
-      {/* Main Gamification Summary Card */}
-      <Reveal y={12} duration={0.45} delay={0.03}>
-        <GamificationSummaryCard onOpenMissions={() => setMissionsOpen(true)} />
+        <div data-tour="tour-welcome">
+          <DashboardWelcome
+            name={name}
+            protectionActive={protection.status?.mode === 'active'}
+            currentStreak={summary?.current_streak ?? null}
+            activeDays={summary?.active_days ?? null}
+          />
+        </div>
       </Reveal>
 
       {recovery.persistence === 'memory' ? (
@@ -87,24 +83,22 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         </div>
       </Reveal>
 
-      <Reveal y={12} duration={0.45} delay={0.1}>
-        <StudentNextAction />
-      </Reveal>
-
       <Reveal y={12} duration={0.45} delay={0.12}>
-        <DashboardSummaryStrip
-          summary={summary}
-          summaryLoading={summaryLoading}
-          checkIns={recovery.state.checkIns}
-        />
+        <div data-tour="tour-summary">
+          <DashboardSummaryStrip
+            summary={summary}
+            summaryLoading={summaryLoading}
+            checkIns={recovery.state.checkIns}
+          />
+        </div>
       </Reveal>
 
       <Reveal y={12} duration={0.45} delay={0.15}>
         <div className="grid items-stretch gap-4 xl:grid-cols-12">
-          <div className="xl:col-span-7">
+          <div className="xl:col-span-7" data-tour="tour-weekly">
             <WeeklySnapshot checkIns={recovery.state.checkIns} />
           </div>
-          <div className="xl:col-span-5">
+          <div className="xl:col-span-5" data-tour="tour-protection">
             <ProtectionSummary
               status={protection.status}
               loading={protection.loading}
@@ -121,6 +115,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         onOpenChange={setMissionsOpen}
       />
     </div>
+      <DashboardTour />
     </NiatPerubahanGate>
   );
 }

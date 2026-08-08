@@ -51,8 +51,15 @@ export function Sidebar() {
 
           if (visibleItems.length === 0) return null;
 
+          const tourTarget =
+            section.titleKey === 'sectionToday'
+              ? 'tour-sidebar-today'
+              : section.titleKey === 'sectionSupport'
+                ? 'tour-sidebar-support'
+                : undefined;
+
           return (
-            <div key={section.titleKey} className="space-y-1">
+            <div key={section.titleKey} className="space-y-1" data-tour={tourTarget}>
               <p className="mb-2 px-3 text-[0.6875rem] font-bold tracking-[0.08em] text-muted-foreground uppercase">
                 {t(section.titleKey)}
               </p>

@@ -30,7 +30,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-08-09.2`.
+`2026-08-09.3`.
 
 ## Structure
 
@@ -198,6 +198,12 @@ The opt-in daily reminder is delivered to the PWA through Web Push
 Notification clicks open `/{locale}/recovery`. Reminder preferences sync through
 `/v1/me/reminder-preference` so the same time applies on Android and Windows
 native apps.
+
+Students see a one-time, skippable dashboard tour on their first visit
+(`components/dashboard/tour/`) that walks through the dashboard content, each
+sidebar section, and each navbar control; the "seen" flag is stored under
+`gamblock:dashboard-tour:v1` and the tour adapts to the mobile bottom
+navigation.
 
 The profile page crops/resizes a selected image in the browser before uploading
 a square WebP avatar. Avatar retrieval stays authenticated through the central

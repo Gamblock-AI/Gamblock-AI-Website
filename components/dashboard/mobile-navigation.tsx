@@ -48,6 +48,7 @@ export function MobileNavigation() {
     <Dialog open={moreOpen} onOpenChange={setMoreOpen}>
       <nav
         aria-label={t('dashboard')}
+        data-tour="tour-mobile-primary"
         className="border-border bg-card/98 fixed inset-x-0 bottom-0 z-40 grid border-t px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_-20px_rgba(22,41,76,0.35)] backdrop-blur-md lg:hidden"
         style={{
           gridTemplateColumns: `repeat(${primaryItems.length + 1}, minmax(0, 1fr))`,
@@ -78,6 +79,7 @@ export function MobileNavigation() {
           type="button"
           aria-current={moreIsActive ? 'page' : undefined}
           aria-label={t('more')}
+          data-tour="tour-mobile-more"
           onClick={() => setMoreOpen(true)}
           className={cn(
             'focus-visible:ring-navy/30 flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.6875rem] font-semibold transition-colors outline-none focus-visible:ring-2',

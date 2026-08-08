@@ -37,10 +37,11 @@ daily missions, skill recommendations, self-regulation review loop.
 | PKM transparency | implemented | `/pkm` route dengan evidence maturity, deliverables state |
 | Admin control plane | implemented | Content CMS, releases, tickets, emergency, platform |
 | Onboarding | implemented | Registration/login, partner invitation |
+| Dashboard tour | implemented (supporting) | First-time guided tour di dashboard untuk role `user`: konten dashboard, group sidebar, kontrol navbar; sekali muncul, bisa di-skip, flag localStorage `gamblock:dashboard-tour:v1`, variant mobile (bottom nav) |
 | PWA & daily reminder | implemented (supporting) | Installable PWA (manifest + service worker + Web Push); opt-in daily reminder di Settings, sinkron via `/v1/me/reminder-preference`; push dibuka ke `/{locale}/recovery` |
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 
-Context version: `2026-08-09.2`
+Context version: `2026-08-09.3`
 
 ## Context load order
 
