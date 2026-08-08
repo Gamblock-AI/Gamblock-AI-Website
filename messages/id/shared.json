@@ -200,5 +200,11 @@
   },
   "commonUi": {
     "close": "Tutup"
-  }
+  },
+  "adminTranslateToEN": "Terjemahkan ke EN",
+  "adminTranslateToID": "Terjemahkan ke ID",
+  "adminTranslating": "Menerjemahkan…",
+  "adminTranslatedToEN": "Terjemahan bahasa Inggris selesai",
+  "adminTranslatedToID": "Terjemahan bahasa Indonesia selesai",
+  "adminTranslateFailed": "Terjemahan gagal"
 }

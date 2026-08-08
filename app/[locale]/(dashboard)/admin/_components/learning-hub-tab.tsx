@@ -24,6 +24,7 @@ import {
   AdminStatusBadge,
   adminFieldClassName,
 } from './admin-shared';
+import { TranslateButton } from '@/components/admin/translate-button';
 
 type Draft = {
   slug: string;
@@ -48,6 +49,37 @@ const kinds = [
   'opportunity',
 ];
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function collectItemTexts(draft: Draft, locale: string): string[] {
+  const suffix = `_${locale}`;
+  const texts: string[] = [
+    draft[`title${suffix}` as keyof Draft] as string ?? '',
+    draft[`summary${suffix}` as keyof Draft] as string ?? '',
+  ];
+  const outcomes = draft.document[`outcomes${suffix}`] ?? [];
+  if (Array.isArray(outcomes)) {
+    for (const o of outcomes) {
+      if (typeof o === 'string') texts.push(o);
+    }
+  }
+  return texts;
+}
+
+function applyItemTranslations(draft: Draft, locale: string, translations: string[]): void {
+  let idx = 0;
+  const next = (): string => translations[idx++] ?? '';
+  const suffix = `_${locale}`;
+  (draft as Record<string, unknown>)[`title${suffix}`] = next();
+  (draft as Record<string, unknown>)[`summary${suffix}`] = next();
+  const outcomes = draft.document[`outcomes${suffix}`] ?? [];
+  if (Array.isArray(outcomes)) {
+    const mapped: string[] = [];
+    for (const o of outcomes) {
+      mapped.push(typeof o === 'string' ? next() : String(o));
+    }
+    draft.document[`outcomes${suffix}`] = mapped;
+  }
+}
 
 function text(document: Record<string, unknown>, key: string) {
   const value = document[key];
@@ -472,6 +504,27 @@ export function LearningHubTab({
                   </h2>
                 </div>
                 <AdminStatusBadge status={selected.status} />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <TranslateButton
+                  sourceLang="id"
+                  targetLang="en"
+                  sourceTexts={collectItemTexts(draft, 'id')}
+                  onTranslated={(translations) => {
+                    applyItemTranslations(draft, 'en', translations);
+                    setDraft({ ...draft });
+                  }}
+                />
+                <TranslateButton
+                  sourceLang="en"
+                  targetLang="id"
+                  sourceTexts={collectItemTexts(draft, 'en')}
+                  onTranslated={(translations) => {
+                    applyItemTranslations(draft, 'id', translations);
+                    setDraft({ ...draft });
+                  }}
+                />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="space-y-2">
@@ -949,6 +1002,32 @@ export function LearningHubTab({
                       })
                     }
                   />
+                  <div className="flex items-center gap-2 sm:col-span-2">
+                    <TranslateButton
+                      sourceLang="id"
+                      targetLang="en"
+                      sourceTexts={[editingCluster.title_id, editingCluster.description_id]}
+                      onTranslated={([title, desc]) => {
+                        setEditingCluster({
+                          ...editingCluster,
+                          title_en: title,
+                          description_en: desc,
+                        });
+                      }}
+                    />
+                    <TranslateButton
+                      sourceLang="en"
+                      targetLang="id"
+                      sourceTexts={[editingCluster.title_en, editingCluster.description_en]}
+                      onTranslated={([title, desc]) => {
+                        setEditingCluster({
+                          ...editingCluster,
+                          title_id: title,
+                          description_id: desc,
+                        });
+                      }}
+                    />
+                  </div>
                   <label className="text-muted-foreground flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"

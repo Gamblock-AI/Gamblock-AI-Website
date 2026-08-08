@@ -39,6 +39,8 @@ daily missions, skill recommendations, self-regulation review loop.
 | Onboarding | implemented | Registration/login, Google OAuth, partner invitation |
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 
+Context version: `2026-08-02.24`
+
 ## Context load order
 
 1. Baca `AGENTS.md` untuk invariants, arsitektur, paths, verifikasi

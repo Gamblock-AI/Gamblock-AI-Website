@@ -24,8 +24,6 @@ providers:
   cursor: '.cursor/rules/gamblock-ai.mdc'
   gemini: 'GEMINI.md'
   github_copilot: '.github/copilot-instructions.md'
-  legacy_cursor: '.cursorrules'
-
 skills:
   verify_change: '.agents/skills/verify-gamblock-change/SKILL.md'
 

@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api-client';
 import type {
   EducationSource,
   EducationThumbnail,
+  EducationVideo,
   RichTextDocument,
 } from '@/hooks/use-education';
 
@@ -49,6 +50,7 @@ export interface AdminEducationDocument {
     >;
   }>;
   thumbnails: EducationThumbnail[];
+  videos: EducationVideo[];
   sources: EducationSource[];
 }
 

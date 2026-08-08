@@ -39,6 +39,13 @@ export interface EducationThumbnail {
   alt_text: Record<string, string>;
 }
 
+export interface EducationVideo {
+  media_id: string;
+  sort_order: number;
+  title: Record<string, string>;
+  alt_text: Record<string, string>;
+}
+
 export interface EducationSource {
   title: string;
   publisher: string;
@@ -73,6 +80,7 @@ export interface EducationModule {
   revision: number;
   thumbnails: EducationThumbnail[];
   thumbnail_urls: Record<string, string>;
+  videos: EducationVideo[];
   media_urls: Record<string, string>;
   sources: EducationSource[];
   sections: EducationSection[];

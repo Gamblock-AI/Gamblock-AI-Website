@@ -7,10 +7,15 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
+  GraduationCap,
+  Lightbulb,
   LockKeyhole,
+  Plus,
   Quote,
   ShieldCheck,
-  Sparkles,
+  Smile,
+  Users,
+  Wallet,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
@@ -44,23 +49,6 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalBodyOverscroll = document.body.style.overscrollBehavior;
-    const originalDocOverscroll = document.documentElement.style.overscrollBehavior;
-
-    document.body.style.overflow = 'hidden';
-    document.body.style.overscrollBehavior = 'none';
-    document.documentElement.style.overscrollBehavior = 'none';
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.body.style.overscrollBehavior = originalBodyOverscroll;
-      document.documentElement.style.overscrollBehavior = originalDocOverscroll;
-    };
-  }, []);
-
   const [quiz, setQuiz] = useState<QuizAnswers>({
     school_impact: '',
     money_spent: '',
@@ -69,6 +57,13 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
     quit_motivation: '',
   });
   const [intentionText, setIntentionText] = useState('');
+
+  useEffect(() => {
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.removeProperty('overflow');
+    };
+  }, []);
 
   const answeredCount = Object.values(quiz).filter((v) => v !== '').length;
   const quizCompleted = answeredCount === 5;
@@ -146,15 +141,28 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
   ];
 
   const quickStarters = [
-    'Saya ingin fokus menyelesaikan kuliah dan tugas dengan tenang.',
-    'Saya ingin menata ulang keuangan dan mulai menabung untuk masa depan.',
-    'Saya ingin pikiran lebih damai, bebas dari rasa cemas dan gelisah.',
-    'Saya ingin menjaga kepercayaan keluarga dan orang-orang terdekat.',
+    {
+      icon: GraduationCap,
+      text: t('niatInspirasi1'),
+    },
+    {
+      icon: Wallet,
+      text: t('niatInspirasi2'),
+    },
+    {
+      icon: Smile,
+      text: t('niatInspirasi3'),
+    },
+    {
+      icon: Users,
+      text: t('niatInspirasi4'),
+    },
   ];
 
   return (
     <Dialog
       open
+      modal
       disablePointerDismissal
       onOpenChange={(nextOpen, eventDetails) => {
         if (!nextOpen) eventDetails.cancel();
@@ -162,7 +170,7 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
     >
       <DialogContent
         showCloseButton={false}
-        className="shadow-float border-border/80 bg-card/98 relative flex max-h-[min(92dvh,680px)] w-full flex-col gap-0 overflow-hidden rounded-3xl p-0 backdrop-blur-xl sm:max-w-[38rem]"
+        className="shadow-float border-border/80 bg-card/98 flex h-[min(92dvh,640px)] w-full max-h-[min(92dvh,640px)] flex-col gap-0 overflow-hidden rounded-3xl p-0 backdrop-blur-xl sm:max-w-[38rem]"
       >
         {/* Header with Gamblock logo */}
         <DialogHeader className="border-border/70 bg-gradient-to-r from-azure/40 via-sky-light/20 to-card shrink-0 border-b px-5 py-3.5 sm:px-6">
@@ -217,10 +225,10 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                     }`}
                   >
                     {s === 1
-                      ? 'Refleksi'
+                      ? t('niatStep1Short')
                       : s === 2
-                        ? 'Niat'
-                        : 'Konfirmasi'}
+                        ? t('niatStep2Short')
+                        : t('niatStep3Short')}
                   </p>
                 </div>
                 {s < 3 && (
@@ -257,33 +265,45 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                   }`}
                 >
                   {quizCompleted && <Check className="size-3" />}
-                  {answeredCount}/5 Terjawab
+                  {answeredCount}
+                  {t('niatAnsweredCountSuffix')}
                 </span>
               </div>
 
               <div className="space-y-3">
                 {questions.map(({ key, label, index }) => (
-                  <fieldset
+                  <div
                     key={key}
-                    className="border-border/70 bg-card/60 hover:border-navy/30 space-y-2 rounded-2xl border p-3.5 transition-colors shadow-xs"
+                    role="group"
+                    aria-labelledby={`question-label-${key}`}
+                    className="border-border/70 bg-card/70 hover:border-navy/30 space-y-2.5 rounded-2xl border p-3.5 sm:p-4 transition-colors shadow-xs"
                   >
-                    <legend className="text-foreground flex items-center gap-2 text-xs font-semibold sm:text-sm">
+                    <div className="flex items-start gap-2.5">
                       <span
-                        className={`flex size-5 shrink-0 items-center justify-center rounded-md text-[0.625rem] font-bold transition-colors ${
+                        className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-all duration-200 ${
                           quiz[key] !== ''
-                            ? 'bg-navy text-white'
-                            : 'bg-muted text-muted-foreground'
+                            ? 'bg-navy text-white shadow-xs'
+                            : 'bg-muted/80 text-muted-foreground border border-border/60'
                         }`}
                       >
-                        {quiz[key] !== '' ? <Check className="size-3" /> : index}
+                        {quiz[key] !== '' ? (
+                          <Check className="size-3.5 stroke-[2.5]" />
+                        ) : (
+                          index
+                        )}
                       </span>
-                      <span>{label}</span>
-                    </legend>
+                      <p
+                        id={`question-label-${key}`}
+                        className="text-foreground text-xs font-semibold sm:text-sm leading-snug pt-0.5"
+                      >
+                        {label}
+                      </p>
+                    </div>
 
                     <div
                       role="radiogroup"
                       aria-label={label}
-                      className="flex flex-wrap gap-2 pt-0.5"
+                      className="flex flex-wrap gap-2 pl-0 sm:pl-8.5 pt-0.5"
                     >
                       {quizOptions[key].map((option) => {
                         const isSelected = quiz[key] === option.value;
@@ -314,7 +334,7 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                         );
                       })}
                     </div>
-                  </fieldset>
+                  </div>
                 ))}
               </div>
             </div>
@@ -335,25 +355,27 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
               {/* Quick Inspiration Starters */}
               <div className="border-border/70 bg-gradient-to-br from-azure/40 via-sky-light/20 to-card space-y-2 rounded-2xl border p-3.5">
                 <p className="text-navy flex items-center gap-1.5 text-xs font-semibold">
-                  <Sparkles className="text-navy size-3.5" />
-                  Inspirasi Cepat (Klik untuk memilih contoh):
+                  <Lightbulb className="text-navy size-4 shrink-0" />
+                  {t('niatInspirasiTitle')}
                 </p>
                 <div className="flex flex-col gap-1.5">
-                  {quickStarters.map((starter, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setIntentionText(starter)}
-                      className="border-border/60 bg-white/90 dark:bg-card hover:border-navy/40 hover:bg-navy/5 hover:text-navy group flex items-start gap-2 rounded-xl border p-2 text-left text-xs transition-all duration-200"
-                    >
-                      <span className="text-muted-foreground group-hover:text-navy mt-0.5 shrink-0 text-[0.6875rem]">
-                        ✦
-                      </span>
-                      <span className="text-foreground/90 group-hover:text-navy leading-snug">
-                        {starter}
-                      </span>
-                    </button>
-                  ))}
+                  {quickStarters.map((starter, idx) => {
+                    const StarterIcon = starter.icon;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setIntentionText(starter.text)}
+                        className="border-border/60 bg-white/90 dark:bg-card hover:border-navy/40 hover:bg-navy/5 hover:text-navy group flex items-start gap-2.5 rounded-xl border p-2.5 text-left text-xs transition-all duration-200 shadow-2xs"
+                      >
+                        <StarterIcon className="text-navy/70 group-hover:text-navy mt-0.5 size-3.5 shrink-0 transition-colors" />
+                        <span className="text-foreground/90 group-hover:text-navy leading-snug flex-1">
+                          {starter.text}
+                        </span>
+                        <Plus className="text-muted-foreground/60 group-hover:text-navy size-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -373,7 +395,8 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                         : 'text-muted-foreground'
                     }`}
                   >
-                    {intentionText.length}/240 karakter
+                    {intentionText.length}
+                    {t('niatCharCountSuffix')}
                   </span>
                 </div>
 
@@ -390,8 +413,7 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                 <div className="bg-muted/40 border-border/50 text-muted-foreground flex items-center gap-2 rounded-xl border px-3 py-2 text-xs leading-snug">
                   <ShieldCheck className="text-navy size-4 shrink-0" />
                   <span>
-                    Tips: Niat yang tulus dan spesifik akan menjadi pegangan
-                    terkuatmu saat menghadapi dorongan impulsif.
+                    {t('niatInputTip')}
                   </span>
                 </div>
               </div>
@@ -415,11 +437,11 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                 <div className="flex items-center justify-between">
                   <p className="text-navy/80 flex items-center gap-1.5 text-[0.6875rem] font-bold tracking-wider uppercase">
                     <Quote className="text-navy size-3.5" />
-                    Niat Pemulihanmu
+                    {t('niatReviewIntentionLabel')}
                   </p>
                   <span className="bg-sage/15 text-sage-dark border-sage/30 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.625rem] font-semibold">
                     <CheckCircle2 className="size-3" />
-                    Siap Disimpan
+                    {t('niatReviewReadyBadge')}
                   </span>
                 </div>
                 <blockquote className="text-navy border-navy/30 mt-1 border-l-2 pl-3 text-sm leading-relaxed font-semibold italic">
@@ -430,7 +452,7 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
               {/* Answers Summary Grid */}
               <div className="border-border/70 bg-card space-y-2.5 rounded-2xl border p-3.5 shadow-xs">
                 <p className="text-muted-foreground text-[0.6875rem] font-bold tracking-wider uppercase">
-                  Ringkasan Refleksi Awal
+                  {t('niatReviewAnswersTitle')}
                 </p>
                 <div className="divide-border/60 divide-y text-xs">
                   {questions.map(({ key, label }) => {

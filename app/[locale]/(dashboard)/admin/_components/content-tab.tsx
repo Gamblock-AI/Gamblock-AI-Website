@@ -42,8 +42,68 @@ import {
   AdminStatusBadge,
   adminFieldClassName,
 } from './admin-shared';
+import { TranslateButton } from '@/components/admin/translate-button';
 
 const emptyRichText = () => ({ type: 'doc', content: [{ type: 'paragraph' }] });
+
+function collectDocTexts(doc: AdminEducationDocument, localeKey: string): string[] {
+  const texts: string[] = [];
+  const tr = doc.translations[localeKey as 'id' | 'en'];
+  if (tr) {
+    texts.push(tr.title, tr.summary, tr.learning_objective, tr.disclaimer, tr.reviewer_role);
+    for (const section of doc.sections) {
+      const sTr = section.translations[localeKey as 'id' | 'en'];
+      if (sTr) {
+        texts.push(sTr.title);
+        if (sTr.knowledge_check) {
+          texts.push(
+            sTr.knowledge_check.question,
+            sTr.knowledge_check.explanation,
+            ...sTr.knowledge_check.choices.map((c) => c.text)
+          );
+        }
+      }
+    }
+    for (const thumb of doc.thumbnails) {
+      if (thumb.alt_text?.[localeKey]) {
+        texts.push(thumb.alt_text[localeKey]);
+      }
+    }
+  }
+  return texts;
+}
+
+function applyDocTranslations(
+  doc: AdminEducationDocument,
+  targetKey: string,
+  translations: string[]
+): void {
+  let idx = 0;
+  const next = (): string => translations[idx++] ?? '';
+  const tr = doc.translations[targetKey as 'id' | 'en'];
+  if (!tr) return;
+  tr.title = next();
+  tr.summary = next();
+  tr.learning_objective = next();
+  tr.disclaimer = next();
+  tr.reviewer_role = next();
+  for (const section of doc.sections) {
+    const sTr = section.translations[targetKey as 'id' | 'en'];
+    if (!sTr) continue;
+    sTr.title = next();
+    if (sTr.knowledge_check) {
+      sTr.knowledge_check.question = next();
+      sTr.knowledge_check.explanation = next();
+      for (const choice of sTr.knowledge_check.choices) {
+        choice.text = next();
+      }
+    }
+  }
+  for (const thumb of doc.thumbnails) {
+    if (!thumb.alt_text) thumb.alt_text = {};
+    thumb.alt_text[targetKey] = next();
+  }
+}
 
 function AdminMediaImage({
   mediaId,
@@ -410,6 +470,58 @@ export function ContentTab(props: ContentTabProps) {
       setBusy(false);
     }
   };
+
+  const uploadVideo = () => {
+    const input = window.document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/mp4,video/webm';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      setBusy(true);
+      try {
+        const media = await props.uploadEducationMedia(file, 'content');
+        mutate((draft) => {
+          if (!draft.videos) draft.videos = [];
+          draft.videos.push({
+            media_id: media.id,
+            sort_order: draft.videos.length,
+            title: { id: '', en: '' },
+            alt_text: { id: '', en: '' },
+          });
+        });
+        toastSuccess(t('mediaUploaded'));
+      } catch (error) {
+        toastError(error, t('mediaUploadError'));
+      } finally {
+        setBusy(false);
+      }
+    };
+    input.click();
+  };
+
+  const addExternalVideo = async () => {
+    const url = window.prompt(t('externalMediaURL'), 'https://');
+    if (!url) return;
+    setBusy(true);
+    try {
+      const media = await props.registerExternalEducationMedia(url, 'video');
+      mutate((draft) => {
+        if (!draft.videos) draft.videos = [];
+        draft.videos.push({
+          media_id: media.id,
+          sort_order: draft.videos.length,
+          title: { id: '', en: '' },
+          alt_text: { id: '', en: '' },
+        });
+      });
+      toastSuccess(t('mediaUploaded'));
+    } catch (error) {
+      toastError(error, t('mediaUploadError'));
+    } finally {
+      setBusy(false);
+    }
+  };
   const requestContentMedia =
     async (): Promise<EditorMediaSelection | null> => {
       const useExternal = window.confirm(t('externalMediaQuestion'));
@@ -745,21 +857,34 @@ export function ContentTab(props: ContentTabProps) {
         </section>
       ) : null}
 
-      <div className="border-border bg-muted flex w-fit rounded-xl border p-1">
-        <button
-          type="button"
-          onClick={() => setLocale('id')}
-          className={`min-h-10 rounded-lg px-4 text-sm font-bold ${locale === 'id' ? 'bg-card text-navy shadow-sm' : 'text-muted-foreground'}`}
-        >
-          {t('languageIndonesian')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setLocale('en')}
-          className={`min-h-10 rounded-lg px-4 text-sm font-bold ${locale === 'en' ? 'bg-card text-navy shadow-sm' : 'text-muted-foreground'}`}
-        >
-          {t('languageEnglish')}
-        </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="border-border bg-muted flex w-fit rounded-xl border p-1">
+          <button
+            type="button"
+            onClick={() => setLocale('id')}
+            className={`min-h-10 rounded-lg px-4 text-sm font-bold ${locale === 'id' ? 'bg-card text-navy shadow-sm' : 'text-muted-foreground'}`}
+          >
+            {t('languageIndonesian')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocale('en')}
+            className={`min-h-10 rounded-lg px-4 text-sm font-bold ${locale === 'en' ? 'bg-card text-navy shadow-sm' : 'text-muted-foreground'}`}
+          >
+            {t('languageEnglish')}
+          </button>
+        </div>
+
+        <TranslateButton
+          sourceLang={locale === 'en' ? 'id' : 'en'}
+          targetLang={locale === 'en' ? 'en' : 'id'}
+          sourceTexts={collectDocTexts(document, locale === 'en' ? 'id' : 'en')}
+          onTranslated={(translations) => {
+            applyDocTranslations(document, locale === 'en' ? 'en' : 'id', translations);
+            const draft = structuredClone(document);
+            mutate({ document: draft });
+          }}
+        />
       </div>
 
       <section className="border-border bg-card grid gap-4 rounded-2xl border p-5 sm:grid-cols-2">
@@ -1033,6 +1158,150 @@ export function ContentTab(props: ContentTabProps) {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="border-border bg-card rounded-2xl border p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-navy font-extrabold">{t('videos')}</h3>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {t('videosHelp')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={uploadVideo}
+              className="gap-1.5 rounded-xl text-xs"
+            >
+              <Upload className="size-3.5" />
+              {t('uploadVideo')}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => void addExternalVideo()}
+              className="gap-1.5 rounded-xl text-xs"
+            >
+              <ExternalLink className="size-3.5" />
+              {t('addExternalVideo')}
+            </Button>
+          </div>
+        </div>
+        {(document.videos?.length ?? 0) === 0 ? (
+          <p className="text-muted-foreground mt-4 text-center text-xs">
+            {t('noVideosYet')}
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {(document.videos ?? []).map((video, index) => (
+              <div
+                key={video.media_id}
+                className="border-border overflow-hidden rounded-2xl border"
+              >
+                <div className="bg-navy/5 flex aspect-video items-center justify-center">
+                  <video
+                    className="h-full w-full object-cover"
+                    src={`/v1/admin/content/media/${video.media_id}`}
+                    controls
+                    preload="metadata"
+                  />
+                </div>
+                <div className="space-y-2 p-3">
+                  <input
+                    className={adminFieldClassName}
+                    placeholder={
+                      locale === 'id'
+                        ? t('titleIndonesian')
+                        : t('titleEnglish')
+                    }
+                    value={video.title?.[locale] ?? ''}
+                    onChange={(event) =>
+                      mutate((draft) => {
+                        if (!draft.videos[index].title)
+                          draft.videos[index].title = {};
+                        draft.videos[index].title[locale] =
+                          event.target.value;
+                      })
+                    }
+                  />
+                  <input
+                    className={adminFieldClassName}
+                    placeholder={
+                      locale === 'id'
+                        ? t('altIndonesian')
+                        : t('altEnglish')
+                    }
+                    value={video.alt_text?.[locale] ?? ''}
+                    onChange={(event) =>
+                      mutate((draft) => {
+                        if (!draft.videos[index].alt_text)
+                          draft.videos[index].alt_text = {};
+                        draft.videos[index].alt_text[locale] =
+                          event.target.value;
+                      })
+                    }
+                  />
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      disabled={index === 0}
+                      onClick={() =>
+                        mutate((draft) => {
+                          const v = draft.videos ?? [];
+                          [v[index - 1], v[index]] = [v[index], v[index - 1]];
+                          v.forEach((item, order) => {
+                            item.sort_order = order;
+                          });
+                        })
+                      }
+                    >
+                      <ArrowUp className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      disabled={
+                        index === (document.videos?.length ?? 0) - 1
+                      }
+                      onClick={() =>
+                        mutate((draft) => {
+                          const v = draft.videos ?? [];
+                          [v[index + 1], v[index]] = [v[index], v[index + 1]];
+                          v.forEach((item, order) => {
+                            item.sort_order = order;
+                          });
+                        })
+                      }
+                    >
+                      <ArrowDown className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        mutate((draft) => {
+                          draft.videos?.splice(index, 1);
+                        })
+                      }
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="space-y-4">

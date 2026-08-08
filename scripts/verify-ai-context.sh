@@ -76,12 +76,10 @@ required_files=(
   ".agents/skills/verify-gamblock-change/SKILL.md"
   ".agents/skills/verify-gamblock-change/agents/openai.yaml"
   ".cursor/rules/gamblock-ai.mdc"
-  ".cursorrules"
   ".github/copilot-instructions.md"
   ".github/workflows/ci.yml"
   "AGENTS.md"
   "CLAUDE.md"
-  "COPILOT.md"
   "GEMINI.md"
   "README.md"
   "messages/README.md"
@@ -175,8 +173,7 @@ assert_contains "GEMINI.md" "@./docs/ai/README.md" "Gemini imports the AI contex
 assert_contains ".github/copilot-instructions.md" "AGENTS.md" "Copilot points to canonical instructions"
 assert_contains ".cursor/rules/gamblock-ai.mdc" "alwaysApply: true" "Cursor rule is always applied"
 assert_contains ".cursor/rules/gamblock-ai.mdc" "@AGENTS.md" "Cursor imports canonical instructions"
-assert_contains ".cursorrules" ".cursor/rules/gamblock-ai.mdc" "legacy Cursor file points to modern rules"
-assert_contains "COPILOT.md" ".github/copilot-instructions.md" "legacy Copilot file points to standard instructions"
+
 
 stale_paths=(
   "app/(app)/"

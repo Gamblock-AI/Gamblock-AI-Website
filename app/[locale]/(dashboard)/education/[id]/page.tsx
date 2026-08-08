@@ -19,6 +19,7 @@ import { useEducationModule } from '@/hooks/use-education';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
 import { ThumbnailCarousel } from '@/components/education/thumbnail-carousel';
+import { VideoGallery } from '@/components/education/video-gallery';
 import { RichContent } from '@/components/education/rich-content';
 import { KnowledgeCheck } from '@/components/education/knowledge-check';
 import {
@@ -169,6 +170,13 @@ export default function EducationDetailPage({
           </div>
         </header>
       </Card>
+
+      <VideoGallery
+        videos={module.videos}
+        mediaURLs={module.media_urls}
+        locale={locale}
+        onMediaOpened={markMediaOpened}
+      />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start">
         <div className="space-y-5">

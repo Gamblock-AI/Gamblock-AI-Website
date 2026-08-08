@@ -234,6 +234,14 @@ export const MESSAGES: Record<string, string> = {
   emergency_review_failed: 'Peninjauan pemulihan darurat gagal.',
   emergency_key_required: 'Kunci darurat wajib diisi.',
   invalid_key: 'Kunci darurat tidak valid.',
+
+  // translation (DeepSeek)
+  translation_failed: 'Gagal menerjemahkan konten. Silakan coba lagi.',
+  translation_invalid_input: 'Input translasi tidak valid.',
+  translation_unavailable:
+    'Layanan AI penerjemahan sedang tidak tersedia.',
+  translation_rate_limited:
+    'Penerjemahan AI sedang sibuk, coba lagi dalam beberapa saat.',
 };
 
 type SupportedLocale = 'id' | 'en';
@@ -315,6 +323,13 @@ const MESSAGES_EN: Record<string, string> = {
     'The Learning Hub draft changed. Reload before saving.',
   learning_hub_taxonomy_conflict:
     'This taxonomy is still used by another item or program.',
+
+  // translation (DeepSeek)
+  translation_failed: 'Could not translate the content. Please try again.',
+  translation_invalid_input: 'Invalid translation input.',
+  translation_unavailable: 'The AI translation service is unavailable.',
+  translation_rate_limited:
+    'The translation service is busy. Please try again shortly.',
 };
 
 const GENERIC: Record<SupportedLocale, string> = {
