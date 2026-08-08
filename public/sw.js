@@ -76,7 +76,7 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       data = event.data.json();
-    } catch (_) {
+    } catch {
       // Non-JSON payloads are ignored.
     }
   }
