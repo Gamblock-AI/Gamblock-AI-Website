@@ -218,13 +218,13 @@ export function StudentAccountability({
             ).map((key) => (
               <label
                 key={key}
-                className="border-border flex h-full min-h-0 cursor-pointer items-center justify-between gap-3 rounded-xl border px-3 py-1.5"
+                className="border-border/80 bg-card hover:bg-muted/20 hover:border-navy/20 flex h-full min-h-0 cursor-pointer items-center justify-between gap-3.5 rounded-xl border p-3 transition-all duration-200 sm:p-3.5"
               >
-                <span>
-                  <span className="text-navy block text-sm font-semibold">
+                <span className="min-w-0 flex-1">
+                  <span className="text-navy block text-sm font-bold tracking-tight">
                     {t(`sharing.${key}.title`)}
                   </span>
-                  <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
+                  <span className="text-muted-foreground mt-1 block text-xs leading-relaxed">
                     {t(`sharing.${key}.body`)}
                   </span>
                 </span>
@@ -241,7 +241,7 @@ export function StudentAccountability({
                       [key]: !current[key],
                     }))
                   }
-                  className="accent-navy size-5 shrink-0"
+                  className="accent-navy size-5 shrink-0 cursor-pointer rounded"
                 />
               </label>
             ))}

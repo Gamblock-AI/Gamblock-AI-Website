@@ -2,11 +2,18 @@
 
 import { type FormEvent, useState } from 'react';
 import {
+  BarChart3,
+  Calendar,
+  Clock,
+  FileCheck2,
   HeartHandshake,
   KeyRound,
+  Lock,
   MessageCircleHeart,
+  MessageSquare,
   ShieldCheck,
   SlidersHorizontal,
+  UserCheck,
   UsersRound,
 } from 'lucide-react';
 import {
@@ -173,6 +180,7 @@ export function StudentPartnersWorkspace({
           title={t('currentGroupTitle')}
           description={t('currentGroupBody')}
           className="h-full xl:col-span-7"
+          contentClassName="justify-start"
           action={
             <DashboardStatus
               tone={membership.status === 'active' ? 'sage' : 'amber'}
@@ -181,31 +189,52 @@ export function StudentPartnersWorkspace({
             </DashboardStatus>
           }
         >
-          <div className="border-border rounded-xl border p-4">
-            <p className="text-navy text-lg font-bold">
-              {group?.name ?? t('groupFallback')}
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {t('managedBy', {
-                name: group?.owner_name ?? t('partnerFallback'),
-              })}
-            </p>
-            {group?.description ? (
-              <p className="text-foreground mt-3 text-sm leading-6">
-                {group.description}
-              </p>
-            ) : null}
-            <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+          <div className="border-border bg-muted/20 flex flex-col gap-3 rounded-xl border p-3.5 sm:p-4">
+            <div className="border-border/80 bg-card rounded-xl border p-4 shadow-2xs">
+              <div className="flex items-center gap-3.5">
+                <div className="bg-azure/80 text-navy flex size-11 shrink-0 items-center justify-center rounded-xl font-bold shadow-2xs">
+                  <UsersRound className="size-5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-navy truncate text-base font-bold tracking-tight sm:text-lg">
+                    {group?.name ?? t('groupFallback')}
+                  </h3>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="border-sage/25 bg-sage/10 text-sage-dark inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                      <UserCheck className="size-3" aria-hidden="true" />
+                      {t('managedBy', {
+                        name: group?.owner_name ?? t('partnerFallback'),
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {group?.description ? (
+                <p className="text-muted-foreground border-border/60 mt-3 border-t pt-3 text-xs leading-relaxed sm:text-sm">
+                  {group.description}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="grid gap-2.5 sm:grid-cols-2">
               <Info
+                icon={Calendar}
                 label={t('joinedLabel')}
                 value={formatDate(membership.joined_at)}
               />
-              <Info label={t('sharingLabel')} value={t('sharingManageHint')} />
               <Info
+                icon={SlidersHorizontal}
+                label={t('sharingLabel')}
+                value={t('sharingManageHint')}
+              />
+              <Info
+                icon={Clock}
                 label={t('pendingApprovalLabel')}
                 value={t('itemCount', { count: pendingApprovalCount })}
               />
               <Info
+                icon={MessageSquare}
                 label={t('latestContactLabel')}
                 value={
                   latestContact
@@ -222,13 +251,35 @@ export function StudentPartnersWorkspace({
           title={t('boundaryDetailsTitle')}
           description={t('boundaryDetailsBody')}
           className="h-full xl:col-span-5"
+          contentClassName="justify-start"
         >
-          <ul className="space-y-3">
-            <BoundaryItem>{t('boundaryItems.approval')}</BoundaryItem>
-            <BoundaryItem>{t('boundaryItems.aggregate')}</BoundaryItem>
-            <BoundaryItem>{t('boundaryItems.private')}</BoundaryItem>
-            <BoundaryItem>{t('boundaryItems.control')}</BoundaryItem>
-          </ul>
+          <div className="border-border bg-muted/20 flex flex-col gap-2.5 rounded-xl border p-3.5 sm:p-4">
+            <BoundaryItem
+              icon={FileCheck2}
+              title={t('boundaryLabels.approval')}
+            >
+              {t('boundaryItems.approval')}
+            </BoundaryItem>
+            <BoundaryItem
+              icon={BarChart3}
+              title={t('boundaryLabels.aggregate')}
+            >
+              {t('boundaryItems.aggregate')}
+            </BoundaryItem>
+            <BoundaryItem
+              icon={Lock}
+              title={t('boundaryLabels.private')}
+              tone="sage"
+            >
+              {t('boundaryItems.private')}
+            </BoundaryItem>
+            <BoundaryItem
+              icon={SlidersHorizontal}
+              title={t('boundaryLabels.control')}
+            >
+              {t('boundaryItems.control')}
+            </BoundaryItem>
+          </div>
         </DashboardPanel>
       </div>
 
