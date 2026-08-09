@@ -87,7 +87,11 @@
         "nearComplete": "Near completion"
       }
     },
-    "itemCount": "{count} items"
+    "itemCount": "{count} items",
+    "advancedTitle": "Advanced analytics",
+    "advancedBody": "Gambling site visits, peak hours, and protection events across your groups.",
+    "advancedEmptyTitle": "No data yet",
+    "advancedEmptyBody": "Aggregates appear once members who consented to sharing activity send protection statistics."
   },
   "recoveryDashboard": {
     "eyebrow": "Your personal overview",
@@ -1208,11 +1212,20 @@
     "kindToolkit": "Toolkit",
     "kindOpportunity": "Opportunity",
     "noProviders": "No learning services yet. Try again later.",
+    "searchPlaceholder": "Search learning platforms or providers...",
+    "platformsCount": "{count} platforms available",
+    "clearSearch": "Clear filter",
+    "featuredBadge": "Featured Platform",
+    "noSearchResults": "No platforms found matching \"{query}\".",
     "courseCount": "{count} courses",
     "openCourse": "Open course",
     "backToDirections": "Back to learning directions",
     "providerUnknown": "Learning service",
-    "noCourses": "No courses from this service yet."
+    "noCourses": "No courses from this service yet.",
+    "paginationLabel": "Page navigation",
+    "prev": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {current} of {total}"
   },
   "dashboardTour": {
     "tourLabel": "Dashboard guide",

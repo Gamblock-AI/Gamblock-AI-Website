@@ -703,6 +703,34 @@ export function LearningHubTab({
                     onChange={(event) => updateDoc('url', event.target.value)}
                   />
                 </label>
+                <label className="space-y-2">
+                  <span className="text-navy text-xs font-bold">
+                    {t('providerDescriptionId')}
+                  </span>
+                  <textarea
+                    className={`${adminFieldClassName} py-2`}
+                    rows={2}
+                    maxLength={200}
+                    value={text(draft.document, 'provider_description_id')}
+                    onChange={(event) =>
+                      updateDoc('provider_description_id', event.target.value)
+                    }
+                  />
+                </label>
+                <label className="space-y-2">
+                  <span className="text-navy text-xs font-bold">
+                    {t('providerDescriptionEn')}
+                  </span>
+                  <textarea
+                    className={`${adminFieldClassName} py-2`}
+                    rows={2}
+                    maxLength={200}
+                    value={text(draft.document, 'provider_description_en')}
+                    onChange={(event) =>
+                      updateDoc('provider_description_en', event.target.value)
+                    }
+                  />
+                </label>
                 <LearningMediaField
                   label="Logo penyedia"
                   help="Gambar logo layanan (mis. Dicoding)."

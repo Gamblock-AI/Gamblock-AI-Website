@@ -249,19 +249,19 @@
     "sharing": {
       "protection_health": {
         "title": "Protection readiness",
-        "body": "Ready or needs-attention status and active device count."
+        "body": "Displays the protection readiness summary (ready or needs attention) and the count of active connected devices. Deep technical details and device specifications are never shared."
       },
       "protection_activity": {
         "title": "Protection activity",
-        "body": "Weekly block count and heartbeat time bucket, without URLs."
+        "body": "Displays the total count of weekly blocked attempts and the aggregate heartbeat time window. URLs, web domains, page titles, and browsing history are never transmitted."
       },
       "recovery_engagement": {
         "title": "Recovery engagement",
-        "body": "Check-in days and completed missions, without mood or note content."
+        "body": "Shares consistency statistics such as active check-in days and total completed daily missions. Personal reflection notes, mood ratings, intentions, and journal entries remain encrypted and strictly private."
       },
       "education_progress": {
         "title": "Education progress",
-        "body": "Broad completion stage, without learning responses."
+        "body": "Displays the overall progress of completed learning modules and active skill milestones. Quiz answers, practice responses, and personal evaluation notes are never accessible to partners."
       }
     },
     "membershipStatus": {
@@ -381,6 +381,12 @@
     },
     "boundaryDetailsTitle": "What your partner can see",
     "boundaryDetailsBody": "Accountability supports protection decisions without becoming surveillance of personal activity.",
+    "boundaryLabels": {
+      "approval": "Protection approvals",
+      "aggregate": "Aggregate statistics",
+      "private": "Private & confidential",
+      "control": "Autonomous control"
+    },
     "boundaryItems": {
       "approval": "Protection pause or removal requests that you submit.",
       "aggregate": "Aggregate summaries from categories that you explicitly enable.",
@@ -468,5 +474,30 @@
     "memberRemoved": "The member was removed and sharing stopped.",
     "archiveGroup": "Archive group with no active members",
     "groupArchived": "Group archived."
+  },
+  "analyticsDashboard": {
+    "insightsLabel": "Analytics insights",
+    "trendTitle": "Gambling site visits per day",
+    "trendBody": "Daily blocked attempts to access gambling sites over the selected period.",
+    "peakHoursTitle": "Peak hours",
+    "peakHoursBody": "Distribution of blocked gambling site accesses per hour in device-local time.",
+    "metricsTitle": "Protection summary",
+    "metricsBody": "Aggregate protection events over the selected period.",
+    "periodToggle": "Select period",
+    "periodDays": "{days} days",
+    "metricBlocked": "Blocked accesses",
+    "metricInterventions": "Interventions",
+    "metricTamper": "Tamper detections",
+    "metricRevoked": "Permissions revoked",
+    "metricProtectedUsers": "Protected users",
+    "metricMembers": "Active members",
+    "metricSharing": "Activity sharing",
+    "metricSharingValue": "{shared} of {total} members",
+    "periodSummary": "Over the last {days} days",
+    "trendSummary": "{total} gambling site accesses were blocked in {days} days.",
+    "hourlySummary": "{total} blocked accesses; {peak}.",
+    "peakHourSingle": "peak at {hour}:00 with {count} accesses",
+    "peakHourMultiple": "multiple peak hours with {count} accesses",
+    "privacyNote": "Aggregates only. URLs, domains, and browsing history never leave the device."
   }
 }

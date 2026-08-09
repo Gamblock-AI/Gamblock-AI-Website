@@ -68,7 +68,7 @@ export const MESSAGES: Record<string, string> = {
   password_reuse_not_allowed:
     'Kata sandi baru harus berbeda dari kata sandi saat ini.',
   password_update_failed: 'Gagal memperbarui kata sandi.',
-  analytics_period_invalid: 'Periode analitik harus 7 atau 30 hari.',
+  analytics_period_invalid: 'Periode analitik tidak valid.',
   protection_analytics_failed: 'Gagal memuat analitik perlindungan.',
   reminder_preference_load_failed: 'Preferensi pengingat belum dapat dimuat.',
   reminder_preference_update_failed: 'Preferensi pengingat belum dapat disimpan.',

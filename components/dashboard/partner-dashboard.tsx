@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
+  BarChart3,
   CircleAlert,
   ClipboardCheck,
   Handshake,
@@ -22,8 +24,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAccountability } from '@/hooks/use-accountability';
+import {
+  usePartnerAnalytics,
+  type AnalyticsPeriod,
+  type AnalyticsSummary,
+} from '@/hooks/use-analytics';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
+import { AnalyticsInsights } from './analytics/analytics-insights';
+import { AnalyticsMetric } from './analytics/analytics-metric';
 import { PartnerAnalyticsPanel } from './partner-analytics-panel';
 
 interface PartnerDashboardProps {
@@ -39,6 +48,8 @@ const liveMemberStatuses = new Set([
 
 export function PartnerDashboard({ name }: PartnerDashboardProps) {
   const t = useTranslations('partnerDashboard');
+  const [selectedGroupID, setSelectedGroupID] = useState('all');
+  const [period, setPeriod] = useState<AnalyticsPeriod>(14);
   const accountability = useAccountability();
   const activeGroups = accountability.workspace.groups.filter(
     (group) => group.status === 'active'
@@ -62,6 +73,9 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
     (member) => member.aggregate.protection_status === 'attention'
   ).length;
   const unknownMembers = activeMembers.length - readyMembers - attentionMembers;
+  const groupId =
+    selectedGroupID === 'all' ? undefined : selectedGroupID;
+  const analytics = usePartnerAnalytics(period, groupId);
 
   return (
     <DashboardPage>
@@ -127,7 +141,69 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
           <PartnerAnalyticsPanel
             groups={accountability.workspace.groups}
             members={accountability.workspace.members}
+            selectedGroupID={selectedGroupID}
+            onSelectedGroupIDChange={setSelectedGroupID}
           />
+
+          <section aria-labelledby="advanced-analytics-title">
+            <div className="mb-3 flex items-center gap-3">
+              <span className="bg-azure text-navy flex size-9 items-center justify-center rounded-lg">
+                <BarChart3 className="size-4" aria-hidden="true" />
+              </span>
+              <div>
+                <h2
+                  id="advanced-analytics-title"
+                  className="text-navy text-lg font-bold"
+                >
+                  {t('advancedTitle')}
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  {t('advancedBody')}
+                </p>
+              </div>
+            </div>
+            {analytics.error ? (
+              <DashboardNotice
+                icon={CircleAlert}
+                title={t('errorTitle')}
+                tone="amber"
+                role="alert"
+                action={
+                  <Button
+                    variant="outline"
+                    onClick={() => void analytics.refetch()}
+                  >
+                    {t('retry')}
+                  </Button>
+                }
+              >
+                {t('errorBody')}
+              </DashboardNotice>
+            ) : analytics.loading ? (
+              <div className="grid gap-4 xl:grid-cols-12" role="status">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="xl:col-span-6 h-56 rounded-2xl"
+                  />
+                ))}
+                <span className="sr-only">{t('loading')}</span>
+              </div>
+            ) : (
+              <AnalyticsInsights
+                summary={analytics.data ?? analyticsFallback(period)}
+                period={period}
+                onPeriodChange={setPeriod}
+                emptyTitle={t('advancedEmptyTitle')}
+                emptyBody={t('advancedEmptyBody')}
+                metricsExtra={
+                  <SharingMetrics
+                    summary={analytics.data ?? analyticsFallback(period)}
+                  />
+                }
+              />
+            )}
+          </section>
 
           <div className="grid gap-5 xl:grid-cols-12 xl:items-stretch">
             <DashboardPanel
@@ -197,6 +273,34 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
         {t('privacyBody')}
       </DashboardNotice>
     </DashboardPage>
+  );
+}
+
+function analyticsFallback(period: AnalyticsPeriod): AnalyticsSummary {
+  return {
+    period_days: period,
+    totals: { blocked: 0, interventions: 0, tamper_events: 0, permission_revoked: 0 },
+    daily: [],
+    hourly: [],
+    data_state: 'empty',
+    member_count: 0,
+    shared_member_count: 0,
+  };
+}
+
+function SharingMetrics({ summary }: { summary: AnalyticsSummary }) {
+  const t = useTranslations('analyticsDashboard');
+  return (
+    <>
+      <AnalyticsMetric label={t('metricMembers')} value={summary.member_count} />
+      <AnalyticsMetric
+        label={t('metricSharing')}
+        value={t('metricSharingValue', {
+          shared: summary.shared_member_count,
+          total: summary.member_count,
+        })}
+      />
+    </>
   );
 }
 

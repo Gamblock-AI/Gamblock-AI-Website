@@ -22,6 +22,8 @@
     "learningHubDescription": "Kelola katalog skill UTY, taxonomy program, dan lifecycle editorial tanpa membuka data progres mahasiswa.",
     "learningHubItemsTitle": "Materi Learning Hub",
     "learningHubItemsDescription": "Setiap item melewati draf, tinjauan, publikasi, dan arsip. Progress/refleksi mahasiswa tidak tersedia di CMS.",
+    "providerDescriptionId": "Deskripsi penyedia (Indonesia)",
+    "providerDescriptionEn": "Provider description (English)",
     "learningHubNewItem": "Materi baru",
     "learningHubCreateDescription": "Isi identitas bilingual minimum untuk membuat draf. Sumber, outcome, pemetaan prodi, dan bukti review dilengkapi di editor sebelum diajukan.",
     "learningHubCreateDraft": "Buat draf",
@@ -323,7 +325,11 @@
     "synthetic": "Sintetis",
     "privacyBoundary": "Batas privasi",
     "aggregateOnly": "Agregat saja",
-    "openWorkspace": "Buka workspace"
+    "openWorkspace": "Buka workspace",
+    "analyticsTitle": "Analitik platform",
+    "analyticsBody": "Ringkasan agregat seluruh pengguna: kunjungan situs judi, jam rawan, dan peristiwa perlindungan.",
+    "analyticsEmptyTitle": "Belum ada data",
+    "analyticsEmptyBody": "Data agregat akan muncul setelah perangkat pengguna mengirim statistik perlindungan."
   },
   "operatorInvitation": {
     "eyebrow": "Akses operator",

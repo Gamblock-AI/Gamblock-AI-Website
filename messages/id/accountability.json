@@ -249,19 +249,19 @@
     "sharing": {
       "protection_health": {
         "title": "Kesiapan perlindungan",
-        "body": "Status siap atau perlu perhatian dan jumlah perangkat aktif."
+        "body": "Menampilkan ringkasan status kesiapan proteksi (siap atau perlu perhatian) dan jumlah perangkat aktif yang terhubung. Rincian teknis mendalam dan spesifikasi perangkat tidak dibagikan."
       },
       "protection_activity": {
         "title": "Aktivitas perlindungan",
-        "body": "Jumlah blok mingguan dan rentang waktu heartbeat, tanpa URL."
+        "body": "Menampilkan jumlah total pemblokiran akses mingguan dan rentang waktu heartbeat perangkat secara agregat. Alamat URL, domain situs, judul halaman, dan riwayat browsing sama sekali tidak pernah dikirim."
       },
       "recovery_engagement": {
         "title": "Keterlibatan pemulihan",
-        "body": "Jumlah hari check-in dan misi selesai, tanpa mood atau isi catatan."
+        "body": "Membagikan statistik konsistensi seperti jumlah hari check-in aktif dan total misi harian yang berhasil diselesaikan. Catatan refleksi, suasana hati (mood), niat pribadi, dan isi jurnal tetap terenkripsi serta sepenuhnya privat."
       },
       "education_progress": {
         "title": "Progres edukasi",
-        "body": "Tahap penyelesaian umum, tanpa jawaban pembelajaran."
+        "body": "Menampilkan gambaran umum kemajuan modul pembelajaran dan pencapaian keterampilan yang sedang dipelajari. Jawaban kuis, respons latihan, dan catatan evaluasi belajar tidak dapat dilihat pendamping."
       }
     },
     "membershipStatus": {
@@ -381,6 +381,12 @@
     },
     "boundaryDetailsTitle": "Apa yang dapat dilihat pendamping",
     "boundaryDetailsBody": "Pendampingan membantu keputusan perlindungan tanpa menjadi pengawasan aktivitas pribadi.",
+    "boundaryLabels": {
+      "approval": "Persetujuan proteksi",
+      "aggregate": "Statistik agregat",
+      "private": "Privat & rahasia",
+      "control": "Kendali mandiri"
+    },
     "boundaryItems": {
       "approval": "Permintaan jeda atau pencopotan perlindungan yang Anda ajukan.",
       "aggregate": "Ringkasan agregat yang kategorinya Anda aktifkan sendiri.",
@@ -468,5 +474,30 @@
     "memberRemoved": "Anggota dikeluarkan dan berbagi dihentikan.",
     "archiveGroup": "Arsipkan grup tanpa anggota aktif",
     "groupArchived": "Grup diarsipkan."
+  },
+  "analyticsDashboard": {
+    "insightsLabel": "Wawasan analitik",
+    "trendTitle": "Kunjungan situs judi per hari",
+    "trendBody": "Jumlah percobaan akses situs judi yang diblokir setiap hari selama periode terpilih.",
+    "peakHoursTitle": "Jam rawan",
+    "peakHoursBody": "Distribusi akses situs judi yang diblokir per jam dalam waktu lokal perangkat.",
+    "metricsTitle": "Ringkasan perlindungan",
+    "metricsBody": "Agregat peristiwa perlindungan selama periode terpilih.",
+    "periodToggle": "Pilih periode",
+    "periodDays": "{days} hari",
+    "metricBlocked": "Akses diblokir",
+    "metricInterventions": "Intervensi",
+    "metricTamper": "Deteksi tamper",
+    "metricRevoked": "Izin dicabut",
+    "metricProtectedUsers": "Pengguna terlindungi",
+    "metricMembers": "Anggota aktif",
+    "metricSharing": "Berbagi aktivitas",
+    "metricSharingValue": "{shared} dari {total} anggota",
+    "periodSummary": "Selama {days} hari terakhir",
+    "trendSummary": "Sebanyak {total} akses situs judi diblokir dalam {days} hari.",
+    "hourlySummary": "Total {total} akses diblokir; {peak}.",
+    "peakHourSingle": "puncak pada jam {hour}:00 dengan {count} akses",
+    "peakHourMultiple": "beberapa jam puncak dengan {count} akses",
+    "privacyNote": "Hanya agregat yang ditampilkan. URL, domain, dan riwayat browsing tidak pernah meninggalkan perangkat."
   }
 }

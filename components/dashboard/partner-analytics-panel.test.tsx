@@ -67,7 +67,12 @@ describe('PartnerAnalyticsPanel', () => {
   it('renders accessible filters, desktop table, mobile cards, and consent states', () => {
     render(
       <NextIntlClientProvider locale="id" messages={recoveryMessages}>
-        <PartnerAnalyticsPanel groups={groups} members={members} />
+        <PartnerAnalyticsPanel
+          groups={groups}
+          members={members}
+          selectedGroupID="all"
+          onSelectedGroupIDChange={() => {}}
+        />
       </NextIntlClientProvider>
     );
 

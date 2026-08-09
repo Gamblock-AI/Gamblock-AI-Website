@@ -22,6 +22,8 @@
     "learningHubDescription": "Manage the UTY skills catalog, program taxonomy, and editorial lifecycle without exposing student progress data.",
     "learningHubItemsTitle": "Learning Hub items",
     "learningHubItemsDescription": "Every item moves through draft, review, publication, and archive. Student progress and reflections are never available in this CMS.",
+    "providerDescriptionId": "Provider description (Indonesian)",
+    "providerDescriptionEn": "Provider description (English)",
     "learningHubNewItem": "New item",
     "learningHubCreateDescription": "Enter the minimum bilingual identity for this draft. Add its source, outcomes, program mapping, and review evidence in the editor before submission.",
     "learningHubCreateDraft": "Create draft",
@@ -323,7 +325,11 @@
     "synthetic": "Synthetic",
     "privacyBoundary": "Privacy boundary",
     "aggregateOnly": "Aggregates only",
-    "openWorkspace": "Open workspace"
+    "openWorkspace": "Open workspace",
+    "analyticsTitle": "Platform analytics",
+    "analyticsBody": "Platform-wide aggregates: gambling site visits, peak hours, and protection events.",
+    "analyticsEmptyTitle": "No data yet",
+    "analyticsEmptyBody": "Aggregates appear once user devices send protection statistics."
   },
   "operatorInvitation": {
     "eyebrow": "Operator access",

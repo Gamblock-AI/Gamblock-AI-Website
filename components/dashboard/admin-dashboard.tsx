@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
+  BarChart3,
   BookOpen,
   CircleAlert,
   FileCheck2,
@@ -24,19 +26,28 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAdminOperations } from '@/hooks/use-admin-operations';
+import {
+  usePlatformAnalytics,
+  type AnalyticsPeriod,
+  type AnalyticsSummary,
+} from '@/hooks/use-analytics';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
+import { AnalyticsInsights } from './analytics/analytics-insights';
+import { AnalyticsMetric } from './analytics/analytics-metric';
 
 export function AdminDashboard({ name }: { name: string }) {
   const t = useTranslations('adminDashboard');
   const user = useLocalUser();
   const verified = Boolean(user.phone_verified_at);
+  const [period, setPeriod] = useState<AnalyticsPeriod>(14);
   const operations = useAdminOperations(
     verified ? user.role : undefined,
     'overview'
   );
   const overview = operations.overview;
+  const analytics = usePlatformAnalytics(period, verified);
 
   return (
     <DashboardPage>
@@ -157,9 +168,92 @@ export function AdminDashboard({ name }: { name: string }) {
               />
             </div>
           </DashboardPanel>
+
+          <section aria-labelledby="platform-analytics-title">
+            <div className="mb-3 flex items-center gap-3">
+              <span className="bg-azure text-navy flex size-9 items-center justify-center rounded-lg">
+                <BarChart3 className="size-4" aria-hidden="true" />
+              </span>
+              <div>
+                <h2
+                  id="platform-analytics-title"
+                  className="text-navy text-lg font-bold"
+                >
+                  {t('analyticsTitle')}
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  {t('analyticsBody')}
+                </p>
+              </div>
+            </div>
+            {analytics.error ? (
+              <DashboardNotice
+                icon={CircleAlert}
+                title={t('errorTitle')}
+                tone="amber"
+                role="alert"
+                action={
+                  <Button
+                    variant="outline"
+                    onClick={() => void analytics.refetch()}
+                  >
+                    {t('retry')}
+                  </Button>
+                }
+              >
+                {t('errorBody')}
+              </DashboardNotice>
+            ) : analytics.loading ? (
+              <div className="grid gap-4 xl:grid-cols-12" role="status">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="xl:col-span-6 h-56 rounded-2xl"
+                  />
+                ))}
+                <span className="sr-only">{t('loading')}</span>
+              </div>
+            ) : (
+              <AnalyticsInsights
+                summary={analytics.data ?? platformFallback(period)}
+                period={period}
+                onPeriodChange={setPeriod}
+                emptyTitle={t('analyticsEmptyTitle')}
+                emptyBody={t('analyticsEmptyBody')}
+                metricsExtra={
+                  <ProtectedUsersMetric
+                    summary={analytics.data ?? platformFallback(period)}
+                  />
+                }
+              />
+            )}
+          </section>
         </>
       )}
     </DashboardPage>
+  );
+}
+
+function platformFallback(period: AnalyticsPeriod): AnalyticsSummary {
+  return {
+    period_days: period,
+    totals: { blocked: 0, interventions: 0, tamper_events: 0, permission_revoked: 0 },
+    daily: [],
+    hourly: [],
+    data_state: 'empty',
+    member_count: 0,
+    shared_member_count: 0,
+    protected_users: 0,
+  };
+}
+
+function ProtectedUsersMetric({ summary }: { summary: AnalyticsSummary }) {
+  const t = useTranslations('analyticsDashboard');
+  return (
+    <AnalyticsMetric
+      label={t('metricProtectedUsers')}
+      value={summary.protected_users ?? 0}
+    />
   );
 }
 

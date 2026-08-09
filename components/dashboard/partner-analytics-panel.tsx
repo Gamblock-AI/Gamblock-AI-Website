@@ -13,11 +13,6 @@ import type {
   AccountabilityMembership,
 } from '@/hooks/use-accountability';
 
-interface PartnerAnalyticsPanelProps {
-  groups: AccountabilityGroup[];
-  members: AccountabilityMembership[];
-}
-
 interface Translation {
   (key: string, values?: Record<string, string | number>): string;
 }
@@ -55,10 +50,16 @@ const educationKey = {
 export function PartnerAnalyticsPanel({
   groups,
   members,
-}: PartnerAnalyticsPanelProps) {
+  selectedGroupID,
+  onSelectedGroupIDChange,
+}: {
+  groups: AccountabilityGroup[];
+  members: AccountabilityMembership[];
+  selectedGroupID: string;
+  onSelectedGroupIDChange: (groupID: string) => void;
+}) {
   const t = useTranslations('partnerDashboard.analytics');
   const locale = useLocale();
-  const [selectedGroupID, setSelectedGroupID] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const activeGroups = useMemo(
@@ -95,7 +96,7 @@ export function PartnerAnalyticsPanel({
           {t('groupFilter')}
           <select
             value={effectiveGroupID}
-            onChange={(event) => setSelectedGroupID(event.target.value)}
+            onChange={(event) => onSelectedGroupIDChange(event.target.value)}
             className="border-border bg-background focus-visible:ring-navy/30 min-h-11 rounded-xl border px-3 text-sm font-medium outline-none focus-visible:ring-2"
           >
             <option value="all">{t('allGroups')}</option>

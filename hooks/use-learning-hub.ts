@@ -41,6 +41,7 @@ export interface LearningItem {
   title: string;
   summary: string;
   provider?: string;
+  provider_description?: string;
   url?: string;
   provider_logo_url?: string;
   thumbnail_url?: string;

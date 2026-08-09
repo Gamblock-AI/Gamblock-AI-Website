@@ -24,11 +24,12 @@ daily missions, skill recommendations, self-regulation review loop.
 | Area | State | Evidence/limit |
 |---|---|---|
 | Dashboard (student/partner/admin) | implemented | Per-role surface terpisah di `/dashboard` |
+| Role analytics | implemented | Partner dan admin mendapat panel analitik agregat di dashboard: trend kunjungan situs judi harian (14/30 hari), jam rawan (histogram 24 jam dari `metadata_json.hourly`), counter intervensi/tamper/izin dicabut, coverage sharing (partner) dan jumlah pengguna terlindungi (admin). Data hanya agregat; chart SVG custom tanpa library eksternal. Sumber: `GET /v1/accountability/analytics` (partner, hormati consent sharing) dan `GET /v1/admin/analytics` (admin) via `hooks/use-analytics.ts` |
 | Mood/urge check-in | implemented | Form check-in harian dengan mood/urge scale, privacy-safe |
 | Daily missions | implemented | 5 slot harian `Asia/Jakarta`, 10 EXP/slot, custom missions |
-| Learning Hub / skills | implemented | Katalog UTY 22 program, 5 cluster, progress account-scoped; "Pilih arah belajar" = grid kartu layanan berlogo (provider dicari dari katalog) → `/skills/[providerSlug]` daftar kursus dengan thumbnail; section latihan singkat dihapus |
+| Learning Hub / skills | implemented | Katalog UTY 22 program, 5 cluster, progress account-scoped; "Pilih arah belajar" = grid kartu layanan berlogo (provider dicari dari katalog) dengan deskripsi singkat per layanan (`provider_description` dari document item) → `/skills/[providerSlug]` daftar kursus dengan thumbnail; pagination 9 kartu/halaman di `/skills` dan `/skills/[providerSlug]`; search di `/skills` memakai query param URL `?q=`, turut mencocokkan deskripsi, dan mereset halaman; section latihan singkat dihapus |
 | Intention + weekly review | implemented | Intention manager local-first, weekly review terenkripsi |
-| Psychoeducation | implemented | Dokumen bilingual berversi, progress per-revision |
+| Psychoeducation | implemented | Dokumen bilingual berversi, progress per-revision; search di `/education` memakai query param URL `?q=` dengan debounce (state lokal agar ketikan cepat tidak kehilangan karakter) |
 | Post-intervention handoff | implemented | `/post-intervention` tanpa browsing context |
 | Accountability | implemented | Group/partner lifecycle, removal approval, aggregate dashboard |
 | Recovery/progress | implemented | Journal terenkripsi, grounding tools, recovery room, progress 7/30/90 |
@@ -41,7 +42,7 @@ daily missions, skill recommendations, self-regulation review loop.
 | PWA & daily reminder | implemented (supporting) | Installable PWA (manifest + service worker + Web Push); opt-in daily reminder di Settings, sinkron via `/v1/me/reminder-preference`; push dibuka ke `/{locale}/recovery` |
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 
-Context version: `2026-08-09.4`
+Context version: `2026-08-09.5`
 
 ## Context load order
 

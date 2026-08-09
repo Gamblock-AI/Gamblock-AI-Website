@@ -1,41 +1,64 @@
 'use client';
 
-import { ArrowRight, BookOpen, GraduationCap, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ArrowRight,
+  BookOpen,
+  GraduationCap,
+  LayoutGrid,
+  Loader2,
+  Search,
+  SearchX,
+  X,
+} from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import {
   DashboardPage,
   DashboardPageHeader,
+  DashboardPanel,
+  DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
+import { Pagination } from '@/components/dashboard/pagination';
 import { Button } from '@/components/ui/button';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 import { slugifyProvider } from '@/lib/skills/external-platforms';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { useLearningHub } from '@/hooks/use-learning-hub';
+import { cn } from '@/lib/utils';
+import { ROUTES } from '@/routes';
 
 interface LearningProvider {
   slug: string;
   name: string;
   logoUrl?: string;
+  description?: string;
   count: number;
 }
+
+const PROVIDERS_PER_PAGE = 9;
 
 function ProviderLogo({
   name,
   logoUrl,
+  isFeatured,
 }: {
   name: string;
   logoUrl?: string;
+  isFeatured?: boolean;
 }) {
   const source = logoUrl ? resolveEducationMediaURL(logoUrl) : '';
   if (source) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={source}
-        alt=""
-        loading="lazy"
-        className="bg-muted flex size-14 shrink-0 items-center justify-center rounded-xl border border-navy/10 object-contain p-1.5"
-      />
+      <div className="border-border/80 relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white p-2 shadow-2xs transition-transform duration-200 group-hover:scale-105 sm:size-13">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={source}
+          alt={name}
+          loading="lazy"
+          className="h-full w-full object-contain"
+        />
+      </div>
     );
   }
   const initials = name
@@ -46,9 +69,16 @@ function ProviderLogo({
     .slice(0, 2)
     .toUpperCase();
   return (
-    <span className="bg-navy text-white flex size-14 shrink-0 items-center justify-center rounded-xl text-base font-extrabold">
+    <div
+      className={cn(
+        'flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold shadow-2xs transition-transform duration-200 group-hover:scale-105 sm:size-13 sm:text-base',
+        isFeatured
+          ? 'bg-navy text-white'
+          : 'from-navy to-navy-light bg-gradient-to-br text-white'
+      )}
+    >
       {initials}
-    </span>
+    </div>
   );
 }
 
@@ -56,8 +86,13 @@ export function SkillsHubClient() {
   const t = useTranslations('skillsHub');
   const locale = useLocale();
   const hub = useLearningHub(locale);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
+  const [page, setPage] = useState(1);
+  const urlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const providers: LearningProvider[] = (() => {
+  const providers: LearningProvider[] = useMemo(() => {
     if (!hub.catalog) return [];
     const bySlug = new Map<string, LearningProvider>();
     for (const item of hub.catalog.items) {
@@ -69,11 +104,15 @@ export function SkillsHubClient() {
         if (!existing.logoUrl && item.provider_logo_url) {
           existing.logoUrl = item.provider_logo_url;
         }
+        if (!existing.description && item.provider_description) {
+          existing.description = item.provider_description;
+        }
       } else {
         bySlug.set(slug, {
           slug,
           name: item.provider,
           logoUrl: item.provider_logo_url,
+          description: item.provider_description,
           count: 1,
         });
       }
@@ -81,7 +120,49 @@ export function SkillsHubClient() {
     return Array.from(bySlug.values()).sort(
       (left, right) => right.count - left.count
     );
-  })();
+  }, [hub.catalog]);
+
+  const filteredProviders = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase(locale);
+    if (!normalized) return providers;
+    return providers.filter(
+      (provider) =>
+        provider.name.toLocaleLowerCase(locale).includes(normalized) ||
+        provider.slug.toLocaleLowerCase(locale).includes(normalized) ||
+        provider.description
+          ?.toLocaleLowerCase(locale)
+          .includes(normalized)
+    );
+  }, [locale, providers, query]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProviders.length / PROVIDERS_PER_PAGE)
+  );
+  const safePage = Math.min(page, totalPages);
+  const pagedProviders = filteredProviders.slice(
+    (safePage - 1) * PROVIDERS_PER_PAGE,
+    safePage * PROVIDERS_PER_PAGE
+  );
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+    setPage(1);
+    if (urlTimerRef.current) clearTimeout(urlTimerRef.current);
+    urlTimerRef.current = window.setTimeout(() => {
+      urlTimerRef.current = null;
+      router.replace({
+        pathname: ROUTES.SKILLS,
+        query: value.trim() ? { q: value } : {},
+      });
+    }, 350);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (urlTimerRef.current) clearTimeout(urlTimerRef.current);
+    };
+  }, []);
 
   return (
     <DashboardPage>
@@ -92,76 +173,162 @@ export function SkillsHubClient() {
         description={t('description')}
       />
 
-      <section
-        className="border-border bg-card shadow-soft rounded-2xl border p-5 sm:p-6"
-        aria-labelledby="learning-hub-providers-title"
+      <DashboardPanel
+        icon={BookOpen}
+        title={t('selectorTitle')}
+        description={t('selectorDescription')}
+        action={
+          providers.length > 0 ? (
+            <DashboardStatus tone="navy">
+              <span className="flex items-center gap-1.5 font-semibold">
+                <LayoutGrid className="text-navy size-3.5" aria-hidden="true" />
+                {t('platformsCount', { count: providers.length })}
+              </span>
+            </DashboardStatus>
+          ) : null
+        }
       >
-        <div className="flex items-start gap-3">
-          <span className="bg-navy flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm">
-            <BookOpen className="size-5" aria-hidden="true" />
-          </span>
-          <div>
-            <h2
-              id="learning-hub-providers-title"
-              className="text-navy text-lg font-bold"
-            >
-              {t('selectorTitle')}
-            </h2>
-            <p className="text-muted-foreground mt-1 text-sm leading-6">
-              {t('selectorDescription')}
-            </p>
-          </div>
-        </div>
-
         {hub.loading ? (
-          <p
-            className="text-muted-foreground flex items-center gap-2 text-sm"
+          <div
+            className="text-muted-foreground flex items-center justify-center gap-2 py-12 text-sm"
             role="status"
           >
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            {t('loading')}
-          </p>
+            <Loader2
+              className="text-navy size-5 animate-spin"
+              aria-hidden="true"
+            />
+            <span>{t('loading')}</span>
+          </div>
         ) : hub.error ? (
-          <div className="border-amber/40 bg-amber/10 mt-5 rounded-xl border p-4 text-sm">
-            {t('error')}{' '}
+          <div className="border-amber/40 bg-amber/10 mt-2 flex items-center justify-between rounded-2xl border p-4 text-sm">
+            <span>{t('error')}</span>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="ml-2"
               onClick={() => void hub.refetch()}
             >
               {t('retry')}
             </Button>
           </div>
         ) : providers.length === 0 ? (
-          <p className="text-muted-foreground mt-5 rounded-2xl border border-dashed p-6 text-center text-sm">
+          <p className="text-muted-foreground mt-2 rounded-2xl border border-dashed p-8 text-center text-sm">
             {t('noProviders')}
           </p>
         ) : (
-          <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {providers.map((provider) => (
-              <Link
-                key={provider.slug}
-                href={`/skills/${provider.slug}`}
-                className="border-border bg-card text-foreground hover:border-navy/30 hover:bg-azure/40 focus-visible:ring-navy/30 group flex items-center gap-4 rounded-2xl border p-4 transition-colors outline-none focus-visible:ring-2"
-              >
-                <ProviderLogo name={provider.name} logoUrl={provider.logoUrl} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-navy font-bold">{provider.name}</p>
-                  <p className="text-muted-foreground mt-0.5 text-xs">
-                    {t('courseCount', { count: provider.count })}
-                  </p>
-                </div>
-                <ArrowRight
-                  className="text-navy/50 group-hover:text-navy size-4 shrink-0 transition-colors"
+          <div>
+            <div className="mb-6">
+              <div className="relative w-full sm:w-80 sm:max-w-sm">
+                <Search
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2"
                   aria-hidden="true"
                 />
-              </Link>
-            ))}
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => handleChange(e.target.value)}
+                  placeholder={t('searchPlaceholder')}
+                  className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-10 w-full rounded-xl border pr-9 pl-10 text-xs outline-none transition-all focus-visible:ring-2 sm:text-sm"
+                />
+                {query ? (
+                  <button
+                    type="button"
+                    onClick={() => handleChange('')}
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-1"
+                    aria-label={t('clearSearch')}
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            {filteredProviders.length === 0 ? (
+              <div className="border-border/80 bg-muted/20 rounded-2xl border border-dashed p-8 text-center">
+                <SearchX
+                  className="text-muted-foreground/60 mx-auto size-8"
+                  aria-hidden="true"
+                />
+                <p className="text-navy mt-2 text-sm font-bold">
+                  {t('noSearchResults', { query })}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => handleChange('')}
+                >
+                  {t('clearSearch')}
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {pagedProviders.map((provider) => {
+                    const isFeatured = provider.slug === 'gamblock-ai';
+                    return (
+                      <Link
+                        key={provider.slug}
+                        href={`/skills/${provider.slug}`}
+                        className={cn(
+                          'group relative flex items-center gap-3.5 rounded-2xl border p-3.5 transition-all duration-200 outline-none hover:-translate-y-0.5 hover:shadow-card focus-visible:ring-2 focus-visible:ring-navy/30 sm:p-4',
+                          isFeatured
+                            ? 'border-navy/25 bg-gradient-to-br from-azure/40 via-card to-card hover:border-navy/45 shadow-soft'
+                            : 'border-border/80 bg-card hover:border-navy/25 hover:bg-muted/20 shadow-2xs'
+                        )}
+                      >
+                        <ProviderLogo
+                          name={provider.name}
+                          logoUrl={provider.logoUrl}
+                          isFeatured={isFeatured}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-navy group-hover:text-navy-light truncate text-sm font-bold tracking-tight transition-colors sm:text-[0.9375rem]">
+                              {provider.name}
+                            </p>
+                            {isFeatured ? (
+                              <span className="border-navy/15 bg-navy/10 text-navy rounded-full border px-1.5 py-0.5 text-[0.625rem] font-bold tracking-wider uppercase">
+                                {t('featuredBadge')}
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs font-medium">
+                            <BookOpen
+                              className="text-navy/60 size-3 shrink-0"
+                              aria-hidden="true"
+                            />
+                            <span>
+                              {t('courseCount', { count: provider.count })}
+                            </span>
+                          </div>
+                          {provider.description ? (
+                            <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-5">
+                              {provider.description}
+                            </p>
+                          ) : null}
+                        </div>
+                        <span className="bg-muted/50 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-200 group-hover:bg-navy group-hover:text-white">
+                          <ArrowRight
+                            className="size-4 transition-transform group-hover:translate-x-0.5"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <Pagination
+                  currentPage={safePage}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
           </div>
         )}
-      </section>
+      </DashboardPanel>
     </DashboardPage>
   );
 }

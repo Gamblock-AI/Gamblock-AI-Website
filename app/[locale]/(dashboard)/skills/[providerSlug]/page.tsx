@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useMemo } from 'react';
+import { use, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Clock3,
@@ -9,11 +9,14 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { DashboardPage } from '@/components/dashboard/dashboard-page';
+import { Pagination } from '@/components/dashboard/pagination';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
 import { slugifyProvider } from '@/lib/skills/external-platforms';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { useLearningHub, type LearningItem } from '@/hooks/use-learning-hub';
+
+const COURSES_PER_PAGE = 9;
 
 const kindKeys: Record<LearningItem['kind'], string> = {
   course: 'kindCourse',
@@ -103,6 +106,12 @@ export default function ProviderDetailPage({
   const locale = useLocale();
   const { providerSlug } = use(params);
   const hub = useLearningHub(locale);
+  const [page, setPage] = useState(1);
+  const [activeSlug, setActiveSlug] = useState(providerSlug);
+  if (activeSlug !== providerSlug) {
+    setActiveSlug(providerSlug);
+    setPage(1);
+  }
 
   const providerItems = useMemo(
     () =>
@@ -113,6 +122,15 @@ export default function ProviderDetailPage({
   );
 
   const provider = providerItems[0];
+  const totalPages = Math.max(
+    1,
+    Math.ceil(providerItems.length / COURSES_PER_PAGE)
+  );
+  const safePage = Math.min(page, totalPages);
+  const pagedItems = providerItems.slice(
+    (safePage - 1) * COURSES_PER_PAGE,
+    safePage * COURSES_PER_PAGE
+  );
 
   return (
     <DashboardPage>
@@ -144,6 +162,11 @@ export default function ProviderDetailPage({
           <p className="text-muted-foreground mt-1 text-sm">
             {t('courseCount', { count: providerItems.length })}
           </p>
+          {provider?.provider_description ? (
+            <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
+              {provider.provider_description}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -160,10 +183,17 @@ export default function ProviderDetailPage({
           {t('noCourses')}
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {providerItems.map((item) => (
-            <CourseCard key={item.id} item={item} />
-          ))}
+        <div className="mt-6">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {pagedItems.map((item) => (
+              <CourseCard key={item.id} item={item} />
+            ))}
+          </div>
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         </div>
       )}
     </DashboardPage>
