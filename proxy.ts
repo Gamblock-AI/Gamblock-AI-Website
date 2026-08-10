@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { routing } from './i18n/routing';
-import { GUEST_ROUTES, PROTECTED_ROUTES } from './routes';
+import { GUEST_ROUTES, PROTECTED_ROUTES, ROUTES } from './routes';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -30,6 +30,16 @@ export function proxy(request: NextRequest) {
   const response = intlMiddleware(request);
 
   const token = request.cookies.get('gamblock_access_token')?.value;
+
+  // Legacy /progress route moved to the rebranded recovery hub.
+  if (
+    pathnameWithoutLocale === ROUTES.PROGRESS ||
+    pathnameWithoutLocale.startsWith(ROUTES.PROGRESS + '/')
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}${ROUTES.RECOVERY}`;
+    return NextResponse.redirect(url);
+  }
 
   const isProtected = PROTECTED_ROUTES.some(
     (route) =>

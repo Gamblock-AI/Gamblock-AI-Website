@@ -13,31 +13,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { levelPoseAsset, LEVEL_REWARDS } from '@/lib/recovery/level-rewards';
+import { levelPoseAsset } from '@/lib/recovery/level-rewards';
 import { getLevelTitleKey } from '@/lib/recovery/level-titles';
 
 /**
- * Calm dedicated level-up moment: the tier's mascot pose, the new journey
- * title, and whatever the level unlocked. No confetti, no sound, no pressure —
- * a single continue action. Reduced motion renders everything statically.
+ * Calm dedicated level-up moment: the tier's mascot pose and the new journey
+ * title. No confetti, no sound, no pressure — a single continue action.
+ * Reduced motion renders everything statically.
  */
 export function LevelUpMoment({
   level,
-  newlyUnlocked,
   onClose,
 }: {
   level: number;
-  newlyUnlocked: string[];
   onClose: () => void;
 }) {
   const t = useTranslations('recoveryDashboard');
-  const room = useTranslations('recoveryRoom');
   const reduce = useReducedMotion();
-  const reward = LEVEL_REWARDS[level];
-  const unlockLabels = [
-    ...newlyUnlocked.map((item) => room(`decor.${item}`)),
-    ...(reward?.themeId ? [room(`theme.${reward.themeId}`)] : []),
-  ];
 
   return (
     <Dialog open onOpenChange={(open) => (!open ? onClose() : undefined)}>
@@ -66,28 +58,9 @@ export function LevelUpMoment({
               {t('levelUpNewTitle', { title: t(getLevelTitleKey(level)) })}
             </DialogDescription>
           </DialogHeader>
-          {unlockLabels.length > 0 ? (
-            <div className="border-navy/10 bg-azure/40 mt-3 rounded-xl border p-3 text-left">
-              <p className="text-navy text-xs font-bold tracking-[0.08em] uppercase">
-                {t('levelUpUnlocks')}
-              </p>
-              <ul className="text-navy mt-1.5 space-y-1 text-sm font-semibold">
-                {unlockLabels.map((label) => (
-                  <li key={label} className="flex items-center gap-2">
-                    <span
-                      className="bg-navy-light size-1.5 shrink-0 rounded-full"
-                      aria-hidden="true"
-                    />
-                    {label}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <p className="text-muted-foreground mt-3 text-sm leading-6">
-              {t('levelUpNoUnlock')}
-            </p>
-          )}
+          <p className="text-muted-foreground mt-3 text-sm leading-6">
+            {t('levelUpNoUnlock')}
+          </p>
           <Button className="mt-4 w-full" onClick={onClose}>
             {t('levelUpContinue')}
           </Button>

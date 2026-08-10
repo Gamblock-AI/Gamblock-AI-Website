@@ -11,10 +11,10 @@ import { getDashboardTourSeen } from '@/lib/recovery/tour-storage';
 
 const SPOTLIGHT_RADIUS = 14;
 
-/** How long to wait before starting the tour when no modal ever blocks it. */
-const START_GRACE_MS = 2000;
-/** Stop observing if the first-run modal is never closed. */
-const OBSERVE_DEADLINE_MS = 5 * 60 * 1000;
+/** How long to wait after mounting so the dashboard shell settles before starting. */
+const START_DELAY_MS = 300;
+/** Keep waiting for a blocking modal (e.g., the daily check-in gate) before giving up. */
+const MODAL_WAIT_MS = 60 * 1000;
 
 interface BubblePosition {
   top: number;
@@ -33,57 +33,49 @@ export function DashboardTour() {
   const role = user?.role;
   const { open, index, total, step, rect, start, next, back, close } =
     useDashboardTour();
-  const [seen] = useState(() => getDashboardTourSeen());
   const [bubblePosition, setBubblePosition] =
     useState<BubblePosition | null>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
 
   // Only students, after the shell is ready, once, and never over an open
-  // modal (e.g. the first-run "Niat Perubahan" gate). A MutationObserver reacts
-  // the moment the gate modal closes, so the tour still appears even when the
-  // user spends a long time answering the initial questions.
+  // modal. The gate mounts this component only after the first-run "Niat
+  // Perubahan" modal is resolved/closed, so no modal can be blocking here.
+  // The seen flag is re-read from storage on every run: `start()` persists it
+  // before the tour opens, so a close triggered re-run must never restart it.
   useEffect(() => {
-    if (!ready || role !== 'user' || seen || open) return;
+    if (!ready || role !== 'user' || open || getDashboardTourSeen()) return;
     let cancelled = false;
     let started = false;
-    let sawModal = false;
+    let modalWaitTimer = 0;
 
     const tryStart = () => {
       if (cancelled || started) return;
-      if (!document.querySelector('[data-tour="welcome"]')) return;
-      const modalOpen = document.querySelector('[role="dialog"]') !== null;
-      if (modalOpen) {
-        sawModal = true;
+      if (!document.querySelector('[data-tour="tour-welcome"]')) return;
+      if (document.querySelector('[role="dialog"]')) {
+        // Wait for a blocking modal (daily check-in gate) to close before
+        // starting, so the tour never stacks over it.
+        modalWaitTimer = window.setTimeout(tryStart, START_DELAY_MS);
         return;
       }
-      if (!sawModal) return;
       started = true;
       start();
     };
 
-    // Start only once the gate modal has been observed and closed. If no modal
-    // ever appears, the grace timer below starts the tour after a short delay
-    // (this also lets a slow /intentions fetch open its modal first).
-    const observer = new MutationObserver(tryStart);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    const graceTimer = window.setTimeout(() => {
-      if (cancelled || started || sawModal) return;
-      started = true;
-      start();
-    }, START_GRACE_MS);
-
+    const delayTimer = window.setTimeout(tryStart, START_DELAY_MS);
     const deadlineTimer = window.setTimeout(() => {
-      observer.disconnect();
-    }, OBSERVE_DEADLINE_MS);
+      if (!started && !cancelled && !document.querySelector('[role="dialog"]')) {
+        started = true;
+        start();
+      }
+    }, MODAL_WAIT_MS);
 
     return () => {
       cancelled = true;
-      observer.disconnect();
-      window.clearTimeout(graceTimer);
+      window.clearTimeout(delayTimer);
       window.clearTimeout(deadlineTimer);
+      window.clearTimeout(modalWaitTimer);
     };
-  }, [ready, role, seen, open, start]);
+  }, [ready, role, open, start]);
 
   // Keep the bubble inside the viewport, preferring to sit below the target.
   useLayoutEffect(() => {

@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useLocalUser } from '@/hooks/use-local-user';
+import { useRecoveryJourney } from '@/hooks/use-recovery-journey';
 import { NiatPerubahanModal } from './niat-perubahan-modal';
+import { DashboardTour } from '@/components/dashboard/tour/dashboard-tour';
 import { apiClient } from '@/lib/api-client';
 
 const subscribeToClientReady = () => () => undefined;
@@ -13,6 +15,7 @@ interface SyncIntention {
 
 export function NiatPerubahanGate({ children }: { children: React.ReactNode }) {
   const user = useLocalUser();
+  const recovery = useRecoveryJourney();
   const [data, setData] = useState<SyncIntention | null>(null);
   const [fetchError, setFetchError] = useState(false);
   const clientReady = useSyncExternalStore(
@@ -45,8 +48,11 @@ export function NiatPerubahanGate({ children }: { children: React.ReactNode }) {
     };
   }, [shouldCheck]);
 
+  const resolved = data !== null || fetchError;
+  const needsIntention = data !== null && !data?.id;
+  const needsCheckIn = !recovery.todayCheckIn;
   const showModal =
-    shouldCheck && data !== null && !fetchError && !data?.id;
+    shouldCheck && resolved && !fetchError && (needsIntention || needsCheckIn);
 
   if (!shouldCheck) return <>{children}</>;
 
@@ -54,8 +60,13 @@ export function NiatPerubahanGate({ children }: { children: React.ReactNode }) {
     <>
       {children}
       {showModal && (
-        <NiatPerubahanModal onCompleted={() => setData({ id: 'completed' })} />
+        <NiatPerubahanModal
+          needsIntention={needsIntention}
+          needsCheckIn={needsCheckIn}
+          onCompleted={() => setData({ id: 'completed' })}
+        />
       )}
+      {resolved && !showModal && <DashboardTour />}
     </>
   );
 }

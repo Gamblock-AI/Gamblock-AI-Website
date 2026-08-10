@@ -9,6 +9,7 @@ import { Link } from '@/i18n/routing';
 
 interface LearningNextStepProps {
   module: EducationModule | null;
+  allCompleted?: boolean;
   loading: boolean;
   error: Error | null;
   onRetry: () => void;
@@ -16,6 +17,7 @@ interface LearningNextStepProps {
 
 export function LearningNextStep({
   module,
+  allCompleted = false,
   loading,
   error,
   onRetry,
@@ -109,7 +111,7 @@ export function LearningNextStep({
       ) : (
         <div className="border-border bg-muted/30 mt-4 rounded-xl border border-dashed p-4">
           <p className="text-muted-foreground text-sm leading-6">
-            {t('learningEmpty')}
+            {allCompleted ? t('learningAllDone') : t('learningEmpty')}
           </p>
         </div>
       )}

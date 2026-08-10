@@ -6,21 +6,11 @@ import { publishExperience } from '@/lib/recovery/experience-store';
 import type { ExperienceProgress } from './use-daily-mission';
 import { useApiQuery } from './use-api';
 
-export type RecoveryPracticeKind =
-  | 'urge_surfing'
-  | 'grounding_54321'
-  | 'focus_sprint';
-export type RecoveryFeedback =
-  | 'lighter'
-  | 'same'
-  | 'heavier'
-  | 'prefer_not_say';
-
 export interface RecoveryPracticeSession {
   id: string;
-  practice_kind: RecoveryPracticeKind;
+  practice_kind: string;
   duration_seconds: number;
-  feedback?: RecoveryFeedback;
+  feedback?: string;
   completed_at: string;
   exp_awarded?: number;
   experience?: ExperienceProgress;
@@ -55,11 +45,6 @@ interface WeeklyReviewSaveResult {
   experience: ExperienceProgress;
 }
 
-/** Narrow read-only practices query for surfaces that need nothing else. */
-export function useRecoveryPractices() {
-  return useApiQuery<RecoveryPracticeSession[]>('/recovery-practices');
-}
-
 export function useRecoveryExperience() {
   const space = useApiQuery<RecoverySpace>('/recovery-space');
   const practices = useApiQuery<RecoveryPracticeSession[]>(
@@ -67,30 +52,6 @@ export function useRecoveryExperience() {
   );
   const weeklyReview = useApiQuery<WeeklyReview>('/weekly-reviews/current');
   const [saving, setSaving] = useState(false);
-
-  const completePractice = useCallback(
-    async (input: {
-      practice_kind: RecoveryPracticeKind;
-      duration_seconds: number;
-      feedback?: RecoveryFeedback;
-    }) => {
-      setSaving(true);
-      try {
-        const item = await apiClient<RecoveryPracticeSession>(
-          '/recovery-practices',
-          { method: 'POST', body: JSON.stringify(input) }
-        );
-        if (item.experience) {
-          publishExperience(item.experience);
-        }
-        await Promise.all([practices.refetch(), space.refetch()]);
-        return item;
-      } finally {
-        setSaving(false);
-      }
-    },
-    [practices, space]
-  );
 
   const saveWeeklyReview = useCallback(
     async (input: WeeklyReview) => {
@@ -113,35 +74,11 @@ export function useRecoveryExperience() {
     [space, weeklyReview]
   );
 
-  const updateSpace = useCallback(
-    async (
-      placed_items: Record<string, unknown>,
-      theme?: RecoveryRoomTheme
-    ) => {
-      setSaving(true);
-      try {
-        const item = await apiClient<RecoverySpace>('/recovery-space', {
-          method: 'PATCH',
-          body: JSON.stringify(
-            theme ? { placed_items, theme } : { placed_items }
-          ),
-        });
-        await space.refetch();
-        return item;
-      } finally {
-        setSaving(false);
-      }
-    },
-    [space]
-  );
-
   return {
     space,
     practices,
     weeklyReview,
     saving,
-    completePractice,
     saveWeeklyReview,
-    updateSpace,
   };
 }

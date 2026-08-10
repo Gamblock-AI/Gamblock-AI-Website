@@ -185,12 +185,7 @@ export const MESSAGES: Record<string, string> = {
   recovery_records_failed: 'Data pemulihan belum dapat dimuat.',
   recovery_record_save_failed: 'Data pemulihan belum dapat disimpan.',
   recovery_practice_fetch_failed: 'Latihan pemulihan belum dapat dimuat.',
-  recovery_practice_invalid:
-    'Latihan belum dapat disimpan. Periksa jenis, durasi, atau umpan baliknya.',
   recovery_space_fetch_failed: 'Ruang pulih belum dapat dimuat.',
-  recovery_space_update_failed: 'Tata ruang pulih belum dapat disimpan.',
-  recovery_space_item_locked:
-    'Item atau tema ini belum terbuka. Kriterianya bisa dilihat di koleksi ruang pulih.',
   weekly_review_fetch_failed: 'Tinjauan mingguan belum dapat dimuat.',
   weekly_review_save_failed: 'Tinjauan mingguan belum dapat disimpan.',
   fetch_data_requests_failed: 'Gagal memuat permintaan data.',

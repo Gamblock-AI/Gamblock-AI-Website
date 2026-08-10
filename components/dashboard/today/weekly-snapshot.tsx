@@ -1,73 +1,34 @@
-import { ArrowRight, BarChart3, LockKeyhole, Sparkles } from 'lucide-react';
+'use client';
+
+import { ArrowRight, BarChart3, LockKeyhole } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { moodCopy } from '@/components/dashboard/today/dashboard-copy';
+import { useMemo } from 'react';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
-import type { DailyCheckIn, MoodLevel } from '@/lib/recovery/types';
-import { RECOVERY_TIME_ZONE } from '@/lib/recovery/date';
-import { getRecentJakartaCheckInDays } from '@/lib/recovery/weekly-window';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useProgressSnapshot } from '@/hooks/use-progress-snapshot';
 
-interface WeeklySnapshotProps {
-  checkIns: DailyCheckIn[];
+function lastSevenDays() {
+  const end = new Date();
+  end.setHours(12, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(end);
+    date.setDate(end.getDate() - (6 - index));
+    return date;
+  });
 }
 
-interface ChartPoint {
-  dateKey: string;
-  x: number;
-  y: number;
-  label: string;
-  mood: MoodLevel;
-}
-
-const CHART_LEFT = 96;
-const CHART_RIGHT = 616;
-const CHART_TOP = 28;
-const CHART_BOTTOM = 150;
-const MOOD_GUIDE_LEVELS = [5, 3, 1] as const;
-
-export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
+export function WeeklySnapshot() {
   const t = useTranslations('recoveryDashboard');
   const locale = useLocale();
-  const days = getRecentJakartaCheckInDays(checkIns);
-  const dateFormatter = new Intl.DateTimeFormat(locale, {
-    weekday: 'short',
-    day: 'numeric',
-    timeZone: RECOVERY_TIME_ZONE,
-  });
-  const points = days.flatMap<ChartPoint>((day, index) => {
-    if (!day.checkIn) return [];
-    const mood = day.checkIn.mood;
-    return [
-      {
-        dateKey: day.dateKey,
-        x: CHART_LEFT + index * ((CHART_RIGHT - CHART_LEFT) / 6),
-        y: CHART_BOTTOM - (mood - 1) * ((CHART_BOTTOM - CHART_TOP) / 4),
-        label: dateFormatter.format(day.date),
-        mood,
-      },
-    ];
-  });
-  const moods = points.map((point) => point.mood);
-  const moodRange =
-    moods.length > 0 ? Math.max(...moods) - Math.min(...moods) : 0;
-  const strongerUrgeCount = days.filter(
-    (day) => (day.checkIn?.urge ?? 0) >= 4
-  ).length;
-  const enoughData = points.length >= 4;
-  const needMore = Math.max(0, 4 - points.length);
-  const patternSummary =
-    moodRange <= 1 ? t('weeklyStable') : t('weeklyChanged');
-  const chartSummary = enoughData
-    ? [
-        t('weeklyRecorded', { count: points.length }),
-        patternSummary,
-        strongerUrgeCount > 0
-          ? t('weeklyStrongerUrge', { count: strongerUrgeCount })
-          : null,
-      ]
-        .filter(Boolean)
-        .join(' ')
-    : `${t('weeklyInsufficient')} ${t('weeklyNeedMore', { count: needMore })}`;
+  const { data, loading } = useProgressSnapshot(7);
+
+  const days = useMemo(() => lastSevenDays(), []);
+  const blocks = data?.daily_blocks ?? [];
+  const max = Math.max(1, ...blocks);
+  const total = blocks.reduce((sum, count) => sum + count, 0);
+  const hasData = blocks.some((count) => count > 0);
+  const dayFormatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
 
   return (
     <section
@@ -80,159 +41,78 @@ export function WeeklySnapshot({ checkIns }: WeeklySnapshotProps) {
             id="weekly-snapshot-title"
             className="text-navy text-lg font-bold"
           >
-            {t('weeklyTitle')}
+            {t('blockTrendTitle')}
           </h2>
+          <p className="text-muted-foreground mt-1 text-sm leading-6">
+            {t('blockTrendBody')}
+          </p>
           <p className="text-muted-foreground mt-1 flex items-start gap-2 text-sm leading-6">
-            <LockKeyhole
-              className="mt-1 size-3.5 shrink-0"
-              aria-hidden="true"
-            />
-            {t('weeklyPrivate')}
+            <LockKeyhole className="mt-1 size-3.5 shrink-0" aria-hidden="true" />
+            {t('blockTrendPrivate')}
           </p>
         </div>
-        {enoughData ? (
-          <Link
-            href={ROUTES.PROGRESS}
-            className="text-navy hover:bg-navy/[0.05] focus-visible:ring-navy/30 inline-flex min-h-11 items-center gap-2 self-start rounded-xl px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
-          >
-            {t('weeklyOpen')}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        ) : null}
+        <Link
+          href={ROUTES.RECOVERY}
+          className="text-navy hover:bg-navy/[0.05] focus-visible:ring-navy/30 inline-flex min-h-11 items-center gap-2 self-start rounded-xl px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+        >
+          {t('blockTrendOpen')}
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
       </div>
 
-      <div className="mt-4 flex-1 grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem] items-stretch">
-        <div className="border-border bg-muted/45 flex h-full flex-col justify-between rounded-2xl border p-2 sm:p-3">
-          <p className="sr-only">{chartSummary}</p>
-          <svg
-            viewBox="0 0 640 188"
-            className="h-auto min-h-40 w-full"
-            aria-hidden="true"
-          >
-            {[1, 2, 3, 4, 5].map((mood) => {
-              const y =
-                CHART_BOTTOM - (mood - 1) * ((CHART_BOTTOM - CHART_TOP) / 4);
-              return (
-                <line
-                  key={mood}
-                  x1={CHART_LEFT}
-                  x2={CHART_RIGHT}
-                  y1={y}
-                  y2={y}
-                  stroke="currentColor"
-                  className="text-border"
-                  strokeDasharray="4 7"
-                />
-              );
-            })}
-            {MOOD_GUIDE_LEVELS.map((mood) => {
-              const y =
-                CHART_BOTTOM - (mood - 1) * ((CHART_BOTTOM - CHART_TOP) / 4);
-              return (
-                <text
-                  key={mood}
-                  x="6"
-                  y={y + 4}
-                  className="fill-muted-foreground text-[11px] font-semibold"
-                >
-                  {t(moodCopy[mood])}
-                </text>
-              );
-            })}
-            {points.length > 1 ? (
-              <polyline
-                points={points
-                  .map((point) => `${point.x},${point.y}`)
-                  .join(' ')}
-                fill="none"
-                stroke="currentColor"
-                className="text-navy"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ) : null}
-            {points.map((point) => (
-              <g key={point.dateKey}>
-                <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r="7"
-                  fill="currentColor"
-                  className="text-card"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                />
-                <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r="4"
-                  fill="currentColor"
-                  className="text-sky"
-                />
-              </g>
-            ))}
-            {days.map((day, index) => (
-              <text
-                key={day.dateKey}
-                x={CHART_LEFT + index * ((CHART_RIGHT - CHART_LEFT) / 6)}
-                y="176"
-                textAnchor="middle"
-                className="fill-muted-foreground text-[10px] font-medium"
-              >
-                {dateFormatter.format(day.date)}
-              </text>
-            ))}
-          </svg>
-          <ul className="sr-only">
-            {days.map((day) => (
-              <li key={day.dateKey}>
-                {day.checkIn
-                  ? t('weeklyDayRecorded', {
-                      date: dateFormatter.format(day.date),
-                      mood: t(moodCopy[day.checkIn.mood]),
-                    })
-                  : t('weeklyDayMissing', {
-                      date: dateFormatter.format(day.date),
-                    })}
-              </li>
-            ))}
-          </ul>
-        </div>
-        {enoughData ? (
-          <div className="border-navy/10 bg-azure/45 flex h-full flex-col justify-between rounded-2xl border p-3.5">
-            <div className="flex items-center gap-2.5">
-              <span className="bg-navy text-sky flex size-8 shrink-0 items-center justify-center rounded-lg">
-                <Sparkles className="size-4" aria-hidden="true" />
-              </span>
-              <h3 className="text-navy text-sm font-bold">
-                {t('weeklyInsightTitle')}
-              </h3>
+      <div className="mt-4 flex-1">
+        {loading ? (
+          <div className="space-y-3" role="status">
+            <Skeleton className="h-40 w-full rounded-2xl" />
+            <Skeleton className="h-4 w-40" />
+            <span className="sr-only">{t('blockTrendLoading')}</span>
+          </div>
+        ) : hasData ? (
+          <div className="border-border bg-muted/45 flex h-full flex-col rounded-2xl border p-3 sm:p-4">
+            <div
+              className="flex h-40 flex-1 items-end justify-between gap-1.5 sm:gap-3"
+              role="img"
+              aria-label={t('blockTrendAria', { total })}
+            >
+              {days.map((date, index) => {
+                const count = blocks[index] ?? 0;
+                const height = count > 0 ? Math.max(8, (count / max) * 100) : 0;
+                return (
+                  <div
+                    key={date.toISOString()}
+                    className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
+                  >
+                    <span className="text-navy text-xs font-bold tabular-nums">
+                      {count > 0 ? count : ''}
+                    </span>
+                    <div className="flex w-full flex-1 items-end">
+                      <div
+                        className={`w-full rounded-t-md ${
+                          count > 0 ? 'bg-navy' : 'bg-border'
+                        }`}
+                        style={{
+                          height: count > 0 ? `${height}%` : '2px',
+                          minHeight: count > 0 ? '0.5rem' : undefined,
+                        }}
+                      />
+                    </div>
+                    <span className="text-muted-foreground text-[10px] font-medium">
+                      {dayFormatter.format(date)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <p className="text-foreground mt-2 text-sm leading-6">
-              {t('weeklyRecorded', { count: points.length })}
+            <p className="text-muted-foreground mt-3 flex items-center gap-1.5 text-xs font-semibold">
+              <BarChart3 className="size-3.5" aria-hidden="true" />
+              {t('blockTrendTotal', { count: total })}
             </p>
-            <p className="text-muted-foreground mt-1 text-sm leading-6">
-              {patternSummary}
-            </p>
-            {strongerUrgeCount > 0 ? (
-              <p className="text-muted-foreground mt-1 text-sm leading-6">
-                {t('weeklyStrongerUrge', { count: strongerUrgeCount })}
-              </p>
-            ) : null}
           </div>
         ) : (
-          <div className="border-border bg-muted/30 flex h-full flex-col justify-between rounded-2xl border border-dashed p-3.5">
-            <div className="flex items-center gap-2.5">
-              <span className="bg-navy flex size-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm">
-                <BarChart3 className="size-4" aria-hidden="true" />
-              </span>
-              <h3 className="text-foreground text-sm font-semibold">
-                {t('weeklyInsufficient')}
-              </h3>
-            </div>
-            <p className="text-muted-foreground mt-1 text-sm leading-6">
-              {t('weeklyNeedMore', { count: needMore })}
+          <div className="border-border bg-muted/30 flex h-full min-h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-4 text-center">
+            <BarChart3 className="text-navy-light size-6" aria-hidden="true" />
+            <p className="text-muted-foreground max-w-xs text-sm leading-6">
+              {t('blockTrendNoData')}
             </p>
           </div>
         )}

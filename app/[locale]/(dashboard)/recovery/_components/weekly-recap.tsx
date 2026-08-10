@@ -22,7 +22,7 @@ import { useProgressSnapshot } from '@/hooks/use-progress-snapshot';
 type RecapCard =
   | { kind: 'checkIns'; value: number }
   | { kind: 'activeDays'; value: number }
-  | { kind: 'practices'; value: number }
+  | { kind: 'learningHub'; value: number }
   | { kind: 'missions'; value: number }
   | { kind: 'closing'; tone: 'recapStrong' | 'recapSteady' | 'recapGentle' };
 
@@ -44,8 +44,11 @@ export function WeeklyRecap({ onClose }: { onClose: () => void }) {
         { kind: 'checkIns', value: data.check_in_count },
         { kind: 'activeDays', value: data.active_days },
         {
-          kind: 'practices',
-          value: data.activity_days.reduce((total, day) => total + day.practices, 0),
+          kind: 'learningHub',
+          value: data.activity_days.reduce(
+            (total, day) => total + day.learning_hub,
+            0
+          ),
         },
         {
           kind: 'missions',

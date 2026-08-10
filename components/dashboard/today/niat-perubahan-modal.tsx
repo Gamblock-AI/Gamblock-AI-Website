@@ -21,8 +21,11 @@ import {
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { CheckInFields } from './check-in-fields';
 import { apiClient } from '@/lib/api-client';
 import { toastError } from '@/lib/feedback';
+import { recordDailyCheckIn } from '@/lib/recovery/check-in-actions';
+import type { MoodLevel, UrgeLevel } from '@/lib/recovery/types';
 
 interface QuizAnswers {
   school_impact: string;
@@ -32,20 +35,31 @@ interface QuizAnswers {
   quit_motivation: string;
 }
 
+type ModalStep = 'quiz' | 'intention' | 'checkIn' | 'review';
+
 interface NiatPerubahanModalProps {
+  needsIntention: boolean;
+  needsCheckIn: boolean;
   onCompleted: () => void;
 }
-
-type Step = 1 | 2 | 3;
 
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
-export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
+export function NiatPerubahanModal({
+  needsIntention,
+  needsCheckIn,
+  onCompleted,
+}: NiatPerubahanModalProps) {
   const t = useTranslations('recoveryDashboard');
   const containerRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
-  const [step, setStep] = useState<Step>(1);
+  // Snapshot the flags once: the gate flips needsCheckIn as soon as a check-in
+  // is saved, so rebuilding steps from live props mid-flow would shrink the
+  // wizard. The steps must stay stable for the modal's whole lifetime.
+  const [flowNeedsIntention] = useState(() => needsIntention);
+  const [flowNeedsCheckIn] = useState(() => needsCheckIn);
+  const [stepIndex, setStepIndex] = useState(0);
   const [saving, setSaving] = useState(false);
 
   const [quiz, setQuiz] = useState<QuizAnswers>({
@@ -56,6 +70,27 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
     quit_motivation: '',
   });
   const [intentionText, setIntentionText] = useState('');
+  const [checkInMood, setCheckInMood] = useState<MoodLevel | null>(null);
+  const [checkInUrge, setCheckInUrge] = useState<UrgeLevel | null | undefined>(
+    undefined
+  );
+
+  // Dynamic wizard: intention steps first, daily check-in inserted before the
+  // review step so the check-in always sits at step 3 when both are needed.
+  const steps: ModalStep[] = [];
+  if (flowNeedsIntention) steps.push('quiz', 'intention');
+  if (flowNeedsCheckIn) steps.push('checkIn');
+  if (flowNeedsIntention) steps.push('review');
+  const currentStep = steps[stepIndex];
+
+  const stepShortLabel = (key: ModalStep) =>
+    key === 'quiz'
+      ? t('niatStep1Short')
+      : key === 'intention'
+        ? t('niatStep2Short')
+        : key === 'checkIn'
+          ? t('niatStepCheckInShort')
+          : t('niatStep3Short');
 
   useEffect(() => {
     document.documentElement.style.overflow = 'hidden';
@@ -100,26 +135,59 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
   const answeredCount = Object.values(quiz).filter((v) => v !== '').length;
   const quizCompleted = answeredCount === 5;
   const step2Completed = intentionText.trim().length > 0;
+  const checkInReady = checkInMood !== null && checkInUrge !== undefined;
+  const isCheckInLast = stepIndex === steps.length - 1;
 
   const updateQuiz = (field: keyof QuizAnswers, value: string) => {
     setQuiz((prev) => ({ ...prev, [field]: value }));
   };
 
+  const saveCheckIn = async () => {
+    if (checkInMood === null || checkInUrge === undefined) return false;
+    const saved = await recordDailyCheckIn({
+      mood: checkInMood,
+      urge: checkInUrge,
+    });
+    return Boolean(saved);
+  };
+
+  // Only-check-in flow: the single check-in step saves and completes.
+  const handleCheckInSave = async () => {
+    setSaving(true);
+    try {
+      if (await saveCheckIn()) {
+        onCompleted();
+      } else {
+        toastError(new Error('check-in failed'), t('niatSaveError'));
+      }
+    } catch (err) {
+      toastError(err, t('niatSaveError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Final confirmation step: persist intention and check-in together.
   const handleSave = async () => {
     setSaving(true);
     try {
-      await apiClient('/intentions', {
-        method: 'POST',
-        body: JSON.stringify({
-          intention_text: intentionText.trim(),
-          status: 'active',
-          school_impact: quiz.school_impact,
-          money_spent: quiz.money_spent,
-          screen_time: quiz.screen_time,
-          quit_attempts: quiz.quit_attempts,
-          quit_motivation: quiz.quit_motivation,
-        }),
-      });
+      if (flowNeedsIntention) {
+        await apiClient('/intentions', {
+          method: 'POST',
+          body: JSON.stringify({
+            intention_text: intentionText.trim(),
+            status: 'active',
+            school_impact: quiz.school_impact,
+            money_spent: quiz.money_spent,
+            screen_time: quiz.screen_time,
+            quit_attempts: quiz.quit_attempts,
+            quit_motivation: quiz.quit_motivation,
+          }),
+        });
+      }
+      if (flowNeedsCheckIn && !(await saveCheckIn())) {
+        throw new Error('check-in failed');
+      }
       onCompleted();
     } catch (err) {
       toastError(err, t('niatSaveError'));
@@ -172,22 +240,10 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
   ];
 
   const quickStarters = [
-    {
-      icon: GraduationCap,
-      text: t('niatInspirasi1'),
-    },
-    {
-      icon: Wallet,
-      text: t('niatInspirasi2'),
-    },
-    {
-      icon: Smile,
-      text: t('niatInspirasi3'),
-    },
-    {
-      icon: Users,
-      text: t('niatInspirasi4'),
-    },
+    { icon: GraduationCap, text: t('niatInspirasi1') },
+    { icon: Wallet, text: t('niatInspirasi2') },
+    { icon: Smile, text: t('niatInspirasi3') },
+    { icon: Users, text: t('niatInspirasi4') },
   ];
 
   return createPortal(
@@ -229,68 +285,77 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                 id="niat-perubahan-title"
                 className="text-navy text-base leading-tight font-bold sm:text-lg"
               >
-                {t('niatPerubahanTitle')}
+                {flowNeedsIntention
+                  ? t('niatPerubahanTitle')
+                  : t('checkInGateTitle')}
               </h2>
               <p
                 id="niat-perubahan-desc"
                 className="text-muted-foreground mt-0.5 text-xs leading-relaxed"
               >
-                {t('niatPerubahanDescription')}
+                {flowNeedsIntention
+                  ? t('niatPerubahanDescription')
+                  : t('checkInGateDescription')}
               </p>
             </div>
           </div>
         </div>
 
         {/* Stepper with progress bar - horizontally centered */}
-        <div className="border-border/60 bg-muted/20 shrink-0 border-b px-5 py-2.5 sm:px-6">
-          <div className="mx-auto flex max-w-xs sm:max-w-sm items-center justify-center gap-2 sm:gap-3">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex flex-1 items-center gap-2">
-                <div
-                  className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-bold transition-all duration-300 ${
-                    s < step
-                      ? 'bg-sage text-white shadow-xs'
-                      : s === step
-                        ? 'bg-navy text-white ring-4 ring-navy/15 shadow-xs scale-105'
-                        : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {s < step ? <Check className="size-3.5 stroke-[2.5]" /> : s}
-                </div>
-                <div className="hidden sm:block min-w-0">
-                  <p
-                    className={`truncate text-[0.6875rem] font-semibold transition-colors ${
-                      s === step
-                        ? 'text-navy'
-                        : s < step
-                          ? 'text-sage-dark'
-                          : 'text-muted-foreground'
-                    }`}
-                  >
-                    {s === 1
-                      ? t('niatStep1Short')
-                      : s === 2
-                        ? t('niatStep2Short')
-                        : t('niatStep3Short')}
-                  </p>
-                </div>
-                {s < 3 && (
-                  <div
-                    className={`h-1 flex-1 rounded-full transition-all duration-500 ${
-                      s < step ? 'bg-sage' : 'bg-muted/80'
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+        {steps.length > 1 ? (
+          <div className="border-border/60 bg-muted/20 shrink-0 border-b px-5 py-2.5 sm:px-6">
+            <div className="mx-auto flex max-w-xs sm:max-w-sm items-center justify-center gap-2 sm:gap-3">
+              {steps.map((key, index) => {
+                const completed = index < stepIndex;
+                const active = index === stepIndex;
+                return (
+                  <div key={key} className="flex flex-1 items-center gap-2">
+                    <div
+                      className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-bold transition-all duration-300 ${
+                        completed
+                          ? 'bg-sage text-white shadow-xs'
+                          : active
+                            ? 'bg-navy text-white ring-4 ring-navy/15 shadow-xs scale-105'
+                            : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {completed ? (
+                        <Check className="size-3.5 stroke-[2.5]" />
+                      ) : (
+                        index + 1
+                      )}
+                    </div>
+                    <div className="hidden sm:block min-w-0">
+                      <p
+                        className={`truncate text-[0.6875rem] font-semibold transition-colors ${
+                          active
+                            ? 'text-navy'
+                            : completed
+                              ? 'text-sage-dark'
+                              : 'text-muted-foreground'
+                        }`}
+                      >
+                        {stepShortLabel(key)}
+                      </p>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div
+                        className={`h-1 flex-1 rounded-full transition-all duration-500 ${
+                          completed ? 'bg-sage' : 'bg-muted/80'
+                        }`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* Modal Scrollable Body */}
         <div className="flex-1 min-h-0 relative">
           <div className="absolute inset-0 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6">
-          {/* STEP 1: Assessment Quiz */}
-          {step === 1 && (
+          {currentStep === 'quiz' && (
             <div className="space-y-3.5">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -384,8 +449,7 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
             </div>
           )}
 
-          {/* STEP 2: Write Intention */}
-          {step === 2 && (
+          {currentStep === 'intention' && (
             <div className="space-y-4">
               <div>
                 <h3 className="text-navy text-sm font-bold sm:text-base">
@@ -464,8 +528,29 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
             </div>
           )}
 
-          {/* STEP 3: Review & Confirm */}
-          {step === 3 && (
+          {currentStep === 'checkIn' && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-navy text-sm font-bold sm:text-base">
+                  {t('checkInTitle')}
+                </h3>
+                <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+                  {t('checkInDescription')}
+                </p>
+              </div>
+
+              <div className="border-border/70 bg-card/70 rounded-2xl border p-2 shadow-xs sm:p-3">
+                <CheckInFields
+                  mood={checkInMood}
+                  urge={checkInUrge}
+                  onMoodChange={setCheckInMood}
+                  onUrgeChange={setCheckInUrge}
+                />
+              </div>
+            </div>
+          )}
+
+          {currentStep === 'review' && (
             <div className="space-y-4">
               <div>
                 <h3 className="text-navy text-sm font-bold sm:text-base">
@@ -529,12 +614,12 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
           {/* Action row */}
           <div className="border-border/70 bg-card/98 z-10 flex min-h-[3.25rem] items-center justify-between border-t px-5 py-3 sm:px-6">
             <div>
-              {step > 1 ? (
+              {stepIndex > 0 ? (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setStep((s) => (s - 1) as Step)}
+                  onClick={() => setStepIndex((current) => current - 1)}
                   className="text-muted-foreground hover:text-foreground gap-1.5 rounded-xl text-xs"
                 >
                   <ArrowLeft className="size-3.5" />
@@ -544,12 +629,12 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              {step === 1 && (
+              {currentStep === 'quiz' && (
                 <Button
                   type="button"
                   size="sm"
                   disabled={!quizCompleted}
-                  onClick={() => setStep(2)}
+                  onClick={() => setStepIndex((current) => current + 1)}
                   className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
                 >
                   {t('niatNext')}
@@ -557,12 +642,12 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                 </Button>
               )}
 
-              {step === 2 && (
+              {currentStep === 'intention' && (
                 <Button
                   type="button"
                   size="sm"
                   disabled={!step2Completed}
-                  onClick={() => setStep(3)}
+                  onClick={() => setStepIndex((current) => current + 1)}
                   className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
                 >
                   {t('niatNext')}
@@ -570,7 +655,30 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
                 </Button>
               )}
 
-              {step === 3 && (
+              {currentStep === 'checkIn' && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!checkInReady || saving}
+                  onClick={() => {
+                    if (isCheckInLast) {
+                      void handleCheckInSave();
+                    } else {
+                      setStepIndex((current) => current + 1);
+                    }
+                  }}
+                  className="bg-navy hover:bg-navy-light text-primary-foreground shadow-xs gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                >
+                  {isCheckInLast ? t('checkInSave') : t('niatNext')}
+                  {isCheckInLast ? (
+                    <Check className="size-3.5" />
+                  ) : (
+                    <ArrowRight className="size-3.5" />
+                  )}
+                </Button>
+              )}
+
+              {currentStep === 'review' && (
                 <Button
                   type="button"
                   size="sm"
@@ -600,7 +708,11 @@ export function NiatPerubahanModal({ onCompleted }: NiatPerubahanModalProps) {
               className="text-navy/70 size-3 shrink-0"
               aria-hidden="true"
             />
-            <span>{t('niatPerubahanStorage')}</span>
+            <span>
+              {flowNeedsIntention
+                ? t('niatPerubahanStorage')
+                : t('checkInGateStorage')}
+            </span>
           </p>
         </div>
       </div>

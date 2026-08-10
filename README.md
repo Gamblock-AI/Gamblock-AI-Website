@@ -37,7 +37,7 @@ code. The context manifest is `docs/ai/manifest.yaml` and its current version is
 ```
 app/
   [locale]/
-    (dashboard)/           # authenticated dashboard, recovery, progress,
+    (dashboard)/           # authenticated dashboard, recovery (Pemulihan),
                            # education, skills, accountability, partners,
                            # support, profile, data-requests, research-sandbox,
                            # admin, and settings
@@ -98,40 +98,49 @@ accountability page owns staged aggregate-sharing changes, confirmed
 protection decisions, and cancellable pending normal-exit requests. Unsafe
 exit remains immediate and routes recovery through the support team.
 The PKM recovery loop remains directly available through a student-only
-gamification FAB and a once-per-day check-in gate across authenticated
-dashboard pages. The gate uses the `Asia/Jakarta` calendar boundary and
-requires a mood choice plus a gambling-urge answer on a scale that starts at an
-explicit “no urge” point; picking a mood shows a short supportive Gami reply,
-with a direct support link on the most distressed mood. UI feedback remains
-calm and avoids punitive streak or casino-like rewards. A student-only
-`/skills` page adds curated free-course links beside the internal skill
-practices.
+gamification FAB and a merged onboarding/daily-check-in modal on the
+dashboard. The modal's steps are dynamic: first-run intention plus daily
+check-in together render four steps (Reflection, Intention, Check-in,
+Confirmation with the check-in at step 3); intention alone renders three;
+check-in alone renders one. It uses the `Asia/Jakarta` calendar boundary and
+the check-in requires a mood choice plus a gambling-urge answer on a scale
+that starts at an explicit “no urge” point; picking a mood shows a short
+supportive Gami reply. The check-in step only collects the mood/urge answer —
+both the intention and the check-in are persisted together on the final
+confirmation step (or on the single step when check-in alone is needed), so
+the step indicator stays stable through the flow. Check-in completion
+is judged from a server-authoritative merge, so a check-in made on another
+device still counts the same day. UI feedback remains calm and avoids punitive
+streak or casino-like rewards. A student-only `/skills` page adds curated
+free-course links through the Learning Hub.
 
 Recovery begins with a local-first intention manager for the student's reason,
 next action, and focus period, then continues into the server-verified daily
-mission card above a calm, keyboard-accessible dorm-room
-workspace. The window opens three-minute urge surfing, the rug guides
-5-4-3-2-1 grounding, the desk starts a ten-minute focus sprint, the notebook
-opens the encrypted reflection journal, and the phone opens partner/support
-choices. Active timers and focus
-task labels stay browser-local. Completed practices and typed weekly reviews
-sync to the account for a rolling 12-month view; each weekly review receives at
-most one server-authoritative 10-EXP grant under the shared daily cap.
-Deterministic decor placement remains until account deletion and is included
-in export/deletion. Reflection
+mission card and the merged daily check-in. The student recovery journey is
+hubbed at `/recovery` (the former `/progress` route; legacy `/progress` links
+redirect to `/recovery`). It renders the weekly review, 7/30/90-day activity
+recap, and evaluation views for both students and partners, with student data
+kept private. The encrypted reflection journal lives at `/journal`. Completed
+weekly reviews (and any historical practice sessions) sync to the account for
+a rolling 12-month view; each weekly review receives at most one
+server-authoritative 10-EXP grant under the shared daily cap.
+Reflection
 payload v2 is AES-256-GCM encrypted and can carry an optional next step and one
 current-focus marker. Legacy local intention text is never uploaded without a
 one-time opt-in import. The schema contains no URL, domain, DOM, browsing
 history, or detected-page field.
 
 Student progress renders inspectable 7/30/90-day activity calendars across
-check-ins, practices, journal entries, missions, education, and weekly reviews.
+check-ins, journal entries, missions, education, weekly reviews, learning-hub
+progress, and protection block counts.
 Trend language stays unavailable below three check-ins. `/recovery` is
-student-only; partner guidance uses role-filtered CMS response modules in a
-`/progress` dialog, while partner progress consumes only consented aggregate categories
+available to students and partners; partner views consume only consented
+aggregate categories
 and never student recovery details.
 
-`GET /v1/missions/today` supplies exactly five `Asia/Jakarta` daily slots.
+`GET /v1/missions/today` supplies four default `Asia/Jakarta` daily slots
+(active protection, daily check-in, education section, education module) plus
+custom slots.
 Every slot is worth 10 EXP. The website shows only default and custom mission
 sources: default tasks remain server-verified and never use a separate locked
 card, while custom tasks are private self-attestations and may be edited or

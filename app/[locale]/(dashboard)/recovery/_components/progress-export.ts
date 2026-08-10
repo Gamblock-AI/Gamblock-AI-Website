@@ -47,7 +47,7 @@ function buildPrintableProgressHtml(
           </tr>`
         )
         .join('')
-    : `<tr><td colspan="7" class="empty">${escapeHtml(copy.noActivity)}</td></tr>`;
+    : `<tr><td colspan="${progressCategories.length + 1}" class="empty">${escapeHtml(copy.noActivity)}</td></tr>`;
 
   return `<!doctype html>
 <html lang="${escapeHtml(copy.locale)}">

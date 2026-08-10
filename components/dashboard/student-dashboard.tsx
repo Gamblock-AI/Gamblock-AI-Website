@@ -12,7 +12,6 @@ import { ProtectionSummary } from '@/components/dashboard/today/protection-summa
 import { WeeklySnapshot } from '@/components/dashboard/today/weekly-snapshot';
 import { NiatPerubahanGate } from '@/components/dashboard/today/niat-perubahan-gate';
 import { StudentGamificationFab } from '@/components/dashboard/student-gamification-fab';
-import { DashboardTour } from '@/components/dashboard/tour/dashboard-tour';
 import { useDashboardSummary } from '@/hooks/use-dashboard-summary';
 import { useEducationModules } from '@/hooks/use-education';
 import { useProtectionStatus } from '@/hooks/use-protection-status';
@@ -40,8 +39,9 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
     education.modules.find(
       (module) => module.progress.progress_percent < 100
     ) ??
-    education.modules[0] ??
     null;
+  const allModulesCompleted =
+    education.modules.length > 0 && learningModule === null;
 
   return (
     <NiatPerubahanGate>
@@ -75,6 +75,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         <div className="grid items-stretch gap-4 lg:grid-cols-2">
           <LearningNextStep
             module={learningModule}
+            allCompleted={allModulesCompleted}
             loading={education.loading}
             error={education.error}
             onRetry={() => void education.refetch()}
@@ -96,7 +97,7 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
       <Reveal y={12} duration={0.45} delay={0.15}>
         <div className="grid items-stretch gap-4 xl:grid-cols-12">
           <div className="xl:col-span-7" data-tour="tour-weekly">
-            <WeeklySnapshot checkIns={recovery.state.checkIns} />
+            <WeeklySnapshot />
           </div>
           <div className="xl:col-span-5" data-tour="tour-protection">
             <ProtectionSummary
@@ -115,7 +116,6 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
         onOpenChange={setMissionsOpen}
       />
     </div>
-      <DashboardTour />
     </NiatPerubahanGate>
   );
 }

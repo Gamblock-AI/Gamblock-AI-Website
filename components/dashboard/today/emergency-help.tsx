@@ -56,14 +56,14 @@ export function EmergencyHelp() {
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Link
-          href={ROUTES.ACCOUNTABILITY}
+          href={`${ROUTES.SUPPORT}?channel=partner`}
           className="bg-crimson hover:bg-crimson-light focus-visible:ring-crimson/30 flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-colors outline-none focus-visible:ring-2 motion-reduce:transition-none"
         >
           <MessageCircleWarning className="size-4" />
           {t('emergencyHelpAction')}
         </Link>
         <Link
-          href={ROUTES.SUPPORT}
+          href={`${ROUTES.SUPPORT}?channel=hotline`}
           className="border-crimson/35 bg-card text-crimson hover:bg-crimson/[0.08] focus-visible:ring-crimson/30 flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-colors duration-200 outline-none focus-visible:ring-2 motion-reduce:transition-none"
         >
           <Phone className="size-4" />

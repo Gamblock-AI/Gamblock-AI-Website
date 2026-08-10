@@ -7,8 +7,10 @@ import {
   CheckCircle2,
   Clock3,
   RefreshCw,
+  RotateCcw,
   Search,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
@@ -37,13 +39,20 @@ export function EducationLibraryClient() {
   const searchParams = useSearchParams();
   const { modules, loading, error, refetch } = useEducationModules(locale);
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
-  const [category, setCategory] = useState('all');
-  const urlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [category, setCategory] = useState(() => {
+    const requested = searchParams.get('category');
+    return requested && requested !== 'all' ? requested : 'all';
+  });
+  const urlTimerRef = useRef<number | null>(null);
   const categories = useMemo(
     () =>
       Array.from(new Set(modules.map((item) => item.category))).filter(Boolean),
     [modules]
   );
+  // A stale/invalid URL category (e.g. after a category was removed) falls back
+  // to "all" for display; the URL is corrected on the next user interaction.
+  const effectiveCategory =
+    category === 'all' || categories.includes(category) ? category : 'all';
   const filtered = useMemo(
     () =>
       modules.filter((item) => {
@@ -51,31 +60,46 @@ export function EducationLibraryClient() {
           .toLocaleLowerCase()
           .includes(query.toLocaleLowerCase());
         return (
-          matchesQuery && (category === 'all' || item.category === category)
+          matchesQuery &&
+          (effectiveCategory === 'all' || item.category === effectiveCategory)
         );
       }),
-    [category, modules, query]
+    [effectiveCategory, modules, query]
   );
   const continued = modules.find(
     (item) =>
       item.progress.progress_percent > 0 && item.progress.progress_percent < 100
   );
 
+  const updateParams = (nextQuery: string, nextCategory: string) => {
+    const params: Record<string, string> = {};
+    if (nextQuery.trim()) params.q = nextQuery.trim();
+    if (nextCategory && nextCategory !== 'all') params.category = nextCategory;
+    router.replace({
+      pathname: ROUTES.EDUCATION,
+      query: Object.keys(params).length ? params : {},
+    });
+  };
+
+  const clearSearchTimer = () => {
+    if (urlTimerRef.current) {
+      clearTimeout(urlTimerRef.current);
+      urlTimerRef.current = null;
+    }
+  };
+
   const handleSearchChange = (value: string) => {
     setQuery(value);
-    if (urlTimerRef.current) clearTimeout(urlTimerRef.current);
+    clearSearchTimer();
     urlTimerRef.current = window.setTimeout(() => {
       urlTimerRef.current = null;
-      router.replace({
-        pathname: ROUTES.EDUCATION,
-        query: value.trim() ? { q: value } : {},
-      });
+      updateParams(value, effectiveCategory);
     }, 350);
   };
 
   useEffect(() => {
     return () => {
-      if (urlTimerRef.current) clearTimeout(urlTimerRef.current);
+      clearSearchTimer();
     };
   }, []);
 
@@ -142,35 +166,123 @@ export function EducationLibraryClient() {
         </section>
       ) : null}
 
-      <div className="border-border bg-card mb-5 flex flex-col gap-3 rounded-2xl border p-3 sm:flex-row sm:items-center">
-        <label className="relative flex-1">
-          <span className="sr-only">{t('search')}</span>
-          <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-          <input
-            value={query}
-            onChange={(event) => handleSearchChange(event.target.value)}
-            placeholder={t('searchPlaceholder')}
-            className="border-input bg-background min-h-11 w-full rounded-xl border pr-3 pl-10 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-          />
-        </label>
-        <label className="sr-only" htmlFor="education-category">
-          {t('category')}
-        </label>
-        <select
-          id="education-category"
-          value={category}
-          onChange={(event) => setCategory(event.target.value)}
-          className="border-input bg-background text-navy min-h-11 rounded-xl border px-3 text-sm font-semibold outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-        >
-          <option value="all">{t('allCategories')}</option>
-          {categories.map((item) => (
-            <option key={item} value={item}>
-              {tDynamic(dynamicLabelKey('educationCategory', item), {
-                value: dynamicLabelFallback(item),
-              })}
-            </option>
-          ))}
-        </select>
+      <div className="border-border bg-card shadow-soft mb-6 rounded-[1.5rem] border p-4 sm:p-5 space-y-3.5">
+        {/* Top Row: Compact Search Input & Status Info */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:w-80 md:w-96 group">
+            <span className="sr-only">{t('search')}</span>
+            <Search className="text-navy-light/70 group-focus-within:text-navy absolute top-1/2 left-3.5 size-4 -translate-y-1/2 transition-colors pointer-events-none" />
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => handleSearchChange(event.target.value)}
+              placeholder={t('searchPlaceholder')}
+              className="border-input/80 bg-background/50 text-foreground placeholder:text-muted-foreground/70 min-h-11 w-full rounded-xl border pr-9 pl-10 text-sm font-medium transition-all duration-200 outline-none hover:border-border hover:bg-background focus:border-navy/50 focus:ring-2 focus:ring-navy/15 focus:bg-background shadow-2xs"
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => handleSearchChange('')}
+                aria-label={t('clearSearch')}
+                title={t('clearSearch')}
+                className="hover:bg-muted/60 text-muted-foreground hover:text-navy absolute top-1/2 right-2.5 -translate-y-1/2 rounded-full p-1 transition-colors cursor-pointer"
+              >
+                <X className="size-3.5" />
+              </button>
+            ) : null}
+          </div>
+
+          {/* Result Info / Reset */}
+          {query || effectiveCategory !== 'all' ? (
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <span className="text-xs font-semibold text-muted-foreground">
+                {t('filterResultsCount', {
+                  filtered: filtered.length,
+                  total: modules.length,
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  clearSearchTimer();
+                  setQuery('');
+                  setCategory('all');
+                  updateParams('', 'all');
+                }}
+                className="text-crimson hover:text-crimson-dark inline-flex items-center gap-1 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <RotateCcw className="size-3" />
+                <span>{t('resetFilters')}</span>
+              </button>
+            </div>
+          ) : (
+            <span className="text-muted-foreground/70 hidden text-xs font-semibold sm:inline">
+              {t('showingModulesCount', { count: modules.length })}
+            </span>
+          )}
+        </div>
+
+        {/* Category Filter Pills Bar */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 border-t border-border/50 pt-3">
+          <button
+            type="button"
+            onClick={() => {
+              clearSearchTimer();
+              setCategory('all');
+              updateParams(query, 'all');
+            }}
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer ${
+              effectiveCategory === 'all'
+                ? 'border-navy bg-navy text-white shadow-xs'
+                : 'border-border/70 bg-muted/30 text-muted-foreground hover:bg-azure/50 hover:text-navy hover:border-navy/20'
+            }`}
+          >
+            <span>{t('allCategories')}</span>
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] font-black ${
+                effectiveCategory === 'all'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-muted text-navy'
+              }`}
+            >
+              {modules.length}
+            </span>
+          </button>
+
+          {categories.map((item) => {
+            const isActive = effectiveCategory === item;
+            const count = modules.filter((m) => m.category === item).length;
+            const label = tDynamic(dynamicLabelKey('educationCategory', item), {
+              value: dynamicLabelFallback(item),
+            });
+
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => {
+                  clearSearchTimer();
+                  setCategory(item);
+                  updateParams(query, item);
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? 'border-navy bg-navy text-white shadow-xs'
+                    : 'border-border/70 bg-muted/30 text-muted-foreground hover:bg-azure/50 hover:text-navy hover:border-navy/20'
+                }`}
+              >
+                <span>{label}</span>
+                <span
+                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-black ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-muted text-navy'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {loading ? (

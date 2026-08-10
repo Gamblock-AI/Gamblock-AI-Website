@@ -24,9 +24,4 @@ export const SYSTEM_MISSION_COPY: Record<
     actionKey: 'mission5Action',
     href: ROUTES.EDUCATION,
   },
-  recovery_practice_today: {
-    labelKey: 'mission6',
-    actionKey: 'mission6Action',
-    href: ROUTES.RECOVERY,
-  },
 };

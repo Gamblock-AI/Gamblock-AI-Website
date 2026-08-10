@@ -21,11 +21,12 @@ export interface ProgressSnapshot {
   activity_days: Array<{
     date: string;
     check_ins: number;
-    practices: number;
     journals: number;
     missions: number;
     education: number;
     reviews: number;
+    learning_hub: number;
+    protection: number;
   }>;
 }
 

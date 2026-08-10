@@ -47,15 +47,20 @@ function ProviderLogo({
   logoUrl?: string;
   isFeatured?: boolean;
 }) {
-  const source = logoUrl ? resolveEducationMediaURL(logoUrl) : '';
-  if (source) {
+  const [imageError, setImageError] = useState(false);
+  const fallbackGamblock = isFeatured ? '/images/logo-mark.png' : '';
+  const rawSource = logoUrl || fallbackGamblock;
+  const source = rawSource ? resolveEducationMediaURL(rawSource) : '';
+
+  if (source && !imageError) {
     return (
-      <div className="border-border/80 relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white p-2 shadow-2xs transition-transform duration-200 group-hover:scale-105 sm:size-13">
+      <div className="border-border/80 relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border bg-white p-2 shadow-2xs transition-all duration-200 group-hover:scale-105 group-hover:shadow-xs sm:size-14 sm:p-2.5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={source}
           alt={name}
           loading="lazy"
+          onError={() => setImageError(true)}
           className="h-full w-full object-contain"
         />
       </div>
@@ -71,7 +76,7 @@ function ProviderLogo({
   return (
     <div
       className={cn(
-        'flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold shadow-2xs transition-transform duration-200 group-hover:scale-105 sm:size-13 sm:text-base',
+        'flex size-12 shrink-0 items-center justify-center rounded-2xl text-sm font-extrabold shadow-2xs transition-transform duration-200 group-hover:scale-105 sm:size-14 sm:text-base',
         isFeatured
           ? 'bg-navy text-white'
           : 'from-navy to-navy-light bg-gradient-to-br text-white'
@@ -90,7 +95,7 @@ export function SkillsHubClient() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [page, setPage] = useState(1);
-  const urlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const urlTimerRef = useRef<number | null>(null);
 
   const providers: LearningProvider[] = useMemo(() => {
     if (!hub.catalog) return [];
@@ -264,7 +269,7 @@ export function SkillsHubClient() {
               </div>
             ) : (
               <div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                   {pagedProviders.map((provider) => {
                     const isFeatured = provider.slug === 'gamblock-ai';
                     return (
@@ -272,10 +277,10 @@ export function SkillsHubClient() {
                         key={provider.slug}
                         href={`/skills/${provider.slug}`}
                         className={cn(
-                          'group relative flex items-center gap-3.5 rounded-2xl border p-3.5 transition-all duration-200 outline-none hover:-translate-y-0.5 hover:shadow-card focus-visible:ring-2 focus-visible:ring-navy/30 sm:p-4',
+                          'group relative flex items-start gap-4 rounded-2xl border p-4 sm:p-4.5 transition-all duration-200 outline-none hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-navy/30',
                           isFeatured
-                            ? 'border-navy/25 bg-gradient-to-br from-azure/40 via-card to-card hover:border-navy/45 shadow-soft'
-                            : 'border-border/80 bg-card hover:border-navy/25 hover:bg-muted/20 shadow-2xs'
+                            ? 'border-navy/30 bg-gradient-to-br from-azure/50 via-card to-card hover:border-navy/50 shadow-soft'
+                            : 'border-border/80 bg-card hover:border-navy/30 hover:bg-muted/15 shadow-2xs'
                         )}
                       >
                         <ProviderLogo
@@ -284,32 +289,34 @@ export function SkillsHubClient() {
                           isFeatured={isFeatured}
                         />
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             <p className="text-navy group-hover:text-navy-light truncate text-sm font-bold tracking-tight transition-colors sm:text-[0.9375rem]">
                               {provider.name}
                             </p>
                             {isFeatured ? (
-                              <span className="border-navy/15 bg-navy/10 text-navy rounded-full border px-1.5 py-0.5 text-[0.625rem] font-bold tracking-wider uppercase">
+                              <span className="bg-navy text-white rounded-full px-2 py-0.5 text-[0.625rem] font-black tracking-wider uppercase shadow-2xs">
                                 {t('featuredBadge')}
                               </span>
                             ) : null}
                           </div>
-                          <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs font-medium">
-                            <BookOpen
-                              className="text-navy/60 size-3 shrink-0"
-                              aria-hidden="true"
-                            />
-                            <span>
-                              {t('courseCount', { count: provider.count })}
+                          <div className="mt-1.5 flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-azure/50 border border-navy/10 px-2 py-0.5 text-[11px] font-bold text-navy">
+                              <BookOpen
+                                className="size-3 text-navy/70 shrink-0"
+                                aria-hidden="true"
+                              />
+                              <span>
+                                {t('courseCount', { count: provider.count })}
+                              </span>
                             </span>
                           </div>
                           {provider.description ? (
-                            <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-5">
+                            <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-relaxed">
                               {provider.description}
                             </p>
                           ) : null}
                         </div>
-                        <span className="bg-muted/50 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-200 group-hover:bg-navy group-hover:text-white">
+                        <span className="bg-muted/60 text-muted-foreground flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 group-hover:bg-navy group-hover:text-white self-center shadow-2xs">
                           <ArrowRight
                             className="size-4 transition-transform group-hover:translate-x-0.5"
                             aria-hidden="true"

@@ -25,7 +25,7 @@ export function ExperienceLevelChip() {
 
   return (
     <Link
-      href={ROUTES.PROGRESS}
+      href={ROUTES.RECOVERY}
       aria-label={t('levelChipAria', { count: currentLevel, title })}
       className="border-border bg-card text-navy hover:border-navy/25 hover:bg-azure/45 focus-visible:ring-navy/35 flex min-h-11 items-center gap-2 rounded-xl border px-2 text-sm font-semibold transition-[background-color,border-color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none"
     >

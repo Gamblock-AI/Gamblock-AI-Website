@@ -31,16 +31,11 @@ const initialMission: DailyMission = {
       system_key: 'education_module_today', completed: false, claimable: false,
       status: 'locked', claim_mode: 'verified', verification_key: 'education_module_today', exp_reward: 10,
     },
-    {
-      id: 'system:6', number: 6, key: 'mission_6', source: 'system',
-      system_key: 'recovery_practice_today', completed: false, claimable: false,
-      status: 'locked', claim_mode: 'verified', verification_key: 'recovery_practice_today', exp_reward: 10,
-    },
   ],
   experience: { total_exp: 0, level: 1, level_progress: 0, level_target: 100 },
   completed_count: 0,
   resolved_count: 0,
-  total_count: 5,
+  total_count: 4,
   created_at: '2026-07-19T00:00:00Z',
   updated_at: '2026-07-19T00:00:00Z',
 };

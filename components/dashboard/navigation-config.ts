@@ -2,7 +2,6 @@ import { ROUTES } from '@/routes';
 import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
-  ChartNoAxesColumnIncreasing,
   CircleHelp,
   FileCheck2,
   FileText,
@@ -70,19 +69,13 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         href: ROUTES.RECOVERY,
         labelKey: 'recovery',
         icon: HeartHandshake,
-        roles: ['user'],
+        roles: ['user', 'partner'],
       },
       {
         href: ROUTES.JOURNAL,
         labelKey: 'journal',
         icon: NotebookPen,
         roles: ['user'],
-      },
-      {
-        href: ROUTES.PROGRESS,
-        labelKey: 'progress',
-        icon: ChartNoAxesColumnIncreasing,
-        roles: ['user', 'partner'],
       },
     ],
   },
@@ -175,8 +168,8 @@ export function getMobilePrimaryNavigation(role?: string) {
     role === 'admin'
       ? [ROUTES.DASHBOARD, ROUTES.ADMIN_TICKETS, ROUTES.ADMIN_CONTENT]
       : role === 'partner'
-        ? [ROUTES.DASHBOARD, ROUTES.PARTNERS, ROUTES.PROGRESS, ROUTES.SUPPORT]
-        : [ROUTES.DASHBOARD, ROUTES.RECOVERY, ROUTES.PROGRESS, ROUTES.SUPPORT];
+        ? [ROUTES.DASHBOARD, ROUTES.PARTNERS, ROUTES.RECOVERY, ROUTES.SUPPORT]
+        : [ROUTES.DASHBOARD, ROUTES.RECOVERY, ROUTES.SUPPORT];
   return dashboardNavigationGroups
     .flatMap((group) => group.items)
     .filter((item) => hrefs.includes(item.href));

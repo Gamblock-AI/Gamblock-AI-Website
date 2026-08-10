@@ -1,9 +1,23 @@
+import { recoveryLimits } from './constants';
 import { clearRecoveryRuntime, updateRecoveryState } from './runtime';
 import { createHistoryEvent } from './date';
 import type { DailyCheckIn, RecoveryIntention } from './types';
 
 export function clearRecoveryData(): void {
   clearRecoveryRuntime();
+}
+
+/** Server check-ins win per local date; local-only rows are kept for dates the server has not returned. */
+function mergeCheckIns(
+  local: DailyCheckIn[],
+  server: DailyCheckIn[]
+): DailyCheckIn[] {
+  const byDate = new Map<string, DailyCheckIn>();
+  for (const item of local) byDate.set(item.date, item);
+  for (const item of server) byDate.set(item.date, item);
+  return Array.from(byDate.values())
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+    .slice(0, recoveryLimits.checkIns);
 }
 
 export function hydrateFromServer(
@@ -20,10 +34,7 @@ export function hydrateFromServer(
       );
     }
 
-    const nextCheckIns =
-      state.checkIns.length === 0 && checkIns.length > 0
-        ? checkIns
-        : state.checkIns;
+    const nextCheckIns = mergeCheckIns(state.checkIns, checkIns);
 
     return {
       ...state,

@@ -76,7 +76,7 @@ export function DailyMissionManager({ compact = false }: { compact?: boolean }) 
   return (
     <div className={compact ? 'space-y-3' : 'space-y-4'}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-bold text-navy">{t('missionProgress', { completed: mission.mission?.completed_count ?? 0, total: 5 })}</p>
+        <p className="text-xs font-bold text-navy">{t('missionProgress', { completed: mission.mission?.completed_count ?? 0, total: mission.mission?.total_count ?? 4 })}</p>
         <p className="text-xs font-semibold text-muted-foreground">{t('customMissionCapacity', { count: customCount })}</p>
       </div>
 

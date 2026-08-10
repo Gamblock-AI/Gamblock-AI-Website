@@ -1,10 +1,8 @@
-import { Activity, CalendarCheck2, HeartPulse, ShieldPlus } from 'lucide-react';
+import { Activity, CalendarCheck2, Flame, ShieldAlert } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatCounter } from '@/components/ui/stat-counter';
-import { moodCopy } from '@/components/dashboard/today/dashboard-copy';
 import type { DashboardSummary } from '@/hooks/use-dashboard-summary';
-import { RECOVERY_TIME_ZONE } from '@/lib/recovery/date';
 import { getRecentJakartaCheckInDays } from '@/lib/recovery/weekly-window';
 import type { DailyCheckIn } from '@/lib/recovery/types';
 import { cn } from '@/lib/utils';
@@ -24,15 +22,6 @@ export function DashboardSummaryStrip({
   const locale = useLocale();
   const recentDays = getRecentJakartaCheckInDays(checkIns);
   const recordedDays = recentDays.filter((day) => day.checkIn);
-  const latestDay = recordedDays.at(-1) ?? null;
-  const latestMood = latestDay?.checkIn?.mood ?? null;
-  const latestDate = latestDay
-    ? new Intl.DateTimeFormat(locale, {
-        day: 'numeric',
-        month: 'short',
-        timeZone: RECOVERY_TIME_ZONE,
-      }).format(latestDay.date)
-    : null;
   const metrics = [
     {
       key: 'check-ins',
@@ -43,13 +32,17 @@ export function DashboardSummaryStrip({
       featured: true,
     },
     {
-      key: 'latest-mood',
-      icon: HeartPulse,
-      label: t('summaryLatestMood'),
-      value: latestMood ? t(moodCopy[latestMood]) : t('summaryNotRecorded'),
-      detail: latestDate
-        ? t('summaryLatestMoodBody', { date: latestDate })
-        : t('summaryLatestMoodEmpty'),
+      key: 'protection-last',
+      icon: ShieldAlert,
+      label: t('summaryProtectionLast'),
+      value: summaryLoading ? null : summary ? (
+        <StatCounter value={summary.blocked_attempts} locale={locale} />
+      ) : (
+        t('summaryUnavailableValue')
+      ),
+      detail: summary
+        ? t('summaryProtectionLastBody')
+        : t('summaryUnavailable'),
     },
     {
       key: 'active-days',
@@ -63,17 +56,15 @@ export function DashboardSummaryStrip({
       detail: summary ? t('summaryActiveDaysBody') : t('summaryUnavailable'),
     },
     {
-      key: 'protection-help',
-      icon: ShieldPlus,
-      label: t('summaryProtectionHelp'),
+      key: 'streak',
+      icon: Flame,
+      label: t('summaryStreak'),
       value: summaryLoading ? null : summary ? (
-        <StatCounter value={summary.blocked_attempts} locale={locale} />
+        <StatCounter value={summary.current_streak} locale={locale} />
       ) : (
         t('summaryUnavailableValue')
       ),
-      detail: summary
-        ? t('summaryProtectionHelpBody')
-        : t('summaryUnavailable'),
+      detail: summary ? t('summaryStreakBody') : t('summaryUnavailable'),
     },
   ];
 

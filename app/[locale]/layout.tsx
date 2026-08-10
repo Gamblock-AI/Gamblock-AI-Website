@@ -62,7 +62,6 @@ export const metadata: Metadata = {
     images: ['/images/landing/generated/og-home.webp'],
   },
   manifest: '/manifest.webmanifest',
-  themeColor: '#16294C',
   appleWebApp: {
     capable: true,
     title: 'Gamblock-AI',

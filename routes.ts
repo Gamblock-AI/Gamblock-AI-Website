@@ -39,7 +39,6 @@ export const ROUTES = {
 
 export const PROTECTED_ROUTES = [
   ROUTES.DASHBOARD,
-  ROUTES.PROGRESS,
   ROUTES.RECOVERY,
   ROUTES.JOURNAL,
   ROUTES.EDUCATION,
@@ -67,7 +66,7 @@ export type AccountRole = 'user' | 'partner' | 'admin';
 
 const consumerRoutes = [
   ROUTES.DASHBOARD,
-  ROUTES.PROGRESS,
+  ROUTES.RECOVERY,
   ROUTES.JOURNAL,
   ROUTES.EDUCATION,
   ROUTES.PARTNERS,
@@ -90,9 +89,6 @@ export function canAccessDashboardRoute(pathname: string, role?: string) {
   }
   if (matches(ROUTES.SUPPORT)) {
     return role === 'user' || role === 'partner';
-  }
-  if (matches(ROUTES.RECOVERY)) {
-    return role === 'user';
   }
   if (matches(ROUTES.SKILLS)) {
     return role === 'user';
