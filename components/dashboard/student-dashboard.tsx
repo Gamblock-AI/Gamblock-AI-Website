@@ -9,6 +9,7 @@ import { DashboardSummaryStrip } from '@/components/dashboard/today/dashboard-su
 import { EmergencyHelp } from '@/components/dashboard/today/emergency-help';
 import { LearningNextStep } from '@/components/dashboard/today/learning-next-step';
 import { ProtectionSummary } from '@/components/dashboard/today/protection-summary';
+import { SpkRecommendationCard } from '@/components/dashboard/today/spk-recommendation-card';
 import { WeeklySnapshot } from '@/components/dashboard/today/weekly-snapshot';
 import { NiatPerubahanGate } from '@/components/dashboard/today/niat-perubahan-gate';
 import { StudentGamificationFab } from '@/components/dashboard/student-gamification-fab';
@@ -81,6 +82,13 @@ export function StudentDashboard({ name }: StudentDashboardProps) {
             onRetry={() => void education.refetch()}
           />
           <EmergencyHelp />
+        </div>
+      </Reveal>
+
+      {/* SPK daily recommendation */}
+      <Reveal y={12} duration={0.45} delay={0.08}>
+        <div data-tour="tour-spk-recommendation">
+          <SpkRecommendationCard />
         </div>
       </Reveal>
 

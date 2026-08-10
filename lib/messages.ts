@@ -236,6 +236,14 @@ export const MESSAGES: Record<string, string> = {
     'Layanan AI penerjemahan sedang tidak tersedia.',
   translation_rate_limited:
     'Penerjemahan AI sedang sibuk, coba lagi dalam beberapa saat.',
+
+  // SPK decision support
+  spk_recommendation_failed: 'Rekomendasi harian belum dapat dimuat.',
+  spk_intervention_not_found:
+    'Rekomendasi tidak ditemukan atau bukan milik Anda.',
+  spk_intervention_complete_failed: 'Rekomendasi belum dapat ditandai selesai.',
+  blocked_events_rejected: 'Data waktu blokir perangkat tidak dapat diterima.',
+  spk_preference_invalid: 'Preferensi belum valid.',
 };
 
 type SupportedLocale = 'id' | 'en';
@@ -318,6 +326,16 @@ const MESSAGES_EN: Record<string, string> = {
   translation_unavailable: 'The AI translation service is unavailable.',
   translation_rate_limited:
     'The translation service is busy. Please try again shortly.',
+
+  // SPK decision support
+  spk_recommendation_failed: 'The daily recommendation could not be loaded.',
+  spk_intervention_not_found:
+    'The recommendation was not found or does not belong to you.',
+  spk_intervention_complete_failed:
+    'The recommendation could not be marked as done.',
+  blocked_events_rejected:
+    'The device block-time data could not be accepted.',
+  spk_preference_invalid: 'The preference is invalid.',
 
   // daily reminder & web push
   reminder_preference_load_failed:
