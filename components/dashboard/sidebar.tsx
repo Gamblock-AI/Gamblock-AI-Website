@@ -56,7 +56,9 @@ export function Sidebar() {
               ? 'tour-sidebar-today'
               : section.titleKey === 'sectionSupport'
                 ? 'tour-sidebar-support'
-                : undefined;
+                : section.titleKey === 'sectionOperations'
+                  ? 'tour-sidebar-operations'
+                  : undefined;
 
           return (
             <div key={section.titleKey} className="space-y-1" data-tour={tourTarget}>

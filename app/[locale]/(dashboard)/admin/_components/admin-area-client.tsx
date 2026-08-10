@@ -14,7 +14,6 @@ import { ContentTab } from './content-tab';
 import { LearningHubTab } from './learning-hub-tab';
 import { EmergencyTab } from './emergency-tab';
 import { PlatformTab } from './platform-tab';
-import { ReleaseTab } from './release-tab';
 import { SupportTab } from './support-tab';
 
 type AdminPageArea = Exclude<AdminArea, 'overview' | 'all'>;
@@ -40,19 +39,17 @@ export function AdminAreaClient({
             title: t('tabLearningHub'),
             description: t('learningHubDescription'),
           }
-        : area === 'releases'
-          ? { title: t('tabReleases'), description: t('releaseDescription') }
-          : area === 'tickets'
-            ? { title: t('tabTickets'), description: t('supportDescription') }
-            : area === 'emergency'
-              ? {
-                  title: t('tabEmergency'),
-                  description: t('emergencyDescription'),
-                }
-              : {
-                  title: t('tabPlatform'),
-                  description: t('platformDescription'),
-                };
+        : area === 'tickets'
+          ? { title: t('tabTickets'), description: t('supportDescription') }
+          : area === 'emergency'
+            ? {
+                title: t('tabEmergency'),
+                description: t('emergencyDescription'),
+              }
+            : {
+                title: t('tabPlatform'),
+                description: t('platformDescription'),
+              };
 
   return (
     <DashboardPage density="compact" className="max-w-none">
@@ -102,15 +99,6 @@ export function AdminAreaClient({
           updateProgram={operations.updateLearningHubProgram}
           deleteProgram={operations.deleteLearningHubProgram}
           uploadEducationMedia={operations.uploadEducationMedia}
-        />
-      ) : area === 'releases' ? (
-        <ReleaseTab
-          allReleases={operations.releases}
-          rollouts={operations.rollouts}
-          createModelRelease={operations.createRelease}
-          uploadReleaseArtifact={operations.uploadReleaseArtifact}
-          createRollout={operations.createRollout}
-          transitionRollout={operations.transitionRollout}
         />
       ) : area === 'tickets' ? (
         <SupportTab

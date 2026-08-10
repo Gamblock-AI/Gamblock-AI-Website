@@ -12,7 +12,6 @@ export const ROUTES = {
   ADMIN: '/admin',
   ADMIN_CONTENT: '/admin/content',
   ADMIN_LEARNING_HUB: '/admin/learning-hub',
-  ADMIN_RELEASES: '/admin/releases',
   ADMIN_TICKETS: '/admin/tickets',
   ADMIN_EMERGENCY: '/admin/emergency',
   ADMIN_PLATFORM: '/admin/platform',
@@ -34,7 +33,6 @@ export const ROUTES = {
   TECHNOLOGY: '/technology',
   PKM: '/pkm',
   POST_INTERVENTION: '/post-intervention',
-  RESEARCH_SANDBOX: '/research-sandbox',
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -53,7 +51,6 @@ export const PROTECTED_ROUTES = [
   ROUTES.PROFILE,
   ROUTES.CREATE_GROUP,
   ROUTES.PARTNER_INVITATIONS,
-  ROUTES.RESEARCH_SANDBOX,
 ] as const;
 
 export const GUEST_ROUTES = [
@@ -84,7 +81,7 @@ export function canAccessDashboardRoute(pathname: string, role?: string) {
   const matches = (route: string) =>
     pathname === route || pathname.startsWith(`${route}/`);
   if (matches(ROUTES.DASHBOARD)) return true;
-  if (matches(ROUTES.ADMIN) || matches(ROUTES.RESEARCH_SANDBOX)) {
+  if (matches(ROUTES.ADMIN)) {
     return role === 'admin';
   }
   if (matches(ROUTES.SUPPORT)) {

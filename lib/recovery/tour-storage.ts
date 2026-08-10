@@ -1,5 +1,6 @@
 export const DASHBOARD_TOUR_KEY = 'gamblock:dashboard-tour:v1';
 export const PARTNER_TOUR_KEY = 'gamblock:partner-tour:v1';
+export const ADMIN_TOUR_KEY = 'gamblock:admin-tour:v1';
 
 export function getTourSeen(key: string): boolean {
   if (typeof window === 'undefined') return false;
@@ -29,4 +30,8 @@ export function setDashboardTourSeen(): void {
 
 export function getPartnerTourSeen(): boolean {
   return getTourSeen(PARTNER_TOUR_KEY);
+}
+
+export function getAdminTourSeen(): boolean {
+  return getTourSeen(ADMIN_TOUR_KEY);
 }

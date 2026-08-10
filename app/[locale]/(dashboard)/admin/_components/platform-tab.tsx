@@ -164,18 +164,18 @@ function formatAuditAction(action: string) {
     .join(' ');
 }
 
-type AdminTranslate = (
-  key: string,
-  values?: Record<string, string | number>
-) => string;
+type AdminTranslate = {
+  (key: string, values?: Record<string, string | number>): string;
+  has(key: string): boolean;
+};
 
 // Localize a known audit action; unknown values fall back to the humanized
-// form so new backend events never render raw keys.
+// form so new backend events never render raw keys or trigger MISSING_MESSAGE
+// console errors.
 function localizeAuditAction(t: AdminTranslate, action: string): string {
   if (!action) return '—';
   const key = `auditActions.${action}`;
-  const label = t(key);
-  return label === key ? formatAuditAction(action) : label;
+  return t.has(key) ? t(key) : formatAuditAction(action);
 }
 
 // Localize the target type and known config targets; IDs and unknown values
@@ -186,11 +186,9 @@ function localizeAuditTarget(
   target: string
 ): string {
   const typeKey = `auditTargetTypes.${targetType}`;
-  const typeLabel = t(typeKey);
-  const resolvedType = typeLabel === typeKey ? targetType : typeLabel;
+  const resolvedType = t.has(typeKey) ? t(typeKey) : targetType;
   const targetKey = `auditTargets.${target}`;
-  const targetLabel = t(targetKey);
-  const resolvedTarget = targetLabel === targetKey ? target : targetLabel;
+  const resolvedTarget = t.has(targetKey) ? t(targetKey) : target;
   return `${resolvedType}: ${resolvedTarget}`;
 }
 

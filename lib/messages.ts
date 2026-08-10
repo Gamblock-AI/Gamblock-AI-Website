@@ -197,11 +197,9 @@ export const MESSAGES: Record<string, string> = {
   account_deletion_failed: 'Penghapusan akun belum dapat dikonfirmasi.',
   type_required: 'Jenis permintaan wajib dipilih.',
 
-  // admin / releases / emergency
+  // admin / emergency
   fetch_admin_modules_failed: 'Gagal memuat modul admin.',
-  fetch_admin_model_releases_failed: 'Gagal memuat rilis model.',
   fetch_admin_support_cases_failed: 'Gagal memuat tiket admin.',
-  fetch_admin_releases_failed: 'Gagal memuat rilis operasional.',
   admin_overview_failed: 'Gagal memuat ringkasan operasional.',
   site_social_links_failed: 'Pengaturan sosial media belum dapat diproses.',
   audit_events_failed: 'Gagal memuat jejak audit.',
@@ -212,15 +210,6 @@ export const MESSAGES: Record<string, string> = {
   operator_invitation_invalid:
     'Undangan operator tidak valid atau telah kedaluwarsa.',
   operator_invitation_accept_failed: 'Akun operator belum dapat diaktifkan.',
-  release_rollout_create_failed: 'Rollout belum dapat disiapkan.',
-  release_rollout_transition_failed: 'Status rollout belum dapat diperbarui.',
-  create_model_release_failed: 'Gagal merilis model.',
-  create_ruleset_release_failed: 'Gagal merilis ruleset.',
-  create_network_release_failed: 'Gagal merilis ruleset jaringan.',
-  release_not_found: 'Rilis tidak ditemukan.',
-  release_validation_failed:
-    'Artefak rilis belum lengkap atau checksum tidak cocok.',
-  artifact_unavailable: 'Artefak rilis belum tersedia atau gagal diverifikasi.',
   portal_overview_failed: 'Gagal memuat ringkasan operasional.',
   generate_key_failed: 'Gagal membuat kunci darurat.',
   emergency_request_failed: 'Gagal meminta pemulihan darurat.',
@@ -305,8 +294,6 @@ const MESSAGES_EN: Record<string, string> = {
     'The data archive is unavailable or its download period has ended.',
   account_deletion_failed: 'Account deletion could not be confirmed.',
   type_required: 'Select a request type.',
-  release_validation_failed:
-    'The release artifact is incomplete or its checksum does not match.',
   emergency_key_required: 'Emergency key is required.',
   invalid_key: 'The emergency key is invalid.',
   learning_hub_admin_failed:

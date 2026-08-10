@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Archive,
   BookOpen,
@@ -21,6 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { NativeSelect } from '@/components/common/native-select';
+import { CompactTabNav } from '@/components/common/compact-tab-nav';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import type {
@@ -35,6 +37,8 @@ import {
   adminFieldClassName,
 } from './admin-shared';
 import { TranslateButton } from '@/components/admin/translate-button';
+import { slugify } from './content-tab';
+import { ROUTES } from '@/routes';
 
 type Draft = {
   slug: string;
@@ -177,6 +181,7 @@ function LearningMediaField({
   onUpload: (file: File) => Promise<void>;
   onChange: (value: string) => void;
 }) {
+  const t = useTranslations('adminPage');
   const inputRef = useRef<HTMLInputElement>(null);
   const source = mediaID ? resolveEducationMediaURL(`/v1/education/media/${mediaID}`) : '';
   return (
@@ -214,7 +219,7 @@ function LearningMediaField({
           disabled={uploading}
           onClick={() => inputRef.current?.click()}
         >
-          {uploading ? '...' : 'Unggah'}
+          {uploading ? '...' : t('learningHubUpload')}
         </Button>
         {mediaID ? (
           <Button
@@ -282,11 +287,15 @@ export function LearningHubTab({
   ) => Promise<{ id: string }>;
 }) {
   const t = useTranslations('adminPage');
+  const searchParams = useSearchParams();
+  const sectionParam = searchParams.get('section');
+  const section = sectionParam === 'taxonomy' ? 'taxonomy' : 'items';
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<AdminLearningHubItem | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState<Draft>(() => emptyDraft());
+  const [isCreateSlugCustom, setIsCreateSlugCustom] = useState(false);
   const [mediaUploading, setMediaUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revisions, setRevisions] = useState<AdminLearningRevision[]>([]);
@@ -367,6 +376,7 @@ export function LearningHubTab({
       setSelected(created);
       setDraft(itemDraft(created));
       setCreateDraft(emptyDraft());
+      setIsCreateSlugCustom(false);
       setCreateOpen(false);
       toastSuccess(t('learningHubCreated'));
     } catch (error) {
@@ -511,16 +521,44 @@ export function LearningHubTab({
   return (
     <div className="space-y-5">
       <AdminSectionHeader
-        title={t('learningHubItemsTitle')}
-        description={t('learningHubItemsDescription')}
+        title={
+          section === 'items'
+            ? t('learningHubItemsTitle')
+            : t('learningHubTaxonomyTitle')
+        }
+        description={
+          section === 'items'
+            ? t('learningHubItemsDescription')
+            : t('learningHubTaxonomyDescription')
+        }
         action={
-          <Button onClick={() => setCreateOpen(true)} disabled={busy}>
-            <Plus className="size-4" />
-            {t('learningHubNewItem')}
-          </Button>
+          section === 'items' ? (
+            <Button onClick={() => setCreateOpen(true)} disabled={busy}>
+              <Plus className="size-4" />
+              {t('learningHubNewItem')}
+            </Button>
+          ) : undefined
         }
       />
 
+      <CompactTabNav<'items' | 'taxonomy'>
+        ariaLabel={t('learningHubTabNavigation')}
+        value={section}
+        items={[
+          {
+            value: 'items' as const,
+            label: t('learningHubTabItems'),
+            href: `${ROUTES.ADMIN_LEARNING_HUB}?section=items`,
+          },
+          {
+            value: 'taxonomy' as const,
+            label: t('learningHubTabTaxonomy'),
+            href: `${ROUTES.ADMIN_LEARNING_HUB}?section=taxonomy`,
+          },
+        ]}
+      />
+
+      {section === 'items' ? (
       <div className="grid gap-5 xl:grid-cols-[20rem_minmax(0,1fr)] xl:items-start">
         <section className="border-border/80 bg-card max-h-[calc(100vh-14rem)] min-h-[500px] flex flex-col rounded-2xl border p-4 shadow-2xs">
           <div className="mb-3 flex items-center justify-between gap-3 shrink-0 pb-3 border-b border-border/60">
@@ -568,7 +606,9 @@ export function LearningHubTab({
                 </div>
                 <div className="mt-2 flex items-center justify-between text-[0.6875rem] text-muted-foreground">
                   <span className="capitalize font-medium">
-                    {item.kind.replace(/_/g, ' ')}
+                    {t.has(`learningHubKind_${item.kind}`)
+                      ? t(`learningHubKind_${item.kind}`)
+                      : item.kind.replace(/_/g, ' ')}
                   </span>
                   <span className="font-mono bg-muted/60 px-1.5 py-0.5 rounded text-[0.625rem]">
                     rev {item.draft_revision}
@@ -584,7 +624,7 @@ export function LearningHubTab({
           </div>
           <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground shrink-0">
             <span className="text-[0.6875rem] font-medium">
-              Total: {visibleItems.length} item
+              {t('learningHubTotalItems', { count: visibleItems.length })}
             </span>
             {filter ? (
               <span className="text-[0.6875rem] font-semibold text-navy">
@@ -604,8 +644,7 @@ export function LearningHubTab({
                 {t('learningHubSelectItem')}
               </p>
               <p className="text-muted-foreground mt-1 max-w-sm text-xs">
-                Pilih salah satu item pada daftar status di sebelah kiri untuk
-                membuka editor dan mengubah konten.
+                {t('learningHubSelectItemBody')}
               </p>
             </div>
           ) : (
@@ -634,7 +673,7 @@ export function LearningHubTab({
               {/* Translation utility bar */}
               <div className="border-border/70 bg-muted/20 flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3">
                 <span className="text-navy text-xs font-semibold">
-                  Terjemahan Otomatis:
+                  {t('learningHubAutoTranslation')}
                 </span>
                 <div className="flex flex-wrap items-center gap-2">
                   <TranslateButton
@@ -661,13 +700,14 @@ export function LearningHubTab({
               {/* Subsection 1: Basic Information */}
               <div className="space-y-3">
                 <h3 className="text-navy text-xs font-bold uppercase tracking-wider">
-                  Informasi Dasar
+                  {t('learningHubBasicInfo')}
                 </h3>
                 <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">Slug</span>
+                    <span className="text-navy text-xs font-bold">{t('learningHubSlug')}</span>
                     <input
                       className={adminFieldClassName}
+                      placeholder="analisis-data-statistika-terapan"
                       value={draft.slug}
                       onChange={(event) =>
                         updateDraft({ slug: event.target.value })
@@ -676,7 +716,7 @@ export function LearningHubTab({
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-navy text-xs font-bold">
-                      Jenis (Kind)
+                      {t('learningHubKind')}
                     </span>
                     <NativeSelect
                       value={draft.kind}
@@ -686,17 +726,18 @@ export function LearningHubTab({
                     >
                       {kinds.map((kind) => (
                         <option key={kind} value={kind}>
-                          {kind}
+                          {t(`learningHubKind_${kind}`)}
                         </option>
                       ))}
                     </NativeSelect>
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-navy text-xs font-bold">
-                      Judul Indonesia
+                      {t('learningHubTitleId')}
                     </span>
                     <input
                       className={adminFieldClassName}
+                      placeholder="Contoh: Pengenalan Analisis Data & Statistika Terapan"
                       value={draft.title_id}
                       onChange={(event) =>
                         updateDraft({ title_id: event.target.value })
@@ -705,10 +746,11 @@ export function LearningHubTab({
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-navy text-xs font-bold">
-                      English title
+                      {t('learningHubTitleEn')}
                     </span>
                     <input
                       className={adminFieldClassName}
+                      placeholder="e.g. Introduction to Data Analysis & Applied Statistics"
                       value={draft.title_en}
                       onChange={(event) =>
                         updateDraft({ title_en: event.target.value })
@@ -717,11 +759,12 @@ export function LearningHubTab({
                   </label>
                   <label className="space-y-1.5 sm:col-span-2">
                     <span className="text-navy text-xs font-bold">
-                      Ringkasan Indonesia
+                      {t('learningHubSummaryId')}
                     </span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
                       rows={2}
+                      placeholder="Contoh: Ringkasan singkat materi mengenai silabus, target kompetensi, dan capaian pembelajaran..."
                       value={draft.summary_id}
                       onChange={(event) =>
                         updateDraft({ summary_id: event.target.value })
@@ -730,11 +773,12 @@ export function LearningHubTab({
                   </label>
                   <label className="space-y-1.5 sm:col-span-2">
                     <span className="text-navy text-xs font-bold">
-                      English summary
+                      {t('learningHubSummaryEn')}
                     </span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
                       rows={2}
+                      placeholder="e.g. Brief summary covering the syllabus, target competencies, and learning outcomes..."
                       value={draft.summary_en}
                       onChange={(event) =>
                         updateDraft({ summary_en: event.target.value })
@@ -747,15 +791,16 @@ export function LearningHubTab({
               {/* Subsection 2: Provider, Media, and Details */}
               <div className="space-y-3">
                 <h3 className="text-navy text-xs font-bold uppercase tracking-wider">
-                  Penyedia, Media & Detail
+                  {t('learningHubProviderMedia')}
                 </h3>
                 <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
                   <label className="space-y-1.5">
                     <span className="text-navy text-xs font-bold">
-                      Penyedia (Provider)
+                      {t('learningHubProvider')}
                     </span>
                     <input
                       className={adminFieldClassName}
+                      placeholder="Contoh: Dicoding, Coursera, MIT OpenCourseWare"
                       value={text(draft.document, 'provider')}
                       onChange={(event) =>
                         updateDoc('provider', event.target.value)
@@ -764,11 +809,12 @@ export function LearningHubTab({
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-navy text-xs font-bold">
-                      HTTPS source URL
+                      {t('learningHubSourceUrl')}
                     </span>
                     <input
                       className={adminFieldClassName}
                       type="url"
+                      placeholder="https://www.dicoding.com/academies/..."
                       value={text(draft.document, 'url')}
                       onChange={(event) => updateDoc('url', event.target.value)}
                     />
@@ -781,6 +827,7 @@ export function LearningHubTab({
                       className={`${adminFieldClassName} py-2`}
                       rows={2}
                       maxLength={200}
+                      placeholder="Contoh: Platform edukasi teknologi terkemuka dengan kurikulum terstandarisasi industri..."
                       value={text(draft.document, 'provider_description_id')}
                       onChange={(event) =>
                         updateDoc('provider_description_id', event.target.value)
@@ -795,6 +842,7 @@ export function LearningHubTab({
                       className={`${adminFieldClassName} py-2`}
                       rows={2}
                       maxLength={200}
+                      placeholder="e.g. Leading technology education platform offering industry-standard curriculums..."
                       value={text(draft.document, 'provider_description_en')}
                       onChange={(event) =>
                         updateDoc('provider_description_en', event.target.value)
@@ -802,8 +850,8 @@ export function LearningHubTab({
                     />
                   </label>
                   <LearningMediaField
-                    label="Logo penyedia"
-                    help="Gambar logo layanan (mis. Dicoding)."
+                    label={t('learningHubProviderLogo')}
+                    help={t('learningHubProviderLogoHelp')}
                     mediaID={text(draft.document, 'provider_logo_media_id')}
                     uploading={mediaUploading}
                     onUpload={async (file) => {
@@ -825,8 +873,8 @@ export function LearningHubTab({
                     }
                   />
                   <LearningMediaField
-                    label="Thumbnail kursus"
-                    help="Gambar sampul kartu kursus (16:9)."
+                    label={t('learningHubThumbnail')}
+                    help={t('learningHubThumbnailHelp')}
                     mediaID={text(draft.document, 'thumbnail_media_id')}
                     uploading={mediaUploading}
                     onUpload={async (file) => {
@@ -847,12 +895,13 @@ export function LearningHubTab({
                   />
                   <label className="space-y-1.5">
                     <span className="text-navy text-xs font-bold">
-                      Durasi (menit)
+                      {t('learningHubDurationMinutes')}
                     </span>
                     <input
                       className={adminFieldClassName}
                       type="number"
                       min={1}
+                      placeholder="45"
                       value={number(draft.document, 'duration_minutes')}
                       onChange={(event) =>
                         updateDoc(
@@ -863,11 +912,10 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      Reviewer
-                    </span>
+                    <span className="text-navy text-xs font-bold">{t('learningHubReviewer')}</span>
                     <input
                       className={adminFieldClassName}
+                      placeholder="Contoh: Dr. Budi Santoso, M.Kom. / Tim Kurikulum"
                       value={text(draft.document, 'reviewer_name')}
                       onChange={(event) =>
                         updateDoc('reviewer_name', event.target.value)
@@ -875,9 +923,7 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5 sm:col-span-2">
-                    <span className="text-navy text-xs font-bold">
-                      Tanggal review
-                    </span>
+                    <span className="text-navy text-xs font-bold">{t('learningHubReviewedAt')}</span>
                     <input
                       className={adminFieldClassName}
                       type="date"
@@ -892,17 +938,14 @@ export function LearningHubTab({
 
               {/* Subsection 3: Outcomes & Taxonomy Slugs */}
               <div className="space-y-3">
-                <h3 className="text-navy text-xs font-bold uppercase tracking-wider">
-                  Capaian Pembelajaran & Taksonomi
-                </h3>
+                <h3 className="text-navy text-xs font-bold uppercase tracking-wider">{t('learningHubOutcomesTaxonomy')}</h3>
                 <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      Outcomes (ID, satu per baris)
-                    </span>
+                    <span className="text-navy text-xs font-bold">{t('learningHubOutcomesId')}</span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
                       rows={3}
+                      placeholder={`Contoh:\nMemahami konsep dasar analisis data\nMampu memvisualisasikan data kuantitatif\nMenerapkan analisis regresi pada studi kasus`}
                       value={list(draft.document, 'outcomes_id')}
                       onChange={(event) =>
                         updateDoc(
@@ -916,12 +959,11 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      Outcomes (EN, one per line)
-                    </span>
+                    <span className="text-navy text-xs font-bold">{t('learningHubOutcomesEn')}</span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
                       rows={3}
+                      placeholder={`e.g.:\nUnderstand fundamental data analysis concepts\nAble to visualize quantitative datasets\nApply regression analysis in case studies`}
                       value={list(draft.document, 'outcomes_en')}
                       onChange={(event) =>
                         updateDoc(
@@ -935,11 +977,10 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      Cluster slugs
-                    </span>
+                    <span className="text-navy text-xs font-bold">{t('learningHubClusterSlugs')}</span>
                     <input
                       className={adminFieldClassName}
+                      placeholder="teknologi-informasi, sains-data"
                       value={list(draft.document, 'clusters').replace(
                         /\n/g,
                         ', '
@@ -956,11 +997,10 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      Program slugs
-                    </span>
+                    <span className="text-navy text-xs font-bold">{t('learningHubProgramSlugs')}</span>
                     <input
                       className={adminFieldClassName}
+                      placeholder="s1-informatika, s1-sistem-informasi"
                       value={list(draft.document, 'programs').replace(
                         /\n/g,
                         ', '
@@ -1038,18 +1078,12 @@ export function LearningHubTab({
           )}
         </section>
       </div>
-
-      <AdminSectionHeader
-        title={t('learningHubTaxonomyTitle')}
-        description={t('learningHubTaxonomyDescription')}
-      />
+      ) : (
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="border-border/80 bg-card rounded-2xl border p-5 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <h3 className="text-navy text-sm font-bold">
-                Rumpun Ilmu (Clusters)
-              </h3>
+              <h3 className="text-navy text-sm font-bold">{t('learningHubClusters')}</h3>
               <span className="text-[0.6875rem] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60">
                 {taxonomy?.clusters?.length ?? 0} cluster
               </span>
@@ -1065,6 +1099,7 @@ export function LearningHubTab({
                     <input
                       aria-label={`${cluster.slug} slug`}
                       className={adminFieldClassName}
+                      placeholder="slug-klaster"
                       defaultValue={cluster.slug}
                       onChange={(event) =>
                         clusterEdits.current.set(cluster.id, {
@@ -1077,6 +1112,7 @@ export function LearningHubTab({
                       aria-label={`${cluster.slug} sort order`}
                       className={adminFieldClassName}
                       type="number"
+                      placeholder="0"
                       defaultValue={cluster.sort_order}
                       onChange={(event) =>
                         clusterEdits.current.set(cluster.id, {
@@ -1088,6 +1124,7 @@ export function LearningHubTab({
                     <input
                       aria-label={`${cluster.slug} Indonesian title`}
                       className={adminFieldClassName}
+                      placeholder="Judul klaster (ID)"
                       defaultValue={cluster.title_id}
                       onChange={(event) =>
                         clusterEdits.current.set(cluster.id, {
@@ -1100,6 +1137,7 @@ export function LearningHubTab({
                     <input
                       aria-label={`${cluster.slug} English title`}
                       className={adminFieldClassName}
+                      placeholder="Cluster title (EN)"
                       defaultValue={cluster.title_en}
                       onChange={(event) =>
                         clusterEdits.current.set(cluster.id, {
@@ -1111,6 +1149,7 @@ export function LearningHubTab({
                     <input
                       aria-label={`${cluster.slug} Indonesian description`}
                       className={adminFieldClassName}
+                      placeholder="Deskripsi klaster (ID)"
                       defaultValue={cluster.description_id}
                       onChange={(event) =>
                         clusterEdits.current.set(cluster.id, {
@@ -1123,6 +1162,7 @@ export function LearningHubTab({
                     <input
                       aria-label={`${cluster.slug} English description`}
                       className={adminFieldClassName}
+                      placeholder="Cluster description (EN)"
                       defaultValue={cluster.description_en}
                       onChange={(event) =>
                         clusterEdits.current.set(cluster.id, {
@@ -1167,9 +1207,7 @@ export function LearningHubTab({
             </div>
 
             <details className="border-border/80 bg-muted/15 mt-3.5 rounded-xl border p-3.5 transition-all">
-              <summary className="text-navy cursor-pointer text-xs font-bold uppercase tracking-wider">
-                Editor cluster lengkap
-              </summary>
+              <summary className="text-navy cursor-pointer text-xs font-bold uppercase tracking-wider">{t('learningHubClusterEditor')}</summary>
               <div className="mt-3 space-y-3">
                 <NativeSelect
                   value={editingCluster?.id ?? ''}
@@ -1181,7 +1219,7 @@ export function LearningHubTab({
                     )
                   }
                 >
-                  <option value="">Pilih cluster</option>
+                  <option value="">{t('learningHubSelectCluster')}</option>
                   {(taxonomy?.clusters ?? []).map((cluster) => (
                     <option key={cluster.id} value={cluster.id}>
                       {cluster.title_id} ({cluster.slug})
@@ -1303,9 +1341,7 @@ export function LearningHubTab({
                             active: event.target.checked,
                           })
                         }
-                      />
-                      Aktif di katalog mahasiswa
-                    </label>
+                      />{t('learningHubActiveInCatalog')}</label>
                     <Button
                       onClick={() => void saveCluster()}
                       disabled={busy}
@@ -1323,7 +1359,7 @@ export function LearningHubTab({
           <div className="border-border/60 mt-4 pt-3.5 border-t grid gap-2 sm:grid-cols-2">
             <input
               className={adminFieldClassName}
-              placeholder="slug"
+              placeholder="slug-klaster (mis. sains-data)"
               value={newCluster.slug}
               onChange={(event) =>
                 setNewCluster({ ...newCluster, slug: event.target.value })
@@ -1331,7 +1367,7 @@ export function LearningHubTab({
             />
             <input
               className={adminFieldClassName}
-              placeholder="Judul ID"
+              placeholder="Judul klaster ID (mis. Sains Data)"
               value={newCluster.title_id}
               onChange={(event) =>
                 setNewCluster({ ...newCluster, title_id: event.target.value })
@@ -1339,7 +1375,7 @@ export function LearningHubTab({
             />
             <input
               className={adminFieldClassName}
-              placeholder="Title EN"
+              placeholder="Cluster title EN (e.g. Data Science)"
               value={newCluster.title_en}
               onChange={(event) =>
                 setNewCluster({ ...newCluster, title_en: event.target.value })
@@ -1360,9 +1396,7 @@ export function LearningHubTab({
         <section className="border-border/80 bg-card rounded-2xl border p-5 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <h3 className="text-navy text-sm font-bold">
-                Program Studi (Programs)
-              </h3>
+              <h3 className="text-navy text-sm font-bold">{t('learningHubPrograms')}</h3>
               <span className="text-[0.6875rem] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60">
                 {taxonomy?.programs ?? [] ? taxonomy?.programs?.length : 0} program
               </span>
@@ -1376,6 +1410,7 @@ export function LearningHubTab({
                 >
                   <input
                     className={adminFieldClassName}
+                    placeholder="Nama program studi"
                     defaultValue={program.name}
                     onChange={(event) =>
                       programEdits.current.set(program.id, {
@@ -1421,9 +1456,7 @@ export function LearningHubTab({
             </div>
 
             <details className="border-border/80 bg-muted/15 mt-3.5 rounded-xl border p-3.5 transition-all">
-              <summary className="text-navy cursor-pointer text-xs font-bold uppercase tracking-wider">
-                Editor program studi lengkap
-              </summary>
+              <summary className="text-navy cursor-pointer text-xs font-bold uppercase tracking-wider">{t('learningHubProgramEditor')}</summary>
               <div className="mt-3 space-y-3">
                 <NativeSelect
                   value={editingProgram?.id ?? ''}
@@ -1435,7 +1468,7 @@ export function LearningHubTab({
                     )
                   }
                 >
-                  <option value="">Pilih program studi</option>
+                  <option value="">{t('learningHubSelectProgram')}</option>
                   {(taxonomy?.programs ?? []).map((program) => (
                     <option key={program.id} value={program.id}>
                       {program.name} ({program.slug})
@@ -1447,6 +1480,7 @@ export function LearningHubTab({
                     <input
                       aria-label="Program slug"
                       className={adminFieldClassName}
+                      placeholder="s1-informatika"
                       value={editingProgram.slug}
                       onChange={(event) =>
                         setEditingProgram({
@@ -1458,6 +1492,7 @@ export function LearningHubTab({
                     <input
                       aria-label="Program name"
                       className={adminFieldClassName}
+                      placeholder="Nama program studi (mis. S1 Informatika)"
                       value={editingProgram.name}
                       onChange={(event) =>
                         setEditingProgram({
@@ -1469,6 +1504,7 @@ export function LearningHubTab({
                     <input
                       aria-label="Program degree"
                       className={adminFieldClassName}
+                      placeholder="Jenjang (mis. S1 / D3 / S2)"
                       value={editingProgram.degree}
                       onChange={(event) =>
                         setEditingProgram({
@@ -1480,6 +1516,7 @@ export function LearningHubTab({
                     <input
                       aria-label="Primary cluster slug"
                       className={adminFieldClassName}
+                      placeholder="Slug klaster utama (mis. teknologi-informasi)"
                       value={editingProgram.primary_cluster_slug}
                       onChange={(event) =>
                         setEditingProgram({
@@ -1492,6 +1529,7 @@ export function LearningHubTab({
                       aria-label="Program sort order"
                       className={adminFieldClassName}
                       type="number"
+                      placeholder="0"
                       value={editingProgram.sort_order}
                       onChange={(event) =>
                         setEditingProgram({
@@ -1510,9 +1548,7 @@ export function LearningHubTab({
                             active: event.target.checked,
                           })
                         }
-                      />
-                      Aktif di katalog mahasiswa
-                    </label>
+                      />{t('learningHubActiveInCatalog')}</label>
                     <Button
                       onClick={() => void saveProgram()}
                       disabled={busy}
@@ -1530,7 +1566,7 @@ export function LearningHubTab({
           <div className="border-border/60 mt-4 pt-3.5 border-t grid gap-2 sm:grid-cols-2">
             <input
               className={adminFieldClassName}
-              placeholder="slug"
+              placeholder="slug-program (mis. s1-informatika)"
               value={newProgram.slug}
               onChange={(event) =>
                 setNewProgram({ ...newProgram, slug: event.target.value })
@@ -1538,7 +1574,7 @@ export function LearningHubTab({
             />
             <input
               className={adminFieldClassName}
-              placeholder="Nama program"
+              placeholder="Nama program studi (mis. S1 Informatika)"
               value={newProgram.name}
               onChange={(event) =>
                 setNewProgram({ ...newProgram, name: event.target.value })
@@ -1546,7 +1582,7 @@ export function LearningHubTab({
             />
             <input
               className={adminFieldClassName}
-              placeholder="Cluster slug"
+              placeholder="Cluster slug (mis. teknologi-informasi)"
               value={newProgram.primary_cluster_slug}
               onChange={(event) =>
                 setNewProgram({
@@ -1567,13 +1603,17 @@ export function LearningHubTab({
           </div>
         </section>
       </div>
+      )}
 
       <Dialog
         open={createOpen}
         onOpenChange={(open) => {
           if (busy) return;
           setCreateOpen(open);
-          if (!open) setCreateDraft(emptyDraft());
+          if (!open) {
+            setCreateDraft(emptyDraft());
+            setIsCreateSlugCustom(false);
+          }
         }}
       >
         <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
@@ -1585,20 +1625,76 @@ export function LearningHubTab({
           </DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">Slug</span>
+              <span className="text-navy text-xs font-bold">{t('learningHubTitleId')}</span>
               <input
                 className={adminFieldClassName}
-                value={createDraft.slug}
-                onChange={(event) =>
+                placeholder="Contoh: Pengenalan Analisis Data & Statistika Terapan"
+                value={createDraft.title_id}
+                onChange={(event) => {
+                  const newTitle = event.target.value;
                   setCreateDraft((current) => ({
                     ...current,
-                    slug: event.target.value,
-                  }))
-                }
+                    title_id: newTitle,
+                    ...(!isCreateSlugCustom
+                      ? { slug: slugify(newTitle || current.title_en) }
+                      : {}),
+                  }));
+                }}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">Kind</span>
+              <span className="text-navy text-xs font-bold">{t('learningHubTitleEn')}</span>
+              <input
+                className={adminFieldClassName}
+                placeholder="e.g. Introduction to Data Analysis & Applied Statistics"
+                value={createDraft.title_en}
+                onChange={(event) => {
+                  const newTitle = event.target.value;
+                  setCreateDraft((current) => ({
+                    ...current,
+                    title_en: newTitle,
+                    ...(!isCreateSlugCustom && !current.title_id
+                      ? { slug: slugify(newTitle) }
+                      : {}),
+                  }));
+                }}
+              />
+            </label>
+            <label className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-navy text-xs font-bold">Slug</span>
+                {isCreateSlugCustom ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreateSlugCustom(false);
+                      setCreateDraft((current) => ({
+                        ...current,
+                        slug: slugify(current.title_id || current.title_en),
+                      }));
+                    }}
+                    className="text-navy text-[0.7rem] hover:underline"
+                  >{t('learningHubAutoSlug')}</button>
+                ) : null}
+              </div>
+              <input
+                className={adminFieldClassName}
+                placeholder="pengenalan-analisis-data-statistika-terapan"
+                pattern="[a-z0-9-]+"
+                value={createDraft.slug}
+                onChange={(event) => {
+                  setIsCreateSlugCustom(true);
+                  setCreateDraft((current) => ({
+                    ...current,
+                    slug: event.target.value,
+                  }));
+                }}
+              />
+            </label>
+            <label className="space-y-2">
+              <span className="text-navy text-xs font-bold">
+                {t('learningHubKind')}
+              </span>
               <NativeSelect
                 value={createDraft.kind}
                 onChange={(event) =>
@@ -1610,46 +1706,19 @@ export function LearningHubTab({
               >
                 {kinds.map((kind) => (
                   <option key={kind} value={kind}>
-                    {kind}
+                    {t(`learningHubKind_${kind}`)}
                   </option>
                 ))}
               </NativeSelect>
             </label>
             <label className="space-y-2">
               <span className="text-navy text-xs font-bold">
-                Judul Indonesia
-              </span>
-              <input
-                className={adminFieldClassName}
-                value={createDraft.title_id}
-                onChange={(event) =>
-                  setCreateDraft((current) => ({
-                    ...current,
-                    title_id: event.target.value,
-                  }))
-                }
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">English title</span>
-              <input
-                className={adminFieldClassName}
-                value={createDraft.title_en}
-                onChange={(event) =>
-                  setCreateDraft((current) => ({
-                    ...current,
-                    title_en: event.target.value,
-                  }))
-                }
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">
-                Ringkasan Indonesia
+                {t('learningHubSummaryId')}
               </span>
               <textarea
                 className={`${adminFieldClassName} py-2`}
                 rows={3}
+                placeholder="Contoh: Ringkasan materi mengenai metodologi analisis data, interpretasi visual, dan studi kasus praktis..."
                 value={createDraft.summary_id}
                 onChange={(event) =>
                   setCreateDraft((current) => ({
@@ -1661,11 +1730,12 @@ export function LearningHubTab({
             </label>
             <label className="space-y-2">
               <span className="text-navy text-xs font-bold">
-                English summary
+                {t('learningHubSummaryEn')}
               </span>
               <textarea
                 className={`${adminFieldClassName} py-2`}
                 rows={3}
+                placeholder="e.g. Course summary covering data analysis methodology, visual interpretation, and practical case studies..."
                 value={createDraft.summary_en}
                 onChange={(event) =>
                   setCreateDraft((current) => ({
@@ -1682,6 +1752,7 @@ export function LearningHubTab({
               variant="outline"
               onClick={() => {
                 setCreateOpen(false);
+                setIsCreateSlugCustom(false);
                 setCreateDraft(emptyDraft());
               }}
               disabled={busy}
@@ -1716,7 +1787,10 @@ export function LearningHubTab({
               >
                 <div>
                   <p className="text-navy text-sm font-bold">
-                    rev {revision.revision} · {revision.kind}
+                    rev {revision.revision} ·{' '}
+                    {t.has(`learningHubKind_${revision.kind}`)
+                      ? t(`learningHubKind_${revision.kind}`)
+                      : revision.kind}
                   </p>
                   <p className="text-muted-foreground text-xs">
                     {new Date(revision.created_at).toLocaleString()}
@@ -1750,7 +1824,7 @@ export function LearningHubTab({
             rows={4}
             value={rollbackReason}
             onChange={(event) => setRollbackReason(event.target.value)}
-            placeholder={t('learningHubRollbackReason')}
+            placeholder="Contoh: Pemulihan draf untuk memperbarui referensi kurikulum terbaru..."
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setRollbackOpen(false)}>

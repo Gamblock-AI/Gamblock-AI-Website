@@ -6,10 +6,8 @@ import {
   BarChart3,
   BookOpen,
   CircleAlert,
-  FileCheck2,
   KeyRound,
   LayoutGrid,
-  Microscope,
   Settings2,
   ShieldCheck,
   Tickets,
@@ -24,6 +22,7 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AdminTour } from '@/components/dashboard/tour/admin-tour';
 import { useAdminOperations } from '@/hooks/use-admin-operations';
 import {
   usePlatformAnalytics,
@@ -51,13 +50,15 @@ export function AdminDashboard({ name }: { name: string }) {
 
   return (
     <DashboardPage>
-      <DashboardPageHeader
-        icon={ShieldCheck}
-        eyebrow={t('eyebrow')}
-        title={t('title', { name: name || t('defaultName') })}
-        description={t('description')}
-        aside={<DashboardStatus tone="navy">{t('role')}</DashboardStatus>}
-      />
+      <div data-tour="tour-admin-welcome">
+        <DashboardPageHeader
+          icon={ShieldCheck}
+          eyebrow={t('eyebrow')}
+          title={t('title', { name: name || t('defaultName') })}
+          description={t('description')}
+          aside={<DashboardStatus tone="navy">{t('role')}</DashboardStatus>}
+        />
+      </div>
 
       {!verified ? (
         <AdminVerificationCard />
@@ -84,7 +85,7 @@ export function AdminDashboard({ name }: { name: string }) {
         </DashboardNotice>
       ) : (
         <>
-          <section aria-labelledby="attention-title">
+          <section aria-labelledby="attention-title" data-tour="tour-admin-attention">
             <div className="mb-3.5 flex items-center gap-2.5">
               <span className="flex size-8 items-center justify-center rounded-lg bg-amber/15 text-amber-900">
                 <AlertTriangle className="size-4" aria-hidden="true" />
@@ -126,7 +127,7 @@ export function AdminDashboard({ name }: { name: string }) {
             </div>
           </section>
 
-          <section aria-labelledby="workspace-title">
+          <section aria-labelledby="workspace-title" data-tour="tour-admin-workspaces">
             <div className="mb-3.5 flex items-center gap-2.5">
               <span className="flex size-8 items-center justify-center rounded-lg bg-azure text-navy">
                 <LayoutGrid className="size-4" aria-hidden="true" />
@@ -152,15 +153,6 @@ export function AdminDashboard({ name }: { name: string }) {
                 primaryValue={overview.draft_content ?? 0}
                 secondaryLabel={t('reviewContent')}
                 secondaryValue={overview.review_content ?? 0}
-              />
-              <WorkspaceLink
-                href={ROUTES.ADMIN_RELEASES}
-                icon={FileCheck2}
-                title={t('releaseTitle')}
-                primaryLabel={t('validatedReleases')}
-                primaryValue={overview.validated_releases ?? 0}
-                secondaryLabel={t('activeRollouts')}
-                secondaryValue={overview.active_rollouts ?? 0}
               />
               <WorkspaceLink
                 href={ROUTES.ADMIN_TICKETS}
@@ -189,19 +181,10 @@ export function AdminDashboard({ name }: { name: string }) {
                 secondaryLabel={t('visibleSocial')}
                 secondaryValue={overview.visible_social_links ?? 0}
               />
-              <WorkspaceLink
-                href={ROUTES.RESEARCH_SANDBOX}
-                icon={Microscope}
-                title={t('researchTitle')}
-                primaryLabel={t('researchMode')}
-                primaryValue={t('synthetic')}
-                secondaryLabel={t('privacyBoundary')}
-                secondaryValue={t('aggregateOnly')}
-              />
             </div>
           </section>
 
-          <section aria-labelledby="platform-analytics-title">
+          <section aria-labelledby="platform-analytics-title" data-tour="tour-admin-analytics">
             <div className="mb-3 flex items-center gap-3">
               <span className="bg-azure text-navy flex size-9 items-center justify-center rounded-lg">
                 <BarChart3 className="size-4" aria-hidden="true" />
@@ -262,6 +245,7 @@ export function AdminDashboard({ name }: { name: string }) {
           </section>
         </>
       )}
+      <AdminTour />
     </DashboardPage>
   );
 }

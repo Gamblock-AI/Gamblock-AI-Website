@@ -30,7 +30,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-08-09.4`.
+`2026-08-11.0`.
 
 ## Structure
 
@@ -39,7 +39,7 @@ app/
   [locale]/
     (dashboard)/           # authenticated dashboard, recovery (Pemulihan),
                            # education, skills, accountability, partners,
-                           # support, profile, data-requests, research-sandbox,
+                           # support, profile, data-requests,
                            # admin, and settings
     (auth)/                # login, register, forgot-password
     (landing)/             # landing, post-intervention, impact, technology,
@@ -247,12 +247,11 @@ students preview and explicitly confirm one active membership, then control
 category-specific aggregate sharing and safe exit. Students initiate protection
 pause/removal requests in the native client; the website remains the scoped
 partner decision and history surface. The unified `admin` operations panel
-provides separate Content, AI Releases, Tickets, Emergency Access, Platform,
-and Research destinations for revision/rollback authoring, claim-owned support
-replies, eligible data-request actions, managed artifact rollouts, research
-tools, direct three-role account provisioning, safe social links, audit history,
-and dual-control emergency access. Admins do not use the requester `/support`
-surface. Enabled non-null social links
+provides separate Content, Learning Hub, Tickets, Emergency Access, and Platform
+destinations for revision/rollback authoring, claim-owned support replies,
+eligible data-request actions, direct three-role account provisioning, safe
+social links, audit history, and dual-control emergency access. Admins do not
+use the requester `/support` surface. Enabled non-null social links
 are rendered in the landing footer; empty settings produce no icon.
 
 Self-service password reset uses the backend's non-enumerating

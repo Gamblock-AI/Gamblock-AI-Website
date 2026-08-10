@@ -167,31 +167,6 @@ export interface AdminLearningTaxonomy {
   }>;
 }
 
-export interface AdminRelease {
-  id: string;
-  version: string;
-  platform: string;
-  sha256?: string;
-  contract_version?: string;
-  threshold?: number;
-  status: string;
-  published_at_text?: string;
-}
-
-export type AdminModelRelease = AdminRelease;
-
-export interface AdminReleaseRollout {
-  id: string;
-  kind: 'model' | 'ruleset' | 'network';
-  release_id: string;
-  release_version: string;
-  status: string;
-  platform: string;
-  percentage: number;
-  app_version_constraint?: string;
-  created_at: string;
-}
-
 export interface AdminDataRequest {
   id: string;
   title: string;
@@ -241,8 +216,6 @@ export interface AdminOverview {
   open_support?: number;
   unassigned_support?: number;
   failed_data_requests?: number;
-  validated_releases?: number;
-  active_rollouts?: number;
   pending_emergency?: number;
   active_operators?: number;
   visible_social_links?: number;
@@ -264,7 +237,6 @@ export interface EmergencyKeyRequest {
 export interface AdminCapabilities {
   content: boolean;
   learningHub: boolean;
-  releases: boolean;
   support: boolean;
   emergency: boolean;
   platform: boolean;
@@ -274,7 +246,6 @@ export type AdminArea =
   | 'overview'
   | 'content'
   | 'learningHub'
-  | 'releases'
   | 'tickets'
   | 'emergency'
   | 'platform'
@@ -285,23 +256,11 @@ export interface AdminModuleDraft {
   document: AdminEducationDocument;
 }
 
-export interface AdminModelReleaseDraft {
-  kind: 'model' | 'ruleset' | 'network';
-  version: string;
-  platform: string;
-  artifact_path: string;
-  sha256: string;
-  contract_version: string;
-  threshold: string;
-}
-
 interface AdminOperationsState {
   overview: AdminOverview | null;
   modules: AdminEducationModule[];
   learningHubItems: AdminLearningHubItem[];
   learningHubTaxonomy: AdminLearningTaxonomy | null;
-  releases: Record<'model' | 'ruleset' | 'network', AdminRelease[]>;
-  rollouts: AdminReleaseRollout[];
   cases: AdminSupportCase[];
   dataRequests: AdminDataRequest[];
   emergencyRequests: EmergencyKeyRequest[];
@@ -315,8 +274,6 @@ const EMPTY_STATE: AdminOperationsState = {
   modules: [],
   learningHubItems: [],
   learningHubTaxonomy: null,
-  releases: { model: [], ruleset: [], network: [] },
-  rollouts: [],
   cases: [],
   dataRequests: [],
   emergencyRequests: [],
@@ -334,7 +291,6 @@ async function fetchAdminOperations(
     modules,
     learningHubItems,
     learningHubTaxonomy,
-    releasePayload,
     cases,
     dataRequests,
     emergencyRequests,
@@ -354,12 +310,6 @@ async function fetchAdminOperations(
     capabilities.learningHub && (area === 'learningHub' || area === 'all')
       ? apiClient<AdminLearningTaxonomy>('/admin/content/learning-hub/taxonomy')
       : Promise.resolve(null),
-    capabilities.releases && (area === 'releases' || area === 'all')
-      ? apiClient<{
-          releases: Record<'model' | 'ruleset' | 'network', AdminRelease[]>;
-          rollouts: AdminReleaseRollout[];
-        }>('/admin/releases')
-      : Promise.resolve({ releases: EMPTY_STATE.releases, rollouts: [] }),
     capabilities.support && (area === 'tickets' || area === 'all')
       ? apiClient<AdminSupportCase[]>('/admin/support-cases')
       : Promise.resolve([]),
@@ -385,8 +335,6 @@ async function fetchAdminOperations(
     modules: modules ?? [],
     learningHubItems: learningHubItems ?? [],
     learningHubTaxonomy,
-    releases: releasePayload.releases,
-    rollouts: releasePayload.rollouts ?? [],
     cases: cases ?? [],
     dataRequests: dataRequests ?? [],
     emergencyRequests: emergencyRequests ?? [],
@@ -401,7 +349,6 @@ export function getAdminCapabilities(role?: string): AdminCapabilities {
   return {
     content: allowed,
     learningHub: allowed,
-    releases: allowed,
     support: allowed,
     emergency: allowed,
     platform: allowed,
@@ -678,50 +625,6 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
     []
   );
 
-  const createModelRelease = useCallback(
-    (release: AdminModelReleaseDraft) =>
-      mutateAndReload('/releases/model', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...release,
-          threshold: Number(release.threshold),
-          metrics: {},
-        }),
-      }).then(() => undefined),
-    [mutateAndReload]
-  );
-  const createRelease = useCallback(
-    (release: AdminModelReleaseDraft) => {
-      const path =
-        release.kind === 'model'
-          ? '/releases/model'
-          : release.kind === 'ruleset'
-            ? '/releases/ruleset'
-            : '/releases/network-rulesets';
-      return mutateAndReload(path, {
-        method: 'POST',
-        body: JSON.stringify({
-          ...release,
-          threshold: Number(release.threshold),
-          metrics: {},
-          rules: {},
-        }),
-      }).then(() => undefined);
-    },
-    [mutateAndReload]
-  );
-  const uploadReleaseArtifact = useCallback(async (file: File) => {
-    const body = new FormData();
-    body.append('file', file);
-    return apiClient<{ artifact_path: string; sha256: string }>(
-      '/admin/release-artifacts',
-      {
-        method: 'POST',
-        body,
-      }
-    );
-  }, []);
-
   return {
     ...data,
     capabilities,
@@ -752,9 +655,6 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
     deleteLearningHubProgram,
     uploadEducationMedia,
     registerExternalEducationMedia,
-    createModelRelease,
-    createRelease,
-    uploadReleaseArtifact,
     getSupportCase: (id: string) =>
       apiClient<AdminSupportCase>(`/admin/support-cases/${id}`),
     claimSupportCase: (id: string, reason: string) =>
@@ -783,23 +683,6 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
       mutateAndReload(`/admin/data-requests/${id}/reject`, {
         method: 'POST',
         body: JSON.stringify({ reason }),
-      }),
-    createRollout: (input: {
-      kind: string;
-      release_id: string;
-      platform: string;
-      percentage: number;
-      app_version_constraint?: string;
-      reason: string;
-    }) =>
-      mutateAndReload('/admin/releases/rollouts', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      }),
-    transitionRollout: (id: string, action: string, reason: string) =>
-      mutateAndReload(`/admin/releases/rollouts/${id}/transition`, {
-        method: 'POST',
-        body: JSON.stringify({ action, reason }),
       }),
     replaceSocialLinks: (items: AdminSiteSocialLink[], reason: string) =>
       mutateAndReload<AdminSiteSocialLink[]>('/admin/site-social-links', {

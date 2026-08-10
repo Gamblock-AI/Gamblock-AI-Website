@@ -3,14 +3,12 @@ import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
   CircleHelp,
-  FileCheck2,
   FileText,
   GraduationCap,
   Handshake,
   HeartHandshake,
   KeyRound,
   LayoutDashboard,
-  Microscope,
   NotebookPen,
   Settings2,
   Tickets,
@@ -33,11 +31,9 @@ export type DashboardNavKey =
   | 'admin'
   | 'adminContent'
   | 'adminLearningHub'
-  | 'adminReleases'
   | 'adminTickets'
   | 'adminEmergency'
-  | 'adminPlatform'
-  | 'researchSandbox';
+  | 'adminPlatform';
 
 export interface DashboardNavItem {
   href: string;
@@ -130,12 +126,6 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         roles: ['admin'],
       },
       {
-        href: ROUTES.ADMIN_RELEASES,
-        labelKey: 'adminReleases',
-        icon: FileCheck2,
-        roles: ['admin'],
-      },
-      {
         href: ROUTES.ADMIN_TICKETS,
         labelKey: 'adminTickets',
         icon: Tickets,
@@ -151,12 +141,6 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         href: ROUTES.ADMIN_PLATFORM,
         labelKey: 'adminPlatform',
         icon: Settings2,
-        roles: ['admin'],
-      },
-      {
-        href: ROUTES.RESEARCH_SANDBOX,
-        labelKey: 'researchSandbox',
-        icon: Microscope,
         roles: ['admin'],
       },
     ],

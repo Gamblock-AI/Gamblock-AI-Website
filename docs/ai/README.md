@@ -36,14 +36,14 @@ daily missions, skill recommendations, self-regulation review loop.
 | Support workspace | implemented | Encrypted threaded support, requester + admin queue |
 | Account recovery | implemented | Non-enumerating email code, 12-character single-use |
 | PKM transparency | implemented | `/pkm` route dengan evidence maturity, deliverables state |
-| Admin control plane | implemented | Content CMS, releases, tickets, emergency, platform |
+| Admin control plane | implemented | Content CMS, tickets, emergency, platform |
 | Onboarding | implemented | Registration/login, partner invitation |
-| Dashboard tour | implemented (supporting) | First-time guided tour di dashboard untuk role `user`: konten dashboard, group sidebar, kontrol navbar; sekali muncul, bisa di-skip, flag localStorage `gamblock:dashboard-tour:v1`, variant mobile (bottom nav) |
+| Dashboard tour | implemented (supporting) | First-time guided tour di dashboard untuk role `user`, `partner`, dan `admin`: konten dashboard, group sidebar, kontrol navbar; sekali muncul, bisa di-skip, flag localStorage `gamblock:dashboard-tour:v1` / `gamblock:partner-tour:v1` / `gamblock:admin-tour:v1`, variant mobile (bottom nav) |
 | PWA & daily reminder | implemented (supporting) | Installable PWA (manifest + service worker + Web Push); opt-in daily reminder di Settings, sinkron via `/v1/me/reminder-preference`; push dibuka ke `/{locale}/recovery` |
 | SPK privacy settings | implemented | `SpkPrivacySettings` di halaman `/settings` (role `user`): panel 5 toggle privasi SPK/AI (master rekomendasi, data perlindungan, aktivitas pemulihan, konteks pribadi, personalisasi AI) dengan state dirty + Batal/Simpan, sinkron via `GET/PUT /v1/client/spk-preference`; badge menghitung hanya 5 flag (bukan field metadata API); saat master mati sub-kategori nonaktif/didim sebagai kill-switch dengan catatan penjelas + tooltip agar jelas bukan bug; copy menegaskan toggle mengatur penggunaan, bukan penyimpanan data |
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 
-Context version: `2026-08-10.0`
+Context version: `2026-08-11.0`
 
 ## Context load order
 

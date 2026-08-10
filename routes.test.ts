@@ -4,9 +4,6 @@ import { canAccessDashboardRoute, defaultRouteForRole, ROUTES } from './routes';
 describe('three-role dashboard access', () => {
   it('keeps admin on dashboard and operational routes only', () => {
     expect(canAccessDashboardRoute(ROUTES.ADMIN, 'admin')).toBe(true);
-    expect(canAccessDashboardRoute(ROUTES.RESEARCH_SANDBOX, 'admin')).toBe(
-      true
-    );
     expect(canAccessDashboardRoute(ROUTES.SUPPORT, 'admin')).toBe(false);
     expect(canAccessDashboardRoute(ROUTES.DASHBOARD, 'admin')).toBe(true);
     expect(defaultRouteForRole('admin')).toBe(ROUTES.DASHBOARD);

@@ -13,7 +13,7 @@ next-intl namespaces; components continue to call
 | `accountability.json` | Approval states/forms, approval routes, accountability and partner workspaces |
 | `recovery.json` | Recovery dashboard/hub, weekly review, education library |
 | `account.json` | Settings, support, profile, data requests |
-| `operations.json` | Administration and synthetic research sandbox |
+| `operations.json` | Administration and operational support |
 
 When adding or moving translations:
 

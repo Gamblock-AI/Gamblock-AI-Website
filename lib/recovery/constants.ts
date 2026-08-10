@@ -24,6 +24,8 @@ export const LEGACY_STORAGE_KEYS = [
 export const ENGAGEMENT_STORAGE_KEYS = [
   'gamblock:dashboard-seen:v1',
   'gamblock:dashboard-tour:v1',
+  'gamblock:partner-tour:v1',
+  'gamblock:admin-tour:v1',
   'gamblock:myth-fact:v1',
   'gamblock:quick-quiz:v1',
   'gamblock:estimator:v1',
