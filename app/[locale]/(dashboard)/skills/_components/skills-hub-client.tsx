@@ -49,8 +49,9 @@ function ProviderLogo({
 }) {
   const [imageError, setImageError] = useState(false);
   const fallbackGamblock = isFeatured ? '/images/logo-mark.png' : '';
-  const rawSource = logoUrl || fallbackGamblock;
-  const source = rawSource ? resolveEducationMediaURL(rawSource) : '';
+  const source = logoUrl
+    ? resolveEducationMediaURL(logoUrl)
+    : fallbackGamblock;
 
   if (source && !imageError) {
     return (

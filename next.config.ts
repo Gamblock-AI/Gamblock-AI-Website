@@ -34,7 +34,8 @@ if (!isProd) {
 }
 
 const scriptSources = new Set(["'self'", "'unsafe-inline'"]);
-if (!isProd) scriptSources.add("'unsafe-eval'");
+if (isProd) scriptSources.add('https://static.cloudflareinsights.com');
+else scriptSources.add("'unsafe-eval'");
 
 const frameSources = new Set(["'self'"]);
 if (configuredApiOrigin) frameSources.add(configuredApiOrigin);
