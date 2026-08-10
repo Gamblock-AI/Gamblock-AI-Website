@@ -15,8 +15,8 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 20
           cache: npm
@@ -36,13 +36,34 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate production public configuration
+        shell: bash
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          case "$NEXT_PUBLIC_API_URL" in
+            https://*) ;;
+            *) echo "NEXT_PUBLIC_API_URL must be a non-empty HTTPS URL" >&2; exit 1 ;;
+          esac
+          case "$NEXT_PUBLIC_APP_URL" in
+            https://*) ;;
+            *) echo "NEXT_PUBLIC_APP_URL must be a non-empty HTTPS URL" >&2; exit 1 ;;
+          esac
+          if [[ ! "$NEXT_PUBLIC_VAPID_PUBLIC_KEY" =~ ^B[A-Za-z0-9_-]{86}$ ]]; then
+            echo "NEXT_PUBLIC_VAPID_PUBLIC_KEY must be a valid P-256 public key" >&2
+            exit 1
+          fi
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -50,7 +71,7 @@ jobs:
 
       - name: Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.IMAGE }}
           tags: |
@@ -60,7 +81,7 @@ jobs:
             type=semver,pattern=v{{major}}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           platforms: linux/amd64
@@ -82,6 +103,7 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
+          fingerprint: ${{ vars.VPS_HOST_FINGERPRINT }}
           script: |
             cd /opt/docker-stack/applications/gamblock-ai-website
             ./update.sh
@@ -90,15 +112,15 @@ jobs:
     if: ${{ vars.ENABLE_CI_TESTS == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 20
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
