@@ -201,19 +201,22 @@
   "commonUi": {
     "close": "Close"
   },
-  "adminTranslateToEN": "Translate to EN",
-  "adminTranslateToID": "Translate to ID",
-  "adminTranslating": "Translating…",
-  "adminTranslatedToEN": "Translation completed",
-  "adminTranslatedToID": "Terjemahan selesai",
-  "adminTranslateFailed": "Translation failed",
-  "reauthTitle": "Security confirmation",
-  "reauthBody": "Sign in again to continue this sensitive action. Your session is safe; it only needs re-verification.",
-  "reauthPasswordLabel": "Password",
-  "reauthConfirm": "Confirm",
-  "reauthSubmitting": "Verifying…",
-  "reauthCancel": "Cancel",
-  "reauthFailed": "Incorrect password. Try again.",
-  "viewDetails": "View details",
-  "hideDetails": "Hide details"
+  "shared": {
+    "adminTranslateToEN": "Translate to EN",
+    "adminTranslateToID": "Translate to ID",
+    "adminTranslating": "Translating…",
+    "adminTranslatedToEN": "Translation completed",
+    "adminTranslatedToID": "Terjemahan selesai",
+    "adminTranslateFailed": "Translation failed",
+    "reauthTitle": "Security confirmation",
+    "reauthBody": "Sign in again to continue this sensitive action. Your session is safe; it only needs re-verification.",
+    "reauthPasswordLabel": "Password",
+    "reauthConfirm": "Confirm",
+    "reauthSubmitting": "Verifying…",
+    "reauthCancel": "Cancel",
+    "reauthFailed": "Incorrect password. Try again.",
+    "reauthFailedGeneric": "Verification failed. Please try again.",
+    "viewDetails": "View details",
+    "hideDetails": "Hide details"
+  }
 }

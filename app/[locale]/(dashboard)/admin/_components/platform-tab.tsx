@@ -1,7 +1,15 @@
-'use client';
-
 import { type FormEvent, useMemo, useState } from 'react';
-import { Save, ShieldCheck, UserCheck, UserPlus, UserX } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  RotateCcw,
+  Save,
+  Share2,
+  ShieldCheck,
+  UserCheck,
+  UserPlus,
+  UserX,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -28,6 +36,11 @@ import type {
   AdminSiteSocialLink,
 } from '@/hooks/use-admin-operations';
 import { toastError, toastSuccess } from '@/lib/feedback';
+import { cn } from '@/lib/utils';
+import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
 import {
   AdminEmptyTable,
   AdminFormField,
@@ -151,6 +164,36 @@ function formatAuditAction(action: string) {
     .join(' ');
 }
 
+type AdminTranslate = (
+  key: string,
+  values?: Record<string, string | number>
+) => string;
+
+// Localize a known audit action; unknown values fall back to the humanized
+// form so new backend events never render raw keys.
+function localizeAuditAction(t: AdminTranslate, action: string): string {
+  if (!action) return '—';
+  const key = `auditActions.${action}`;
+  const label = t(key);
+  return label === key ? formatAuditAction(action) : label;
+}
+
+// Localize the target type and known config targets; IDs and unknown values
+// stay as-is so the audit trail remains readable.
+function localizeAuditTarget(
+  t: AdminTranslate,
+  targetType: string,
+  target: string
+): string {
+  const typeKey = `auditTargetTypes.${targetType}`;
+  const typeLabel = t(typeKey);
+  const resolvedType = typeLabel === typeKey ? targetType : typeLabel;
+  const targetKey = `auditTargets.${target}`;
+  const targetLabel = t(targetKey);
+  const resolvedTarget = targetLabel === targetKey ? target : targetLabel;
+  return `${resolvedType}: ${resolvedTarget}`;
+}
+
 interface PlatformTabProps {
   socialLinks: AdminSiteSocialLink[];
   accounts: AdminAccount[];
@@ -184,6 +227,7 @@ export function PlatformTab({
   updateAccount,
 }: PlatformTabProps) {
   const t = useTranslations('adminPage');
+  const tDynamic = useTranslations('dynamicLabels');
   const initialLinks = useMemo(
     () =>
       PLATFORMS.map((platform, index) => {
@@ -205,6 +249,7 @@ export function PlatformTab({
   );
   const [links, setLinks] = useState(initialLinks);
   const [socialReason, setSocialReason] = useState('');
+  const [socialSaveModalOpen, setSocialSaveModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -219,6 +264,33 @@ export function PlatformTab({
     reason: string;
   } | null>(null);
 
+  const ACCOUNT_PAGE_SIZE = 10;
+  const [accountPage, setAccountPage] = useState(1);
+  const totalAccountPages = Math.max(
+    1,
+    Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE)
+  );
+  const safeAccountPage = Math.min(accountPage, totalAccountPages);
+  const pageAccounts = accounts.slice(
+    (safeAccountPage - 1) * ACCOUNT_PAGE_SIZE,
+    safeAccountPage * ACCOUNT_PAGE_SIZE
+  );
+
+  const localizeRole = (accountRole: string) =>
+    tDynamic(dynamicLabelKey('role', accountRole), {
+      value: dynamicLabelFallback(accountRole),
+    });
+
+  const isLinkModified = (index: number) => {
+    const curr = links[index];
+    const init = initialLinks[index];
+    if (!curr || !init) return false;
+    return curr.url !== init.url || curr.enabled !== init.enabled;
+  };
+
+  const modifiedLinks = links.filter((_, index) => isLinkModified(index));
+  const hasChanges = modifiedLinks.length > 0;
+
   const confirmAccountAction = async () => {
     if (!accountActionModal || !accountActionModal.reason.trim()) return;
     const { account, reason } = accountActionModal;
@@ -226,9 +298,7 @@ export function PlatformTab({
     try {
       await updateAccount(account.id, !account.disabled_at, reason.trim());
       toastSuccess(
-        account.disabled_at
-          ? 'Akun berhasil diaktifkan kembali.'
-          : 'Akun berhasil dinonaktifkan.'
+        account.disabled_at ? t('accountEnabled') : t('accountDisabled')
       );
       setAccountActionModal(null);
     } catch (error) {
@@ -240,10 +310,12 @@ export function PlatformTab({
 
   const saveLinks = async (event: FormEvent) => {
     event.preventDefault();
+    if (!socialReason.trim()) return;
     setBusy(true);
     try {
-      await replaceSocialLinks(links, socialReason);
+      await replaceSocialLinks(links, socialReason.trim());
       setSocialReason('');
+      setSocialSaveModalOpen(false);
       toastSuccess(t('socialSaved'));
     } catch (error) {
       toastError(error, t('socialSaveError'));
@@ -268,9 +340,7 @@ export function PlatformTab({
       setPhone('');
       setDisplayName('');
       setInviteReason('');
-      toastSuccess(
-        'Akun berhasil dibuat. Salin kata sandi sementara sekarang.'
-      );
+      toastSuccess(t('accountCreated'));
     } catch (error) {
       toastError(error, t('operatorActionError'));
     } finally {
@@ -282,24 +352,69 @@ export function PlatformTab({
     <div className="space-y-8">
       {/* Social Media Links Section */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-navy text-base font-bold">
-              Kanal Media Sosial Publik
+              {t('socialTitle')}
             </h3>
             <p className="text-muted-foreground mt-0.5 text-xs">
-              Atur tautan dan visibilitas akun media sosial resmi Gamblock-AI
-              pada situs publik.
+              {t('socialDescription')}
             </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            {hasChanges ? (
+              <>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber/40 bg-amber/15 px-3 py-1 text-xs font-bold text-amber-900">
+                  <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  {t('socialUnsavedChanges', { count: modifiedLinks.length })}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLinks(initialLinks)}
+                  disabled={busy}
+                  className="rounded-xl text-xs font-bold"
+                >
+                  <RotateCcw className="size-3.5" />
+                  {t('socialReset')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setSocialSaveModalOpen(true)}
+                  disabled={busy}
+                  className="rounded-xl text-xs font-bold shadow-soft"
+                >
+                  <Save className="size-3.5" />
+                  {t('saveSocial')}
+                </Button>
+              </>
+            ) : (
+              <span className="text-muted-foreground inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/30 px-3 py-1 text-xs font-semibold">
+                <CheckCircle2
+                  className="size-3.5 text-sage"
+                  aria-hidden="true"
+                />
+                {t('socialAllSaved')}
+              </span>
+            )}
           </div>
         </div>
 
-        <form onSubmit={(event) => void saveLinks(event)} className="space-y-4">
-          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-            {links.map((link, index) => (
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          {links.map((link, index) => {
+            const isModified = isLinkModified(index);
+            return (
               <Card
                 key={link.platform}
-                className="border-border/80 bg-card hover:border-navy/25 flex flex-col justify-between gap-3.5 rounded-2xl border p-4 shadow-sm transition-all duration-200"
+                className={cn(
+                  'bg-card flex flex-col justify-between gap-3.5 rounded-2xl border p-4 shadow-2xs transition-all duration-200',
+                  isModified
+                    ? 'border-amber/50 ring-2 ring-amber/20'
+                    : 'border-border/80 hover:border-navy/25'
+                )}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
@@ -308,8 +423,13 @@ export function PlatformTab({
                     >
                       <SocialIcon platform={link.platform} className="size-4" />
                     </span>
-                    <h4 className="text-navy text-sm font-bold">
+                    <h4 className="text-navy text-sm font-bold flex items-center gap-1.5">
                       {link.label}
+                      {isModified ? (
+                        <span className="bg-amber/20 text-amber-900 text-[0.625rem] font-bold px-1.5 py-0.5 rounded-md">
+                          {t('socialChangedBadge')}
+                        </span>
+                      ) : null}
                     </h4>
                   </div>
                   <label className="border-border bg-muted/40 hover:bg-muted/70 inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-1.5 transition-colors">
@@ -337,7 +457,10 @@ export function PlatformTab({
                 <div>
                   <input
                     type="url"
-                    className="border-input bg-background focus-visible:border-navy/40 focus-visible:ring-navy/20 min-h-9 w-full rounded-xl border px-3 text-xs transition-[border-color,box-shadow] duration-200 outline-none focus-visible:ring-2"
+                    className={cn(
+                      'border-input bg-background focus-visible:border-navy/40 focus-visible:ring-navy/20 min-h-9 w-full rounded-xl border px-3 text-xs transition-[border-color,box-shadow] duration-200 outline-none focus-visible:ring-2',
+                      isModified && 'border-amber/40 bg-amber/[0.02]'
+                    )}
                     placeholder={`https://${
                       link.platform === 'x'
                         ? 'x.com'
@@ -358,24 +481,50 @@ export function PlatformTab({
                   />
                 </div>
               </Card>
-            ))}
-          </div>
+            );
+          })}
+        </div>
 
-          <div className="border-navy/15 bg-azure/35 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-end sm:p-5">
-            <AdminFormField label={t('changeReason')} className="flex-1">
-              <input
-                className={adminFieldClassName}
-                placeholder="Contoh: Pembaruan tautan akun media sosial resmi kampanye"
-                value={socialReason}
-                onChange={(event) => setSocialReason(event.target.value)}
-                required
-              />
-            </AdminFormField>
-            <Button type="submit" disabled={busy} className="sm:shrink-0">
-              <Save className="size-4" /> {t('saveSocial')}
-            </Button>
+        {hasChanges ? (
+          <div className="border-amber/35 bg-gradient-to-r from-amber/[0.08] via-card to-card flex flex-col gap-3 rounded-2xl border p-4 shadow-2xs sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber/20 text-amber-900 ring-1 ring-amber/30">
+                <AlertTriangle className="size-4" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-navy text-sm font-bold">
+                  {t('socialUnsavedChanges', { count: modifiedLinks.length })}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {t('socialUnsavedBody')}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setLinks(initialLinks)}
+                disabled={busy}
+                className="rounded-xl text-xs font-bold"
+              >
+                <RotateCcw className="size-3.5" />
+                {t('socialReset')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setSocialSaveModalOpen(true)}
+                disabled={busy}
+                className="rounded-xl text-xs font-bold shadow-soft"
+              >
+                <Save className="size-3.5" />
+                {t('saveSocial')}
+              </Button>
+            </div>
           </div>
-        </form>
+        ) : null}
       </section>
 
       {/* Account Provisioning & Accounts Table Section */}
@@ -389,16 +538,17 @@ export function PlatformTab({
               <ShieldCheck className="size-5" />
             </span>
             <div>
-              <h3 className="text-navy text-base font-bold">Buat Akun baru</h3>
+              <h3 className="text-navy text-base font-bold">
+                {t('createAccountTitle')}
+              </h3>
               <p className="text-muted-foreground text-xs leading-5">
-                Buat akun user, partner, atau admin dengan kata sandi sementara
-                sekali pakai.
+                {t('createAccountDescription')}
               </p>
             </div>
           </div>
 
           <div className="space-y-3 pt-1">
-            <AdminFormField label="Email">
+            <AdminFormField label={t('fieldEmail')}>
               <input
                 className={adminFieldClassName}
                 type="email"
@@ -409,7 +559,7 @@ export function PlatformTab({
               />
             </AdminFormField>
 
-            <AdminFormField label="WhatsApp">
+            <AdminFormField label={t('fieldPhone')}>
               <input
                 className={adminFieldClassName}
                 type="tel"
@@ -420,10 +570,10 @@ export function PlatformTab({
               />
             </AdminFormField>
 
-            <AdminFormField label="Nama tampilan">
+            <AdminFormField label={t('fieldDisplayName')}>
               <input
                 className={adminFieldClassName}
-                placeholder="Nama lengkap atau panggilan"
+                placeholder={t('fieldDisplayName')}
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
                 required
@@ -436,16 +586,16 @@ export function PlatformTab({
                 value={role}
                 onChange={(event) => setRole(event.target.value)}
               >
-                <option value="user">User (mahasiswa)</option>
-                <option value="partner">Partner</option>
-                <option value="admin">Admin</option>
+                <option value="user">{t('roleUserOption')}</option>
+                <option value="partner">{t('rolePartnerOption')}</option>
+                <option value="admin">{t('roleAdminOption')}</option>
               </select>
             </AdminFormField>
 
             <AdminFormField label={t('changeReason')}>
               <input
                 className={adminFieldClassName}
-                placeholder="Contoh: Pembuatan akun operator pendampingan resmi"
+                placeholder={t('createAccountReasonPlaceholder')}
                 value={inviteReason}
                 onChange={(event) => setInviteReason(event.target.value)}
                 required
@@ -455,7 +605,7 @@ export function PlatformTab({
 
           <Button type="submit" disabled={busy} className="w-full sm:w-auto">
             <UserPlus className="size-4" />
-            Buat akun
+            {t('createAccountSubmit')}
           </Button>
 
           {temporaryPassword ? (
@@ -463,9 +613,7 @@ export function PlatformTab({
               className="border-amber/40 bg-amber/15 text-navy rounded-xl border p-4 text-sm"
               role="status"
             >
-              <p className="font-bold">
-                Kata sandi sementara — hanya ditampilkan sekali
-              </p>
+              <p className="font-bold">{t('temporaryPasswordTitle')}</p>
               <code className="border-amber/30 bg-card mt-2 block rounded-lg border p-2.5 font-mono text-xs break-all select-all">
                 {temporaryPassword}
               </code>
@@ -476,7 +624,7 @@ export function PlatformTab({
                 className="mt-3"
                 onClick={() => setTemporaryPassword(null)}
               >
-                Saya sudah menyimpannya
+                {t('temporaryPasswordSaved')}
               </Button>
             </div>
           ) : null}
@@ -486,10 +634,10 @@ export function PlatformTab({
         <div className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
           <div className="border-border border-b p-4 sm:p-5">
             <h3 className="text-navy text-base font-bold">
-              Daftar Akun Terdaftar
+              {t('accountsTitle')}
             </h3>
             <p className="text-muted-foreground mt-0.5 text-xs">
-              Pengelolaan status dan hak akses akun user, partner, dan admin.
+              {t('accountsDescription')}
             </p>
           </div>
           <Table className="[&_td]:px-4 [&_td]:py-3 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
@@ -513,7 +661,7 @@ export function PlatformTab({
               {accounts.length === 0 ? (
                 <AdminEmptyTable colSpan={4} text={t('noOperators')} />
               ) : (
-                accounts.map((account) => (
+                pageAccounts.map((account) => (
                   <TableRow key={account.id}>
                     <TableCell>
                       <p className="text-navy text-sm font-semibold">
@@ -529,7 +677,7 @@ export function PlatformTab({
                           account.role
                         )}`}
                       >
-                        {account.role}
+                        {localizeRole(account.role)}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -562,6 +710,52 @@ export function PlatformTab({
               )}
             </TableBody>
           </Table>
+          {accounts.length > ACCOUNT_PAGE_SIZE ? (
+            <div className="border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-5">
+              <p className="text-muted-foreground text-xs">
+                {t('accountsShowing', {
+                  from: (safeAccountPage - 1) * ACCOUNT_PAGE_SIZE + 1,
+                  to: Math.min(
+                    safeAccountPage * ACCOUNT_PAGE_SIZE,
+                    accounts.length
+                  ),
+                  count: accounts.length,
+                })}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={safeAccountPage <= 1}
+                  onClick={() =>
+                    setAccountPage((current) => Math.max(current - 1, 1))
+                  }
+                >
+                  {t('pagePrev')}
+                </Button>
+                <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap">
+                  {t('pageOf', {
+                    current: safeAccountPage,
+                    total: totalAccountPages,
+                  })}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={safeAccountPage >= totalAccountPages}
+                  onClick={() =>
+                    setAccountPage((current) =>
+                      Math.min(current + 1, totalAccountPages)
+                    )
+                  }
+                >
+                  {t('pageNext')}
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -570,7 +764,7 @@ export function PlatformTab({
         <div className="border-border border-b p-4 sm:p-5">
           <h3 className="text-navy text-base font-bold">{t('auditTitle')}</h3>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Catatan jejak aktivitas dan perubahan sensitif operasional sistem.
+            {t('auditDescription')}
           </p>
         </div>
         <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
@@ -609,11 +803,11 @@ export function PlatformTab({
                   </TableCell>
                   <TableCell>
                     <span className="border-border/70 bg-muted/40 text-navy inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold">
-                      {formatAuditAction(event.action)}
+                      {localizeAuditAction(t, event.action)}
                     </span>
                   </TableCell>
                   <TableCell className="text-foreground text-xs font-medium">
-                    {event.target_type}: {event.target}
+                    {localizeAuditTarget(t, event.target_type, event.target)}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
                     {event.reason || '—'}
@@ -659,13 +853,13 @@ export function PlatformTab({
                   <div className="space-y-1 pt-0.5">
                     <DialogTitle className="text-navy text-base leading-none font-bold">
                       {accountActionModal.account.disabled_at
-                        ? 'Aktifkan Kembali Akun'
-                        : 'Nonaktifkan Akun'}
+                        ? t('enableAccountTitle')
+                        : t('disableAccountTitle')}
                     </DialogTitle>
                     <DialogDescription className="text-muted-foreground text-xs leading-relaxed">
                       {accountActionModal.account.disabled_at
-                        ? 'Akun ini akan dipulihkan sehingga pengguna dapat kembali mengakses dashboard.'
-                        : 'Akun ini akan dinonaktifkan sementara dan tidak dapat masuk ke sistem.'}
+                        ? t('enableAccountBody')
+                        : t('disableAccountBody')}
                     </DialogDescription>
                   </div>
                 </div>
@@ -681,7 +875,7 @@ export function PlatformTab({
                       accountActionModal.account.role
                     )}`}
                   >
-                    {accountActionModal.account.role}
+                    {localizeRole(accountActionModal.account.role)}
                   </span>
                 </div>
                 <p className="text-muted-foreground truncate font-mono text-xs">
@@ -690,12 +884,12 @@ export function PlatformTab({
               </div>
 
               <AdminFormField
-                label="Alasan perubahan (wajib untuk audit log)"
+                label={t('accountReasonLabel')}
                 className="space-y-2"
               >
                 <input
                   className={`${adminFieldClassName} h-10`}
-                  placeholder="Contoh: Pemeliharaan rutin / Permintaan pemilik akun"
+                  placeholder={t('accountReasonPlaceholder')}
                   value={accountActionModal.reason}
                   onChange={(e) =>
                     setAccountActionModal((prev) =>
@@ -715,7 +909,7 @@ export function PlatformTab({
                   disabled={busy}
                   className="rounded-xl px-5"
                 >
-                  Batal
+                  {t('cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -728,12 +922,99 @@ export function PlatformTab({
                   className="rounded-xl px-5 font-bold"
                 >
                   {accountActionModal.account.disabled_at
-                    ? 'Aktifkan Akun'
-                    : 'Nonaktifkan Akun'}
+                    ? t('enableAccount')
+                    : t('disableAccount')}
                 </Button>
               </DialogFooter>
             </form>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* Social Media Save Confirmation Modal */}
+      <Dialog
+        open={socialSaveModalOpen}
+        onOpenChange={(open) => {
+          if (!busy) setSocialSaveModalOpen(open);
+        }}
+      >
+        <DialogContent className="border-border/80 gap-5 rounded-2xl p-6 shadow-2xl sm:max-w-md">
+          <DialogHeader className="pr-6">
+            <div className="flex items-start gap-3.5">
+              <span className="border-border/80 bg-azure/80 text-navy flex size-11 shrink-0 items-center justify-center rounded-2xl border shadow-xs">
+                <Share2 className="size-5" aria-hidden="true" />
+              </span>
+              <div className="space-y-1 pt-0.5">
+                <DialogTitle className="text-navy text-base leading-none font-bold">
+                  {t('socialModalTitle')}
+                </DialogTitle>
+                <DialogDescription className="text-muted-foreground text-xs leading-relaxed">
+                  {t('socialModalDescription')}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <form onSubmit={(e) => void saveLinks(e)} className="space-y-4">
+            <div className="rounded-xl border border-border/80 bg-muted/30 p-3 space-y-2">
+              <p className="text-navy text-xs font-bold">
+                {t('socialSummaryTitle', { count: modifiedLinks.length })}
+              </p>
+              <ul className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                {modifiedLinks.map((link) => (
+                  <li
+                    key={link.platform}
+                    className="flex items-center justify-between text-xs gap-2"
+                  >
+                    <span className="font-semibold text-navy flex items-center gap-1.5">
+                      <SocialIcon
+                        platform={link.platform}
+                        className="size-3.5"
+                      />
+                      {link.label}
+                    </span>
+                    <span className="text-muted-foreground truncate max-w-[200px] text-[0.6875rem]">
+                      {link.enabled ? `✓ ${t('socialVisibleYes')}` : t('socialHidden')} •{' '}
+                      {link.url || t('socialEmpty')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <AdminFormField
+              label={t('changeReason')}
+              help={t('socialReasonHelp')}
+            >
+              <input
+                className={adminFieldClassName}
+                placeholder={t('socialModalPlaceholder')}
+                value={socialReason}
+                onChange={(event) => setSocialReason(event.target.value)}
+                required
+                autoFocus
+              />
+            </AdminFormField>
+
+            <DialogFooter className="border-border/80 bg-muted/40 -mx-6 mt-6 -mb-6 flex flex-row items-center justify-end gap-3 rounded-b-2xl border-t px-6 py-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setSocialSaveModalOpen(false)}
+                disabled={busy}
+                className="rounded-xl px-4 text-xs font-bold"
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={busy || !socialReason.trim()}
+                className="rounded-xl px-5 text-xs font-bold"
+              >
+                {busy ? t('saving') : t('socialConfirmSave')}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

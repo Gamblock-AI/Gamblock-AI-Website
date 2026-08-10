@@ -69,6 +69,13 @@ export function SupportTab(props: SupportTabProps) {
   } | null>(null);
   const [modalReason, setModalReason] = useState('');
 
+  const dataRequestTitle = (request: AdminDataRequest) =>
+    request.type === 'export'
+      ? t('dataRequestTypeExport')
+      : request.type === 'delete'
+        ? t('dataRequestTypeDelete')
+        : request.title || request.id;
+
   useEffect(() => {
     if (!caseID || selected?.id === caseID) return;
     let active = true;
@@ -140,7 +147,7 @@ export function SupportTab(props: SupportTabProps) {
         {promptModal?.itemSummary ? (
           <div className="border-border/80 bg-muted/40 rounded-xl border p-3.5">
             <span className="text-muted-foreground block text-[0.7rem] font-bold tracking-wider uppercase">
-              Detail Target
+              {t('detailTarget')}
             </span>
             <p className="text-navy mt-0.5 text-sm font-semibold">
               {promptModal.itemSummary}
@@ -162,7 +169,7 @@ export function SupportTab(props: SupportTabProps) {
             <textarea
               value={modalReason}
               onChange={(event) => setModalReason(event.target.value)}
-              placeholder="Contoh: Mengambil tiket untuk penanganan dan audit..."
+              placeholder={t('reasonPlaceholder')}
               className="border-input bg-card focus-visible:border-navy/40 focus-visible:ring-navy/30 min-h-[90px] w-full resize-none rounded-xl border p-3 text-sm outline-none transition-all focus-visible:ring-2"
               required
               autoFocus
@@ -195,7 +202,7 @@ export function SupportTab(props: SupportTabProps) {
       setPromptModal({
         action: 'claim_case',
         targetId: item.id,
-        title: 'Ambil Tiket Dukungan',
+        title: t('claimCaseTitle'),
         description: t('claimReasonPrompt'),
         itemSummary: `${item.title} (${item.id})`,
       });
@@ -288,13 +295,13 @@ export function SupportTab(props: SupportTabProps) {
               variant="outline"
               disabled={busy}
               onClick={() => {
-                setPromptModal({
-                  action: 'release_case',
-                  targetId: selected.id,
-                  title: 'Lepaskan Penanganan Tiket',
-                  description: t('releaseReasonPrompt'),
-                  itemSummary: `${selected.title} (${selected.id})`,
-                });
+              setPromptModal({
+                action: 'release_case',
+                targetId: selected.id,
+                title: t('releaseCaseTitle'),
+                description: t('releaseReasonPrompt'),
+                itemSummary: `${selected.title} (${selected.id})`,
+              });
                 setModalReason('');
               }}
             >
@@ -393,7 +400,7 @@ export function SupportTab(props: SupportTabProps) {
         <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
           <TableHeader>
             <TableRow className="bg-muted/40">
-              <TableHead className="font-bold text-xs">ID</TableHead>
+              <TableHead className="font-bold text-xs">{t('thId')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thSubject')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thPriority')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thStatus')}</TableHead>
@@ -458,7 +465,7 @@ export function SupportTab(props: SupportTabProps) {
         <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
           <TableHeader>
             <TableRow className="bg-muted/40">
-              <TableHead className="font-bold text-xs">ID</TableHead>
+              <TableHead className="font-bold text-xs">{t('thId')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thType')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thStatus')}</TableHead>
               <TableHead className="font-bold text-xs">{t('retryCount')}</TableHead>
@@ -474,7 +481,7 @@ export function SupportTab(props: SupportTabProps) {
                   <TableCell className="font-mono text-xs">
                     {request.id}
                   </TableCell>
-                  <TableCell className="text-navy text-sm font-semibold">{request.title}</TableCell>
+                  <TableCell className="text-navy text-sm font-semibold">{dataRequestTitle(request)}</TableCell>
                   <TableCell>
                     <AdminStatusBadge status={request.status} />
                   </TableCell>
@@ -506,9 +513,9 @@ export function SupportTab(props: SupportTabProps) {
                             setPromptModal({
                               action: 'reject_data_request',
                               targetId: request.id,
-                              title: 'Tolak Permintaan Data',
+                              title: t('rejectDataRequestTitle'),
                               description: t('reasonPrompt'),
-                              itemSummary: `${request.title} (${request.id})`,
+                              itemSummary: `${dataRequestTitle(request)} (${request.id})`,
                             });
                             setModalReason('');
                           }}

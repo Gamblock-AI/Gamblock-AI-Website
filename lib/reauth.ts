@@ -1,5 +1,3 @@
-'use client';
-
 const listeners = new Set<() => void>();
 let activeResolve: ((ok: boolean) => void) | null = null;
 let activePromise: Promise<boolean> | null = null;
@@ -26,10 +24,13 @@ export function subscribeReauthDialog(listener: () => void): () => void {
 /**
  * Request a fresh password re-authentication. Resolves `true` when the user
  * successfully re-authenticates (new tokens stored) and `false` when they
- * cancel. Concurrent callers share the same dialog and outcome.
+ * cancel. Concurrent callers share the same dialog and outcome. If no dialog is
+ * mounted (no subscriber), it resolves `false` so callers surface the original
+ * error instead of hanging.
  */
 export function requestReauth(): Promise<boolean> {
   if (activePromise) return activePromise;
+  if (listeners.size === 0) return Promise.resolve(false);
   activePromise = new Promise((resolve) => {
     activeResolve = resolve;
     notifyListeners();

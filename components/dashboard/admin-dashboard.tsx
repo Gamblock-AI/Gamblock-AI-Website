@@ -1,14 +1,14 @@
-'use client';
-
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
+  AlertTriangle,
   ArrowRight,
   BarChart3,
   BookOpen,
   CircleAlert,
   FileCheck2,
   KeyRound,
+  LayoutGrid,
   Microscope,
   Settings2,
   ShieldCheck,
@@ -20,7 +20,6 @@ import {
   DashboardNotice,
   DashboardPage,
   DashboardPageHeader,
-  DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,7 @@ import {
 } from '@/hooks/use-analytics';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { Link } from '@/i18n/routing';
+import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
 import { AnalyticsInsights } from './analytics/analytics-insights';
 import { AnalyticsMetric } from './analytics/analytics-metric';
@@ -85,32 +85,64 @@ export function AdminDashboard({ name }: { name: string }) {
       ) : (
         <>
           <section aria-labelledby="attention-title">
-            <div className="mb-3 flex items-end justify-between gap-4">
+            <div className="mb-3.5 flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-amber/15 text-amber-900">
+                <AlertTriangle className="size-4" aria-hidden="true" />
+              </span>
               <div>
                 <h2 id="attention-title" className="text-navy text-lg font-bold">
                   {t('attentionTitle')}
                 </h2>
-                <p className="text-muted-foreground mt-1 text-sm">
+                <p className="text-muted-foreground text-xs sm:text-sm">
                   {t('attentionBody')}
                 </p>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <AttentionMetric label={t('reviewContent')} value={overview.review_content ?? 0} />
-              <AttentionMetric label={t('unassignedTickets')} value={overview.unassigned_support ?? 0} />
-              <AttentionMetric label={t('failedData')} value={overview.failed_data_requests ?? 0} />
-              <AttentionMetric label={t('pendingEmergency')} value={overview.pending_emergency ?? 0} />
+            <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+              <AttentionMetric
+                icon={BookOpen}
+                label={t('reviewContent')}
+                value={overview.review_content ?? 0}
+                href={ROUTES.ADMIN_CONTENT}
+              />
+              <AttentionMetric
+                icon={Tickets}
+                label={t('unassignedTickets')}
+                value={overview.unassigned_support ?? 0}
+                href={ROUTES.ADMIN_TICKETS}
+              />
+              <AttentionMetric
+                icon={AlertTriangle}
+                label={t('failedData')}
+                value={overview.failed_data_requests ?? 0}
+                href={ROUTES.DATA_REQUESTS}
+              />
+              <AttentionMetric
+                icon={KeyRound}
+                label={t('pendingEmergency')}
+                value={overview.pending_emergency ?? 0}
+                href={ROUTES.ADMIN_EMERGENCY}
+              />
             </div>
           </section>
 
-          <DashboardPanel
-            icon={ShieldCheck}
-            title={t('workspaceTitle')}
-            description={t('workspaceBody')}
-            surface="flat"
-            className="p-0"
-            contentClassName="mt-4"
-          >
+          <section aria-labelledby="workspace-title">
+            <div className="mb-3.5 flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-azure text-navy">
+                <LayoutGrid className="size-4" aria-hidden="true" />
+              </span>
+              <div>
+                <h2
+                  id="workspace-title"
+                  className="text-navy text-lg font-bold"
+                >
+                  {t('workspaceTitle')}
+                </h2>
+                <p className="text-muted-foreground text-xs sm:text-sm">
+                  {t('workspaceBody')}
+                </p>
+              </div>
+            </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <WorkspaceLink
                 href={ROUTES.ADMIN_CONTENT}
@@ -167,7 +199,7 @@ export function AdminDashboard({ name }: { name: string }) {
                 secondaryValue={t('aggregateOnly')}
               />
             </div>
-          </DashboardPanel>
+          </section>
 
           <section aria-labelledby="platform-analytics-title">
             <div className="mb-3 flex items-center gap-3">
@@ -260,13 +292,86 @@ function ProtectedUsersMetric({ summary }: { summary: AnalyticsSummary }) {
   );
 }
 
-function AttentionMetric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="border-border bg-card shadow-soft rounded-2xl border p-4">
-      <p className="text-muted-foreground text-xs font-semibold">{label}</p>
-      <p className="text-navy mt-2 text-3xl font-extrabold tabular-nums">{value}</p>
+function AttentionMetric({
+  icon: Icon,
+  label,
+  value,
+  href,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  href?: string;
+}) {
+  const t = useTranslations('adminDashboard');
+  const needsAttention = value > 0;
+  const content = (
+    <div
+      className={cn(
+        'group relative flex flex-col justify-between rounded-2xl border p-4 shadow-2xs transition-all duration-200',
+        needsAttention
+          ? 'border-amber/40 bg-gradient-to-br from-amber/[0.08] via-card to-card hover:border-amber/60 hover:shadow-xs'
+          : 'border-border/80 bg-card hover:border-navy/20 hover:shadow-2xs'
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            'flex size-9 items-center justify-center rounded-xl transition-colors',
+            needsAttention
+              ? 'bg-amber/20 text-amber-900 ring-1 ring-amber/30'
+              : 'bg-muted/60 text-navy'
+          )}
+        >
+          <Icon className="size-4.5" aria-hidden="true" />
+        </span>
+        {needsAttention ? (
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber/40 bg-amber/15 px-2 py-0.5 text-[0.6875rem] font-bold text-amber-900">
+            <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+            {t('attentionRequired')}
+          </span>
+        ) : (
+          <span className="text-muted-foreground text-[0.6875rem] font-medium">
+            {t('underControl')}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3.5">
+        <p className="text-muted-foreground line-clamp-1 text-xs font-semibold">
+          {label}
+        </p>
+        <div className="mt-1 flex items-baseline justify-between">
+          <p
+            className={cn(
+              'text-2xl font-black tabular-nums tracking-tight',
+              needsAttention ? 'text-amber-900' : 'text-navy'
+            )}
+          >
+            {value}
+          </p>
+          {href ? (
+            <span className="text-navy flex items-center gap-1 text-xs font-bold opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+              {t('openQueue')}
+              <ArrowRight className="size-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </span>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-navy/30"
+      >
+        {content}
+      </Link>
+    );
+  }
+  return content;
 }
 
 function WorkspaceLink({
@@ -290,29 +395,52 @@ function WorkspaceLink({
   return (
     <Link
       href={href}
-      className="group border-border bg-card hover:border-navy/30 focus-visible:ring-navy/30 rounded-2xl border p-5 shadow-soft outline-none transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:shadow-card focus-visible:ring-2 motion-reduce:transform-none motion-reduce:transition-none"
+      className="group relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-2xs outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-card focus-visible:ring-2 focus-visible:ring-navy/30"
     >
-      <div className="flex items-center gap-3">
-        <span className="bg-azure text-navy flex size-10 items-center justify-center rounded-xl">
-          <Icon className="size-5" aria-hidden="true" />
-        </span>
-        <h3 className="text-navy flex-1 font-bold">{title}</h3>
-        <ArrowRight className="text-navy size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none" aria-hidden="true" />
-      </div>
-      <dl className="mt-5 grid grid-cols-2 gap-3">
-        <Metric label={primaryLabel} value={primaryValue} />
-        <Metric label={secondaryLabel} value={secondaryValue} />
-      </dl>
-      <span className="text-navy mt-4 block text-sm font-semibold">{t('openWorkspace')}</span>
-    </Link>
-  );
-}
+      <div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-azure/80 text-navy ring-1 ring-navy/10 transition-colors group-hover:bg-navy group-hover:text-white">
+              <Icon className="size-5" aria-hidden="true" />
+            </span>
+            <h3 className="text-navy font-bold text-base leading-snug">
+              {title}
+            </h3>
+          </div>
+          <span className="flex size-7 items-center justify-center rounded-lg bg-muted/40 text-muted-foreground transition-all duration-200 group-hover:bg-navy group-hover:text-white">
+            <ArrowRight
+              className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
+          </span>
+        </div>
 
-function Metric({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div>
-      <dt className="text-muted-foreground text-xs leading-5">{label}</dt>
-      <dd className="text-navy mt-1 text-lg font-extrabold tabular-nums">{value}</dd>
-    </div>
+        <dl className="mt-4 grid grid-cols-2 gap-2.5">
+          <div className="rounded-xl border border-border/60 bg-muted/30 p-2.5 transition-colors group-hover:border-navy/15 group-hover:bg-muted/45">
+            <dt className="text-muted-foreground truncate text-[0.6875rem] font-bold tracking-wider uppercase">
+              {primaryLabel}
+            </dt>
+            <dd className="text-navy mt-1 text-base font-black tabular-nums">
+              {primaryValue}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-muted/30 p-2.5 transition-colors group-hover:border-navy/15 group-hover:bg-muted/45">
+            <dt className="text-muted-foreground truncate text-[0.6875rem] font-bold tracking-wider uppercase">
+              {secondaryLabel}
+            </dt>
+            <dd className="text-navy mt-1 text-base font-black tabular-nums">
+              {secondaryValue}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs font-bold text-navy transition-colors group-hover:text-navy-light">
+        <span>{t('openWorkspace')}</span>
+        <span className="text-muted-foreground group-hover:text-navy text-[0.6875rem] font-medium flex items-center gap-1">
+          {t('accessWorkspace')} &rarr;
+        </span>
+      </div>
+    </Link>
   );
 }

@@ -201,19 +201,22 @@
   "commonUi": {
     "close": "Tutup"
   },
-  "adminTranslateToEN": "Terjemahkan ke EN",
-  "adminTranslateToID": "Terjemahkan ke ID",
-  "adminTranslating": "Menerjemahkan…",
-  "adminTranslatedToEN": "Terjemahan bahasa Inggris selesai",
-  "adminTranslatedToID": "Terjemahan bahasa Indonesia selesai",
-  "adminTranslateFailed": "Terjemahan gagal",
-  "reauthTitle": "Konfirmasi keamanan",
-  "reauthBody": "Masuk kembali untuk melanjutkan aksi sensitif ini. Sesi Anda aman, hanya perlu verifikasi ulang.",
-  "reauthPasswordLabel": "Kata sandi",
-  "reauthConfirm": "Konfirmasi",
-  "reauthSubmitting": "Memverifikasi…",
-  "reauthCancel": "Batal",
-  "reauthFailed": "Kata sandi salah. Coba lagi.",
-  "viewDetails": "Lihat detail",
-  "hideDetails": "Tutup detail"
+  "shared": {
+    "adminTranslateToEN": "Terjemahkan ke EN",
+    "adminTranslateToID": "Terjemahkan ke ID",
+    "adminTranslating": "Menerjemahkan…",
+    "adminTranslatedToEN": "Terjemahan bahasa Inggris selesai",
+    "adminTranslatedToID": "Terjemahan bahasa Indonesia selesai",
+    "adminTranslateFailed": "Terjemahan gagal",
+    "reauthTitle": "Konfirmasi keamanan",
+    "reauthBody": "Masuk kembali untuk melanjutkan aksi sensitif ini. Sesi Anda aman, hanya perlu verifikasi ulang.",
+    "reauthPasswordLabel": "Kata sandi",
+    "reauthConfirm": "Konfirmasi",
+    "reauthSubmitting": "Memverifikasi…",
+    "reauthCancel": "Batal",
+    "reauthFailed": "Kata sandi salah. Coba lagi.",
+    "reauthFailedGeneric": "Verifikasi gagal. Coba lagi.",
+    "viewDetails": "Lihat detail",
+    "hideDetails": "Tutup detail"
+  }
 }

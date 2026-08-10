@@ -1,6 +1,7 @@
 import { ApiError } from './api-error';
 import { config } from './config';
 import { reportDevelopmentError } from './diagnostics';
+import { requestReauth } from './reauth';
 
 const API_URL = config.apiUrl;
 let refreshPromise: Promise<string> | null = null;
@@ -106,9 +107,16 @@ async function refreshAccessToken(): Promise<string> {
  * actions without a full logout.
  */
 export async function reauthenticate(password: string): Promise<void> {
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gamblock_access_token')
+      : null;
   const response = await fetch(`${API_URL}/v1/auth/reauthenticate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     credentials: 'include',
     body: JSON.stringify({ password }),
   });
@@ -155,9 +163,21 @@ async function performApiRequest<T>(
   if (response.status === 401 && typeof window !== 'undefined') {
     const authError = await apiErrorFromResponse(response.clone());
     if (authError.code === 'recent_auth_required') {
-      // A recent-auth check protects a sensitive mutation, but it does not
-      // invalidate the current session. Let the caller show its safe error
-      // message instead of deleting the user's session and forcing a logout.
+      // A recent-auth check protects a sensitive mutation but does not
+      // invalidate the session. Prompt for a fresh password; if the user
+      // re-authenticates, retry the request once with the new token.
+      if (await requestReauth()) {
+        const freshToken = localStorage.getItem('gamblock_access_token');
+        const retriedResponse = await fetch(`${API_URL}${cleanPath}`, {
+          ...options,
+          headers: new Headers([
+            ...headers.entries(),
+            ['Authorization', `Bearer ${freshToken ?? ''}`],
+          ]),
+          credentials: 'include',
+        });
+        return await unwrap(retriedResponse);
+      }
       throw authError;
     }
   }

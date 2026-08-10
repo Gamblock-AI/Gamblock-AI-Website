@@ -1,7 +1,15 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { Archive, History, Plus, Save, Send, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  BookOpen,
+  History,
+  Plus,
+  Save,
+  Send,
+  Trash2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +28,7 @@ import type {
   AdminLearningRevision,
   AdminLearningTaxonomy,
 } from '@/hooks/use-admin-operations';
+import { cn } from '@/lib/utils';
 import {
   AdminSectionHeader,
   AdminStatusBadge,
@@ -512,18 +521,18 @@ export function LearningHubTab({
         }
       />
 
-      <div className="grid gap-5 xl:grid-cols-[20rem_minmax(0,1fr)]">
-        <section className="border-border bg-card rounded-2xl border p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="grid gap-5 xl:grid-cols-[20rem_minmax(0,1fr)] xl:items-start">
+        <section className="border-border/80 bg-card max-h-[calc(100vh-14rem)] min-h-[500px] flex flex-col rounded-2xl border p-4 shadow-2xs">
+          <div className="mb-3 flex items-center justify-between gap-3 shrink-0 pb-3 border-b border-border/60">
             <label
-              className="text-navy text-xs font-bold"
+              className="text-navy text-xs font-bold uppercase tracking-wider"
               htmlFor="learning-hub-status-filter"
             >
               {t('learningHubStatusFilter')}
             </label>
             <NativeSelect
               id="learning-hub-status-filter"
-              className="h-9 w-auto min-w-32"
+              className="h-8.5 w-auto min-w-32 text-xs font-medium"
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
             >
@@ -535,7 +544,7 @@ export function LearningHubTab({
             </NativeSelect>
           </div>
           <div
-            className="space-y-2"
+            className="mt-1 flex-1 overflow-y-auto pr-1.5 space-y-2 min-h-0 focus:outline-none"
             role="list"
             aria-label={t('learningHubItemsTitle')}
           >
@@ -544,390 +553,482 @@ export function LearningHubTab({
                 key={item.id}
                 type="button"
                 onClick={() => selectItem(item)}
-                className={`border-border w-full rounded-xl border p-3 text-left transition ${selected?.id === item.id ? 'border-navy bg-azure/50' : 'hover:bg-muted/50'}`}
+                className={cn(
+                  'w-full rounded-xl border p-3 text-left transition-all duration-150',
+                  selected?.id === item.id
+                    ? 'border-navy/40 bg-azure/80 text-navy ring-1 ring-navy/20 shadow-xs'
+                    : 'border-border/80 bg-card hover:border-navy/25 hover:bg-muted/35 shadow-2xs'
+                )}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-navy line-clamp-2 text-sm font-bold">
+                  <span className="text-navy line-clamp-2 text-xs font-bold leading-snug">
                     {item.title_id || item.slug}
                   </span>
                   <AdminStatusBadge status={item.status} />
                 </div>
-                <span className="text-muted-foreground mt-1 block text-xs">
-                  {item.kind} · rev {item.draft_revision}
-                </span>
+                <div className="mt-2 flex items-center justify-between text-[0.6875rem] text-muted-foreground">
+                  <span className="capitalize font-medium">
+                    {item.kind.replace(/_/g, ' ')}
+                  </span>
+                  <span className="font-mono bg-muted/60 px-1.5 py-0.5 rounded text-[0.625rem]">
+                    rev {item.draft_revision}
+                  </span>
+                </div>
               </button>
             ))}
             {!visibleItems.length ? (
-              <p className="text-muted-foreground py-8 text-center text-sm">
+              <p className="text-muted-foreground py-8 text-center text-xs">
                 {t('learningHubNoItems')}
               </p>
             ) : null}
           </div>
+          <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground shrink-0">
+            <span className="text-[0.6875rem] font-medium">
+              Total: {visibleItems.length} item
+            </span>
+            {filter ? (
+              <span className="text-[0.6875rem] font-semibold text-navy">
+                Filter: {filter}
+              </span>
+            ) : null}
+          </div>
         </section>
 
-        <section className="border-border bg-card rounded-2xl border p-4 sm:p-5">
+        <section className="border-border/80 bg-card rounded-2xl border p-5 sm:p-6 shadow-2xs">
           {!selected || !draft ? (
-            <p className="text-muted-foreground py-12 text-center text-sm">
-              {t('learningHubSelectItem')}
-            </p>
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <span className="border-border/80 bg-muted/60 text-muted-foreground flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
+                <BookOpen className="size-6" aria-hidden="true" />
+              </span>
+              <p className="text-navy mt-3 text-sm font-bold">
+                {t('learningHubSelectItem')}
+              </p>
+              <p className="text-muted-foreground mt-1 max-w-sm text-xs">
+                Pilih salah satu item pada daftar status di sebelah kiri untuk
+                membuka editor dan mengubah konten.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-6">
+              <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
                 <div>
-                  <p className="text-muted-foreground text-xs">
-                    {selected.slug}
-                  </p>
-                  <h2 className="text-navy text-xl font-bold">
-                    {t('learningHubEditorTitle')}
+                  <div className="flex items-center gap-2">
+                    <span className="border-border/60 bg-muted/70 text-muted-foreground rounded-md border px-2 py-0.5 font-mono text-[0.6875rem] font-semibold">
+                      {selected.slug}
+                    </span>
+                    <span className="text-muted-foreground font-mono text-[0.6875rem]">
+                      rev {selected.draft_revision}
+                    </span>
+                  </div>
+                  <h2 className="text-navy mt-1 text-lg font-bold">
+                    {draft.title_id ||
+                      draft.slug ||
+                      t('learningHubEditorTitle')}
                   </h2>
                 </div>
-                <AdminStatusBadge status={selected.status} />
+                <div className="flex items-center gap-2">
+                  <AdminStatusBadge status={selected.status} />
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <TranslateButton
-                  sourceLang="id"
-                  targetLang="en"
-                  sourceTexts={collectItemTexts(draft, 'id')}
-                  onTranslated={(translations) => {
-                    applyItemTranslations(draft, 'en', translations);
-                    setDraft({ ...draft });
-                  }}
-                />
-                <TranslateButton
-                  sourceLang="en"
-                  targetLang="id"
-                  sourceTexts={collectItemTexts(draft, 'en')}
-                  onTranslated={(translations) => {
-                    applyItemTranslations(draft, 'id', translations);
-                    setDraft({ ...draft });
-                  }}
-                />
+              {/* Translation utility bar */}
+              <div className="border-border/70 bg-muted/20 flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3">
+                <span className="text-navy text-xs font-semibold">
+                  Terjemahan Otomatis:
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <TranslateButton
+                    sourceLang="id"
+                    targetLang="en"
+                    sourceTexts={collectItemTexts(draft, 'id')}
+                    onTranslated={(translations) => {
+                      applyItemTranslations(draft, 'en', translations);
+                      setDraft({ ...draft });
+                    }}
+                  />
+                  <TranslateButton
+                    sourceLang="en"
+                    targetLang="id"
+                    sourceTexts={collectItemTexts(draft, 'en')}
+                    onTranslated={(translations) => {
+                      applyItemTranslations(draft, 'id', translations);
+                      setDraft({ ...draft });
+                    }}
+                  />
+                </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">Slug</span>
-                  <input
-                    className={adminFieldClassName}
-                    value={draft.slug}
-                    onChange={(event) =>
-                      updateDraft({ slug: event.target.value })
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">Kind</span>
-                  <NativeSelect
-                    value={draft.kind}
-                    onChange={(event) =>
-                      updateDraft({ kind: event.target.value })
-                    }
-                  >
-                    {kinds.map((kind) => (
-                      <option key={kind} value={kind}>
-                        {kind}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    Judul Indonesia
-                  </span>
-                  <input
-                    className={adminFieldClassName}
-                    value={draft.title_id}
-                    onChange={(event) =>
-                      updateDraft({ title_id: event.target.value })
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    English title
-                  </span>
-                  <input
-                    className={adminFieldClassName}
-                    value={draft.title_en}
-                    onChange={(event) =>
-                      updateDraft({ title_en: event.target.value })
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    Ringkasan Indonesia
-                  </span>
-                  <textarea
-                    className={`${adminFieldClassName} py-2`}
-                    rows={3}
-                    value={draft.summary_id}
-                    onChange={(event) =>
-                      updateDraft({ summary_id: event.target.value })
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    English summary
-                  </span>
-                  <textarea
-                    className={`${adminFieldClassName} py-2`}
-                    rows={3}
-                    value={draft.summary_en}
-                    onChange={(event) =>
-                      updateDraft({ summary_en: event.target.value })
-                    }
-                  />
-                </label>
+
+              {/* Subsection 1: Basic Information */}
+              <div className="space-y-3">
+                <h3 className="text-navy text-xs font-bold uppercase tracking-wider">
+                  Informasi Dasar
+                </h3>
+                <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">Slug</span>
+                    <input
+                      className={adminFieldClassName}
+                      value={draft.slug}
+                      onChange={(event) =>
+                        updateDraft({ slug: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Jenis (Kind)
+                    </span>
+                    <NativeSelect
+                      value={draft.kind}
+                      onChange={(event) =>
+                        updateDraft({ kind: event.target.value })
+                      }
+                    >
+                      {kinds.map((kind) => (
+                        <option key={kind} value={kind}>
+                          {kind}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Judul Indonesia
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      value={draft.title_id}
+                      onChange={(event) =>
+                        updateDraft({ title_id: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      English title
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      value={draft.title_en}
+                      onChange={(event) =>
+                        updateDraft({ title_en: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5 sm:col-span-2">
+                    <span className="text-navy text-xs font-bold">
+                      Ringkasan Indonesia
+                    </span>
+                    <textarea
+                      className={`${adminFieldClassName} py-2`}
+                      rows={2}
+                      value={draft.summary_id}
+                      onChange={(event) =>
+                        updateDraft({ summary_id: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5 sm:col-span-2">
+                    <span className="text-navy text-xs font-bold">
+                      English summary
+                    </span>
+                    <textarea
+                      className={`${adminFieldClassName} py-2`}
+                      rows={2}
+                      value={draft.summary_en}
+                      onChange={(event) =>
+                        updateDraft({ summary_en: event.target.value })
+                      }
+                    />
+                  </label>
+                </div>
               </div>
-              <div className="border-border grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">Provider</span>
-                  <input
-                    className={adminFieldClassName}
-                    value={text(draft.document, 'provider')}
-                    onChange={(event) =>
-                      updateDoc('provider', event.target.value)
+
+              {/* Subsection 2: Provider, Media, and Details */}
+              <div className="space-y-3">
+                <h3 className="text-navy text-xs font-bold uppercase tracking-wider">
+                  Penyedia, Media & Detail
+                </h3>
+                <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Penyedia (Provider)
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      value={text(draft.document, 'provider')}
+                      onChange={(event) =>
+                        updateDoc('provider', event.target.value)
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      HTTPS source URL
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      type="url"
+                      value={text(draft.document, 'url')}
+                      onChange={(event) => updateDoc('url', event.target.value)}
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      {t('providerDescriptionId')}
+                    </span>
+                    <textarea
+                      className={`${adminFieldClassName} py-2`}
+                      rows={2}
+                      maxLength={200}
+                      value={text(draft.document, 'provider_description_id')}
+                      onChange={(event) =>
+                        updateDoc('provider_description_id', event.target.value)
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      {t('providerDescriptionEn')}
+                    </span>
+                    <textarea
+                      className={`${adminFieldClassName} py-2`}
+                      rows={2}
+                      maxLength={200}
+                      value={text(draft.document, 'provider_description_en')}
+                      onChange={(event) =>
+                        updateDoc('provider_description_en', event.target.value)
+                      }
+                    />
+                  </label>
+                  <LearningMediaField
+                    label="Logo penyedia"
+                    help="Gambar logo layanan (mis. Dicoding)."
+                    mediaID={text(draft.document, 'provider_logo_media_id')}
+                    uploading={mediaUploading}
+                    onUpload={async (file) => {
+                      setMediaUploading(true);
+                      try {
+                        const media = await uploadEducationMedia(
+                          file,
+                          'thumbnail'
+                        );
+                        updateDoc('provider_logo_media_id', media.id);
+                      } catch {
+                        toastError(t('learningHubThumbnailError'));
+                      } finally {
+                        setMediaUploading(false);
+                      }
+                    }}
+                    onChange={(value) =>
+                      updateDoc('provider_logo_media_id', value)
                     }
                   />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    HTTPS source URL
-                  </span>
-                  <input
-                    className={adminFieldClassName}
-                    type="url"
-                    value={text(draft.document, 'url')}
-                    onChange={(event) => updateDoc('url', event.target.value)}
+                  <LearningMediaField
+                    label="Thumbnail kursus"
+                    help="Gambar sampul kartu kursus (16:9)."
+                    mediaID={text(draft.document, 'thumbnail_media_id')}
+                    uploading={mediaUploading}
+                    onUpload={async (file) => {
+                      setMediaUploading(true);
+                      try {
+                        const media = await uploadEducationMedia(
+                          file,
+                          'thumbnail'
+                        );
+                        updateDoc('thumbnail_media_id', media.id);
+                      } catch {
+                        toastError(t('learningHubThumbnailError'));
+                      } finally {
+                        setMediaUploading(false);
+                      }
+                    }}
+                    onChange={(value) => updateDoc('thumbnail_media_id', value)}
                   />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    {t('providerDescriptionId')}
-                  </span>
-                  <textarea
-                    className={`${adminFieldClassName} py-2`}
-                    rows={2}
-                    maxLength={200}
-                    value={text(draft.document, 'provider_description_id')}
-                    onChange={(event) =>
-                      updateDoc('provider_description_id', event.target.value)
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    {t('providerDescriptionEn')}
-                  </span>
-                  <textarea
-                    className={`${adminFieldClassName} py-2`}
-                    rows={2}
-                    maxLength={200}
-                    value={text(draft.document, 'provider_description_en')}
-                    onChange={(event) =>
-                      updateDoc('provider_description_en', event.target.value)
-                    }
-                  />
-                </label>
-                <LearningMediaField
-                  label="Logo penyedia"
-                  help="Gambar logo layanan (mis. Dicoding)."
-                  mediaID={text(draft.document, 'provider_logo_media_id')}
-                  uploading={mediaUploading}
-                  onUpload={async (file) => {
-                    setMediaUploading(true);
-                    try {
-                      const media = await uploadEducationMedia(file, 'thumbnail');
-                      updateDoc('provider_logo_media_id', media.id);
-                    } catch {
-                      toastError(t('learningHubThumbnailError'));
-                    } finally {
-                      setMediaUploading(false);
-                    }
-                  }}
-                  onChange={(value) =>
-                    updateDoc('provider_logo_media_id', value)
-                  }
-                />
-                <LearningMediaField
-                  label="Thumbnail kursus"
-                  help="Gambar sampul kartu kursus (16:9)."
-                  mediaID={text(draft.document, 'thumbnail_media_id')}
-                  uploading={mediaUploading}
-                  onUpload={async (file) => {
-                    setMediaUploading(true);
-                    try {
-                      const media = await uploadEducationMedia(file, 'thumbnail');
-                      updateDoc('thumbnail_media_id', media.id);
-                    } catch {
-                      toastError(t('learningHubThumbnailError'));
-                    } finally {
-                      setMediaUploading(false);
-                    }
-                  }}
-                  onChange={(value) =>
-                    updateDoc('thumbnail_media_id', value)
-                  }
-                />
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    Durasi (menit)
-                  </span>
-                  <input
-                    className={adminFieldClassName}
-                    type="number"
-                    min={1}
-                    value={number(draft.document, 'duration_minutes')}
-                    onChange={(event) =>
-                      updateDoc('duration_minutes', Number(event.target.value))
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">Reviewer</span>
-                  <input
-                    className={adminFieldClassName}
-                    value={text(draft.document, 'reviewer_name')}
-                    onChange={(event) =>
-                      updateDoc('reviewer_name', event.target.value)
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    Tanggal review
-                  </span>
-                  <input
-                    className={adminFieldClassName}
-                    type="date"
-                    value={text(draft.document, 'reviewed_at')}
-                    onChange={(event) =>
-                      updateDoc('reviewed_at', event.target.value)
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    Outcomes (ID, satu per baris)
-                  </span>
-                  <textarea
-                    className={`${adminFieldClassName} py-2`}
-                    rows={3}
-                    value={list(draft.document, 'outcomes_id')}
-                    onChange={(event) =>
-                      updateDoc(
-                        'outcomes_id',
-                        event.target.value
-                          .split('\n')
-                          .map((value) => value.trim())
-                          .filter(Boolean)
-                      )
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    Outcomes (EN, one per line)
-                  </span>
-                  <textarea
-                    className={`${adminFieldClassName} py-2`}
-                    rows={3}
-                    value={list(draft.document, 'outcomes_en')}
-                    onChange={(event) =>
-                      updateDoc(
-                        'outcomes_en',
-                        event.target.value
-                          .split('\n')
-                          .map((value) => value.trim())
-                          .filter(Boolean)
-                      )
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    Cluster slugs
-                  </span>
-                  <input
-                    className={adminFieldClassName}
-                    value={list(draft.document, 'clusters').replace(
-                      /\n/g,
-                      ', '
-                    )}
-                    onChange={(event) =>
-                      updateDoc(
-                        'clusters',
-                        event.target.value
-                          .split(',')
-                          .map((value) => value.trim())
-                          .filter(Boolean)
-                      )
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-navy text-xs font-bold">
-                    Program slugs
-                  </span>
-                  <input
-                    className={adminFieldClassName}
-                    value={list(draft.document, 'programs').replace(
-                      /\n/g,
-                      ', '
-                    )}
-                    onChange={(event) =>
-                      updateDoc(
-                        'programs',
-                        event.target.value
-                          .split(',')
-                          .map((value) => value.trim())
-                          .filter(Boolean)
-                      )
-                    }
-                  />
-                </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Durasi (menit)
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      type="number"
+                      min={1}
+                      value={number(draft.document, 'duration_minutes')}
+                      onChange={(event) =>
+                        updateDoc(
+                          'duration_minutes',
+                          Number(event.target.value)
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Reviewer
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      value={text(draft.document, 'reviewer_name')}
+                      onChange={(event) =>
+                        updateDoc('reviewer_name', event.target.value)
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5 sm:col-span-2">
+                    <span className="text-navy text-xs font-bold">
+                      Tanggal review
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      type="date"
+                      value={text(draft.document, 'reviewed_at')}
+                      onChange={(event) =>
+                        updateDoc('reviewed_at', event.target.value)
+                      }
+                    />
+                  </label>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => void save()} disabled={busy}>
-                  <Save className="size-4" />
-                  {t('learningHubSave')}
-                </Button>
-                {selected.status === 'draft' ? (
+
+              {/* Subsection 3: Outcomes & Taxonomy Slugs */}
+              <div className="space-y-3">
+                <h3 className="text-navy text-xs font-bold uppercase tracking-wider">
+                  Capaian Pembelajaran & Taksonomi
+                </h3>
+                <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Outcomes (ID, satu per baris)
+                    </span>
+                    <textarea
+                      className={`${adminFieldClassName} py-2`}
+                      rows={3}
+                      value={list(draft.document, 'outcomes_id')}
+                      onChange={(event) =>
+                        updateDoc(
+                          'outcomes_id',
+                          event.target.value
+                            .split('\n')
+                            .map((value) => value.trim())
+                            .filter(Boolean)
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Outcomes (EN, one per line)
+                    </span>
+                    <textarea
+                      className={`${adminFieldClassName} py-2`}
+                      rows={3}
+                      value={list(draft.document, 'outcomes_en')}
+                      onChange={(event) =>
+                        updateDoc(
+                          'outcomes_en',
+                          event.target.value
+                            .split('\n')
+                            .map((value) => value.trim())
+                            .filter(Boolean)
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Cluster slugs
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      value={list(draft.document, 'clusters').replace(
+                        /\n/g,
+                        ', '
+                      )}
+                      onChange={(event) =>
+                        updateDoc(
+                          'clusters',
+                          event.target.value
+                            .split(',')
+                            .map((value) => value.trim())
+                            .filter(Boolean)
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy text-xs font-bold">
+                      Program slugs
+                    </span>
+                    <input
+                      className={adminFieldClassName}
+                      value={list(draft.document, 'programs').replace(
+                        /\n/g,
+                        ', '
+                      )}
+                      onChange={(event) =>
+                        updateDoc(
+                          'programs',
+                          event.target.value
+                            .split(',')
+                            .map((value) => value.trim())
+                            .filter(Boolean)
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Action Bar */}
+              <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
-                    variant="outline"
-                    onClick={() => void transition('submit-review')}
+                    onClick={() => void save()}
                     disabled={busy}
+                    className="shadow-soft rounded-xl font-bold"
                   >
-                    <Send className="size-4" />
-                    {t('learningHubSubmit')}
+                    <Save className="size-4" />
+                    {t('learningHubSave')}
                   </Button>
-                ) : null}
-                {selected.status === 'in_review' ? (
-                  <Button
-                    onClick={() => void transition('publish')}
-                    disabled={busy}
-                  >
-                    <Send className="size-4" />
-                    {t('learningHubPublish')}
-                  </Button>
-                ) : null}
-                {selected.status === 'published' ||
-                selected.status === 'in_review' ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => void transition('archive')}
-                    disabled={busy}
-                  >
-                    <Archive className="size-4" />
-                    {t('learningHubArchive')}
-                  </Button>
-                ) : null}
+                  {selected.status === 'draft' ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => void transition('submit-review')}
+                      disabled={busy}
+                      className="rounded-xl font-medium"
+                    >
+                      <Send className="size-4" />
+                      {t('learningHubSubmit')}
+                    </Button>
+                  ) : null}
+                  {selected.status === 'in_review' ? (
+                    <Button
+                      onClick={() => void transition('publish')}
+                      disabled={busy}
+                      className="shadow-soft rounded-xl font-bold"
+                    >
+                      <Send className="size-4" />
+                      {t('learningHubPublish')}
+                    </Button>
+                  ) : null}
+                  {selected.status === 'published' ||
+                  selected.status === 'in_review' ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => void transition('archive')}
+                      disabled={busy}
+                      className="rounded-xl font-medium"
+                    >
+                      <Archive className="size-4" />
+                      {t('learningHubArchive')}
+                    </Button>
+                  ) : null}
+                </div>
                 <Button
                   variant="ghost"
                   onClick={() => void openHistory()}
                   disabled={busy}
+                  className="text-muted-foreground hover:text-navy rounded-xl font-medium"
                 >
                   <History className="size-4" />
                   {t('learningHubHistory')}
@@ -943,259 +1044,283 @@ export function LearningHubTab({
         description={t('learningHubTaxonomyDescription')}
       />
       <div className="grid gap-5 lg:grid-cols-2">
-        <section className="border-border bg-card rounded-2xl border p-4">
-          <h3 className="text-navy font-bold">Clusters</h3>
-          <div className="mt-3 space-y-2">
-            {(taxonomy?.clusters ?? []).map((cluster) => (
-              <div
-                key={cluster.id}
-                className="grid gap-2 rounded-xl border p-3 sm:grid-cols-[1fr_auto]"
-              >
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <input
-                    aria-label={`${cluster.slug} slug`}
-                    className={adminFieldClassName}
-                    defaultValue={cluster.slug}
-                    onChange={(event) =>
-                      clusterEdits.current.set(cluster.id, {
-                        ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                        slug: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label={`${cluster.slug} sort order`}
-                    className={adminFieldClassName}
-                    type="number"
-                    defaultValue={cluster.sort_order}
-                    onChange={(event) =>
-                      clusterEdits.current.set(cluster.id, {
-                        ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                        sort_order: Number(event.target.value),
-                      })
-                    }
-                  />
-                  <input
-                    aria-label={`${cluster.slug} Indonesian title`}
-                    className={adminFieldClassName}
-                    defaultValue={cluster.title_id}
-                    onChange={(event) =>
-                      clusterEdits.current.set(cluster.id, {
-                        ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                        title_id: event.target.value,
-                        title: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label={`${cluster.slug} English title`}
-                    className={adminFieldClassName}
-                    defaultValue={cluster.title_en}
-                    onChange={(event) =>
-                      clusterEdits.current.set(cluster.id, {
-                        ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                        title_en: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label={`${cluster.slug} Indonesian description`}
-                    className={adminFieldClassName}
-                    defaultValue={cluster.description_id}
-                    onChange={(event) =>
-                      clusterEdits.current.set(cluster.id, {
-                        ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                        description_id: event.target.value,
-                        description: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label={`${cluster.slug} English description`}
-                    className={adminFieldClassName}
-                    defaultValue={cluster.description_en}
-                    onChange={(event) =>
-                      clusterEdits.current.set(cluster.id, {
-                        ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                        description_en: event.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const next =
-                        clusterEdits.current.get(cluster.id) ?? cluster;
-                      void updateCluster(cluster.id, {
-                        slug: next.slug,
-                        title_id: next.title_id,
-                        title_en: next.title_en,
-                        description_id: next.description_id,
-                        description_en: next.description_en,
-                        sort_order: next.sort_order,
-                        active: next.active,
-                      });
-                    }}
-                  >
-                    <Save className="size-4" />
-                  </Button>
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => void deleteCluster(cluster.id)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <details className="border-border mt-3 rounded-xl border p-3">
-            <summary className="text-navy cursor-pointer text-sm font-bold">
-              Editor cluster lengkap
-            </summary>
-            <div className="mt-3 space-y-3">
-              <NativeSelect
-                value={editingCluster?.id ?? ''}
-                onChange={(event) =>
-                  setEditingCluster(
-                    (taxonomy?.clusters ?? []).find(
-                      (cluster) => cluster.id === event.target.value
-                    ) ?? null
-                  )
-                }
-              >
-                <option value="">Pilih cluster</option>
-                {(taxonomy?.clusters ?? []).map((cluster) => (
-                  <option key={cluster.id} value={cluster.id}>
-                    {cluster.title_id} ({cluster.slug})
-                  </option>
-                ))}
-              </NativeSelect>
-              {editingCluster ? (
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <input
-                    aria-label="Cluster slug"
-                    className={adminFieldClassName}
-                    value={editingCluster.slug}
-                    onChange={(event) =>
-                      setEditingCluster({
-                        ...editingCluster,
-                        slug: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label="Cluster sort order"
-                    className={adminFieldClassName}
-                    type="number"
-                    value={editingCluster.sort_order}
-                    onChange={(event) =>
-                      setEditingCluster({
-                        ...editingCluster,
-                        sort_order: Number(event.target.value),
-                      })
-                    }
-                  />
-                  <input
-                    aria-label="Cluster Indonesian title"
-                    className={adminFieldClassName}
-                    value={editingCluster.title_id}
-                    onChange={(event) =>
-                      setEditingCluster({
-                        ...editingCluster,
-                        title_id: event.target.value,
-                        title: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label="Cluster English title"
-                    className={adminFieldClassName}
-                    value={editingCluster.title_en}
-                    onChange={(event) =>
-                      setEditingCluster({
-                        ...editingCluster,
-                        title_en: event.target.value,
-                      })
-                    }
-                  />
-                  <textarea
-                    aria-label="Cluster Indonesian description"
-                    className={`${adminFieldClassName} py-2`}
-                    rows={2}
-                    value={editingCluster.description_id}
-                    onChange={(event) =>
-                      setEditingCluster({
-                        ...editingCluster,
-                        description_id: event.target.value,
-                        description: event.target.value,
-                      })
-                    }
-                  />
-                  <textarea
-                    aria-label="Cluster English description"
-                    className={`${adminFieldClassName} py-2`}
-                    rows={2}
-                    value={editingCluster.description_en}
-                    onChange={(event) =>
-                      setEditingCluster({
-                        ...editingCluster,
-                        description_en: event.target.value,
-                      })
-                    }
-                  />
-                  <div className="flex items-center gap-2 sm:col-span-2">
-                    <TranslateButton
-                      sourceLang="id"
-                      targetLang="en"
-                      sourceTexts={[editingCluster.title_id, editingCluster.description_id]}
-                      onTranslated={([title, desc]) => {
-                        setEditingCluster({
-                          ...editingCluster,
-                          title_en: title,
-                          description_en: desc,
-                        });
-                      }}
-                    />
-                    <TranslateButton
-                      sourceLang="en"
-                      targetLang="id"
-                      sourceTexts={[editingCluster.title_en, editingCluster.description_en]}
-                      onTranslated={([title, desc]) => {
-                        setEditingCluster({
-                          ...editingCluster,
-                          title_id: title,
-                          description_id: desc,
-                        });
-                      }}
-                    />
-                  </div>
-                  <label className="text-muted-foreground flex items-center gap-2 text-sm">
+        <section className="border-border/80 bg-card rounded-2xl border p-5 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <h3 className="text-navy text-sm font-bold">
+                Rumpun Ilmu (Clusters)
+              </h3>
+              <span className="text-[0.6875rem] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60">
+                {taxonomy?.clusters?.length ?? 0} cluster
+              </span>
+            </div>
+
+            <div className="mt-3 max-h-[360px] overflow-y-auto pr-1.5 space-y-2.5 min-h-0 focus:outline-none">
+              {(taxonomy?.clusters ?? []).map((cluster) => (
+                <div
+                  key={cluster.id}
+                  className="border-border/80 bg-muted/20 hover:bg-muted/35 hover:border-navy/20 grid gap-2.5 rounded-xl border p-3.5 shadow-2xs transition-all sm:grid-cols-[1fr_auto]"
+                >
+                  <div className="grid gap-2 sm:grid-cols-2">
                     <input
-                      type="checkbox"
-                      checked={editingCluster.active}
+                      aria-label={`${cluster.slug} slug`}
+                      className={adminFieldClassName}
+                      defaultValue={cluster.slug}
                       onChange={(event) =>
-                        setEditingCluster({
-                          ...editingCluster,
-                          active: event.target.checked,
+                        clusterEdits.current.set(cluster.id, {
+                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
+                          slug: event.target.value,
                         })
                       }
                     />
-                    Aktif di katalog mahasiswa
-                  </label>
-                  <Button onClick={() => void saveCluster()} disabled={busy}>
-                    <Save className="size-4" />
-                    {t('learningHubSave')}
-                  </Button>
+                    <input
+                      aria-label={`${cluster.slug} sort order`}
+                      className={adminFieldClassName}
+                      type="number"
+                      defaultValue={cluster.sort_order}
+                      onChange={(event) =>
+                        clusterEdits.current.set(cluster.id, {
+                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
+                          sort_order: Number(event.target.value),
+                        })
+                      }
+                    />
+                    <input
+                      aria-label={`${cluster.slug} Indonesian title`}
+                      className={adminFieldClassName}
+                      defaultValue={cluster.title_id}
+                      onChange={(event) =>
+                        clusterEdits.current.set(cluster.id, {
+                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
+                          title_id: event.target.value,
+                          title: event.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      aria-label={`${cluster.slug} English title`}
+                      className={adminFieldClassName}
+                      defaultValue={cluster.title_en}
+                      onChange={(event) =>
+                        clusterEdits.current.set(cluster.id, {
+                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
+                          title_en: event.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      aria-label={`${cluster.slug} Indonesian description`}
+                      className={adminFieldClassName}
+                      defaultValue={cluster.description_id}
+                      onChange={(event) =>
+                        clusterEdits.current.set(cluster.id, {
+                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
+                          description_id: event.target.value,
+                          description: event.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      aria-label={`${cluster.slug} English description`}
+                      className={adminFieldClassName}
+                      defaultValue={cluster.description_en}
+                      onChange={(event) =>
+                        clusterEdits.current.set(cluster.id, {
+                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
+                          description_en: event.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center gap-1 sm:flex-col sm:justify-center">
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const next =
+                          clusterEdits.current.get(cluster.id) ?? cluster;
+                        void updateCluster(cluster.id, {
+                          slug: next.slug,
+                          title_id: next.title_id,
+                          title_en: next.title_en,
+                          description_id: next.description_id,
+                          description_en: next.description_en,
+                          sort_order: next.sort_order,
+                          active: next.active,
+                        });
+                      }}
+                      className="hover:text-navy"
+                    >
+                      <Save className="size-4" />
+                    </Button>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => void deleteCluster(cluster.id)}
+                      className="hover:text-destructive text-muted-foreground"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
                 </div>
-              ) : null}
+              ))}
             </div>
-          </details>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+
+            <details className="border-border/80 bg-muted/15 mt-3.5 rounded-xl border p-3.5 transition-all">
+              <summary className="text-navy cursor-pointer text-xs font-bold uppercase tracking-wider">
+                Editor cluster lengkap
+              </summary>
+              <div className="mt-3 space-y-3">
+                <NativeSelect
+                  value={editingCluster?.id ?? ''}
+                  onChange={(event) =>
+                    setEditingCluster(
+                      (taxonomy?.clusters ?? []).find(
+                        (cluster) => cluster.id === event.target.value
+                      ) ?? null
+                    )
+                  }
+                >
+                  <option value="">Pilih cluster</option>
+                  {(taxonomy?.clusters ?? []).map((cluster) => (
+                    <option key={cluster.id} value={cluster.id}>
+                      {cluster.title_id} ({cluster.slug})
+                    </option>
+                  ))}
+                </NativeSelect>
+                {editingCluster ? (
+                  <div className="grid gap-2.5 sm:grid-cols-2">
+                    <input
+                      aria-label="Cluster slug"
+                      className={adminFieldClassName}
+                      value={editingCluster.slug}
+                      onChange={(event) =>
+                        setEditingCluster({
+                          ...editingCluster,
+                          slug: event.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      aria-label="Cluster sort order"
+                      className={adminFieldClassName}
+                      type="number"
+                      value={editingCluster.sort_order}
+                      onChange={(event) =>
+                        setEditingCluster({
+                          ...editingCluster,
+                          sort_order: Number(event.target.value),
+                        })
+                      }
+                    />
+                    <input
+                      aria-label="Cluster Indonesian title"
+                      className={adminFieldClassName}
+                      value={editingCluster.title_id}
+                      onChange={(event) =>
+                        setEditingCluster({
+                          ...editingCluster,
+                          title_id: event.target.value,
+                          title: event.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      aria-label="Cluster English title"
+                      className={adminFieldClassName}
+                      value={editingCluster.title_en}
+                      onChange={(event) =>
+                        setEditingCluster({
+                          ...editingCluster,
+                          title_en: event.target.value,
+                        })
+                      }
+                    />
+                    <textarea
+                      aria-label="Cluster Indonesian description"
+                      className={`${adminFieldClassName} py-2`}
+                      rows={2}
+                      value={editingCluster.description_id}
+                      onChange={(event) =>
+                        setEditingCluster({
+                          ...editingCluster,
+                          description_id: event.target.value,
+                          description: event.target.value,
+                        })
+                      }
+                    />
+                    <textarea
+                      aria-label="Cluster English description"
+                      className={`${adminFieldClassName} py-2`}
+                      rows={2}
+                      value={editingCluster.description_en}
+                      onChange={(event) =>
+                        setEditingCluster({
+                          ...editingCluster,
+                          description_en: event.target.value,
+                        })
+                      }
+                    />
+                    <div className="flex items-center gap-2 sm:col-span-2">
+                      <TranslateButton
+                        sourceLang="id"
+                        targetLang="en"
+                        sourceTexts={[
+                          editingCluster.title_id,
+                          editingCluster.description_id,
+                        ]}
+                        onTranslated={([title, desc]) => {
+                          setEditingCluster({
+                            ...editingCluster,
+                            title_en: title,
+                            description_en: desc,
+                          });
+                        }}
+                      />
+                      <TranslateButton
+                        sourceLang="en"
+                        targetLang="id"
+                        sourceTexts={[
+                          editingCluster.title_en,
+                          editingCluster.description_en,
+                        ]}
+                        onTranslated={([title, desc]) => {
+                          setEditingCluster({
+                            ...editingCluster,
+                            title_id: title,
+                            description_id: desc,
+                          });
+                        }}
+                      />
+                    </div>
+                    <label className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={editingCluster.active}
+                        onChange={(event) =>
+                          setEditingCluster({
+                            ...editingCluster,
+                            active: event.target.checked,
+                          })
+                        }
+                      />
+                      Aktif di katalog mahasiswa
+                    </label>
+                    <Button
+                      onClick={() => void saveCluster()}
+                      disabled={busy}
+                      className="rounded-xl font-bold"
+                    >
+                      <Save className="size-4" />
+                      {t('learningHubSave')}
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            </details>
+          </div>
+
+          <div className="border-border/60 mt-4 pt-3.5 border-t grid gap-2 sm:grid-cols-2">
             <input
               className={adminFieldClassName}
               placeholder="slug"
@@ -1224,165 +1349,185 @@ export function LearningHubTab({
               variant="outline"
               onClick={() => void createTaxonomy('cluster')}
               disabled={busy}
+              className="rounded-xl font-medium"
             >
               <Plus className="size-4" />
               {t('learningHubAdd')}
             </Button>
           </div>
         </section>
-        <section className="border-border bg-card rounded-2xl border p-4">
-          <h3 className="text-navy font-bold">Programs</h3>
-          <div className="mt-3 space-y-2">
-            {(taxonomy?.programs ?? []).map((program) => (
-              <div
-                key={program.id}
-                className="grid gap-2 rounded-xl border p-3 sm:grid-cols-[1fr_1fr_auto]"
-              >
-                <input
-                  className={adminFieldClassName}
-                  defaultValue={program.name}
-                  onChange={(event) =>
-                    programEdits.current.set(program.id, {
-                      ...(programEdits.current.get(program.id) ?? program),
-                      name: event.target.value,
-                    })
-                  }
-                />
-                <span className="text-muted-foreground self-center text-xs">
-                  {program.slug}
-                </span>
-                <div className="flex gap-1">
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const next =
-                        programEdits.current.get(program.id) ?? program;
-                      void updateProgram(program.id, {
-                        slug: next.slug,
-                        name: next.name,
-                        degree: next.degree,
-                        primary_cluster_slug: next.primary_cluster_slug,
-                        sort_order: next.sort_order,
-                        active: next.active,
-                      });
-                    }}
-                  >
-                    <Save className="size-4" />
-                  </Button>
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => void deleteProgram(program.id)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <details className="border-border mt-3 rounded-xl border p-3">
-            <summary className="text-navy cursor-pointer text-sm font-bold">
-              Editor program studi lengkap
-            </summary>
-            <div className="mt-3 space-y-3">
-              <NativeSelect
-                value={editingProgram?.id ?? ''}
-                onChange={(event) =>
-                  setEditingProgram(
-                    (taxonomy?.programs ?? []).find(
-                      (program) => program.id === event.target.value
-                    ) ?? null
-                  )
-                }
-              >
-                <option value="">Pilih program studi</option>
-                {(taxonomy?.programs ?? []).map((program) => (
-                  <option key={program.id} value={program.id}>
-                    {program.name} ({program.slug})
-                  </option>
-                ))}
-              </NativeSelect>
-              {editingProgram ? (
-                <div className="grid gap-2 sm:grid-cols-2">
+
+        <section className="border-border/80 bg-card rounded-2xl border p-5 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <h3 className="text-navy text-sm font-bold">
+                Program Studi (Programs)
+              </h3>
+              <span className="text-[0.6875rem] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60">
+                {taxonomy?.programs ?? [] ? taxonomy?.programs?.length : 0} program
+              </span>
+            </div>
+
+            <div className="mt-3 max-h-[360px] overflow-y-auto pr-1.5 space-y-2.5 min-h-0 focus:outline-none">
+              {(taxonomy?.programs ?? []).map((program) => (
+                <div
+                  key={program.id}
+                  className="border-border/80 bg-muted/20 hover:bg-muted/35 hover:border-navy/20 grid gap-2.5 rounded-xl border p-3.5 shadow-2xs transition-all sm:grid-cols-[1fr_1fr_auto]"
+                >
                   <input
-                    aria-label="Program slug"
                     className={adminFieldClassName}
-                    value={editingProgram.slug}
+                    defaultValue={program.name}
                     onChange={(event) =>
-                      setEditingProgram({
-                        ...editingProgram,
-                        slug: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label="Program name"
-                    className={adminFieldClassName}
-                    value={editingProgram.name}
-                    onChange={(event) =>
-                      setEditingProgram({
-                        ...editingProgram,
+                      programEdits.current.set(program.id, {
+                        ...(programEdits.current.get(program.id) ?? program),
                         name: event.target.value,
                       })
                     }
                   />
-                  <input
-                    aria-label="Program degree"
-                    className={adminFieldClassName}
-                    value={editingProgram.degree}
-                    onChange={(event) =>
-                      setEditingProgram({
-                        ...editingProgram,
-                        degree: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label="Primary cluster slug"
-                    className={adminFieldClassName}
-                    value={editingProgram.primary_cluster_slug}
-                    onChange={(event) =>
-                      setEditingProgram({
-                        ...editingProgram,
-                        primary_cluster_slug: event.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    aria-label="Program sort order"
-                    className={adminFieldClassName}
-                    type="number"
-                    value={editingProgram.sort_order}
-                    onChange={(event) =>
-                      setEditingProgram({
-                        ...editingProgram,
-                        sort_order: Number(event.target.value),
-                      })
-                    }
-                  />
-                  <label className="text-muted-foreground flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground self-center font-mono text-xs">
+                    {program.slug}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const next =
+                          programEdits.current.get(program.id) ?? program;
+                        void updateProgram(program.id, {
+                          slug: next.slug,
+                          name: next.name,
+                          degree: next.degree,
+                          primary_cluster_slug: next.primary_cluster_slug,
+                          sort_order: next.sort_order,
+                          active: next.active,
+                        });
+                      }}
+                      className="hover:text-navy"
+                    >
+                      <Save className="size-4" />
+                    </Button>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => void deleteProgram(program.id)}
+                      className="hover:text-destructive text-muted-foreground"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <details className="border-border/80 bg-muted/15 mt-3.5 rounded-xl border p-3.5 transition-all">
+              <summary className="text-navy cursor-pointer text-xs font-bold uppercase tracking-wider">
+                Editor program studi lengkap
+              </summary>
+              <div className="mt-3 space-y-3">
+                <NativeSelect
+                  value={editingProgram?.id ?? ''}
+                  onChange={(event) =>
+                    setEditingProgram(
+                      (taxonomy?.programs ?? []).find(
+                        (program) => program.id === event.target.value
+                      ) ?? null
+                    )
+                  }
+                >
+                  <option value="">Pilih program studi</option>
+                  {(taxonomy?.programs ?? []).map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.name} ({program.slug})
+                    </option>
+                  ))}
+                </NativeSelect>
+                {editingProgram ? (
+                  <div className="grid gap-2.5 sm:grid-cols-2">
                     <input
-                      type="checkbox"
-                      checked={editingProgram.active}
+                      aria-label="Program slug"
+                      className={adminFieldClassName}
+                      value={editingProgram.slug}
                       onChange={(event) =>
                         setEditingProgram({
                           ...editingProgram,
-                          active: event.target.checked,
+                          slug: event.target.value,
                         })
                       }
                     />
-                    Aktif di katalog mahasiswa
-                  </label>
-                  <Button onClick={() => void saveProgram()} disabled={busy}>
-                    <Save className="size-4" />
-                    {t('learningHubSave')}
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          </details>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <input
+                      aria-label="Program name"
+                      className={adminFieldClassName}
+                      value={editingProgram.name}
+                      onChange={(event) =>
+                        setEditingProgram({
+                          ...editingProgram,
+                          name: event.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      aria-label="Program degree"
+                      className={adminFieldClassName}
+                      value={editingProgram.degree}
+                      onChange={(event) =>
+                        setEditingProgram({
+                          ...editingProgram,
+                          degree: event.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      aria-label="Primary cluster slug"
+                      className={adminFieldClassName}
+                      value={editingProgram.primary_cluster_slug}
+                      onChange={(event) =>
+                        setEditingProgram({
+                          ...editingProgram,
+                          primary_cluster_slug: event.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      aria-label="Program sort order"
+                      className={adminFieldClassName}
+                      type="number"
+                      value={editingProgram.sort_order}
+                      onChange={(event) =>
+                        setEditingProgram({
+                          ...editingProgram,
+                          sort_order: Number(event.target.value),
+                        })
+                      }
+                    />
+                    <label className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={editingProgram.active}
+                        onChange={(event) =>
+                          setEditingProgram({
+                            ...editingProgram,
+                            active: event.target.checked,
+                          })
+                        }
+                      />
+                      Aktif di katalog mahasiswa
+                    </label>
+                    <Button
+                      onClick={() => void saveProgram()}
+                      disabled={busy}
+                      className="rounded-xl font-bold"
+                    >
+                      <Save className="size-4" />
+                      {t('learningHubSave')}
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            </details>
+          </div>
+
+          <div className="border-border/60 mt-4 pt-3.5 border-t grid gap-2 sm:grid-cols-2">
             <input
               className={adminFieldClassName}
               placeholder="slug"
@@ -1414,6 +1559,7 @@ export function LearningHubTab({
               variant="outline"
               onClick={() => void createTaxonomy('program')}
               disabled={busy}
+              className="rounded-xl font-medium"
             >
               <Plus className="size-4" />
               {t('learningHubAdd')}

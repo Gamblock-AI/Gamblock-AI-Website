@@ -27,7 +27,9 @@ export function TranslateButton({
       ? t('adminTranslateToEN')
       : t('adminTranslateToID');
 
-  const nonEmpty = sourceTexts.map((s) => s.trim()).filter(Boolean);
+  const nonEmpty = sourceTexts
+    .map((s) => String(s ?? '').trim())
+    .filter(Boolean);
   const disabled = nonEmpty.length === 0 || translating;
 
   const handleClick = async () => {
@@ -37,7 +39,7 @@ export function TranslateButton({
       const mapped = Array.from({ length: sourceTexts.length });
       let resultIndex = 0;
       for (let i = 0; i < sourceTexts.length; i++) {
-        if (sourceTexts[i].trim()) {
+        if (String(sourceTexts[i] ?? '').trim()) {
           mapped[i] = result[resultIndex++];
         } else {
           mapped[i] = sourceTexts[i];

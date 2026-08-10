@@ -89,10 +89,12 @@ export interface EditorMediaSelection {
 
 export function RichTextEditor({
   value,
+  placeholder,
   onChange,
   onRequestMedia,
 }: {
   value: RichTextDocument;
+  placeholder?: string;
   onChange: (document: RichTextDocument) => void;
   onRequestMedia: () => Promise<EditorMediaSelection | null>;
 }) {
@@ -112,7 +114,8 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          'prose prose-slate max-w-none min-h-56 px-4 py-4 outline-none prose-headings:text-navy prose-a:text-navy-light',
+          'prose prose-slate max-w-none min-h-56 px-4 py-4 outline-none prose-headings:text-navy prose-a:text-navy-light [&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_p.is-editor-empty:first-child]:before:text-muted-foreground/50 [&_p.is-editor-empty:first-child]:before:float-left [&_p.is-editor-empty:first-child]:before:pointer-events-none [&_p.is-editor-empty:first-child]:before:h-0',
+        ...(placeholder ? { 'data-placeholder': placeholder } : {}),
       },
     },
     onUpdate: ({ editor: current }) =>

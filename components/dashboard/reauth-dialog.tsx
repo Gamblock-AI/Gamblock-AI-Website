@@ -2,10 +2,11 @@
 
 import { useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { LockKeyhole } from 'lucide-react';
+import { LockKeyhole, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { reauthenticate } from '@/lib/api-client';
+import { ApiError } from '@/lib/api-error';
 import {
   isReauthDialogOpen,
   resolveReauth,
@@ -13,9 +14,10 @@ import {
 } from '@/lib/reauth';
 
 /**
- * Global password re-authentication dialog. Mounted once in the dashboard
- * layout; opened on demand by `requestReauth()` when a recent-auth-protected
- * action is rejected, so the caller can retry with a fresh auth_time.
+ * Global re-authentication prompt, mounted once in the dashboard layout and
+ * opened on demand by `requestReauth()` when a recent-auth-protected action is
+ * rejected. Rendered as a top-anchored security bar (not a stacked modal) so it
+ * never visually stacks over the dialog that triggered it.
  */
 export function ReauthDialog() {
   const t = useTranslations('shared');
@@ -27,6 +29,7 @@ export function ReauthDialog() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [invalidCredentials, setInvalidCredentials] = useState(false);
 
   if (!open) return null;
 
@@ -38,8 +41,11 @@ export function ReauthDialog() {
       await reauthenticate(password);
       setPassword('');
       resolveReauth(true);
-    } catch {
+    } catch (err) {
       setError(true);
+      setInvalidCredentials(
+        err instanceof ApiError && err.code === 'invalid_credentials'
+      );
     } finally {
       setBusy(false);
     }
@@ -52,79 +58,83 @@ export function ReauthDialog() {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/40"
-        aria-hidden="true"
-        onClick={cancel}
-      />
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[95] flex justify-center px-4 pt-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="reauth-title"
         aria-describedby="reauth-desc"
-        className="border-border/80 bg-card shadow-float animate-in fade-in-0 zoom-in-95 relative w-full max-w-sm rounded-2xl border p-5"
+        className="border-border/80 bg-card shadow-float animate-in fade-in-0 slide-in-from-top-2 motion-reduce:animate-none pointer-events-auto w-full max-w-md rounded-2xl border p-4"
       >
         <div className="flex items-start gap-3">
-          <span className="bg-azure/80 text-navy flex size-10 shrink-0 items-center justify-center rounded-xl">
+          <span className="bg-azure/80 text-navy flex size-9 shrink-0 items-center justify-center rounded-xl">
             <LockKeyhole className="size-4.5" aria-hidden="true" />
           </span>
-          <div className="min-w-0">
-            <h2 id="reauth-title" className="text-navy text-base font-bold">
-              {t('reauthTitle')}
-            </h2>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <h2 id="reauth-title" className="text-navy text-sm font-bold">
+                {t('reauthTitle')}
+              </h2>
+              <button
+                type="button"
+                onClick={cancel}
+                aria-label={t('reauthCancel')}
+                className="text-muted-foreground hover:text-navy hover:bg-muted -mr-1 -mt-1 flex size-7 shrink-0 items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-navy/30"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
             <p
               id="reauth-desc"
               className="text-muted-foreground mt-1 text-xs leading-relaxed"
             >
               {t('reauthBody')}
             </p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <input
+                id="reauth-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') void submit();
+                  if (event.key === 'Escape') cancel();
+                }}
+                autoComplete="current-password"
+                autoFocus
+                placeholder={t('reauthPasswordLabel')}
+                className="border-input bg-background focus-visible:border-navy focus-visible:ring-navy/20 h-10 min-w-0 flex-1 basis-40 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+              />
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void submit()}
+                disabled={busy || !password}
+                className="rounded-xl"
+              >
+                {busy ? t('reauthSubmitting') : t('reauthConfirm')}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={cancel}
+                disabled={busy}
+                className="text-muted-foreground rounded-xl"
+              >
+                {t('reauthCancel')}
+              </Button>
+            </div>
+
+            {error ? (
+              <p className="mt-2 text-xs font-semibold text-red-600" role="alert">
+                {invalidCredentials
+                  ? t('reauthFailed')
+                  : t('reauthFailedGeneric')}
+              </p>
+            ) : null}
           </div>
-        </div>
-
-        <label
-          htmlFor="reauth-password"
-          className="text-navy mt-4 block text-xs font-semibold"
-        >
-          {t('reauthPasswordLabel')}
-        </label>
-        <input
-          id="reauth-password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') void submit();
-            if (event.key === 'Escape') cancel();
-          }}
-          autoComplete="current-password"
-          autoFocus
-          className="border-input bg-background focus-visible:border-navy focus-visible:ring-navy/20 mt-1.5 h-10 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-        />
-        {error ? (
-          <p className="mt-2 text-xs font-semibold text-red-600" role="alert">
-            {t('reauthFailed')}
-          </p>
-        ) : null}
-
-        <div className="mt-4 flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={cancel}
-            disabled={busy}
-          >
-            {t('reauthCancel')}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => void submit()}
-            disabled={busy || !password}
-          >
-            {busy ? t('reauthSubmitting') : t('reauthConfirm')}
-          </Button>
         </div>
       </div>
     </div>,

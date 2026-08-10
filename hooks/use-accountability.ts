@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { ApiError } from '@/lib/api-error';
-import { requestReauth } from '@/lib/reauth';
 import { useApiQuery } from './use-api';
 
 export interface SharingPreferences {
@@ -267,21 +265,7 @@ export function useAccountability() {
     async <T>(action: string, request: () => Promise<T>) => {
       setMutatingActions((current) => new Set(current).add(action));
       try {
-        let result: T;
-        try {
-          result = await request();
-        } catch (error) {
-          if (
-            error instanceof ApiError &&
-            error.code === 'recent_auth_required' &&
-            (await requestReauth())
-          ) {
-            // Re-authenticated successfully; retry the failed action once.
-            result = await request();
-          } else {
-            throw error;
-          }
-        }
+        const result = await request();
         await fetchData();
         return result;
       } finally {
