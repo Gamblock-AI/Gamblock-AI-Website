@@ -6,7 +6,10 @@ import {
   mobileTourSteps,
   type TourStep,
 } from '@/components/dashboard/tour/tour-config';
-import { setDashboardTourSeen } from '@/lib/recovery/tour-storage';
+import {
+  DASHBOARD_TOUR_KEY,
+  setTourSeen,
+} from '@/lib/recovery/tour-storage';
 
 export interface TourRect {
   top: number;
@@ -15,19 +18,27 @@ export interface TourRect {
   height: number;
 }
 
+export interface TourConfig {
+  desktop: TourStep[];
+  mobile: TourStep[];
+  storageKey: string;
+}
+
 /**
- * State machine for the first-time student dashboard tour. Owns the step list
- * (desktop vs mobile), the current index, and the measured bounding rect of the
- * highlighted element so the spotlight and bubble stay glued to it while
- * scrolling or resizing.
+ * State machine for a first-time guided tour (student or partner dashboard).
+ * Owns the step list (desktop vs mobile), the current index, and the measured
+ * bounding rect of the highlighted element so the spotlight and bubble stay
+ * glued to it while scrolling or resizing.
  */
-export function useDashboardTour() {
+export function useDashboardTour(config?: TourConfig) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [rect, setRect] = useState<TourRect | null>(null);
 
-  const steps = isMobile ? mobileTourSteps : desktopTourSteps;
+  const steps = isMobile
+    ? (config?.mobile ?? mobileTourSteps)
+    : (config?.desktop ?? desktopTourSteps);
   // Clamp on render so a breakpoint switch never points past the current list.
   const safeIndex = Math.min(index, steps.length - 1);
   const step = steps[safeIndex];
@@ -91,8 +102,8 @@ export function useDashboardTour() {
   const start = useCallback(() => {
     setIndex(0);
     setOpen(true);
-    setDashboardTourSeen();
-  }, []);
+    setTourSeen(config?.storageKey ?? DASHBOARD_TOUR_KEY);
+  }, [config?.storageKey]);
 
   const next = useCallback(() => {
     setIndex((current) => Math.min(current + 1, steps.length - 1));

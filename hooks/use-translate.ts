@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { friendlyMessage } from '@/lib/messages';
 
@@ -11,6 +11,10 @@ interface TranslateResult {
 export function useTranslate() {
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
+  // Synchronous in-flight guard: React state updates are async, so a rapid
+  // double-click could otherwise pass the `translating` check and fire a second
+  // (billable) DeepSeek translation request.
+  const inFlightRef = useRef(false);
 
   const translate = useCallback(
     async (
@@ -19,8 +23,9 @@ export function useTranslate() {
       targetLang: 'id' | 'en'
     ): Promise<string[] | null> => {
       const filtered = texts.map((t) => t.trim()).filter(Boolean);
-      if (filtered.length === 0) return null;
+      if (filtered.length === 0 || inFlightRef.current) return null;
 
+      inFlightRef.current = true;
       setTranslating(true);
       setTranslateError(null);
       try {
@@ -38,6 +43,7 @@ export function useTranslate() {
         setTranslateError(message);
         return null;
       } finally {
+        inFlightRef.current = false;
         setTranslating(false);
       }
     },

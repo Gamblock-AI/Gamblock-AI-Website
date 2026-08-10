@@ -1,5 +1,4 @@
-'use client';
-
+import { Clock3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { AnalyticsHour } from '@/hooks/use-analytics';
 
@@ -34,13 +33,13 @@ export function PeakHoursChart({ hours }: { hours: AnalyticsHour[] }) {
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
 
   return (
-    <div className="border-border bg-muted/45 rounded-2xl border p-2 sm:p-3">
+    <div className="relative flex-1 flex flex-col justify-center rounded-2xl border border-border/80 bg-muted/30 p-2 sm:p-3 overflow-hidden shadow-2xs min-h-[190px]">
       <p className="sr-only">
         {t('hourlySummary', { total, peak: peakHours })}
       </p>
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="h-auto min-h-40 w-full"
+        className="w-full h-auto min-h-36 max-h-48 aspect-[640/190]"
         aria-hidden="true"
       >
         {[0, 0.33, 0.66, 1].map((ratio) => {
@@ -59,7 +58,7 @@ export function PeakHoursChart({ hours }: { hours: AnalyticsHour[] }) {
           );
         })}
         {buckets.map((bucket) => {
-          const isPeak = bucket.count > 0 && bucket.count === topCount;
+          const isPeak = total > 0 && bucket.count > 0 && bucket.count === topCount;
           const height = Math.max(0, BOTTOM - yFor(bucket.count));
           return (
             <rect
@@ -75,7 +74,7 @@ export function PeakHoursChart({ hours }: { hours: AnalyticsHour[] }) {
                   ? 'text-crimson'
                   : bucket.count > 0
                     ? 'text-cyan'
-                    : 'text-border'
+                    : 'text-border/60'
               }
             />
           );
@@ -94,6 +93,24 @@ export function PeakHoursChart({ hours }: { hours: AnalyticsHour[] }) {
           ) : null
         )}
       </svg>
+
+      {total === 0 ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-border/80 bg-card/92 px-4 py-2.5 shadow-2xs backdrop-blur-xs">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-azure text-navy">
+              <Clock3 className="size-4" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="text-navy text-xs font-bold leading-tight">
+                {t('peakHoursEmptyTitle')}
+              </p>
+              <p className="text-muted-foreground mt-0.5 text-[0.6875rem] leading-tight">
+                {t('peakHoursEmptyBody')}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

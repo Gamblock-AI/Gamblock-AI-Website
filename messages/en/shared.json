@@ -206,5 +206,14 @@
   "adminTranslating": "Translating…",
   "adminTranslatedToEN": "Translation completed",
   "adminTranslatedToID": "Terjemahan selesai",
-  "adminTranslateFailed": "Translation failed"
+  "adminTranslateFailed": "Translation failed",
+  "reauthTitle": "Security confirmation",
+  "reauthBody": "Sign in again to continue this sensitive action. Your session is safe; it only needs re-verification.",
+  "reauthPasswordLabel": "Password",
+  "reauthConfirm": "Confirm",
+  "reauthSubmitting": "Verifying…",
+  "reauthCancel": "Cancel",
+  "reauthFailed": "Incorrect password. Try again.",
+  "viewDetails": "View details",
+  "hideDetails": "Hide details"
 }

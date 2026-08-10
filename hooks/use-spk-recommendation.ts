@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { useApiQuery } from './use-api';
 
@@ -70,6 +70,17 @@ export function useSpkRecommendation() {
     useApiQuery<SpkRecommendation>('/client/spk-recommendation');
   const [completing, setCompleting] = useState(false);
   const [completedId, setCompletedId] = useState<string | null>(null);
+
+  // Refetch after the first-run "Niat Perubahan" modal persists an intention
+  // and/or daily check-in; the recommendation reflects the new server data.
+  useEffect(() => {
+    const refresh = () => {
+      void refetch();
+    };
+    window.addEventListener('gamblock:recovery-data-changed', refresh);
+    return () =>
+      window.removeEventListener('gamblock:recovery-data-changed', refresh);
+  }, [refetch]);
 
   const markCompleted = useCallback(
     async (recommendationId: string): Promise<boolean> => {

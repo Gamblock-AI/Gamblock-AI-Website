@@ -1,10 +1,22 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { BarChart3, Clock3, LockKeyhole } from 'lucide-react';
+import {
+  AlertTriangle,
+  BarChart3,
+  Clock3,
+  LockKeyhole,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldOff,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { DashboardPanel } from '@/components/dashboard/dashboard-page';
-import type { AnalyticsPeriod, AnalyticsSummary } from '@/hooks/use-analytics';
+import type {
+  AnalyticsDay,
+  AnalyticsPeriod,
+  AnalyticsSummary,
+} from '@/hooks/use-analytics';
 import { cn } from '@/lib/utils';
 import { AnalyticsMetric } from './analytics-metric';
 import { DailyTrendChart } from './daily-trend-chart';
@@ -17,19 +29,17 @@ export function AnalyticsInsights({
   period,
   onPeriodChange,
   metricsExtra,
-  emptyTitle,
-  emptyBody,
 }: {
   summary: AnalyticsSummary;
   period: AnalyticsPeriod;
   onPeriodChange: (period: AnalyticsPeriod) => void;
   metricsExtra?: ReactNode;
-  emptyTitle: string;
-  emptyBody: string;
+  emptyTitle?: string;
+  emptyBody?: string;
 }) {
   const t = useTranslations('analyticsDashboard');
-  const { totals, daily, hourly, data_state } = summary;
-  const isEmpty = data_state === 'empty' || daily.length === 0;
+  const { totals, daily, hourly } = summary;
+  const chartPoints = ensureDailyPoints(daily, period);
 
   return (
     <section
@@ -40,6 +50,9 @@ export function AnalyticsInsights({
         icon={BarChart3}
         title={t('trendTitle')}
         description={t('trendBody')}
+        density="compact"
+        className="xl:col-span-7"
+        contentClassName="flex-1 flex flex-col justify-end"
         action={
           <div
             className="border-border bg-muted/45 inline-flex rounded-xl border p-1"
@@ -53,7 +66,7 @@ export function AnalyticsInsights({
                 onClick={() => onPeriodChange(value)}
                 aria-pressed={period === value}
                 className={cn(
-                  'text-navy min-h-9 rounded-lg px-3 text-sm font-bold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-navy/30',
+                  'min-h-8 rounded-lg px-2.5 text-xs font-bold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-navy/30',
                   period === value
                     ? 'bg-navy text-white shadow-sm'
                     : 'text-muted-foreground hover:bg-navy/[0.06]'
@@ -64,52 +77,56 @@ export function AnalyticsInsights({
             ))}
           </div>
         }
-        className="xl:col-span-7"
       >
-        {isEmpty ? (
-          <ChartEmpty title={emptyTitle} body={emptyBody} />
-        ) : (
-          <DailyTrendChart points={daily} />
-        )}
+        <DailyTrendChart points={chartPoints} />
       </DashboardPanel>
 
       <DashboardPanel
         icon={Clock3}
         title={t('peakHoursTitle')}
         description={t('peakHoursBody')}
+        density="compact"
         className="xl:col-span-5"
+        contentClassName="flex-1 flex flex-col justify-end"
       >
-        {isEmpty ? (
-          <ChartEmpty title={emptyTitle} body={emptyBody} />
-        ) : (
-          <PeakHoursChart hours={hourly} />
-        )}
+        <PeakHoursChart hours={hourly} />
       </DashboardPanel>
 
       <DashboardPanel
-        icon={BarChart3}
+        icon={ShieldCheck}
         title={t('metricsTitle')}
         description={t('metricsBody')}
+        density="compact"
         className="xl:col-span-12"
         fullHeight={false}
-        contentClassName="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        contentClassName="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
       >
         <AnalyticsMetric
+          icon={ShieldAlert}
+          tone="crimson"
           label={t('metricBlocked')}
           value={totals.blocked}
           body={t('periodSummary', { days: period })}
         />
         <AnalyticsMetric
+          icon={ShieldCheck}
+          tone="azure"
           label={t('metricInterventions')}
           value={totals.interventions}
           body={t('periodSummary', { days: period })}
         />
         <AnalyticsMetric
+          icon={AlertTriangle}
+          tone={totals.tamper_events > 0 ? 'amber' : 'navy'}
+          attention={totals.tamper_events > 0}
           label={t('metricTamper')}
           value={totals.tamper_events}
           body={t('periodSummary', { days: period })}
         />
         <AnalyticsMetric
+          icon={ShieldOff}
+          tone={totals.permission_revoked > 0 ? 'amber' : 'navy'}
+          attention={totals.permission_revoked > 0}
           label={t('metricRevoked')}
           value={totals.permission_revoked}
           body={t('periodSummary', { days: period })}
@@ -125,12 +142,24 @@ export function AnalyticsInsights({
   );
 }
 
-function ChartEmpty({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="border-border bg-muted/25 flex min-h-44 flex-col items-center justify-center rounded-xl border border-dashed p-5 text-center">
-      <BarChart3 className="text-muted-foreground size-6" aria-hidden="true" />
-      <p className="text-foreground mt-2 text-sm font-semibold">{title}</p>
-      <p className="text-muted-foreground mt-1 text-sm leading-6">{body}</p>
-    </div>
-  );
+function ensureDailyPoints(
+  points: AnalyticsDay[] | undefined,
+  days: number
+): AnalyticsDay[] {
+  if (points && points.length > 0) return points;
+  const now = new Date();
+  const fallback: AnalyticsDay[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    fallback.push({
+      date: dateStr,
+      blocked: 0,
+      interventions: 0,
+      tamper_events: 0,
+      permission_revoked: 0,
+    });
+  }
+  return fallback;
 }

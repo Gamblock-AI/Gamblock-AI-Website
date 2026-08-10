@@ -63,7 +63,13 @@ export function NiatPerubahanGate({ children }: { children: React.ReactNode }) {
         <NiatPerubahanModal
           needsIntention={needsIntention}
           needsCheckIn={needsCheckIn}
-          onCompleted={() => setData({ id: 'completed' })}
+          onCompleted={() => {
+            setData({ id: 'completed' });
+            window.dispatchEvent(
+              new CustomEvent('gamblock:recovery-data-changed')
+            );
+            window.dispatchEvent(new CustomEvent('gamblock:recovery-sync-changed'));
+          }}
         />
       )}
       {resolved && !showModal && <DashboardTour />}

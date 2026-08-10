@@ -100,6 +100,31 @@ async function refreshAccessToken(): Promise<string> {
   return refreshPromise;
 }
 
+/**
+ * Re-authenticates the signed-in user with their password and stores a fresh
+ * token pair whose `auth_time` is now, satisfying recent-auth-protected
+ * actions without a full logout.
+ */
+export async function reauthenticate(password: string): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/auth/reauthenticate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ password }),
+  });
+  const payload = await unwrapResponse<{
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+  }>(response);
+  if (!payload.access_token || !payload.refresh_token) {
+    throw new ApiError(401, 'invalid_credentials');
+  }
+  localStorage.setItem('gamblock_access_token', payload.access_token);
+  localStorage.setItem('gamblock_refresh_token', payload.refresh_token);
+  persistAccessCookie(payload.access_token, payload.expires_in);
+}
+
 async function performApiRequest<T>(
   path: string,
   options?: RequestInit,

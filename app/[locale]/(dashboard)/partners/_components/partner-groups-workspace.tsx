@@ -9,12 +9,30 @@ import {
   useState,
 } from 'react';
 import {
+  BookOpen,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronsUpDown,
   ClipboardCheck,
   Copy,
+  FolderKanban,
   KeyRound,
+  Laptop,
+  Lock,
   MessageCircleHeart,
   PhoneCall,
+  PlusCircle,
+  RefreshCw,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  Smartphone,
+  Trash2,
+  UserCheck,
+  UserPlus,
   UserRoundMinus,
+  Users,
   UsersRound,
 } from 'lucide-react';
 import {
@@ -23,6 +41,7 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { StudentAvatar } from '@/components/dashboard/student-avatar';
 import {
   type AccountabilityGroup,
   type AccountabilityMembership,
@@ -30,11 +49,11 @@ import {
 } from '@/hooks/use-accountability';
 import { refreshCurrentUser, useLocalUser } from '@/hooks/use-local-user';
 import { toastError, toastSuccess } from '@/lib/feedback';
-import { ROUTES } from '@/routes';
+import { cn } from '@/lib/utils';
 import {
   EmptyLine,
   Info,
-  QuickLink,
+  StatOverviewCard,
   type Translation,
 } from './partners-shared';
 
@@ -160,35 +179,63 @@ export function PartnerGroupsWorkspace({
 
   return (
     <div className="space-y-5">
+      {/* 1. Ringkasan Pendampingan Card */}
       <DashboardPanel
         icon={ClipboardCheck}
         title={t('partnerOverviewTitle')}
         description={t('partnerOverviewBody')}
+        density="compact"
+        surface="default"
+        fullHeight={false}
       >
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Info label={t('activeGroupsLabel')} value={String(activeGroups)} />
-          <Info label={t('activeMembersLabel')} value={String(activeMembers)} />
-          <Info
+          <StatOverviewCard
+            icon={FolderKanban}
+            label={t('activeGroupsLabel')}
+            value={activeGroups}
+            tone="navy"
+            subtitle={t('groupStatus.active')}
+          />
+          <StatOverviewCard
+            icon={UserCheck}
+            label={t('activeMembersLabel')}
+            value={activeMembers}
+            tone="sage"
+            subtitle={
+              activeMembers > 0
+                ? `${activeMembers} mahasiswa`
+                : 'Belum ada'
+            }
+          />
+          <StatOverviewCard
+            icon={ShieldAlert}
             label={t('pendingDecisionsLabel')}
-            value={String(pendingDecisions)}
+            value={pendingDecisions}
+            tone={pendingDecisions > 0 ? 'amber' : 'navy'}
+            subtitle={pendingDecisions > 0 ? undefined : 'Tidak ada antrean'}
+            badge={
+              pendingDecisions > 0
+                ? {
+                    text: `${pendingDecisions} perlu tindakan`,
+                    tone: 'amber',
+                  }
+                : undefined
+            }
           />
-          <Info
-            label={t('pendingContactsLabel')}
-            value={String(pendingContacts)}
-          />
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <QuickLink
-            href={ROUTES.ACCOUNTABILITY}
-            icon={ClipboardCheck}
-            title={t('openDecisionQueueTitle')}
-            body={t('openDecisionQueueBody')}
-          />
-          <QuickLink
-            href={`${ROUTES.SUPPORT}?channel=partner`}
+          <StatOverviewCard
             icon={MessageCircleHeart}
-            title={t('openContactQueueTitle')}
-            body={t('openContactQueueBody')}
+            label={t('pendingContactsLabel')}
+            value={pendingContacts}
+            tone={pendingContacts > 0 ? 'azure' : 'navy'}
+            subtitle={pendingContacts > 0 ? undefined : 'Tidak ada antrean'}
+            badge={
+              pendingContacts > 0
+                ? {
+                    text: `${pendingContacts} baru`,
+                    tone: 'navy',
+                  }
+                : undefined
+            }
           />
         </div>
       </DashboardPanel>
@@ -198,6 +245,7 @@ export function PartnerGroupsWorkspace({
           icon={PhoneCall}
           title={t('verificationTitle')}
           description={t('verificationBody')}
+          fullHeight={false}
         >
           <div className="grid gap-4 lg:grid-cols-2">
             <VerificationCard
@@ -263,71 +311,110 @@ export function PartnerGroupsWorkspace({
         </DashboardPanel>
       ) : null}
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(20rem,0.75fr)_minmax(0,1.25fr)] xl:items-stretch">
+      {/* 2-Column Section: Buat Grup (Left) and Grup & Anggota (Right) */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(21rem,0.72fr)_minmax(0,1.28fr)] xl:items-start">
+        {/* 2. Buat Grup Card */}
         <DashboardPanel
           icon={UsersRound}
           title={t('createGroupTitle')}
           description={t('createGroupBody')}
           density="compact"
+          fullHeight={false}
+          className="shadow-2xs"
         >
           <form
             onSubmit={(event) => void createGroup(event)}
-            className="flex h-full flex-col gap-4"
+            className="flex flex-col gap-4"
           >
-            <div className="space-y-4">
-              <label
-                htmlFor="group-name"
-                className="text-navy block text-sm font-semibold"
-              >
-                {t('groupName')}
-              </label>
-              <input
-                id="group-name"
-                value={groupName}
-                minLength={3}
-                maxLength={80}
-                onChange={(event) => setGroupName(event.target.value)}
-                placeholder={t('groupNamePlaceholder')}
-                className="border-input bg-background focus-visible:ring-navy/20 h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-                required
-              />
-              <label
-                htmlFor="group-description"
-                className="text-navy block text-sm font-semibold"
-              >
-                {t('groupDescription')}
-              </label>
-              <Textarea
-                id="group-description"
-                value={groupDescription}
-                maxLength={240}
-                onChange={(event) => setGroupDescription(event.target.value)}
-                placeholder={t('groupDescriptionPlaceholder')}
-              />
+            <div className="space-y-3.5">
+              <div>
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="group-name"
+                    className="text-navy block text-xs font-bold uppercase tracking-wider"
+                  >
+                    {t('groupName')}
+                  </label>
+                  <span className="text-muted-foreground text-[0.6875rem]">
+                    {groupName.length}/80
+                  </span>
+                </div>
+                <input
+                  id="group-name"
+                  value={groupName}
+                  minLength={3}
+                  maxLength={80}
+                  onChange={(event) => setGroupName(event.target.value)}
+                  placeholder={t('groupNamePlaceholder')}
+                  className="border-input bg-background focus-visible:ring-navy/25 mt-1.5 h-11 w-full rounded-xl border px-3.5 text-sm transition-colors outline-none focus-visible:ring-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="group-description"
+                    className="text-navy block text-xs font-bold uppercase tracking-wider"
+                  >
+                    {t('groupDescription')}
+                  </label>
+                  <span className="text-muted-foreground text-[0.6875rem]">
+                    {groupDescription.length}/240
+                  </span>
+                </div>
+                <Textarea
+                  id="group-description"
+                  value={groupDescription}
+                  maxLength={240}
+                  rows={3}
+                  onChange={(event) => setGroupDescription(event.target.value)}
+                  placeholder={t('groupDescriptionPlaceholder')}
+                  className="border-input bg-background focus-visible:ring-navy/25 mt-1.5 resize-none rounded-xl text-sm transition-colors outline-none focus-visible:ring-2"
+                />
+              </div>
+
+              {/* Privacy & Security Tip Callout */}
+              <div className="border-border/70 bg-azure/20 flex items-start gap-2.5 rounded-xl border p-3">
+                <ShieldCheck
+                  className="text-navy mt-0.5 size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <p className="text-foreground/85 text-xs leading-relaxed">
+                  {t('groupSecurityTip')}
+                </p>
+              </div>
             </div>
-            <div className="mt-auto space-y-2.5">
+
+            <div className="pt-1 space-y-2">
               <Button
                 type="submit"
                 disabled={!verified || accountability.mutating}
+                className="w-full gap-2 shadow-sm font-semibold"
               >
+                <PlusCircle className="size-4" aria-hidden="true" />
                 {t('createGroup')}
               </Button>
               {!verified ? (
-                <p className="text-muted-foreground text-xs leading-5">
-                  {t('createRequiresVerification')}
-                </p>
+                <div className="border-amber/30 bg-amber/[0.08] flex items-center gap-2 rounded-lg border p-2.5 text-xs text-amber-900">
+                  <ShieldAlert className="size-4 shrink-0 text-amber-700" />
+                  <span>{t('createRequiresVerification')}</span>
+                </div>
               ) : null}
             </div>
           </form>
         </DashboardPanel>
 
+        {/* 3. Grup dan Anggota Card */}
         <DashboardPanel
           icon={KeyRound}
           title={t('groupsTitle')}
           description={t('groupsBody')}
           density="compact"
+          fullHeight={false}
+          className="shadow-2xs"
         >
-          <div className="flex-1 space-y-3">
+          <div className="space-y-4">
             {accountability.workspace.groups.length ? (
               accountability.workspace.groups.map((group) => (
                 <GroupCard
@@ -340,10 +427,10 @@ export function PartnerGroupsWorkspace({
                   setRemovalReasons={setRemovalReasons}
                   mutating={accountability.mutating}
                   onRotate={() => void rotate(group)}
-                  onArchive={() =>
+                  onDelete={() =>
                     void run(
-                      accountability.archiveGroup(group.id),
-                      t('groupArchived')
+                      accountability.deleteGroup(group.id),
+                      t('groupDeleted')
                     )
                   }
                   onRemove={(membership) =>
@@ -403,7 +490,7 @@ function GroupCard({
   setRemovalReasons,
   mutating,
   onRotate,
-  onArchive,
+  onDelete,
   onRemove,
 }: {
   t: Translation;
@@ -414,150 +501,427 @@ function GroupCard({
   setRemovalReasons: Dispatch<SetStateAction<Record<string, string>>>;
   mutating: boolean;
   onRotate: () => void;
-  onArchive: () => void;
+  onDelete: () => void;
   onRemove: (membership: AccountabilityMembership) => void;
 }) {
-  const activeMembers = members.filter((item) =>
-    ['active', 'leave_pending', 'support_review', 'safety_suspended'].includes(
-      item.status
-    )
+  const [expandedMembers, setExpandedMembers] = useState<
+    Record<string, boolean>
+  >({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const activeMembers = useMemo(
+    () =>
+      members.filter((item) =>
+        ['active', 'leave_pending', 'support_review', 'safety_suspended'].includes(
+          item.status
+        )
+      ),
+    [members]
   );
 
+  const filteredMembers = useMemo(() => {
+    if (!searchQuery.trim()) return activeMembers;
+    const query = searchQuery.toLowerCase().trim();
+    return activeMembers.filter((m) =>
+      m.student_name.toLowerCase().includes(query)
+    );
+  }, [activeMembers, searchQuery]);
+
+  const allExpanded =
+    activeMembers.length > 0 &&
+    activeMembers.every((m) => expandedMembers[m.id]);
+
+  const toggleMember = (memberId: string) => {
+    setExpandedMembers((prev) => ({
+      ...prev,
+      [memberId]: !prev[memberId],
+    }));
+  };
+
+  const toggleAll = () => {
+    const nextState = !allExpanded;
+    const updated: Record<string, boolean> = {};
+    for (const m of activeMembers) {
+      updated[m.id] = nextState;
+    }
+    setExpandedMembers(updated);
+  };
+
+  const handleCopy = async (textToCopy: string) => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      toastSuccess(t('copySuccess'));
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      // Fallback
+    }
+  };
+
   return (
-    <article className="border-border rounded-xl border p-3.5">
+    <article className="border-border/80 bg-background/50 hover:border-navy/20 relative rounded-2xl border p-4 sm:p-5 transition-all duration-200 shadow-2xs">
+      {/* Group Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-navy font-bold">{group.name}</p>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {t('memberCount', { count: activeMembers.length })}
-          </p>
+        <div className="flex items-start gap-3 min-w-0">
+          <span className="bg-azure/80 text-navy mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl font-bold">
+            <FolderKanban className="size-4.5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-navy text-base sm:text-lg font-extrabold tracking-tight">
+                {group.name}
+              </h3>
+              <DashboardStatus
+                tone={group.status === 'active' ? 'sage' : 'muted'}
+              >
+                {t(`groupStatus.${group.status}`)}
+              </DashboardStatus>
+            </div>
+            <p className="text-muted-foreground mt-0.5 text-xs font-medium">
+              {t('memberCount', { count: activeMembers.length })}
+            </p>
+          </div>
         </div>
-        <DashboardStatus tone={group.status === 'active' ? 'sage' : 'muted'}>
-          {t(`groupStatus.${group.status}`)}
-        </DashboardStatus>
       </div>
+
       {group.description ? (
-        <p className="text-foreground mt-3 text-sm leading-6">
+        <p className="text-foreground/80 mt-3 text-xs leading-relaxed sm:text-sm">
           {group.description}
         </p>
       ) : null}
+
+      {/* Join Code Box */}
       {group.status === 'active' ? (
-        <div className="bg-muted/45 mt-4 rounded-xl p-3">
-          <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-            {t('joinCode')}
-          </p>
-          <div className="mt-2 flex items-center justify-between gap-3">
-            {code ? (
-              <code className="text-navy font-mono text-sm font-semibold tracking-[0.06em]">
-                {code}
-              </code>
-            ) : (
-              <p className="text-navy text-sm font-semibold">
-                {t('codeHint', { hint: group.join_code_hint })}
-              </p>
-            )}
-            {code ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={t('copyCode')}
-                onClick={() => void navigator.clipboard.writeText(code)}
-              >
-                <Copy className="size-4" aria-hidden="true" />
-              </Button>
-            ) : null}
+        <div className="border-border/70 bg-muted/40 mt-4 rounded-xl border p-3.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <KeyRound className="text-navy size-4" aria-hidden="true" />
+              <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
+                {t('joinCode')}
+              </span>
+            </div>
+            <span className="text-muted-foreground hidden sm:inline text-[0.6875rem]">
+              {code ? t('copyCode') : ''}
+            </span>
           </div>
-          <Button
-            variant="outline"
-            className="mt-3 w-full"
-            disabled={mutating}
-            onClick={onRotate}
-          >
-            {t('rotateCode')}
-          </Button>
+
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3">
+            {code ? (
+              <div className="flex items-center gap-2">
+                <code className="border-navy/20 bg-background text-navy font-mono text-sm font-bold tracking-[0.14em] rounded-lg border px-3 py-1.5 shadow-2xs">
+                  {code}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  aria-label={t('copyCode')}
+                  onClick={() => void handleCopy(code)}
+                  className="gap-1.5 text-xs h-8 px-2.5"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="size-3.5 text-sage" />
+                      <span className="text-sage font-semibold">
+                        {t('copied')}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3.5" />
+                      <span>{t('copyCode')}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="border-border bg-background text-navy font-mono text-xs font-semibold rounded-lg border px-2.5 py-1">
+                  {t('codeHint', { hint: group.join_code_hint })}
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  (Aktif di perangkat)
+                </span>
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs h-8"
+              disabled={mutating}
+              onClick={onRotate}
+            >
+              <RefreshCw
+                className={cn('size-3.5', mutating && 'animate-spin')}
+                aria-hidden="true"
+              />
+              {t('rotateCode')}
+            </Button>
+          </div>
         </div>
       ) : null}
 
-      <div className="mt-3 space-y-2.5">
-        {activeMembers.map((membership) => (
-          <div
-            key={membership.id}
-            className="border-border bg-background rounded-xl border p-2.5"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <p className="text-navy font-semibold">
-                {membership.student_name}
-              </p>
-              <DashboardStatus
-                tone={membership.status === 'active' ? 'sage' : 'amber'}
-              >
-                {t(`membershipStatus.${membership.status}`)}
-              </DashboardStatus>
-            </div>
-            <div className="mt-2.5 grid gap-2 text-xs sm:grid-cols-2">
-              <Info
-                label={t('protectionStatus')}
-                value={formatProtectionStatus(
-                  t,
-                  membership.aggregate.protection_status
-                )}
-              />
-              <Info
-                label={t('activeDevices')}
-                value={String(
-                  membership.aggregate.active_device_count ?? t('notShared')
-                )}
-              />
-              <Info
-                label={t('checkInDays')}
-                value={String(
-                  membership.aggregate.check_in_days ?? t('notShared')
-                )}
-              />
-              <Info
-                label={t('educationBand')}
-                value={formatEducationProgress(
-                  t,
-                  membership.aggregate.education_progress_band
-                )}
-              />
-            </div>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <input
-                value={removalReasons[membership.id] ?? ''}
-                onChange={(event) =>
-                  setRemovalReasons((current) => ({
-                    ...current,
-                    [membership.id]: event.target.value,
-                  }))
-                }
-                maxLength={240}
-                placeholder={t('removalReason')}
-                aria-label={t('removalReason')}
-                className="border-input bg-background focus-visible:ring-navy/20 h-10 min-w-0 flex-1 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-              />
-              <Button
-                variant="outline"
-                disabled={mutating}
-                onClick={() => onRemove(membership)}
-              >
-                <UserRoundMinus className="size-4" aria-hidden="true" />
-                {t('remove')}
-              </Button>
-            </div>
+      {/* Members Section with Header, Search, Expand All & Collapsible Student Rows */}
+      <div className="mt-4 pt-2 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Users className="text-navy size-4" aria-hidden="true" />
+            <h4 className="text-navy text-xs font-bold uppercase tracking-wider">
+              {t('membersList')}
+            </h4>
+            <span className="border-border bg-muted/80 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[0.6875rem] font-bold">
+              {activeMembers.length}
+            </span>
           </div>
-        ))}
+
+          {activeMembers.length >= 2 ? (
+            <button
+              type="button"
+              onClick={toggleAll}
+              className="text-navy hover:text-navy-light inline-flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <ChevronsUpDown className="size-3.5" aria-hidden="true" />
+              <span>{allExpanded ? t('collapseAll') : t('expandAll')}</span>
+            </button>
+          ) : null}
+        </div>
+
+        {/* Search input if group has 4+ members */}
+        {activeMembers.length >= 4 ? (
+          <div className="relative">
+            <Search className="text-muted-foreground absolute left-3 top-1/2 size-3.5 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('searchStudents')}
+              className="border-input bg-background/80 focus-visible:ring-navy/20 h-9 w-full rounded-xl border pl-8.5 pr-3 text-xs outline-none focus-visible:ring-2"
+            />
+          </div>
+        ) : null}
+
+        {/* Member list or Empty states */}
+        {activeMembers.length === 0 ? (
+          <div className="border-border/80 border-dashed bg-muted/20 flex flex-col items-center justify-center rounded-xl border p-6 text-center">
+            <span className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-full">
+              <UserPlus className="size-5" />
+            </span>
+            <p className="text-navy mt-2 text-xs font-bold sm:text-sm">
+              {t('noStudentsInGroup')}
+            </p>
+            <p className="text-muted-foreground mt-1 max-w-sm text-xs">
+              {t('noStudentsInGroupBody')}
+            </p>
+          </div>
+        ) : filteredMembers.length === 0 ? (
+          <p className="text-muted-foreground py-3 text-center text-xs">
+            {t('noMatchingStudents')}
+          </p>
+        ) : (
+          <div className="space-y-2.5">
+            {filteredMembers.map((membership) => {
+              const isExpanded = Boolean(expandedMembers[membership.id]);
+              const protection = membership.aggregate.protection_status;
+              const isProtectionReady = protection === 'ready';
+              const isProtectionAttention = protection === 'attention';
+
+              return (
+                <div
+                  key={membership.id}
+                  className={cn(
+                    'border-border/80 bg-card rounded-xl border transition-all duration-200 shadow-2xs',
+                    isExpanded
+                      ? 'border-navy/25 ring-1 ring-navy/10'
+                      : 'hover:border-navy/20 hover:bg-muted/15'
+                  )}
+                >
+                  {/* Collapsed Toggle Header */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    onClick={() => toggleMember(membership.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleMember(membership.id);
+                      }
+                    }}
+                    className="flex flex-wrap items-center justify-between gap-3 p-3 cursor-pointer select-none"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <StudentAvatar
+                        name={membership.student_name}
+                        avatarUrl={membership.student_avatar_url}
+                        className="size-8 shadow-2xs"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-navy truncate text-sm font-bold">
+                            {membership.student_name}
+                          </p>
+                          <DashboardStatus
+                            tone={
+                              membership.status === 'active' ? 'sage' : 'amber'
+                            }
+                          >
+                            {t(`membershipStatus.${membership.status}`)}
+                          </DashboardStatus>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Preview Chips on Collapsed Row */}
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="hidden xs:flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 text-xs">
+                        <span
+                          className={cn(
+                            'size-2 rounded-full shrink-0',
+                            isProtectionReady
+                              ? 'bg-sage'
+                              : isProtectionAttention
+                                ? 'bg-amber animate-pulse'
+                                : 'bg-muted-foreground'
+                          )}
+                        />
+                        <span className="text-muted-foreground text-[0.6875rem] font-medium sm:text-xs">
+                          {formatProtectionStatus(t, protection)}
+                        </span>
+                      </div>
+
+                      {membership.aggregate.active_device_count ? (
+                        <div className="hidden sm:flex items-center gap-1 text-muted-foreground text-xs">
+                          <Smartphone className="size-3.5" />
+                          <span>
+                            {membership.aggregate.active_device_count}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      <span
+                        className={cn(
+                          'text-muted-foreground flex size-7 items-center justify-center rounded-lg bg-muted/50 transition-transform duration-200',
+                          isExpanded && 'rotate-180 text-navy bg-azure/80'
+                        )}
+                      >
+                        <ChevronDown className="size-4" aria-hidden="true" />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Expanded Accordion Body */}
+                  {isExpanded ? (
+                    <div className="border-border/70 bg-muted/15 border-t p-3.5 sm:p-4 rounded-b-xl space-y-3.5 animate-in fade-in-50 duration-150">
+                      <div className="grid gap-2 text-xs sm:grid-cols-2">
+                        <Info
+                          label={t('protectionStatus')}
+                          value={formatProtectionStatus(t, protection)}
+                          icon={
+                            isProtectionReady ? ShieldCheck : ShieldAlert
+                          }
+                          tone={
+                            isProtectionReady
+                              ? 'sage'
+                              : isProtectionAttention
+                                ? 'amber'
+                                : 'default'
+                          }
+                        />
+                        <Info
+                          label={t('activeDevices')}
+                          value={String(
+                            membership.aggregate.active_device_count ??
+                              t('notShared')
+                          )}
+                          icon={Laptop}
+                        />
+                        <Info
+                          label={t('checkInDays')}
+                          value={
+                            membership.aggregate.check_in_days !== undefined &&
+                            membership.aggregate.check_in_days !== null
+                              ? `${membership.aggregate.check_in_days} hari`
+                              : t('notShared')
+                          }
+                          icon={Calendar}
+                        />
+                        <Info
+                          label={t('educationBand')}
+                          value={formatEducationProgress(
+                            t,
+                            membership.aggregate.education_progress_band
+                          )}
+                          icon={BookOpen}
+                        />
+                      </div>
+
+                      {/* Privacy Note */}
+                      <p className="text-muted-foreground flex items-center gap-1.5 text-[0.6875rem]">
+                        <Lock className="size-3 shrink-0" />
+                        <span>
+                          Data di atas adalah ringkasan agregat yang disetujui
+                          siswa.
+                        </span>
+                      </p>
+
+                      {/* Member Removal Action */}
+                      <div className="border-border/60 bg-background flex flex-col gap-2 rounded-xl border p-2.5 sm:flex-row sm:items-center">
+                        <input
+                          value={removalReasons[membership.id] ?? ''}
+                          onChange={(event) =>
+                            setRemovalReasons((current) => ({
+                              ...current,
+                              [membership.id]: event.target.value,
+                            }))
+                          }
+                          maxLength={240}
+                          placeholder={t('removalReason')}
+                          aria-label={t('removalReason')}
+                          className="border-input bg-background focus-visible:ring-navy/20 h-9 min-w-0 flex-1 rounded-lg border px-3 text-xs outline-none focus-visible:ring-2"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={mutating}
+                          onClick={() => onRemove(membership)}
+                          className="gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 h-9"
+                        >
+                          <UserRoundMinus
+                            className="size-3.5"
+                            aria-hidden="true"
+                          />
+                          {t('remove')}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
+      {/* Delete Group Button */}
       {group.status === 'active' ? (
-        <Button
-          variant="outline"
-          className="mt-4 w-full"
-          disabled={mutating || activeMembers.length > 0}
-          onClick={onArchive}
-        >
-          {t('archiveGroup')}
-        </Button>
+        <div className="mt-5 border-t border-border/70 pt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2 text-xs text-muted-foreground hover:text-foreground"
+            disabled={mutating || activeMembers.length > 0}
+            onClick={onDelete}
+          >
+            <Trash2 className="size-3.5" aria-hidden="true" />
+            {t('deleteGroup')}
+          </Button>
+          {activeMembers.length > 0 ? (
+            <p className="text-muted-foreground mt-1.5 text-center text-[0.6875rem]">
+              {t('deleteGroupHint')}
+            </p>
+          ) : null}
+        </div>
       ) : null}
     </article>
   );
@@ -577,9 +941,9 @@ function VerificationCard({
   children: ReactNode;
 }) {
   return (
-    <div className="border-border rounded-xl border p-4">
+    <div className="border-border/80 bg-background/50 rounded-2xl border p-4 shadow-2xs">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-navy font-semibold">{title}</p>
+        <p className="text-navy font-bold text-sm">{title}</p>
         <DashboardStatus tone={verified ? 'sage' : 'amber'}>
           {verified ? verifiedLabel : pendingLabel}
         </DashboardStatus>
@@ -588,3 +952,4 @@ function VerificationCard({
     </div>
   );
 }
+

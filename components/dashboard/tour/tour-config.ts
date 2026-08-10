@@ -66,3 +66,77 @@ export const mobileTourSteps: TourStep[] = [
     bodyKey: 'profileBody',
   },
 ];
+
+/** Partner dashboard tour on desktop (sidebar + top navbar visible). */
+export const partnerDesktopTourSteps: TourStep[] = [
+  {
+    target: 'tour-partner-summary',
+    titleKey: 'summaryTitle',
+    bodyKey: 'summaryBody',
+  },
+  {
+    target: 'tour-partner-filters',
+    titleKey: 'filtersTitle',
+    bodyKey: 'filtersBody',
+  },
+  {
+    target: 'tour-partner-table',
+    titleKey: 'tableTitle',
+    bodyKey: 'tableBody',
+  },
+  {
+    target: 'tour-partner-analytics',
+    titleKey: 'analyticsTitle',
+    bodyKey: 'analyticsBody',
+  },
+  {
+    target: 'tour-sidebar-today',
+    titleKey: 'sidebarTodayTitle',
+    bodyKey: 'sidebarTodayBody',
+  },
+  {
+    target: 'tour-sidebar-support',
+    titleKey: 'sidebarSupportTitle',
+    bodyKey: 'sidebarSupportBody',
+  },
+  { target: 'tour-search', titleKey: 'searchTitle', bodyKey: 'searchBody' },
+  {
+    target: 'tour-profile',
+    titleKey: 'profileTitle',
+    bodyKey: 'profileBody',
+  },
+];
+
+/** Partner dashboard tour on small screens (bottom navigation instead of sidebar). */
+export const partnerMobileTourSteps: TourStep[] = [
+  {
+    target: 'tour-partner-summary',
+    titleKey: 'summaryTitle',
+    bodyKey: 'summaryBody',
+  },
+  {
+    target: 'tour-partner-filters',
+    titleKey: 'filtersTitle',
+    bodyKey: 'filtersBody',
+  },
+  {
+    target: 'tour-partner-table',
+    titleKey: 'tableTitle',
+    bodyKey: 'tableBody',
+  },
+  {
+    target: 'tour-mobile-primary',
+    titleKey: 'mobilePrimaryTitle',
+    bodyKey: 'mobilePrimaryBody',
+  },
+  {
+    target: 'tour-mobile-more',
+    titleKey: 'mobileMoreTitle',
+    bodyKey: 'mobileMoreBody',
+  },
+  {
+    target: 'tour-profile',
+    titleKey: 'profileTitle',
+    bodyKey: 'profileBody',
+  },
+];

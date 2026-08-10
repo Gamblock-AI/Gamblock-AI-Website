@@ -9,6 +9,8 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { StudentAvatar } from '@/components/dashboard/student-avatar';
+import { ExpandableRow } from '@/components/dashboard/expandable-row';
 import type { useAccountability } from '@/hooks/use-accountability';
 import { Link } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
@@ -37,6 +39,12 @@ export function PartnerAccountability({
   const locale = useLocale();
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [dialog, setDialog] = useState<PartnerDialog>(null);
+  const [expandedApprovals, setExpandedApprovals] = useState<
+    Record<string, boolean>
+  >({});
+  const [expandedLeaves, setExpandedLeaves] = useState<Record<string, boolean>>(
+    {}
+  );
   const pendingApprovals = accountability.requests.filter(
     (request) => request.status === 'pending'
   );
@@ -50,6 +58,11 @@ export function PartnerAccountability({
       ),
     [accountability.workspace.members]
   );
+
+  const toggleApproval = (id: string) =>
+    setExpandedApprovals((current) => ({ ...current, [id]: !current[id] }));
+  const toggleLeave = (id: string) =>
+    setExpandedLeaves((current) => ({ ...current, [id]: !current[id] }));
 
   const confirmDecision = async () => {
     if (!dialog) return;
@@ -131,28 +144,38 @@ export function PartnerAccountability({
               pendingApprovals.map((request) => {
                 const member = membersById.get(request.membership_id);
                 return (
-                  <article
+                  <ExpandableRow
                     key={request.id}
-                    className="border-border bg-muted/35 rounded-xl border p-4"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="text-navy text-sm font-bold">
-                          {member?.student_name || t('studentFallback')}
-                        </p>
-                        <p className="text-navy mt-1 font-semibold">
-                          {request.action === 'pause_protection'
-                            ? t('pauseRequest', {
-                                minutes: request.requested_duration_minutes,
-                              })
-                            : t('uninstallRequest')}
-                        </p>
+                    open={Boolean(expandedApprovals[request.id])}
+                    onToggle={() => toggleApproval(request.id)}
+                    header={
+                      <div className="flex w-full items-center gap-2 min-w-0">
+                        {member ? (
+                          <StudentAvatar
+                            name={member.student_name}
+                            avatarUrl={member.student_avatar_url}
+                            className="size-6"
+                          />
+                        ) : null}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-navy truncate text-sm font-bold">
+                            {member?.student_name || t('studentFallback')}
+                          </p>
+                          <p className="text-navy text-xs font-semibold">
+                            {request.action === 'pause_protection'
+                              ? t('pauseRequest', {
+                                  minutes: request.requested_duration_minutes,
+                                })
+                              : t('uninstallRequest')}
+                          </p>
+                        </div>
+                        <RequestStatus status="pending">
+                          {t('pending')}
+                        </RequestStatus>
                       </div>
-                      <RequestStatus status="pending">
-                        {t('pending')}
-                      </RequestStatus>
-                    </div>
-                    <p className="text-muted-foreground mt-2 text-sm leading-6">
+                    }
+                  >
+                    <p className="text-muted-foreground text-sm leading-6">
                       {request.reason || t('noReason')}
                     </p>
                     <dl className="bg-background/70 mt-3 grid gap-2 rounded-lg p-3 text-xs sm:grid-cols-2">
@@ -225,7 +248,7 @@ export function PartnerAccountability({
                         {t('approve')}
                       </Button>
                     </div>
-                  </article>
+                  </ExpandableRow>
                 );
               })
             ) : (
@@ -250,24 +273,34 @@ export function PartnerAccountability({
                 const member = membersById.get(request.membership_id);
                 const unsafe = request.kind === 'unsafe';
                 return (
-                  <article
+                  <ExpandableRow
                     key={request.id}
-                    className="border-border rounded-xl border p-4"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="text-navy text-sm font-bold">
-                          {member?.student_name || t('studentFallback')}
-                        </p>
-                        <p className="text-navy mt-1 font-semibold">
-                          {unsafe ? t('unsafeLeave') : t('normalLeave')}
-                        </p>
+                    open={Boolean(expandedLeaves[request.id])}
+                    onToggle={() => toggleLeave(request.id)}
+                    header={
+                      <div className="flex w-full items-center gap-2 min-w-0">
+                        {member ? (
+                          <StudentAvatar
+                            name={member.student_name}
+                            avatarUrl={member.student_avatar_url}
+                            className="size-6"
+                          />
+                        ) : null}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-navy truncate text-sm font-bold">
+                            {member?.student_name || t('studentFallback')}
+                          </p>
+                          <p className="text-navy text-xs font-semibold">
+                            {unsafe ? t('unsafeLeave') : t('normalLeave')}
+                          </p>
+                        </div>
+                        <RequestStatus status="pending">
+                          {t('pending')}
+                        </RequestStatus>
                       </div>
-                      <RequestStatus status="pending">
-                        {t('pending')}
-                      </RequestStatus>
-                    </div>
-                    <p className="text-muted-foreground mt-2 text-sm leading-6">
+                    }
+                  >
+                    <p className="text-muted-foreground text-sm leading-6">
                       {request.reason || t('noReason')}
                     </p>
                     <p className="text-muted-foreground mt-2 text-xs">
@@ -330,7 +363,7 @@ export function PartnerAccountability({
                         {t('confirmLeave')}
                       </Button>
                     </div>
-                  </article>
+                  </ExpandableRow>
                 );
               })
             ) : (

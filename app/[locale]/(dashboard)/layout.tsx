@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Navbar } from '@/components/dashboard/navbar';
 import { MobileNavigation } from '@/components/dashboard/mobile-navigation';
+import { ReauthDialog } from '@/components/dashboard/reauth-dialog';
 import { PageTransition } from '@/components/common/PageTransition';
 import { getTranslations } from 'next-intl/server';
 import { DashboardAccessGate } from '@/components/dashboard/dashboard-access-gate';
@@ -37,6 +38,7 @@ export default async function AppLayout({
         </div>
 
         <MobileNavigation />
+        <ReauthDialog />
       </div>
     </DashboardAccessGate>
   );

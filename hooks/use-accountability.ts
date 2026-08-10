@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { ApiError } from '@/lib/api-error';
+import { requestReauth } from '@/lib/reauth';
 import { useApiQuery } from './use-api';
 
 export interface SharingPreferences {
@@ -32,7 +34,7 @@ export interface AccountabilityGroup {
   description: string;
   join_code?: string;
   join_code_hint: string;
-  status: 'active' | 'archived';
+  status: 'active';
   member_count: number;
   code_rotated_at: string;
   created_at: string;
@@ -44,6 +46,7 @@ export interface AccountabilityMembership {
   student_id: string;
   student_name: string;
   student_email?: string;
+  student_avatar_url?: string;
   status:
     | 'active'
     | 'leave_pending'
@@ -72,6 +75,7 @@ export interface PartnerContactRequest {
   id: string;
   membership_id: string;
   student_name: string;
+  student_avatar_url?: string;
   category: 'check_in' | 'practical_help' | 'accountability' | 'other';
   message?: string;
   status: 'pending' | 'acknowledged' | 'closed' | 'cancelled' | 'escalated';
@@ -263,7 +267,21 @@ export function useAccountability() {
     async <T>(action: string, request: () => Promise<T>) => {
       setMutatingActions((current) => new Set(current).add(action));
       try {
-        const result = await request();
+        let result: T;
+        try {
+          result = await request();
+        } catch (error) {
+          if (
+            error instanceof ApiError &&
+            error.code === 'recent_auth_required' &&
+            (await requestReauth())
+          ) {
+            // Re-authenticated successfully; retry the failed action once.
+            result = await request();
+          } else {
+            throw error;
+          }
+        }
         await fetchData();
         return result;
       } finally {
@@ -311,9 +329,9 @@ export function useAccountability() {
           { method: 'POST' }
         )
       ),
-    archiveGroup: (groupId: string) =>
-      mutate(`group:${groupId}:archive`, () =>
-        apiClient(`/accountability/groups/${groupId}/archive`, {
+    deleteGroup: (groupId: string) =>
+      mutate(`group:${groupId}:delete`, () =>
+        apiClient(`/accountability/groups/${groupId}/delete`, {
           method: 'POST',
         })
       ),

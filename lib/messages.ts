@@ -98,8 +98,8 @@ export const MESSAGES: Record<string, string> = {
   accountability_join_failed:
     'Belum dapat bergabung ke grup. Periksa konfirmasi dan keanggotaan aktif Anda.',
   accountability_code_rotate_failed: 'Kode grup belum dapat diganti.',
-  accountability_group_archive_failed:
-    'Grup hanya dapat diarsipkan setelah tidak memiliki anggota aktif.',
+  accountability_group_delete_failed:
+    'Grup hanya dapat dihapus setelah tidak memiliki anggota aktif.',
   accountability_sharing_update_failed:
     'Preferensi berbagi belum dapat diperbarui.',
   accountability_leave_failed: 'Permintaan keluar belum dapat diproses.',
@@ -326,6 +326,8 @@ const MESSAGES_EN: Record<string, string> = {
   translation_unavailable: 'The AI translation service is unavailable.',
   translation_rate_limited:
     'The translation service is busy. Please try again shortly.',
+  accountability_group_delete_failed:
+    'The group can only be deleted after it has no active members.',
 
   // SPK decision support
   spk_recommendation_failed: 'The daily recommendation could not be loaded.',

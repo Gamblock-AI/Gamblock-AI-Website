@@ -156,10 +156,13 @@ export function SkillsHubClient() {
     if (urlTimerRef.current) clearTimeout(urlTimerRef.current);
     urlTimerRef.current = window.setTimeout(() => {
       urlTimerRef.current = null;
-      router.replace({
-        pathname: ROUTES.SKILLS,
-        query: value.trim() ? { q: value } : {},
-      });
+      router.replace(
+        {
+          pathname: ROUTES.SKILLS,
+          query: value.trim() ? { q: value } : {},
+        },
+        { scroll: false }
+      );
     }, 350);
   };
 

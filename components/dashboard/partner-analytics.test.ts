@@ -60,7 +60,6 @@ describe('buildPartnerAnalytics', () => {
     const groups = [
       group('group-a', 'Alpha'),
       group('group-b', 'Beta'),
-      group('group-archived', 'Archived', 'archived'),
     ];
     const memberships = [
       member('a', 'group-a', 'Alya', {
@@ -87,9 +86,6 @@ describe('buildPartnerAnalytics', () => {
       member('left', 'group-a', 'Left', {
         status: 'left',
         aggregate: { weekly_block_count: 10 },
-      }),
-      member('archived', 'group-archived', 'Archived', {
-        aggregate: { weekly_block_count: 20 },
       }),
     ];
 

@@ -251,8 +251,11 @@ function ProtectedUsersMetric({ summary }: { summary: AnalyticsSummary }) {
   const t = useTranslations('analyticsDashboard');
   return (
     <AnalyticsMetric
+      icon={ShieldCheck}
+      tone="sage"
       label={t('metricProtectedUsers')}
       value={summary.protected_users ?? 0}
+      body={t('metricProtectedUsersBody')}
     />
   );
 }

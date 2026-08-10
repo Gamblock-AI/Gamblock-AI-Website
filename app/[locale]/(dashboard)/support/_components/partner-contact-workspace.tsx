@@ -20,6 +20,8 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { StudentAvatar } from '@/components/dashboard/student-avatar';
+import { ExpandableRow } from '@/components/dashboard/expandable-row';
 import {
   type PartnerContactRequest,
   usePartnerContactRequests,
@@ -37,10 +39,23 @@ export function PartnerContactWorkspace() {
     useState<PartnerContactRequest['category']>('check_in');
   const [message, setMessage] = useState('');
   const [currentTime] = useState(() => Date.now());
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const workspace = contacts.workspace;
   const user = useLocalUser();
   const isPartner = workspace?.role === 'partner' || user.role === 'partner';
   const membership = workspace?.membership;
+  const toggleExpanded = (id: string) =>
+    setExpanded((current) => ({ ...current, [id]: !current[id] }));
+
+  // Partner view splits requests into actionable ("Permintaan dari siswa")
+  // and finished ("Riwayat permintaan siswa"); the student view keeps the
+  // single request list as before.
+  const incoming = contacts.requests.filter((request) =>
+    ['pending', 'acknowledged', 'escalated'].includes(request.status)
+  );
+  const history = contacts.requests.filter((request) =>
+    ['closed', 'cancelled'].includes(request.status)
+  );
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -136,7 +151,21 @@ export function PartnerContactWorkspace() {
             </DashboardStatus>
           }
         >
-          <ContactBoundary isPartner />
+          <div className="space-y-3">
+            <ContactRequestList
+              requests={incoming}
+              isPartner
+              mutating={contacts.mutating}
+              locale={locale}
+              currentTime={currentTime}
+              expanded={expanded}
+              onToggle={toggleExpanded}
+              onTransition={(id, status) => void transition(id, status)}
+              emptyTitle={t('incomingEmpty')}
+              emptyBody={t('incomingEmptyBody')}
+            />
+            <ContactBoundary isPartner />
+          </div>
         </DashboardPanel>
       ) : (
         <DashboardPanel
@@ -214,12 +243,25 @@ export function PartnerContactWorkspace() {
         className={`h-full ${isPartner ? 'xl:col-span-7' : 'xl:col-span-5'}`}
       >
         <ContactRequestList
-          requests={contacts.requests}
+          requests={isPartner ? history : contacts.requests}
           isPartner={isPartner}
           mutating={contacts.mutating}
           locale={locale}
           currentTime={currentTime}
+          expanded={expanded}
+          onToggle={toggleExpanded}
+          limit={isPartner ? 5 : 2}
           onTransition={(id, status) => void transition(id, status)}
+          emptyTitle={
+            isPartner
+              ? t('incomingHistoryEmpty')
+              : t('partnerHistoryEmpty')
+          }
+          emptyBody={
+            isPartner
+              ? t('incomingHistoryEmptyBody')
+              : t('partnerHistoryEmptyBody')
+          }
         />
       </DashboardPanel>
     </div>
@@ -254,6 +296,11 @@ function ContactRequestList({
   mutating,
   locale,
   currentTime,
+  expanded,
+  onToggle,
+  limit,
+  emptyTitle,
+  emptyBody,
   onTransition,
 }: {
   requests: PartnerContactRequest[];
@@ -261,9 +308,13 @@ function ContactRequestList({
   mutating: boolean;
   locale: string;
   currentTime: number;
+  expanded: Record<string, boolean>;
+  onToggle: (id: string) => void;
+  limit?: number;
+  emptyTitle: string;
+  emptyBody: string;
   onTransition: (id: string, status: string) => void;
 }) {
-  const maximumVisibleRequests = 2;
   const t = useTranslations('supportWorkspace');
   const formatter = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
@@ -273,45 +324,54 @@ function ContactRequestList({
   if (!requests.length) {
     return (
       <div className="border-border rounded-xl border border-dashed p-4">
-        <p className="text-navy font-semibold">
-          {isPartner ? t('incomingHistoryEmpty') : t('partnerHistoryEmpty')}
-        </p>
+        <p className="text-navy font-semibold">{emptyTitle}</p>
         <p className="text-muted-foreground mt-1 text-sm leading-6">
-          {isPartner
-            ? t('incomingHistoryEmptyBody')
-            : t('partnerHistoryEmptyBody')}
+          {emptyBody}
         </p>
       </div>
     );
   }
 
+  const visible = [...requests]
+    .sort(
+      (left, right) =>
+        Date.parse(right.created_at) - Date.parse(left.created_at)
+    )
+    .slice(0, limit);
+
   return (
     <div className="space-y-3">
-      {[...requests]
-        .sort(
-          (left, right) =>
-            Date.parse(right.created_at) - Date.parse(left.created_at)
-        )
-        .slice(0, maximumVisibleRequests)
-        .map((request) => {
-          const createdAt = new Date(request.created_at);
-          const canEscalate =
-            !isPartner &&
-            request.status === 'pending' &&
-            currentTime - createdAt.getTime() >= 24 * 60 * 60 * 1000;
-          return (
-            <article
-              key={request.id}
-              className="border-border bg-background rounded-xl border p-4"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-navy text-sm font-bold">
-                    {isPartner
-                      ? request.student_name || t('studentFallback')
-                      : t(`partnerCategories.${request.category}`)}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
+      {visible.map((request) => {
+        const createdAt = new Date(request.created_at);
+        const canEscalate =
+          !isPartner &&
+          request.status === 'pending' &&
+          currentTime - createdAt.getTime() >= 24 * 60 * 60 * 1000;
+        return (
+          <ExpandableRow
+            key={request.id}
+            open={Boolean(expanded[request.id])}
+            onToggle={() => onToggle(request.id)}
+            header={
+              <div className="flex w-full items-center gap-2 min-w-0">
+                {isPartner ? (
+                  <StudentAvatar
+                    name={request.student_name || t('studentFallback')}
+                    avatarUrl={request.student_avatar_url}
+                    className="size-6"
+                  />
+                ) : null}
+                <div className="min-w-0 flex-1">
+                  {isPartner ? (
+                    <p className="text-navy truncate text-sm font-bold">
+                      {request.student_name || t('studentFallback')}
+                    </p>
+                  ) : (
+                    <p className="text-navy truncate text-sm font-bold">
+                      {t(`partnerCategories.${request.category}`)}
+                    </p>
+                  )}
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     {Number.isNaN(createdAt.getTime())
                       ? t('dateUnavailable')
                       : formatter.format(createdAt)}
@@ -321,66 +381,68 @@ function ContactRequestList({
                   {t(`contactStatuses.${request.status}`)}
                 </DashboardStatus>
               </div>
-              {isPartner ? (
-                <p className="text-muted-foreground mt-2 text-xs font-semibold">
-                  {t(`partnerCategories.${request.category}`)}
-                </p>
-              ) : null}
-              <p className="text-foreground mt-2 text-sm leading-6">
-                {request.message || t('partnerMessageEmpty')}
+            }
+          >
+            {isPartner ? (
+              <p className="text-muted-foreground text-xs font-semibold">
+                {t(`partnerCategories.${request.category}`)}
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {isPartner && request.status === 'pending' ? (
-                  <Button
-                    variant="outline"
-                    disabled={mutating}
-                    onClick={() => onTransition(request.id, 'acknowledged')}
-                  >
-                    {t('contactAcknowledge')}
-                  </Button>
-                ) : null}
-                {isPartner &&
-                ['acknowledged', 'escalated'].includes(request.status) ? (
-                  <Button
-                    variant="outline"
-                    disabled={mutating}
-                    onClick={() => onTransition(request.id, 'closed')}
-                  >
-                    {t('contactClose')}
-                  </Button>
-                ) : null}
-                {!isPartner && request.status === 'pending' ? (
-                  <Button
-                    variant="outline"
-                    disabled={mutating}
-                    onClick={() => onTransition(request.id, 'cancelled')}
-                  >
-                    {t('contactCancel')}
-                  </Button>
-                ) : null}
-                {canEscalate ? (
-                  <Button
-                    variant="outline"
-                    disabled={mutating}
-                    onClick={() => onTransition(request.id, 'escalated')}
-                  >
-                    {t('contactEscalate')}
-                  </Button>
-                ) : null}
-                {!isPartner &&
-                ['acknowledged', 'escalated'].includes(request.status) ? (
-                  <Button
-                    variant="outline"
-                    disabled={mutating}
-                    onClick={() => onTransition(request.id, 'closed')}
-                  >
-                    {t('contactClose')}
-                  </Button>
-                ) : null}
-              </div>
-            </article>
-          );
-        })}
+            ) : null}
+            <p className="text-foreground mt-2 text-sm leading-6">
+              {request.message || t('partnerMessageEmpty')}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {isPartner && request.status === 'pending' ? (
+                <Button
+                  variant="outline"
+                  disabled={mutating}
+                  onClick={() => onTransition(request.id, 'acknowledged')}
+                >
+                  {t('contactAcknowledge')}
+                </Button>
+              ) : null}
+              {isPartner &&
+              ['acknowledged', 'escalated'].includes(request.status) ? (
+                <Button
+                  variant="outline"
+                  disabled={mutating}
+                  onClick={() => onTransition(request.id, 'closed')}
+                >
+                  {t('contactClose')}
+                </Button>
+              ) : null}
+              {!isPartner && request.status === 'pending' ? (
+                <Button
+                  variant="outline"
+                  disabled={mutating}
+                  onClick={() => onTransition(request.id, 'cancelled')}
+                >
+                  {t('contactCancel')}
+                </Button>
+              ) : null}
+              {canEscalate ? (
+                <Button
+                  variant="outline"
+                  disabled={mutating}
+                  onClick={() => onTransition(request.id, 'escalated')}
+                >
+                  {t('contactEscalate')}
+                </Button>
+              ) : null}
+              {!isPartner &&
+              ['acknowledged', 'escalated'].includes(request.status) ? (
+                <Button
+                  variant="outline"
+                  disabled={mutating}
+                  onClick={() => onTransition(request.id, 'closed')}
+                >
+                  {t('contactClose')}
+                </Button>
+              ) : null}
+            </div>
+          </ExpandableRow>
+        );
+      })}
     </div>
   );
 }

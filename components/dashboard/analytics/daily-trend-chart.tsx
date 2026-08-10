@@ -1,6 +1,5 @@
-'use client';
-
 import { useId } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { AnalyticsDay } from '@/hooks/use-analytics';
 
@@ -35,13 +34,13 @@ export function DailyTrendChart({ points }: { points: AnalyticsDay[] }) {
   const totalBlocked = points.reduce((sum, point) => sum + point.blocked, 0);
 
   return (
-    <div className="border-border bg-muted/45 rounded-2xl border p-2 sm:p-3">
+    <div className="relative flex-1 flex flex-col justify-center rounded-2xl border border-border/80 bg-muted/30 p-2 sm:p-3 overflow-hidden shadow-2xs min-h-[190px]">
       <p className="sr-only">
         {t('trendSummary', { total: totalBlocked, days: points.length })}
       </p>
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="h-auto min-h-40 w-full"
+        className="w-full h-auto min-h-36 max-h-48 aspect-[640/190]"
         aria-hidden="true"
       >
         <defs>
@@ -67,7 +66,7 @@ export function DailyTrendChart({ points }: { points: AnalyticsDay[] }) {
           );
         })}
 
-        {points.length > 1 ? (
+        {points.length > 1 && totalBlocked > 0 ? (
           <path
             d={`M ${areaPoints}`}
             fill={`url(#${gradientId})`}
@@ -79,8 +78,8 @@ export function DailyTrendChart({ points }: { points: AnalyticsDay[] }) {
             points={linePoints}
             fill="none"
             stroke="currentColor"
-            className="text-navy"
-            strokeWidth="3"
+            className={totalBlocked > 0 ? 'text-navy' : 'text-border/80'}
+            strokeWidth={totalBlocked > 0 ? '3' : '2'}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -90,18 +89,18 @@ export function DailyTrendChart({ points }: { points: AnalyticsDay[] }) {
             <circle
               cx={xFor(index)}
               cy={yFor(point.blocked)}
-              r="6"
+              r="5"
               fill="currentColor"
               className="text-card"
               stroke="currentColor"
-              strokeWidth="5"
+              strokeWidth="4"
             />
             <circle
               cx={xFor(index)}
               cy={yFor(point.blocked)}
-              r="3.5"
+              r="3"
               fill="currentColor"
-              className="text-sky"
+              className={point.blocked > 0 ? 'text-sky' : 'text-border'}
             />
           </g>
         ))}
@@ -119,6 +118,24 @@ export function DailyTrendChart({ points }: { points: AnalyticsDay[] }) {
           ) : null
         )}
       </svg>
+
+      {totalBlocked === 0 ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-border/80 bg-card/92 px-4 py-2.5 shadow-2xs backdrop-blur-xs">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-sage/15 text-sage-dark">
+              <ShieldCheck className="size-4" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="text-navy text-xs font-bold leading-tight">
+                {t('dailyTrendEmptyTitle')}
+              </p>
+              <p className="text-muted-foreground mt-0.5 text-[0.6875rem] leading-tight">
+                {t('dailyTrendEmptyBody')}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

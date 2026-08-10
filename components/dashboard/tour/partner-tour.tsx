@@ -5,52 +5,50 @@ import { useTranslations } from 'next-intl';
 import { useDashboardTour } from '@/hooks/use-dashboard-tour';
 import { useAuthoritativeUser } from '@/hooks/use-local-user';
 import {
-  DASHBOARD_TOUR_KEY,
-  getDashboardTourSeen,
+  getPartnerTourSeen,
+  PARTNER_TOUR_KEY,
 } from '@/lib/recovery/tour-storage';
-import { desktopTourSteps, mobileTourSteps } from './tour-config';
+import { partnerDesktopTourSteps, partnerMobileTourSteps } from './tour-config';
 import { TourBubble } from './tour-bubble';
 
 /** How long to wait after mounting so the dashboard shell settles before starting. */
 const START_DELAY_MS = 300;
-/** Keep waiting for a blocking modal (e.g., the daily check-in gate) before giving up. */
+/** Keep waiting for a blocking modal (e.g., the re-auth dialog) before giving up. */
 const MODAL_WAIT_MS = 60 * 1000;
 
 /**
- * First-time guided tour for the student dashboard. Highlights the dashboard
- * content, each sidebar section, and each navbar control. Appears once, is
- * skippable, and is student-role only.
+ * First-time guided tour for the partner dashboard. Highlights the summary,
+ * analytics filters, member table, advanced analytics, and the shared shell
+ * controls. Appears once, is skippable, and is partner-role only.
  */
-export function DashboardTour() {
-  const t = useTranslations('dashboardTour');
+export function PartnerTour() {
+  const t = useTranslations('partnerTour');
   const { user, status } = useAuthoritativeUser();
   const ready = status === 'ready';
   const role = user?.role;
   const tour = useDashboardTour({
-    desktop: desktopTourSteps,
-    mobile: mobileTourSteps,
-    storageKey: DASHBOARD_TOUR_KEY,
+    desktop: partnerDesktopTourSteps,
+    mobile: partnerMobileTourSteps,
+    storageKey: PARTNER_TOUR_KEY,
   });
   const { open, start } = tour;
 
-  // The gate mounts this component only after the first-run "Niat Perubahan"
-  // modal is resolved/closed, so no modal can be blocking here. The seen flag
-  // is re-read from storage on every run: `start()` persists it before the
-  // tour opens, so a close triggered re-run must never restart it.
   useEffect(() => {
-    if (!ready || role !== 'user' || open || getDashboardTourSeen()) return;
+    if (!ready || role !== 'partner' || open || getPartnerTourSeen()) return;
     let cancelled = false;
     let started = false;
     let modalWaitTimer = 0;
 
     const tryStart = () => {
       if (cancelled || started) return;
-      if (!document.querySelector('[data-tour="tour-welcome"]')) {
+      if (!document.querySelector('[data-tour="tour-partner-summary"]')) {
+        // The summary appears after the workspace loads; keep polling so a
+        // slow first load does not skip the tour.
         modalWaitTimer = window.setTimeout(tryStart, START_DELAY_MS);
         return;
       }
       if (document.querySelector('[role="dialog"]')) {
-        // Wait for a blocking modal (daily check-in gate) to close before
+        // Wait for a blocking modal (e.g., the re-auth dialog) to close before
         // starting, so the tour never stacks over it.
         modalWaitTimer = window.setTimeout(tryStart, START_DELAY_MS);
         return;

@@ -1,20 +1,26 @@
-'use client';
-
 import { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
+  AlertTriangle,
   ArrowRight,
-  Check,
+  BookOpen,
+  Calendar,
   EyeOff,
+  Handshake,
   LockKeyhole,
   MessageCircleHeart,
+  ShieldAlert,
   ShieldCheck,
+  Users,
   UsersRound,
 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
-import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
+import { StudentAvatar } from '@/components/dashboard/student-avatar';
+import { ExpandableRow } from '@/components/dashboard/expandable-row';
 import {
   DashboardPage,
   DashboardPageHeader,
+  DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import {
@@ -22,10 +28,9 @@ import {
   type MemberAggregate,
   useAccountability,
 } from '@/hooks/use-accountability';
-import { useEducationModules } from '@/hooks/use-education';
 import { Link } from '@/i18n/routing';
+import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
-import { PartnerResponsePracticeDialog } from './partner-response-practice-dialog';
 
 interface ProgressTranslation {
   (key: string, values?: Record<string, string | number>): string;
@@ -77,15 +82,70 @@ function formatMembershipStatus(
   return t(membershipStatusKey[status]);
 }
 
+const liveMemberStatuses = new Set([
+  'active',
+  'leave_pending',
+  'support_review',
+  'safety_suspended',
+]);
+
+type MonitorFlag = 'status' | 'protection' | 'inactive' | 'noCheckIn';
+
+const monitorSeverity: Record<MonitorFlag, number> = {
+  status: 0,
+  protection: 1,
+  inactive: 2,
+  noCheckIn: 3,
+};
+
+const monitorFlagLabel: Record<MonitorFlag, string> = {
+  status: 'reasonStatus',
+  protection: 'reasonProtection',
+  inactive: 'reasonInactive',
+  noCheckIn: 'reasonNoCheckIn',
+};
+
+// Monitoring triage flags derived from the consented aggregate summaries. It
+// surfaces students who need the partner's attention without exposing any raw
+// browsing or personal recovery detail.
+function monitorFlags(member: AccountabilityMembership): MonitorFlag[] {
+  const flags: MonitorFlag[] = [];
+  if (member.status !== 'active') flags.push('status');
+  if (member.aggregate.protection_status === 'attention') {
+    flags.push('protection');
+  }
+  if (
+    member.aggregate.last_heartbeat_bucket === 'older' ||
+    member.aggregate.last_heartbeat_bucket === 'never'
+  ) {
+    flags.push('inactive');
+  }
+  if (member.aggregate.check_in_days === 0) flags.push('noCheckIn');
+  return flags;
+}
+
 export function PartnerProgress() {
   const p = useTranslations('progressExperience');
-  const locale = useLocale();
   const accountability = useAccountability();
-  const education = useEducationModules(locale);
-  const [practiceOpen, setPracticeOpen] = useState(false);
-  const simulator = education.modules.find(
-    (module) => module.experience_type === 'partner_response_simulator'
+  const [expandedMembers, setExpandedMembers] = useState<
+    Record<string, boolean>
+  >({});
+  const liveMembers = accountability.workspace.members.filter((member) =>
+    liveMemberStatuses.has(member.status)
   );
+  const flagged = liveMembers
+    .map((member) => ({ member, flags: monitorFlags(member) }))
+    .filter((item) => item.flags.length > 0)
+    .sort((left, right) => {
+      const leftSeverity = Math.min(
+        ...left.flags.map((flag) => monitorSeverity[flag])
+      );
+      const rightSeverity = Math.min(
+        ...right.flags.map((flag) => monitorSeverity[flag])
+      );
+      if (leftSeverity !== rightSeverity) return leftSeverity - rightSeverity;
+      return left.member.student_name.localeCompare(right.member.student_name);
+    });
 
   return (
     <DashboardPage>
@@ -98,88 +158,159 @@ export function PartnerProgress() {
           <DashboardStatus tone="navy">{p('aggregateOnly')}</DashboardStatus>
         }
       />
-      <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr] xl:items-stretch">
-        <section className="border-border bg-card flex h-full flex-col rounded-[2rem] border p-4 sm:p-5">
-          <MessageCircleHeart
-            className="text-cyan-dark size-8"
-            aria-hidden="true"
-          />
-          <h2 className="text-navy mt-4 text-xl font-bold">
-            {p('learningPath')}
-          </h2>
-          <p className="text-muted-foreground mt-2 text-sm leading-6">
-            {p('learningPathBody')}
-          </p>
-          <div className="mt-4 flex-1 space-y-2.5">
-            {(simulator?.sections ?? []).map((section, index) => {
-              const checkID = section.knowledge_check?.id ?? '';
-              const done =
-                simulator?.progress.correct_check_ids.includes(checkID);
-              return (
-                <div
-                  key={section.id}
-                  className={`flex min-h-14 items-center gap-3 rounded-2xl border p-3 ${done ? 'border-sage/30 bg-sage/8' : 'border-border'}`}
-                >
-                  <span
-                    className={`flex size-10 shrink-0 items-center justify-center rounded-full font-bold ${done ? 'bg-sage text-white' : 'bg-muted text-navy'}`}
-                  >
-                    {done ? (
-                      <Check className="size-4" aria-hidden="true" />
-                    ) : (
-                      index + 1
-                    )}
-                  </span>
-                  <p className="text-navy text-sm font-semibold">
-                    {section.title}
+      <div className="grid gap-5 xl:grid-cols-12 xl:items-stretch">
+        <DashboardPanel
+          icon={ShieldAlert}
+          accent="amber"
+          title={p('monitorTitle')}
+          description={p('monitorBody')}
+          density="compact"
+          className="xl:col-span-5"
+        >
+          <div className="flex-1 space-y-3">
+            {flagged.length === 0 ? (
+              <div className="border-sage/35 bg-sage/[0.08] flex items-start gap-3 rounded-2xl border p-4 shadow-2xs">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sage/20 text-sage-dark">
+                  <ShieldCheck className="size-4.5" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-navy text-sm font-bold">
+                    {p('monitorAllGood')}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                    {p('monitorAllGoodBody')}
                   </p>
                 </div>
-              );
-            })}
-            {!simulator ? (
-              <p className="text-muted-foreground text-sm">
-                {p('learningEmpty')}
-              </p>
-            ) : null}
-          </div>
-          <Button
-            type="button"
-            className="mt-4 self-start"
-            onClick={() => setPracticeOpen(true)}
-            disabled={!simulator || education.loading}
-          >
-            {p('openLearning')}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Button>
-        </section>
+              </div>
+            ) : (
+              flagged.map(({ member, flags }) => (
+                <div
+                  key={member.id}
+                  className="group relative flex flex-col justify-between rounded-2xl border border-amber/35 bg-gradient-to-br from-amber/[0.05] via-card to-card p-4 shadow-2xs transition-all duration-200 hover:border-amber/55 hover:shadow-xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <StudentAvatar
+                          name={member.student_name}
+                          avatarUrl={member.student_avatar_url}
+                          className="size-8 ring-2 ring-amber/30"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-navy truncate text-sm font-bold">
+                            {member.student_name}
+                          </p>
+                          <p className="text-muted-foreground text-[0.6875rem]">
+                            {member.group_name || 'Grup pendampingan'}
+                          </p>
+                        </div>
+                      </div>
+                      <DashboardStatus tone="amber">Perhatian</DashboardStatus>
+                    </div>
 
-        <section className="border-border bg-card flex h-full flex-col rounded-[2rem] border p-4 sm:p-5">
-          <div>
-            <p className="text-cyan-dark text-xs font-bold tracking-[0.14em] uppercase">
-              {p('sharedEyebrow')}
-            </p>
-            <h2 className="text-navy mt-2 text-xl font-bold">
-              {p('sharedTitle')}
-            </h2>
-            <p className="text-muted-foreground mt-2 text-sm leading-6">
-              {p('sharedBody')}
-            </p>
-          </div>
-          <div className="mt-4 flex-1 space-y-3">
-            {accountability.workspace.members.map((member) => (
-              <article
-                key={member.id}
-                className="border-border rounded-2xl border p-3"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-navy font-bold">{member.student_name}</p>
-                  <DashboardStatus
-                    tone={member.status === 'active' ? 'sage' : 'amber'}
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {flags.map((flag) => (
+                        <span
+                          key={flag}
+                          className="inline-flex items-center gap-1 rounded-lg border border-amber/40 bg-amber/15 px-2 py-0.5 text-[0.6875rem] font-bold text-amber-900"
+                        >
+                          <AlertTriangle
+                            className="size-3 shrink-0"
+                            aria-hidden="true"
+                          />
+                          {flag === 'status'
+                            ? formatMembershipStatus(p, member.status)
+                            : p(monitorFlagLabel[flag])}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`${ROUTES.SUPPORT}?channel=partner`}
+                    className="mt-3.5 flex min-h-9.5 items-center justify-center gap-2 rounded-xl border border-amber/40 bg-amber/15 text-xs font-bold text-amber-900 transition-all duration-200 hover:border-transparent hover:bg-amber-500 hover:text-white shadow-2xs group-hover:border-amber/50"
                   >
-                    {formatMembershipStatus(p, member.status)}
-                  </DashboardStatus>
+                    <MessageCircleHeart
+                      className="size-3.5"
+                      aria-hidden="true"
+                    />
+                    <span>{p('monitorContact')}</span>
+                    <ArrowRight className="size-3 transition-transform duration-200 group-hover:translate-x-1" />
+                  </Link>
                 </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              ))
+            )}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Users className="size-3.5" aria-hidden="true" />
+              {p('monitorSummary', {
+                attention: flagged.length,
+                total: liveMembers.length,
+              })}
+            </span>
+            <span className="font-semibold text-amber-800">
+              {flagged.length > 0
+                ? `${flagged.length} perlu tindakan`
+                : 'Semua aman'}
+            </span>
+          </div>
+        </DashboardPanel>
+
+        <DashboardPanel
+          icon={Handshake}
+          title={p('sharedTitle')}
+          description={p('sharedBody')}
+          density="compact"
+          className="xl:col-span-7"
+          action={
+            <span className="text-muted-foreground inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/40 px-3 py-1 text-xs font-semibold">
+              <ShieldCheck className="size-3.5 text-sage" aria-hidden="true" />
+              {p('sharedEyebrow')}
+            </span>
+          }
+        >
+          <div className="flex-1 space-y-3">
+            {accountability.workspace.members.map((member) => (
+              <ExpandableRow
+                key={member.id}
+                open={Boolean(expandedMembers[member.id])}
+                onToggle={() =>
+                  setExpandedMembers((current) => ({
+                    ...current,
+                    [member.id]: !current[member.id],
+                  }))
+                }
+                className="rounded-2xl"
+                header={
+                  <div className="flex w-full items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <StudentAvatar
+                        name={member.student_name}
+                        avatarUrl={member.student_avatar_url}
+                        className="size-8"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-navy truncate font-bold text-sm">
+                          {member.student_name}
+                        </p>
+                        <p className="text-muted-foreground text-[0.6875rem]">
+                          {member.group_name || 'Grup pendampingan'}
+                        </p>
+                      </div>
+                    </div>
+                    <DashboardStatus
+                      tone={member.status === 'active' ? 'sage' : 'amber'}
+                    >
+                      {formatMembershipStatus(p, member.status)}
+                    </DashboardStatus>
+                  </div>
+                }
+              >
+                <div className="grid gap-2.5 sm:grid-cols-3">
                   <Aggregate
+                    icon={ShieldCheck}
                     label={p('protection')}
                     value={formatProtectionStatus(
                       p,
@@ -187,6 +318,7 @@ export function PartnerProgress() {
                     )}
                   />
                   <Aggregate
+                    icon={BookOpen}
                     label={p('education')}
                     value={formatEducationProgress(
                       p,
@@ -194,71 +326,106 @@ export function PartnerProgress() {
                     )}
                   />
                   <Aggregate
+                    icon={Calendar}
                     label={p('participation')}
-                    value={member.aggregate.check_in_days}
+                    value={
+                      member.aggregate.check_in_days !== undefined
+                        ? `${member.aggregate.check_in_days}/7 hari`
+                        : undefined
+                    }
                   />
                 </div>
-              </article>
+              </ExpandableRow>
             ))}
+
             {accountability.workspace.members.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{p('noMembers')}</p>
+              <div className="border-border/80 bg-muted/20 flex min-h-32 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center">
+                <Users
+                  className="text-muted-foreground size-6"
+                  aria-hidden="true"
+                />
+                <p className="text-muted-foreground mt-2 text-sm">
+                  {p('noMembers')}
+                </p>
+              </div>
             ) : null}
           </div>
-          <p className="text-muted-foreground mt-4 text-xs leading-5">
-            {p('aggregateOnly')}
-          </p>
-        </section>
+
+          <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5 font-medium">
+              <LockKeyhole className="size-3.5 text-navy" aria-hidden="true" />
+              {p('aggregateOnly')}
+            </span>
+            <span className="font-semibold text-navy">
+              {accountability.workspace.members.length} anggota
+            </span>
+          </div>
+        </DashboardPanel>
       </div>
-      <div className="border-navy/20 bg-navy/[0.04] flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between">
+
+      <div className="border-navy/15 bg-gradient-to-r from-azure/35 via-background to-azure/20 flex flex-col gap-4 rounded-2xl border p-5 shadow-2xs sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <LockKeyhole
-            className="text-navy mt-0.5 size-5 shrink-0"
-            aria-hidden="true"
-          />
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-soft">
+            <LockKeyhole className="size-5" aria-hidden="true" />
+          </span>
           <div>
-            <p className="text-navy font-bold">{p('privacyBoundary')}</p>
-            <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
+            <p className="text-navy font-bold text-sm sm:text-base">
+              {p('privacyBoundary')}
+            </p>
+            <p className="text-muted-foreground mt-1 max-w-3xl text-xs leading-relaxed sm:text-sm">
               {p('privacyBoundaryBody')}
             </p>
           </div>
         </div>
         <Link
           href={ROUTES.PARTNERS}
-          className="border-navy/25 focus-visible:ring-navy/30 text-navy inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold outline-none focus-visible:ring-2"
+          className="bg-navy text-white hover:bg-navy-light focus-visible:ring-navy/30 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold shadow-soft transition-all duration-200 outline-none focus-visible:ring-2 hover:shadow-md"
         >
-          {p('managePartner')}
-          <ArrowRight className="size-4" aria-hidden="true" />
+          <span>{p('managePartner')}</span>
+          <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1" />
         </Link>
       </div>
-      {practiceOpen && simulator ? (
-        <PartnerResponsePracticeDialog
-          open={practiceOpen}
-          onOpenChange={setPracticeOpen}
-          moduleSlug={simulator.slug}
-        />
-      ) : null}
     </DashboardPage>
   );
 }
 
 function Aggregate({
+  icon: Icon,
   label,
   value,
 }: {
+  icon: LucideIcon;
   label: string;
   value?: string | number;
 }) {
   const p = useTranslations('progressExperience');
   const shared = value !== undefined && value !== null && value !== '';
+
   return (
-    <div className={`rounded-xl p-3 ${shared ? 'bg-sage/8' : 'bg-muted/45'}`}>
-      {shared ? (
-        <ShieldCheck className="text-sage size-4" aria-hidden="true" />
-      ) : (
-        <EyeOff className="text-muted-foreground size-4" aria-hidden="true" />
+    <div
+      className={cn(
+        'group relative flex flex-col justify-between rounded-xl border p-3 shadow-2xs transition-all',
+        shared
+          ? 'border-border/80 bg-card hover:border-navy/20'
+          : 'border-dashed border-border bg-muted/25'
       )}
-      <p className="text-muted-foreground mt-2 text-xs">{label}</p>
-      <p className="text-navy mt-1 text-sm font-bold">
+    >
+      <div className="flex items-center justify-between gap-1">
+        <p className="text-muted-foreground truncate text-[0.6875rem] font-bold tracking-wider uppercase">
+          {label}
+        </p>
+        {shared ? (
+          <span className="flex size-6 items-center justify-center rounded-md bg-sage/15 text-sage-dark">
+            <Icon className="size-3.5" aria-hidden="true" />
+          </span>
+        ) : (
+          <span className="flex size-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <EyeOff className="size-3.5" aria-hidden="true" />
+          </span>
+        )}
+      </div>
+
+      <p className="text-navy mt-2 text-sm font-extrabold tabular-nums">
         {shared ? String(value) : p('notShared')}
       </p>
     </div>

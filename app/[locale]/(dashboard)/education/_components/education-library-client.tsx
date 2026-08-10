@@ -75,10 +75,13 @@ export function EducationLibraryClient() {
     const params: Record<string, string> = {};
     if (nextQuery.trim()) params.q = nextQuery.trim();
     if (nextCategory && nextCategory !== 'all') params.category = nextCategory;
-    router.replace({
-      pathname: ROUTES.EDUCATION,
-      query: Object.keys(params).length ? params : {},
-    });
+    router.replace(
+      {
+        pathname: ROUTES.EDUCATION,
+        query: Object.keys(params).length ? params : {},
+      },
+      { scroll: false }
+    );
   };
 
   const clearSearchTimer = () => {
