@@ -249,7 +249,7 @@ export function SpkRecommendationCard() {
           </p>
 
           <p className="text-foreground/85 mt-2 text-sm leading-relaxed font-medium">
-            {llmExplanation || t(reasonCodeKey)}
+            {llmExplanation || t(reasonCodeKey, { feature: featureName })}
           </p>
 
           {/* Risk Factors Grid */}
