@@ -30,7 +30,7 @@ development server and remove only `.next/dev` once before restarting it.
 
 For AI-assisted work, read `AGENTS.md` and `docs/ai/README.md` before changing
 code. The context manifest is `docs/ai/manifest.yaml` and its current version is
-`2026-08-11.0`.
+`2026-08-11.1`.
 
 ## Structure
 
@@ -38,7 +38,7 @@ code. The context manifest is `docs/ai/manifest.yaml` and its current version is
 app/
   [locale]/
     (dashboard)/           # authenticated dashboard, recovery (Pemulihan),
-                           # education, skills, accountability, partners,
+                           # education, skills, mini-games, accountability, partners,
                            # support, profile, data-requests,
                            # admin, and settings
     (auth)/                # login, register, forgot-password
@@ -52,6 +52,7 @@ app/
 components/
   landing/                 # marketing sections and scroll animations
   dashboard/               # responsive shell, Today dashboard, and navigation
+  mini-games/              # session-only student game islands and shared shell
   account/                 # authenticated profile/avatar composition
   education/               # rich-text reader, checks, media, and admin editor
   common/                  # PageTransition and reusable cross-surface helpers
@@ -60,7 +61,7 @@ components/
   ui/                      # shadcn-style primitives
 hooks/          # authenticated API hooks and browser-local recovery hooks
 i18n/           # locale routing plus explicit modular-catalog server loader
-lib/            # api-client, config/messages, and versioned recovery domain
+lib/            # api-client, config/messages, recovery, and pure mini-game logic
 messages/
   en/           # English JSON split by product domain
   id/           # Indonesian JSON with the same modules and nested keys
@@ -113,6 +114,13 @@ is judged from a server-authoritative merge, so a check-in made on another
 device still counts the same day. UI feedback remains calm and avoids punitive
 streak or casino-like rewards. A student-only `/skills` page adds curated
 free-course links through the Learning Hub.
+
+The student-only `/mini-games` hub provides four voluntary supporting
+activities: Spektrum Kilat, Rakit Rupa, Jejak Kembar, and Puncak Pikir. Each
+game runs entirely in the current browser page session. Answers, scores, card
+order, puzzle state, and response timing are not persisted, synced, analyzed,
+awarded EXP, or exposed to partners/admins. The games use calm feedback without
+leaderboards, random rewards, currency, punitive streaks, or clinical claims.
 
 Recovery begins with a local-first intention manager for the student's reason,
 next action, and focus period, then continues into the server-verified daily

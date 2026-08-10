@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { canAccessDashboardRoute, defaultRouteForRole, ROUTES } from './routes';
+import {
+  canAccessDashboardRoute,
+  defaultRouteForRole,
+  PROTECTED_ROUTES,
+  ROUTES,
+} from './routes';
 
 describe('three-role dashboard access', () => {
   it('keeps admin on dashboard and operational routes only', () => {
@@ -17,9 +22,20 @@ describe('three-role dashboard access', () => {
     expect(defaultRouteForRole('partner')).toBe(ROUTES.DASHBOARD);
   });
 
-  it('keeps the skills hub student-only', () => {
+  it('keeps student-only learning routes private to users', () => {
     expect(canAccessDashboardRoute(ROUTES.SKILLS, 'user')).toBe(true);
     expect(canAccessDashboardRoute(ROUTES.SKILLS, 'partner')).toBe(false);
     expect(canAccessDashboardRoute(ROUTES.SKILLS, 'admin')).toBe(false);
+    expect(canAccessDashboardRoute(ROUTES.MINI_GAMES, 'user')).toBe(true);
+    expect(
+      canAccessDashboardRoute(`${ROUTES.MINI_GAMES}/color-sprint`, 'user')
+    ).toBe(true);
+    expect(canAccessDashboardRoute(ROUTES.MINI_GAMES, 'partner')).toBe(false);
+    expect(canAccessDashboardRoute(ROUTES.MINI_GAMES, 'admin')).toBe(false);
+  });
+
+  it('requires authentication before matching dashboard routes', () => {
+    expect(canAccessDashboardRoute(ROUTES.MINI_GAMES)).toBe(false);
+    expect(PROTECTED_ROUTES).toContain(ROUTES.MINI_GAMES);
   });
 });

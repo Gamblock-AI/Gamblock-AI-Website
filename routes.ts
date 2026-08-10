@@ -6,6 +6,7 @@ export const ROUTES = {
   JOURNAL: '/journal',
   EDUCATION: '/education',
   SKILLS: '/skills',
+  MINI_GAMES: '/mini-games',
   SETTINGS: '/settings',
   SUPPORT: '/support',
   SUPPORT_HISTORY: '/support/history',
@@ -41,6 +42,7 @@ export const PROTECTED_ROUTES = [
   ROUTES.JOURNAL,
   ROUTES.EDUCATION,
   ROUTES.SKILLS,
+  ROUTES.MINI_GAMES,
   ROUTES.SETTINGS,
   ROUTES.SUPPORT,
   ROUTES.SUPPORT_HISTORY,
@@ -88,6 +90,9 @@ export function canAccessDashboardRoute(pathname: string, role?: string) {
     return role === 'user' || role === 'partner';
   }
   if (matches(ROUTES.SKILLS)) {
+    return role === 'user';
+  }
+  if (matches(ROUTES.MINI_GAMES)) {
     return role === 'user';
   }
   if (matches(ROUTES.JOURNAL)) {

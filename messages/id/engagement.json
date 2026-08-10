@@ -49,5 +49,348 @@
     "recapGentle": "Minggu ini terasa berat, dan kamu tetap di sini. Hadir itu sendiri sudah sebuah langkah.",
     "next": "Lanjut",
     "close": "Tutup"
+  },
+  "miniGames": {
+    "hub": {
+      "eyebrow": "Aktivitas jeda mahasiswa",
+      "title": "Pilih jeda yang terasa pas",
+      "description": "Empat permainan singkat untuk mengalihkan perhatian sejenak dengan cara yang ringan dan sukarela.",
+      "localBadge": "Hanya di sesi ini",
+      "localNote": "Jawaban, skor, dan waktu tidak disimpan atau dibagikan.",
+      "sectionTitle": "Empat cara untuk mengambil jeda",
+      "sectionDescription": "Pilih permainan sesuai energi dan waktu yang kamu punya.",
+      "gameCount": "{count} permainan",
+      "play": "Mulai bermain"
+    },
+    "shell": {
+      "backToHub": "Kembali ke Mini Games",
+      "instructions": "Cara bermain",
+      "status": "Status permainan"
+    },
+    "games": {
+      "colorSprint": {
+        "title": "Spektrum Kilat",
+        "description": "Pilih warna tinta, bukan arti kata, dalam dua belas ronde singkat.",
+        "category": "Respons cepat",
+        "duration": "2–3 menit",
+        "cta": "Mainkan Spektrum Kilat"
+      },
+      "pictureForge": {
+        "title": "Rakit Rupa",
+        "description": "Tukar dua keping untuk merakit kembali sudut belajar yang terpecah.",
+        "category": "Susun visual",
+        "duration": "3–5 menit",
+        "cta": "Mainkan Rakit Rupa"
+      },
+      "twinTrace": {
+        "title": "Jejak Kembar",
+        "description": "Buka kartu, ingat posisinya, lalu temukan delapan pasangan ikon.",
+        "category": "Daya ingat",
+        "duration": "3–4 menit",
+        "cta": "Mainkan Jejak Kembar"
+      },
+      "brainSummit": {
+        "title": "Puncak Pikir",
+        "description": "Jawab delapan trivia ringan dan baca penjelasan setelah setiap pilihan.",
+        "category": "Trivia",
+        "duration": "4–6 menit",
+        "cta": "Mainkan Puncak Pikir"
+      }
+    },
+    "colorSprint": {
+      "readyTitle": "Siap membaca warna dengan cara berbeda?",
+      "readyDescription": "Kamu akan mendapat dua belas ronde. Setiap ronde memberi waktu lima detik dan permainan tetap berlanjut jika jawaban keliru atau waktu habis.",
+      "start": "Mulai ronde",
+      "round": "Ronde {current} dari {total}",
+      "score": "Benar",
+      "timeLeft": "{seconds} detik tersisa",
+      "prompt": "Pilih warna tintanya",
+      "pause": "Jeda",
+      "resume": "Lanjutkan",
+      "pausedTitle": "Permainan dijeda",
+      "pausedDescription": "Waktu berhenti. Lanjutkan saat kamu sudah siap.",
+      "progressLabel": "Waktu ronde",
+      "answerLabel": "Tekan {shortcut} untuk memilih {color}",
+      "keyboardHint": "Gunakan tombol angka 1 sampai 4 untuk menjawab.",
+      "instructions": {
+        "chooseInk": "Perhatikan warna tinta yang dipakai pada kata.",
+        "differentWord": "Abaikan arti kata jika berbeda dari warna tintanya.",
+        "keyboard": "Pilih tombol warna atau tekan angka 1 sampai 4."
+      },
+      "colors": {
+        "blue": "Biru",
+        "yellow": "Kuning",
+        "red": "Merah",
+        "green": "Hijau"
+      },
+      "feedback": {
+        "correct": "Tepat. Lanjut ke ronde berikutnya.",
+        "wrong": "Belum tepat. Lanjut ke ronde berikutnya.",
+        "timeout": "Waktu ronde habis. Lanjut ke ronde berikutnya."
+      },
+      "results": {
+        "title": "Sesi selesai",
+        "description": "Hasil ini hanya berlaku untuk sesi sekarang dan tidak disimpan.",
+        "accuracy": "Ketepatan",
+        "averageResponse": "Rata-rata respons",
+        "averageResponseValue": "{seconds} detik",
+        "correct": "Jawaban benar",
+        "correctValue": "{correct} dari {total}",
+        "playAgain": "Main lagi"
+      }
+    },
+    "pictureForge": {
+      "readyTitle": "Rakit satu gambar utuh",
+      "readyDescription": "Lihat pratinjau, lalu pilih dua keping untuk menukar posisinya hingga gambar kembali tersusun.",
+      "start": "Acak dan mulai",
+      "previewAlt": "Ilustrasi sudut belajar kampus pada pagi hari",
+      "previewLabel": "Gambar acuan",
+      "moves": "Langkah",
+      "elapsed": "Waktu aktif",
+      "secondsValue": "{seconds} detik",
+      "boardLabel": "Papan puzzle tiga kali tiga",
+      "tileLabel": "Keping gambar {tile} pada posisi {position}",
+      "selectedStatus": "Posisi {position} dipilih. Pilih keping kedua untuk menukar.",
+      "swapStatus": "Posisi {first} dan {second} ditukar.",
+      "completeStatus": "Gambar berhasil disusun.",
+      "completeTitle": "Gambar kembali utuh",
+      "completeDescription": "Kamu menyelesaikannya dalam {moves} langkah dan {seconds} detik aktif.",
+      "reset": "Ulangi susunan",
+      "shuffle": "Acak baru",
+      "instructions": {
+        "preview": "Gunakan gambar acuan untuk mengenali posisi setiap keping.",
+        "swap": "Pilih satu keping, lalu pilih keping lain untuk menukarnya.",
+        "keyboard": "Gunakan tombol panah untuk berpindah dan Enter atau Spasi untuk memilih."
+      }
+    },
+    "twinTrace": {
+      "playAreaLabel": "Area permainan Jejak Kembar",
+      "instructions": {
+        "reveal": "Buka dua kartu untuk melihat ikon di baliknya.",
+        "match": "Pasangan yang sama akan tetap terbuka; pasangan berbeda akan tertutup lagi.",
+        "finish": "Temukan seluruh delapan pasangan tanpa batas waktu."
+      },
+      "stats": {
+        "moves": "Langkah",
+        "time": "Waktu",
+        "pairs": "Pasangan"
+      },
+      "reset": "Acak ulang",
+      "firstSelected": "Kartu pertama terbuka. Pilih satu kartu lagi.",
+      "completedTitle": "Semua pasangan ditemukan",
+      "matchFound": "Pasangan {icon} ditemukan.",
+      "mismatch": "Kedua kartu berbeda dan akan ditutup kembali.",
+      "readyTitle": "Ikuti jejak setiap ikon",
+      "readyDescription": "Enam belas kartu akan diacak menjadi delapan pasangan. Waktu baru berjalan setelah kartu pertama dibuka.",
+      "start": "Acak dan mulai",
+      "completedDescription": "Kamu menemukan semuanya dalam {moves} langkah dan waktu {time}.",
+      "playAgain": "Main lagi",
+      "gridLabel": "Papan kartu empat kali empat",
+      "matchedCard": "Kartu {position}, pasangan {icon} sudah ditemukan",
+      "revealedCard": "Kartu {position}, ikon {icon} terbuka",
+      "hiddenCard": "Kartu {position}, tertutup",
+      "iconLabels": {
+        "bookOpen": "buku terbuka",
+        "compass": "kompas",
+        "leaf": "daun",
+        "lightbulb": "lampu ide",
+        "music": "not musik",
+        "rocket": "roket",
+        "star": "bintang",
+        "telescope": "teleskop"
+      }
+    },
+    "brainSummit": {
+      "playAreaLabel": "Area kuis Puncak Pikir",
+      "instructions": {
+        "answer": "Pilih satu jawaban dari empat pilihan.",
+        "learn": "Baca penjelasan singkat setelah menjawab.",
+        "finish": "Selesaikan delapan soal acak untuk melihat skor sesi."
+      },
+      "stats": {
+        "progress": "Progres",
+        "score": "Skor"
+      },
+      "reset": "Mulai ulang",
+      "readyTitle": "Naik menuju puncak pengetahuan",
+      "readyDescription": "Delapan soal akan dipilih dari geografi, sains, Indonesia, dan teknologi. Tidak ada batas waktu.",
+      "start": "Mulai kuis",
+      "completedTitle": "Pendakian selesai",
+      "completedDescription": "Kamu menjawab {score} dari {total} soal dengan benar. Hasil ini tidak disimpan.",
+      "playAgain": "Coba set soal lain",
+      "categories": {
+        "geography": "Geografi",
+        "science": "Sains",
+        "indonesia": "Indonesia",
+        "technology": "Teknologi"
+      },
+      "questionProgress": "Soal {current} dari {total}",
+      "correct": "Jawaban tepat",
+      "incorrect": "Belum tepat",
+      "seeResults": "Lihat hasil",
+      "next": "Soal berikutnya",
+      "questions": {
+        "everest": {
+          "prompt": "Gunung manakah yang paling tinggi di dunia jika diukur dari permukaan laut?",
+          "explanation": "Gunung Everest memiliki puncak tertinggi di atas permukaan laut, sekitar 8.849 meter.",
+          "options": {
+            "everest": "Gunung Everest",
+            "k2": "K2",
+            "kilimanjaro": "Gunung Kilimanjaro",
+            "denali": "Denali"
+          }
+        },
+        "pacific": {
+          "prompt": "Samudra manakah yang paling luas di Bumi?",
+          "explanation": "Samudra Pasifik mencakup wilayah yang lebih luas daripada samudra lainnya.",
+          "options": {
+            "pacific": "Samudra Pasifik",
+            "atlantic": "Samudra Atlantik",
+            "indian": "Samudra Hindia",
+            "arctic": "Samudra Arktik"
+          }
+        },
+        "tokyo": {
+          "prompt": "Kota manakah yang menjadi ibu kota Jepang?",
+          "explanation": "Tokyo adalah ibu kota Jepang dan pusat pemerintahan nasionalnya.",
+          "options": {
+            "tokyo": "Tokyo",
+            "kyoto": "Kyoto",
+            "osaka": "Osaka",
+            "sapporo": "Sapporo"
+          }
+        },
+        "giza": {
+          "prompt": "Di negara manakah Piramida Giza berada?",
+          "explanation": "Kompleks Piramida Giza berada di Mesir, dekat kota Kairo.",
+          "options": {
+            "egypt": "Mesir",
+            "jordan": "Yordania",
+            "morocco": "Maroko",
+            "turkey": "Turki"
+          }
+        },
+        "jupiter": {
+          "prompt": "Planet manakah yang terbesar dalam Tata Surya?",
+          "explanation": "Jupiter adalah planet terbesar dalam Tata Surya berdasarkan diameter dan massa.",
+          "options": {
+            "jupiter": "Jupiter",
+            "saturn": "Saturnus",
+            "earth": "Bumi",
+            "neptune": "Neptunus"
+          }
+        },
+        "mars": {
+          "prompt": "Planet manakah yang dikenal sebagai Planet Merah?",
+          "explanation": "Mars tampak kemerahan karena mineral besi pada permukaannya mengalami oksidasi.",
+          "options": {
+            "mars": "Mars",
+            "venus": "Venus",
+            "mercury": "Merkurius",
+            "uranus": "Uranus"
+          }
+        },
+        "carbonDioxide": {
+          "prompt": "Gas manakah yang diserap tumbuhan untuk fotosintesis?",
+          "explanation": "Tumbuhan menggunakan karbon dioksida, air, dan energi cahaya untuk membentuk glukosa.",
+          "options": {
+            "carbonDioxide": "Karbon dioksida",
+            "oxygen": "Oksigen",
+            "nitrogen": "Nitrogen",
+            "hydrogen": "Hidrogen"
+          }
+        },
+        "heart": {
+          "prompt": "Organ manakah yang memompa darah ke seluruh tubuh?",
+          "explanation": "Jantung berkontraksi untuk mendorong darah melalui sistem peredaran tubuh.",
+          "options": {
+            "heart": "Jantung",
+            "lungs": "Paru-paru",
+            "liver": "Hati",
+            "kidneys": "Ginjal"
+          }
+        },
+        "independence": {
+          "prompt": "Pada tahun berapakah kemerdekaan Indonesia diproklamasikan?",
+          "explanation": "Soekarno dan Mohammad Hatta memproklamasikan kemerdekaan Indonesia pada 17 Agustus 1945.",
+          "options": {
+            "1945": "1945",
+            "1942": "1942",
+            "1949": "1949",
+            "1950": "1950"
+          }
+        },
+        "borobudur": {
+          "prompt": "Di provinsi manakah Candi Borobudur berada?",
+          "explanation": "Candi Borobudur berada di Kabupaten Magelang, Jawa Tengah.",
+          "options": {
+            "centralJava": "Jawa Tengah",
+            "eastJava": "Jawa Timur",
+            "westJava": "Jawa Barat",
+            "bali": "Bali"
+          }
+        },
+        "laskarPelangi": {
+          "prompt": "Siapakah penulis novel Laskar Pelangi?",
+          "explanation": "Laskar Pelangi adalah novel karya Andrea Hirata.",
+          "options": {
+            "andreaHirata": "Andrea Hirata",
+            "pramoedya": "Pramoedya Ananta Toer",
+            "deeLestari": "Dee Lestari",
+            "tereLiye": "Tere Liye"
+          }
+        },
+        "pancasila": {
+          "prompt": "Berapa jumlah sila dalam Pancasila?",
+          "explanation": "Pancasila terdiri dari lima sila yang menjadi dasar negara Indonesia.",
+          "options": {
+            "five": "Lima",
+            "three": "Tiga",
+            "four": "Empat",
+            "six": "Enam"
+          }
+        },
+        "cpu": {
+          "prompt": "Komponen komputer manakah yang menjalankan instruksi program?",
+          "explanation": "CPU adalah prosesor utama yang mengeksekusi instruksi program.",
+          "options": {
+            "processor": "Prosesor",
+            "storage": "Penyimpanan",
+            "monitor": "Monitor",
+            "keyboard": "Papan ketik"
+          }
+        },
+        "https": {
+          "prompt": "Apa manfaat utama HTTPS saat membuka sebuah situs web?",
+          "explanation": "HTTPS mengenkripsi koneksi antara peramban dan situs sehingga data lebih sulit disadap saat transit.",
+          "options": {
+            "encryptedConnection": "Koneksi terenkripsi",
+            "largerImages": "Gambar lebih besar",
+            "offlineMode": "Mode luring otomatis",
+            "fasterProcessor": "Prosesor lebih cepat"
+          }
+        },
+        "binary": {
+          "prompt": "Dua digit manakah yang digunakan dalam sistem bilangan biner?",
+          "explanation": "Sistem biner menyatakan nilai menggunakan digit 0 dan 1.",
+          "options": {
+            "zeroOne": "0 dan 1",
+            "oneTwo": "1 dan 2",
+            "az": "A dan Z",
+            "zeroNine": "0 dan 9"
+          }
+        },
+        "router": {
+          "prompt": "Apa fungsi utama router dalam jaringan komputer?",
+          "explanation": "Router meneruskan paket data di antara jaringan yang berbeda.",
+          "options": {
+            "connectNetworks": "Menghubungkan jaringan",
+            "printDocuments": "Mencetak dokumen",
+            "editPhotos": "Mengedit foto",
+            "storePasswords": "Menyimpan kata sandi"
+          }
+        }
+      }
+    }
   }
 }

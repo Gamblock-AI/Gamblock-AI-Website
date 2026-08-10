@@ -49,5 +49,348 @@
     "recapGentle": "This week felt heavy, and you are still here. Showing up is itself a step.",
     "next": "Next",
     "close": "Close"
+  },
+  "miniGames": {
+    "hub": {
+      "eyebrow": "Student break activities",
+      "title": "Choose the pause that feels right",
+      "description": "Four short games for a light, voluntary change of focus.",
+      "localBadge": "This session only",
+      "localNote": "Answers, scores, and times are not saved or shared.",
+      "sectionTitle": "Four ways to take a break",
+      "sectionDescription": "Choose a game that fits the energy and time you have.",
+      "gameCount": "{count} games",
+      "play": "Start playing"
+    },
+    "shell": {
+      "backToHub": "Back to Mini Games",
+      "instructions": "How to play",
+      "status": "Game status"
+    },
+    "games": {
+      "colorSprint": {
+        "title": "Spectrum Sprint",
+        "description": "Choose the ink color, not the word, across twelve short rounds.",
+        "category": "Quick response",
+        "duration": "2–3 minutes",
+        "cta": "Play Spectrum Sprint"
+      },
+      "pictureForge": {
+        "title": "Picture Forge",
+        "description": "Swap two tiles at a time to rebuild a fragmented study corner.",
+        "category": "Visual assembly",
+        "duration": "3–5 minutes",
+        "cta": "Play Picture Forge"
+      },
+      "twinTrace": {
+        "title": "Twin Trace",
+        "description": "Reveal cards, remember their positions, and find eight icon pairs.",
+        "category": "Memory",
+        "duration": "3–4 minutes",
+        "cta": "Play Twin Trace"
+      },
+      "brainSummit": {
+        "title": "Brain Summit",
+        "description": "Answer eight light trivia questions and learn after each choice.",
+        "category": "Trivia",
+        "duration": "4–6 minutes",
+        "cta": "Play Brain Summit"
+      }
+    },
+    "colorSprint": {
+      "readyTitle": "Ready to read color differently?",
+      "readyDescription": "You will get twelve rounds. Each round gives you five seconds, and the game continues after a wrong answer or timeout.",
+      "start": "Start rounds",
+      "round": "Round {current} of {total}",
+      "score": "Correct",
+      "timeLeft": "{seconds} seconds left",
+      "prompt": "Choose the ink color",
+      "pause": "Pause",
+      "resume": "Resume",
+      "pausedTitle": "Game paused",
+      "pausedDescription": "The clock has stopped. Resume whenever you are ready.",
+      "progressLabel": "Round time",
+      "answerLabel": "Press {shortcut} to choose {color}",
+      "keyboardHint": "Use number keys 1 through 4 to answer.",
+      "instructions": {
+        "chooseInk": "Look at the ink color used to display the word.",
+        "differentWord": "Ignore the word's meaning when it differs from the ink color.",
+        "keyboard": "Choose a color button or press a number from 1 through 4."
+      },
+      "colors": {
+        "blue": "Blue",
+        "yellow": "Yellow",
+        "red": "Red",
+        "green": "Green"
+      },
+      "feedback": {
+        "correct": "Correct. Moving to the next round.",
+        "wrong": "Not quite. Moving to the next round.",
+        "timeout": "This round's time is up. Moving to the next round."
+      },
+      "results": {
+        "title": "Session complete",
+        "description": "This result only applies to the current session and is not saved.",
+        "accuracy": "Accuracy",
+        "averageResponse": "Average response",
+        "averageResponseValue": "{seconds} seconds",
+        "correct": "Correct answers",
+        "correctValue": "{correct} of {total}",
+        "playAgain": "Play again"
+      }
+    },
+    "pictureForge": {
+      "readyTitle": "Rebuild one complete picture",
+      "readyDescription": "Use the preview, then select two tiles to swap their positions until the picture is whole again.",
+      "start": "Shuffle and start",
+      "previewAlt": "Illustration of a campus study corner in the morning",
+      "previewLabel": "Reference picture",
+      "moves": "Moves",
+      "elapsed": "Active time",
+      "secondsValue": "{seconds} seconds",
+      "boardLabel": "Three by three puzzle board",
+      "tileLabel": "Picture tile {tile} at position {position}",
+      "selectedStatus": "Position {position} selected. Choose a second tile to swap.",
+      "swapStatus": "Positions {first} and {second} swapped.",
+      "completeStatus": "Picture successfully assembled.",
+      "completeTitle": "The picture is whole again",
+      "completeDescription": "You completed it in {moves} moves and {seconds} active seconds.",
+      "reset": "Reset layout",
+      "shuffle": "New shuffle",
+      "instructions": {
+        "preview": "Use the reference picture to recognize where each tile belongs.",
+        "swap": "Select one tile, then another tile to swap their positions.",
+        "keyboard": "Use arrow keys to move and Enter or Space to select."
+      }
+    },
+    "twinTrace": {
+      "playAreaLabel": "Twin Trace play area",
+      "instructions": {
+        "reveal": "Reveal two cards to see the icons behind them.",
+        "match": "Matching cards stay open; different cards turn back over.",
+        "finish": "Find all eight pairs without a time limit."
+      },
+      "stats": {
+        "moves": "Moves",
+        "time": "Time",
+        "pairs": "Pairs"
+      },
+      "reset": "Shuffle again",
+      "firstSelected": "First card revealed. Choose one more card.",
+      "completedTitle": "All pairs found",
+      "matchFound": "{icon} pair found.",
+      "mismatch": "The cards are different and will turn back over.",
+      "readyTitle": "Follow the trace of each icon",
+      "readyDescription": "Sixteen cards will be shuffled into eight pairs. The timer starts after you reveal the first card.",
+      "start": "Shuffle and start",
+      "completedDescription": "You found every pair in {moves} moves and {time}.",
+      "playAgain": "Play again",
+      "gridLabel": "Four by four card board",
+      "matchedCard": "Card {position}, matched {icon} pair",
+      "revealedCard": "Card {position}, revealed {icon} icon",
+      "hiddenCard": "Card {position}, hidden",
+      "iconLabels": {
+        "bookOpen": "open book",
+        "compass": "compass",
+        "leaf": "leaf",
+        "lightbulb": "light bulb",
+        "music": "music note",
+        "rocket": "rocket",
+        "star": "star",
+        "telescope": "telescope"
+      }
+    },
+    "brainSummit": {
+      "playAreaLabel": "Brain Summit quiz area",
+      "instructions": {
+        "answer": "Choose one answer from four options.",
+        "learn": "Read a short explanation after answering.",
+        "finish": "Complete eight random questions to see your session score."
+      },
+      "stats": {
+        "progress": "Progress",
+        "score": "Score"
+      },
+      "reset": "Start over",
+      "readyTitle": "Climb toward the summit of knowledge",
+      "readyDescription": "Eight questions will be selected from geography, science, Indonesia, and technology. There is no time limit.",
+      "start": "Start quiz",
+      "completedTitle": "Climb complete",
+      "completedDescription": "You answered {score} of {total} questions correctly. This result is not saved.",
+      "playAgain": "Try another question set",
+      "categories": {
+        "geography": "Geography",
+        "science": "Science",
+        "indonesia": "Indonesia",
+        "technology": "Technology"
+      },
+      "questionProgress": "Question {current} of {total}",
+      "correct": "Correct answer",
+      "incorrect": "Not quite",
+      "seeResults": "See results",
+      "next": "Next question",
+      "questions": {
+        "everest": {
+          "prompt": "Which mountain is the world's highest when measured above sea level?",
+          "explanation": "Mount Everest has the highest summit above sea level, at about 8,849 meters.",
+          "options": {
+            "everest": "Mount Everest",
+            "k2": "K2",
+            "kilimanjaro": "Mount Kilimanjaro",
+            "denali": "Denali"
+          }
+        },
+        "pacific": {
+          "prompt": "Which ocean is the largest on Earth?",
+          "explanation": "The Pacific Ocean covers a larger area than any other ocean.",
+          "options": {
+            "pacific": "Pacific Ocean",
+            "atlantic": "Atlantic Ocean",
+            "indian": "Indian Ocean",
+            "arctic": "Arctic Ocean"
+          }
+        },
+        "tokyo": {
+          "prompt": "Which city is the capital of Japan?",
+          "explanation": "Tokyo is Japan's capital and the seat of its national government.",
+          "options": {
+            "tokyo": "Tokyo",
+            "kyoto": "Kyoto",
+            "osaka": "Osaka",
+            "sapporo": "Sapporo"
+          }
+        },
+        "giza": {
+          "prompt": "In which country are the Pyramids of Giza located?",
+          "explanation": "The Giza pyramid complex is in Egypt, near the city of Cairo.",
+          "options": {
+            "egypt": "Egypt",
+            "jordan": "Jordan",
+            "morocco": "Morocco",
+            "turkey": "Turkey"
+          }
+        },
+        "jupiter": {
+          "prompt": "Which planet is the largest in the Solar System?",
+          "explanation": "Jupiter is the Solar System's largest planet by both diameter and mass.",
+          "options": {
+            "jupiter": "Jupiter",
+            "saturn": "Saturn",
+            "earth": "Earth",
+            "neptune": "Neptune"
+          }
+        },
+        "mars": {
+          "prompt": "Which planet is known as the Red Planet?",
+          "explanation": "Mars looks reddish because iron minerals on its surface have oxidized.",
+          "options": {
+            "mars": "Mars",
+            "venus": "Venus",
+            "mercury": "Mercury",
+            "uranus": "Uranus"
+          }
+        },
+        "carbonDioxide": {
+          "prompt": "Which gas do plants absorb for photosynthesis?",
+          "explanation": "Plants use carbon dioxide, water, and light energy to make glucose.",
+          "options": {
+            "carbonDioxide": "Carbon dioxide",
+            "oxygen": "Oxygen",
+            "nitrogen": "Nitrogen",
+            "hydrogen": "Hydrogen"
+          }
+        },
+        "heart": {
+          "prompt": "Which organ pumps blood throughout the body?",
+          "explanation": "The heart contracts to move blood through the body's circulatory system.",
+          "options": {
+            "heart": "Heart",
+            "lungs": "Lungs",
+            "liver": "Liver",
+            "kidneys": "Kidneys"
+          }
+        },
+        "independence": {
+          "prompt": "In which year was Indonesia's independence proclaimed?",
+          "explanation": "Soekarno and Mohammad Hatta proclaimed Indonesia's independence on August 17, 1945.",
+          "options": {
+            "1945": "1945",
+            "1942": "1942",
+            "1949": "1949",
+            "1950": "1950"
+          }
+        },
+        "borobudur": {
+          "prompt": "In which province is Borobudur Temple located?",
+          "explanation": "Borobudur Temple is in Magelang Regency, Central Java.",
+          "options": {
+            "centralJava": "Central Java",
+            "eastJava": "East Java",
+            "westJava": "West Java",
+            "bali": "Bali"
+          }
+        },
+        "laskarPelangi": {
+          "prompt": "Who wrote the novel Laskar Pelangi?",
+          "explanation": "Laskar Pelangi is a novel by Andrea Hirata.",
+          "options": {
+            "andreaHirata": "Andrea Hirata",
+            "pramoedya": "Pramoedya Ananta Toer",
+            "deeLestari": "Dee Lestari",
+            "tereLiye": "Tere Liye"
+          }
+        },
+        "pancasila": {
+          "prompt": "How many principles are in Pancasila?",
+          "explanation": "Pancasila consists of five principles that form Indonesia's state foundation.",
+          "options": {
+            "five": "Five",
+            "three": "Three",
+            "four": "Four",
+            "six": "Six"
+          }
+        },
+        "cpu": {
+          "prompt": "Which computer component executes program instructions?",
+          "explanation": "The CPU is the main processor that executes program instructions.",
+          "options": {
+            "processor": "Processor",
+            "storage": "Storage",
+            "monitor": "Monitor",
+            "keyboard": "Keyboard"
+          }
+        },
+        "https": {
+          "prompt": "What is the main benefit of HTTPS when opening a website?",
+          "explanation": "HTTPS encrypts the connection between the browser and the website, making data harder to intercept in transit.",
+          "options": {
+            "encryptedConnection": "An encrypted connection",
+            "largerImages": "Larger images",
+            "offlineMode": "Automatic offline mode",
+            "fasterProcessor": "A faster processor"
+          }
+        },
+        "binary": {
+          "prompt": "Which two digits are used in the binary number system?",
+          "explanation": "The binary system represents values using the digits 0 and 1.",
+          "options": {
+            "zeroOne": "0 and 1",
+            "oneTwo": "1 and 2",
+            "az": "A and Z",
+            "zeroNine": "0 and 9"
+          }
+        },
+        "router": {
+          "prompt": "What is a router's main function in a computer network?",
+          "explanation": "A router forwards data packets between different networks.",
+          "options": {
+            "connectNetworks": "Connect networks",
+            "printDocuments": "Print documents",
+            "editPhotos": "Edit photos",
+            "storePasswords": "Store passwords"
+          }
+        }
+      }
+    }
   }
 }

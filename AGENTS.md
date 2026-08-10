@@ -69,6 +69,12 @@ error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
 - Marketing sections and scroll animations live under `components/landing/`.
 - Dashboard navigation lives under `components/dashboard/`; reusable app-wide
   helpers, including `PageTransition`, live under `components/common/`.
+- Student mini-games live under `app/[locale]/(dashboard)/mini-games/`, with
+  interactive islands in `components/mini-games/` and pure session engines in
+  `lib/mini-games/`. They are a supporting, `user`-only activity: do not persist
+  or sync answers, scores, card order, puzzle state, or response timing, and do
+  not connect them to analytics, SPK/LLM, EXP, partner/admin projections, or
+  casino-like rewards.
 - Data fetching goes through the hooks in `hooks/` (`use-api`,
   `use-dashboard-summary`, `use-progress-snapshot`, `use-accountability`),
   which call `lib/api-client.ts`.
@@ -180,6 +186,9 @@ reintroduce deploy-user SSH keys.
 - Intentions remain local-first and opt-in for account sync. Structured
   check-ins are committed to the account after the user explicitly submits the
   daily form; never broaden what the check-in payload contains.
+- Mini-games use text and Lucide icons instead of emoji, remain keyboard
+  operable, and must not make clinical, diagnostic, or cognitive-improvement
+  claims.
 
 ## E2E
 
@@ -191,7 +200,7 @@ new authenticated flows under `e2e/`.
 - `AGENTS.md` is canonical. `CLAUDE.md`, `GEMINI.md`,
   `.github/copilot-instructions.md`, and `.cursor/rules/gamblock-ai.mdc` are
   provider adapters and must remain thin.
-- Context version: `2026-08-11.0`.
+- Context version: `2026-08-11.1`.
 - `docs/ai/manifest.yaml` inventories every required context surface. Keep its
   `context_version` synchronized with this file and `docs/ai/README.md`.
 - When paths, commands, architecture, or invariants change, update the canonical

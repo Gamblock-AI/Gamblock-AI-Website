@@ -34,16 +34,23 @@ export function AdminSectionHeader({
 
 export function AdminFormField({
   label,
+  help,
   className,
   children,
 }: {
   label: string;
+  help?: string;
   className?: string;
   children: ReactNode;
 }) {
   return (
     <label className={`space-y-2 ${className ?? ''}`}>
       <span className="text-navy text-xs font-bold">{label}</span>
+      {help ? (
+        <span className="text-muted-foreground block text-xs leading-5">
+          {help}
+        </span>
+      ) : null}
       {children}
     </label>
   );

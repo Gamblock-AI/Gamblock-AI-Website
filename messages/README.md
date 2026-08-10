@@ -14,6 +14,7 @@ next-intl namespaces; components continue to call
 | `recovery.json` | Recovery dashboard/hub, weekly review, education library |
 | `account.json` | Settings, support, profile, data requests |
 | `operations.json` | Administration and operational support |
+| `engagement.json` | Gami engagement copy, weekly recap, and session-only mini-games |
 
 When adding or moving translations:
 

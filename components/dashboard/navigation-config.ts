@@ -4,6 +4,7 @@ import {
   BookOpen,
   CircleHelp,
   FileText,
+  Gamepad2,
   GraduationCap,
   Handshake,
   HeartHandshake,
@@ -22,6 +23,7 @@ export type DashboardNavKey =
   | 'progress'
   | 'education'
   | 'skills'
+  | 'miniGames'
   | 'accountability'
   | 'partners'
   | 'support'
@@ -88,6 +90,12 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         href: ROUTES.SKILLS,
         labelKey: 'skills',
         icon: GraduationCap,
+        roles: ['user'],
+      },
+      {
+        href: ROUTES.MINI_GAMES,
+        labelKey: 'miniGames',
+        icon: Gamepad2,
         roles: ['user'],
       },
       {

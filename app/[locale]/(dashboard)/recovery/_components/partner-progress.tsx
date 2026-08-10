@@ -130,6 +130,9 @@ export function PartnerProgress() {
   const [expandedMembers, setExpandedMembers] = useState<
     Record<string, boolean>
   >({});
+  const groupNames = new Map(
+    accountability.workspace.groups.map((group) => [group.id, group.name])
+  );
   const liveMembers = accountability.workspace.members.filter((member) =>
     liveMemberStatuses.has(member.status)
   );
@@ -201,7 +204,8 @@ export function PartnerProgress() {
                             {member.student_name}
                           </p>
                           <p className="text-muted-foreground text-[0.6875rem]">
-                            {member.group_name || 'Grup pendampingan'}
+                            {groupNames.get(member.group_id) ??
+                              p('groupFallback')}
                           </p>
                         </div>
                       </div>
@@ -296,7 +300,8 @@ export function PartnerProgress() {
                           {member.student_name}
                         </p>
                         <p className="text-muted-foreground text-[0.6875rem]">
-                          {member.group_name || 'Grup pendampingan'}
+                          {groupNames.get(member.group_id) ??
+                            p('groupFallback')}
                         </p>
                       </div>
                     </div>

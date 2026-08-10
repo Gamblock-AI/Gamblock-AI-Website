@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-context_version="2026-08-11.0"
+context_version="2026-08-11.1"
 allow_untracked=false
 
 usage() {
@@ -94,14 +94,17 @@ required_files=(
 required_paths=(
   "app/[locale]/(auth)"
   "app/[locale]/(dashboard)"
+  "app/[locale]/(dashboard)/mini-games"
   "app/[locale]/(landing)"
   "app/[locale]/(landing)/pkm/page.tsx"
   "components/common/PageTransition.tsx"
   "components/dashboard"
   "components/landing"
+  "components/mini-games"
   "hooks"
   "i18n/messages.ts"
   "lib/api-client.ts"
+  "lib/mini-games"
   "messages/README.md"
   "messages/en"
   "messages/id"
@@ -109,6 +112,7 @@ required_paths=(
   "messages/id/pkm.json"
   "next.config.ts"
   "proxy.ts"
+  "public/images/mini-games"
   "routes.ts"
   "scripts/validate-messages.mjs"
 )
