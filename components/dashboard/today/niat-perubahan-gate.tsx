@@ -1,11 +1,17 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { useRecoveryJourney } from '@/hooks/use-recovery-journey';
 import { NiatPerubahanModal } from './niat-perubahan-modal';
 import { DashboardTour } from '@/components/dashboard/tour/dashboard-tour';
 import { apiClient } from '@/lib/api-client';
+import { GamiDailyRecommendation } from './gami-daily-recommendation';
 
 const subscribeToClientReady = () => () => undefined;
 
@@ -13,11 +19,18 @@ interface SyncIntention {
   id?: string;
 }
 
-export function NiatPerubahanGate({ children }: { children: React.ReactNode }) {
+export function NiatPerubahanGate({
+  children,
+  studentName,
+}: {
+  children: React.ReactNode;
+  studentName: string;
+}) {
   const user = useLocalUser();
   const recovery = useRecoveryJourney();
   const [data, setData] = useState<SyncIntention | null>(null);
   const [fetchError, setFetchError] = useState(false);
+  const [tourSettled, setTourSettled] = useState(false);
   const clientReady = useSyncExternalStore(
     subscribeToClientReady,
     () => true,
@@ -53,13 +66,14 @@ export function NiatPerubahanGate({ children }: { children: React.ReactNode }) {
   const needsCheckIn = !recovery.todayCheckIn;
   const showModal =
     shouldCheck && resolved && !fetchError && (needsIntention || needsCheckIn);
+  const settleTour = useCallback(() => setTourSettled(true), []);
 
   if (!shouldCheck) return <>{children}</>;
 
   return (
     <>
       {children}
-      {showModal && (
+      {showModal ? (
         <NiatPerubahanModal
           needsIntention={needsIntention}
           needsCheckIn={needsCheckIn}
@@ -68,11 +82,18 @@ export function NiatPerubahanGate({ children }: { children: React.ReactNode }) {
             window.dispatchEvent(
               new CustomEvent('gamblock:recovery-data-changed')
             );
-            window.dispatchEvent(new CustomEvent('gamblock:recovery-sync-changed'));
+            window.dispatchEvent(
+              new CustomEvent('gamblock:recovery-sync-changed')
+            );
           }}
         />
-      )}
-      {resolved && !showModal && <DashboardTour />}
+      ) : null}
+      {resolved && !showModal && !tourSettled ? (
+        <DashboardTour onSettled={settleTour} />
+      ) : null}
+      {resolved && !showModal && tourSettled ? (
+        <GamiDailyRecommendation studentName={studentName} />
+      ) : null}
     </>
   );
 }

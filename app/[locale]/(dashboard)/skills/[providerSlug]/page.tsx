@@ -142,28 +142,30 @@ export default function ProviderDetailPage({
         {t('backToDirections')}
       </Link>
 
-      <div className="border-border bg-card shadow-soft mt-4 flex flex-wrap items-center gap-4 rounded-2xl border p-5">
+      <div className="border-border/80 bg-gradient-to-r from-card via-azure/15 to-card shadow-2xs mt-3 flex items-center gap-4 rounded-2xl border p-4 sm:p-5">
         {provider?.provider_logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={resolveEducationMediaURL(provider.provider_logo_url)}
             alt=""
-            className="bg-muted flex size-16 items-center justify-center rounded-2xl border border-navy/10 object-contain p-2"
+            className="bg-card flex size-12 shrink-0 items-center justify-center rounded-xl border border-border/80 object-contain p-1.5 shadow-2xs"
           />
         ) : (
-          <span className="bg-navy text-white flex size-16 items-center justify-center rounded-2xl text-lg font-extrabold">
+          <span className="bg-gradient-to-br from-navy to-indigo-700 text-white flex size-12 shrink-0 items-center justify-center rounded-xl text-base font-black shadow-2xs">
             {provider?.provider?.slice(0, 2).toUpperCase() ?? '?'}
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="text-navy text-xl font-bold">
-            {provider?.provider ?? t('providerUnknown')}
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {t('courseCount', { count: providerItems.length })}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-navy text-lg font-black tracking-tight sm:text-xl">
+              {provider?.provider ?? t('providerUnknown')}
+            </h1>
+            <span className="bg-navy/10 text-navy rounded-full px-2.5 py-0.5 text-xs font-bold">
+              {t('courseCount', { count: providerItems.length })}
+            </span>
+          </div>
           {provider?.provider_description ? (
-            <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
+            <p className="text-muted-foreground mt-0.5 max-w-2xl text-xs leading-relaxed sm:text-sm line-clamp-2">
               {provider.provider_description}
             </p>
           ) : null}

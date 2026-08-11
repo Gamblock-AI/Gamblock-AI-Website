@@ -115,6 +115,15 @@ device still counts the same day. UI feedback remains calm and avoids punitive
 streak or casino-like rewards. A student-only `/skills` page adds curated
 free-course links through the Learning Hub.
 
+The student's daily SPK recommendation is delivered as an interactive Gami
+conversation instead of an in-flow card. Gami enters from the right and greets
+the student once per backend `recommendation_id`; a small right-edge launcher
+keeps the recommendation available afterward. The compact view presents the
+recommended feature and action while an optional disclosure retains the
+privacy-safe reason, data-quality guidance, and refresh action. Automatic
+presentation is serialized after the required Niat Perubahan/check-in flow and
+the first-visit dashboard tour, so their dialogs and spotlights never overlap.
+
 The student-only `/mini-games` hub provides four voluntary supporting
 activities: Spektrum Kilat, Rakit Rupa, Jejak Kembar, and Puncak Pikir. Each
 game runs entirely in the current browser page session. Answers, scores, card
@@ -220,7 +229,8 @@ Students see a one-time, skippable dashboard tour on their first visit
 (`components/dashboard/tour/`) that walks through the dashboard content, each
 sidebar section, and each navbar control; the "seen" flag is stored under
 `gamblock:dashboard-tour:v1` and the tour adapts to the mobile bottom
-navigation.
+navigation. On the student dashboard, the tour settles before the automatic
+Gami recommendation is allowed to open.
 
 The skills page ("Pilih arah belajar") lists learning services as logo cards
 (providers derived from the Learning Hub catalog); selecting one opens

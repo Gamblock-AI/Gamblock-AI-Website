@@ -77,14 +77,14 @@
       },
       "pictureForge": {
         "title": "Rakit Rupa",
-        "description": "Tukar dua keping untuk merakit kembali sudut belajar yang terpecah.",
+        "description": "Pilih gambar lalu susun kembali dengan menukar keping ke tempatnya.",
         "category": "Susun visual",
         "duration": "3–5 menit",
         "cta": "Mainkan Rakit Rupa"
       },
       "twinTrace": {
         "title": "Jejak Kembar",
-        "description": "Buka kartu, ingat posisinya, lalu temukan delapan pasangan ikon.",
+        "description": "Amati kartu buah berwarna, lalu temukan pasangan yang sama.",
         "category": "Daya ingat",
         "duration": "3–4 menit",
         "cta": "Mainkan Jejak Kembar"
@@ -141,14 +141,23 @@
     },
     "pictureForge": {
       "readyTitle": "Rakit satu gambar utuh",
-      "readyDescription": "Lihat pratinjau, lalu pilih dua keping untuk menukar posisinya hingga gambar kembali tersusun.",
+      "readyDescription": "Pilih gambar dan tingkat kesulitan, lalu gunakan gambar acuan untuk menukar keping hingga gambar kembali utuh.",
       "start": "Acak dan mulai",
-      "previewAlt": "Ilustrasi sudut belajar kampus pada pagi hari",
+      "imageChoiceLabel": "Pilih gambar",
+      "difficultyLabel": "Pilih jumlah keping",
+      "difficultyNames": {
+        "3x3": "3 × 3",
+        "4x4": "4 × 4",
+        "5x5": "5 × 5"
+      },
+      "pieces": "Keping",
+      "piecesValue": "{pieces} keping",
       "previewLabel": "Gambar acuan",
       "moves": "Langkah",
       "elapsed": "Waktu aktif",
       "secondsValue": "{seconds} detik",
-      "boardLabel": "Papan puzzle tiga kali tiga",
+      "changeChallenge": "Ganti tantangan",
+      "boardLabel": "Papan puzzle gambar {gridSize} kali {gridSize}",
       "tileLabel": "Keping gambar {tile} pada posisi {position}",
       "selectedStatus": "Posisi {position} dipilih. Pilih keping kedua untuk menukar.",
       "swapStatus": "Posisi {first} dan {second} ditukar.",
@@ -161,14 +170,30 @@
         "preview": "Gunakan gambar acuan untuk mengenali posisi setiap keping.",
         "swap": "Pilih satu keping, lalu pilih keping lain untuk menukarnya.",
         "keyboard": "Gunakan tombol panah untuk berpindah dan Enter atau Spasi untuk memilih."
+      },
+      "imageNames": {
+        "studyCorner": "Sudut belajar",
+        "fruitMarket": "Pasar buah",
+        "berryGarden": "Kebun beri",
+        "tropicalPlatter": "Hidangan tropis",
+        "orchardBasket": "Keranjang kebun",
+        "citrusTable": "Meja jeruk"
+      },
+      "imageAlts": {
+        "studyCorner": "Sudut belajar yang menghadap kampus saat matahari terbit",
+        "fruitMarket": "Keranjang buah berwarna di pasar terbuka",
+        "berryGarden": "Stroberi dan buah beri di atas piring di kebun",
+        "tropicalPlatter": "Hidangan buah tropis dengan nanas dan buah naga",
+        "orchardBasket": "Keranjang panen berisi apel, pir, persik, dan plum",
+        "citrusTable": "Buah jeruk berwarna cerah di dalam mangkuk keramik"
       }
     },
     "twinTrace": {
       "playAreaLabel": "Area permainan Jejak Kembar",
       "instructions": {
-        "reveal": "Buka dua kartu untuk melihat ikon di baliknya.",
+        "reveal": "Perhatikan kartu buah saat pratinjau awal, lalu buka dua kartu setiap giliran.",
         "match": "Pasangan yang sama akan tetap terbuka; pasangan berbeda akan tertutup lagi.",
-        "finish": "Temukan seluruh delapan pasangan tanpa batas waktu."
+        "finish": "Temukan semua pasangan hingga papan selesai."
       },
       "stats": {
         "moves": "Langkah",
@@ -176,28 +201,43 @@
         "pairs": "Pasangan"
       },
       "reset": "Acak ulang",
+      "changeDifficulty": "Ganti tingkat kesulitan",
       "firstSelected": "Kartu pertama terbuka. Pilih satu kartu lagi.",
       "completedTitle": "Semua pasangan ditemukan",
-      "matchFound": "Pasangan {icon} ditemukan.",
+      "matchFound": "Pasangan {fruit} ditemukan.",
       "mismatch": "Kedua kartu berbeda dan akan ditutup kembali.",
-      "readyTitle": "Ikuti jejak setiap ikon",
-      "readyDescription": "Enam belas kartu akan diacak menjadi delapan pasangan. Waktu baru berjalan setelah kartu pertama dibuka.",
+      "previewStatus": "Semua kartu ditampilkan selama {seconds} detik. Ingat posisinya.",
+      "previewComplete": "Pratinjau selesai. Pilih kartu pertama.",
+      "previewingTitle": "Luangkan waktu untuk mengingat",
+      "previewingDescription": "Kartu buah akan tertutup setelah {seconds} detik.",
+      "readyTitle": "Ikuti jejak setiap buah",
+      "readyDescription": "Pilih ukuran papan. Setiap permainan dimulai dengan pratinjau buah singkat sebelum kartu tertutup.",
+      "difficultyLabel": "Pilih ukuran papan",
+      "difficultyNames": {
+        "4x4": "4 × 4",
+        "5x5": "5 × 5"
+      },
+      "pairCountValue": "{pairs} pasangan · {cards} kartu",
       "start": "Acak dan mulai",
       "completedDescription": "Kamu menemukan semuanya dalam {moves} langkah dan waktu {time}.",
       "playAgain": "Main lagi",
-      "gridLabel": "Papan kartu empat kali empat",
-      "matchedCard": "Kartu {position}, pasangan {icon} sudah ditemukan",
-      "revealedCard": "Kartu {position}, ikon {icon} terbuka",
+      "gridLabel": "Papan kartu buah {gridSize} kali {gridSize}",
+      "matchedCard": "Kartu {position}, pasangan {fruit} sudah ditemukan",
+      "revealedCard": "Kartu {position}, kartu {fruit} terbuka",
       "hiddenCard": "Kartu {position}, tertutup",
-      "iconLabels": {
-        "bookOpen": "buku terbuka",
-        "compass": "kompas",
-        "leaf": "daun",
-        "lightbulb": "lampu ide",
-        "music": "not musik",
-        "rocket": "roket",
-        "star": "bintang",
-        "telescope": "teleskop"
+      "fruitLabels": {
+        "apple": "apel merah",
+        "banana": "pisang kuning",
+        "orange": "jeruk",
+        "kiwi": "kiwi hijau",
+        "blueberry": "bluberi",
+        "grapes": "anggur ungu",
+        "dragonfruit": "buah naga merah muda",
+        "pineapple": "nanas emas",
+        "coconut": "kelapa",
+        "peach": "persik",
+        "pear": "pir hijau",
+        "watermelon": "semangka"
       }
     },
     "brainSummit": {

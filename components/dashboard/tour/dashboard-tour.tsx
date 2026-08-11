@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useDashboardTour } from '@/hooks/use-dashboard-tour';
 import { useAuthoritativeUser } from '@/hooks/use-local-user';
@@ -21,7 +21,7 @@ const MODAL_WAIT_MS = 60 * 1000;
  * content, each sidebar section, and each navbar control. Appears once, is
  * skippable, and is student-role only.
  */
-export function DashboardTour() {
+export function DashboardTour({ onSettled }: { onSettled: () => void }) {
   const t = useTranslations('dashboardTour');
   const { user, status } = useAuthoritativeUser();
   const ready = status === 'ready';
@@ -31,7 +31,26 @@ export function DashboardTour() {
     mobile: mobileTourSteps,
     storageKey: DASHBOARD_TOUR_KEY,
   });
-  const { open, start } = tour;
+  const { close, open, start } = tour;
+  const settledRef = useRef(false);
+
+  const settle = useCallback(() => {
+    if (settledRef.current) return;
+    settledRef.current = true;
+    onSettled();
+  }, [onSettled]);
+
+  const finishTour = useCallback(() => {
+    close();
+    settle();
+  }, [close, settle]);
+
+  // Let the dashboard experience queue continue immediately when this tour
+  // was already completed on an earlier visit.
+  useEffect(() => {
+    if (!ready || role !== 'user' || open || !getDashboardTourSeen()) return;
+    settle();
+  }, [open, ready, role, settle]);
 
   // The gate mounts this component only after the first-run "Niat Perubahan"
   // modal is resolved/closed, so no modal can be blocking here. The seen flag
@@ -85,7 +104,7 @@ export function DashboardTour() {
       rect={tour.rect}
       next={tour.next}
       back={tour.back}
-      close={tour.close}
+      close={finishTour}
     />
   );
 }

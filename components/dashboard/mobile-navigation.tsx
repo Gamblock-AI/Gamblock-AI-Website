@@ -1,25 +1,28 @@
 'use client';
 
-import { Link, usePathname } from '@/i18n/routing';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { Ellipsis, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+
+import {
+  Dialog,
+  DialogClose,
+  DialogDescription,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useLocalUser } from '@/hooks/use-local-user';
+import { Link, usePathname } from '@/i18n/routing';
+import { cn } from '@/lib/utils';
 import {
   canShowNavigationItem,
   dashboardNavigationGroups,
   getMobilePrimaryNavigation,
   isNavigationItemActive,
 } from './navigation-config';
-import { useLocalUser } from '@/hooks/use-local-user';
 
 export function MobileNavigation() {
   const t = useTranslations('dashboardNav');
@@ -93,63 +96,61 @@ export function MobileNavigation() {
         </button>
       </nav>
 
-      <DialogContent
-        showCloseButton={false}
-        className="shadow-float max-h-[min(78dvh,42rem)] overflow-y-auto rounded-t-[28px] rounded-b-none border-x-0 border-b-0 p-0 lg:hidden"
-        style={{
-          top: 'auto',
-          right: 0,
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          maxWidth: 'none',
-          transform: 'none',
-        }}
-      >
-        <DialogHeader className="border-border bg-card sticky top-0 z-10 border-b px-5 py-5 pr-16">
-          <DialogTitle className="text-navy text-lg font-bold">
-            {t('moreTitle')}
-          </DialogTitle>
-          <DialogDescription>{t('moreDescription')}</DialogDescription>
-          <DialogClose
-            aria-label={t('closeMore')}
-            className="text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/30 absolute top-4 right-4 flex size-11 items-center justify-center rounded-xl transition-colors outline-none focus-visible:ring-2"
-          >
-            <X className="size-5" aria-hidden="true" />
-          </DialogClose>
-        </DialogHeader>
-
-        <div className="space-y-6 px-4 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-          {moreGroups.map((section) => (
-            <div key={section.titleKey} className="space-y-1">
-              <p className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
-                {t(section.titleKey)}
-              </p>
-              {section.items.map(({ href, labelKey, icon: Icon }) => {
-                const isActive = isNavigationItemActive(pathname, href);
-
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    aria-current={isActive ? 'page' : undefined}
-                    onClick={() => setMoreOpen(false)}
-                    className={cn(
-                      'focus-visible:ring-navy/30 flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2',
-                      isActive
-                        ? 'bg-navy shadow-soft text-white'
-                        : 'text-foreground hover:bg-azure/75'
-                    )}
-                  >
-                    <Icon className="size-5" aria-hidden="true" />
-                    {t(labelKey)}
-                  </Link>
-                );
-              })}
+      <DialogPortal>
+        <DialogOverlay className="bg-navy/60 z-50 backdrop-blur-xs lg:hidden" />
+        <DialogPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center lg:hidden">
+          <DialogPrimitive.Popup className="bg-card text-card-foreground data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-6 data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-6 relative flex max-h-[82dvh] w-full flex-col overflow-hidden rounded-t-[28px] border-t border-border shadow-float outline-none duration-200 motion-reduce:animate-none">
+            {/* Grab Handle */}
+            <div className="flex justify-center pt-3 pb-1" aria-hidden="true">
+              <span className="bg-muted-foreground/30 h-1.25 w-10 rounded-full" />
             </div>
-          ))}
-        </div>
-      </DialogContent>
+
+            <DialogHeader className="border-border/80 bg-card sticky top-0 z-10 shrink-0 border-b px-5 pt-1.5 pb-4 pr-14 text-left">
+              <DialogTitle className="text-navy text-lg font-extrabold">
+                {t('moreTitle')}
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground mt-0.5 text-xs">{t('moreDescription')}</DialogDescription>
+              <DialogClose
+                aria-label={t('closeMore')}
+                className="text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/30 absolute top-2 right-4 flex size-10 items-center justify-center rounded-xl transition-colors outline-none focus-visible:ring-2"
+              >
+                <X className="size-5" aria-hidden="true" />
+              </DialogClose>
+            </DialogHeader>
+
+            <div className="space-y-5 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+              {moreGroups.map((section) => (
+                <div key={section.titleKey} className="space-y-1">
+                  <p className="text-muted-foreground/85 mb-2 px-3 text-[0.6875rem] font-bold tracking-wider uppercase">
+                    {t(section.titleKey)}
+                  </p>
+                  {section.items.map(({ href, labelKey, icon: Icon }) => {
+                    const isActive = isNavigationItemActive(pathname, href);
+
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        aria-current={isActive ? 'page' : undefined}
+                        onClick={() => setMoreOpen(false)}
+                        className={cn(
+                          'focus-visible:ring-navy/30 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2',
+                          isActive
+                            ? 'bg-navy shadow-soft text-white'
+                            : 'text-foreground hover:bg-azure/75'
+                        )}
+                      >
+                        <Icon className="size-4.5" aria-hidden="true" />
+                        {t(labelKey)}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </DialogPrimitive.Popup>
+        </DialogPrimitive.Viewport>
+      </DialogPortal>
     </Dialog>
   );
 }

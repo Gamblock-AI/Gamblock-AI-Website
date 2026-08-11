@@ -12,27 +12,31 @@ export type GameAccent = 'navy' | 'sky' | 'sage' | 'amber';
 
 const accentClasses: Record<
   GameAccent,
-  { icon: string; wash: string; border: string }
+  { icon: string; wash: string; border: string; glow: string }
 > = {
   navy: {
-    icon: 'bg-navy text-white',
+    icon: 'bg-gradient-to-br from-navy to-indigo-700 text-white shadow-navy/20',
     wash: 'from-navy/[0.08] via-card to-card',
     border: 'border-navy/20',
+    glow: 'bg-navy/15',
   },
   sky: {
-    icon: 'bg-sky text-navy',
+    icon: 'bg-gradient-to-br from-sky to-cyan-500 text-navy shadow-sky/25',
     wash: 'from-sky/[0.14] via-card to-card',
     border: 'border-sky/35',
+    glow: 'bg-sky/20',
   },
   sage: {
-    icon: 'bg-sage text-white',
+    icon: 'bg-gradient-to-br from-sage-light to-emerald-600 text-white shadow-sage/25',
     wash: 'from-sage/[0.12] via-card to-card',
     border: 'border-sage/30',
+    glow: 'bg-sage/20',
   },
   amber: {
-    icon: 'bg-amber text-navy',
+    icon: 'bg-gradient-to-br from-amber-300 to-amber-500 text-navy shadow-amber/25',
     wash: 'from-amber/[0.14] via-card to-card',
     border: 'border-amber/35',
+    glow: 'bg-amber/20',
   },
 };
 
@@ -77,34 +81,37 @@ export function GamePageShell({
 
       <header
         className={cn(
-          'relative overflow-hidden rounded-3xl border bg-gradient-to-br p-5 shadow-soft sm:p-7',
+          'relative overflow-hidden rounded-2xl border bg-gradient-to-r p-4 shadow-2xs sm:p-5',
           tone.border,
           tone.wash
         )}
       >
         <div
-          className="border-navy/10 pointer-events-none absolute -top-16 -right-10 size-48 rounded-full border-[28px] opacity-60"
+          className={cn(
+            'pointer-events-none absolute -top-12 -right-10 size-40 rounded-full blur-2xl opacity-50',
+            tone.glow
+          )}
           aria-hidden="true"
         />
-        <div className="relative flex items-start gap-4">
+        <div className="relative flex items-center gap-3.5 sm:gap-4">
           <span
             className={cn(
-              'flex size-12 shrink-0 items-center justify-center rounded-2xl shadow-sm sm:size-14',
+              'flex size-11 shrink-0 items-center justify-center rounded-xl shadow-xs sm:size-12',
               tone.icon
             )}
           >
-            <Icon className="size-6 sm:size-7" aria-hidden="true" />
+            <Icon className="size-5 sm:size-6" aria-hidden="true" />
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             {eyebrow ? (
-              <p className="text-navy-light text-xs font-bold tracking-[0.12em] uppercase">
+              <p className="text-navy-light text-[0.6875rem] font-black tracking-wider uppercase">
                 {eyebrow}
               </p>
             ) : null}
-            <h1 className="text-navy mt-1 text-2xl leading-tight font-extrabold tracking-[-0.03em] sm:text-3xl">
+            <h1 className="text-navy text-lg leading-snug font-black tracking-tight sm:text-xl">
               {title}
             </h1>
-            <p className="text-muted-foreground mt-2 max-w-3xl text-sm leading-6 sm:text-base">
+            <p className="text-muted-foreground mt-0.5 max-w-3xl text-xs leading-relaxed sm:text-sm">
               {description}
             </p>
           </div>
@@ -113,38 +120,38 @@ export function GamePageShell({
 
       <div
         className={cn(
-          'grid items-start gap-5',
-          hasAside && 'xl:grid-cols-[minmax(0,1fr)_19rem]'
+          'grid items-start gap-4 sm:gap-5',
+          hasAside && 'xl:grid-cols-[minmax(0,1fr)_18rem]'
         )}
       >
         <section
           aria-label={playAreaLabel ?? title}
-          className="border-border bg-card min-w-0 rounded-3xl border p-4 shadow-soft sm:p-6"
+          className="border-border/80 bg-card min-w-0 rounded-2xl border p-4 shadow-2xs sm:rounded-3xl sm:p-6"
         >
           {children}
         </section>
 
         {hasAside ? (
-          <aside className="grid gap-4 sm:grid-cols-2 xl:sticky xl:top-6 xl:grid-cols-1">
+          <aside className="grid gap-3.5 sm:grid-cols-2 xl:sticky xl:top-6 xl:grid-cols-1">
             {instructions ? (
-              <section className="border-sky/30 bg-sky-light/25 rounded-2xl border p-4 sm:p-5">
-                <div className="text-navy flex items-center gap-2 text-sm font-bold">
-                  <Lightbulb className="size-4" aria-hidden="true" />
+              <section className="border-sky/25 bg-sky-light/15 rounded-2xl border p-4 shadow-2xs">
+                <div className="text-navy flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                  <Lightbulb className="size-3.5 text-sky-dark shrink-0" aria-hidden="true" />
                   <h2>{t('shell.instructions')}</h2>
                 </div>
-                <div className="text-muted-foreground mt-3 text-sm leading-6">
+                <div className="text-muted-foreground mt-2.5 text-xs leading-relaxed sm:text-sm">
                   {instructions}
                 </div>
               </section>
             ) : null}
 
             {status ? (
-              <section className="border-navy/15 bg-card rounded-2xl border p-4 shadow-soft sm:p-5">
-                <div className="text-navy flex items-center gap-2 text-sm font-bold">
-                  <CircleGauge className="size-4" aria-hidden="true" />
+              <section className="border-border/80 bg-card rounded-2xl border p-4 shadow-2xs">
+                <div className="text-navy flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                  <CircleGauge className="size-3.5 text-navy-light shrink-0" aria-hidden="true" />
                   <h2>{t('shell.status')}</h2>
                 </div>
-                <div className="mt-3">{status}</div>
+                <div className="mt-2.5">{status}</div>
               </section>
             ) : null}
 

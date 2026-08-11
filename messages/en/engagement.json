@@ -77,14 +77,14 @@
       },
       "pictureForge": {
         "title": "Picture Forge",
-        "description": "Swap two tiles at a time to rebuild a fragmented study corner.",
+        "description": "Choose a picture and rebuild it by swapping tiles into place.",
         "category": "Visual assembly",
         "duration": "3–5 minutes",
         "cta": "Play Picture Forge"
       },
       "twinTrace": {
         "title": "Twin Trace",
-        "description": "Reveal cards, remember their positions, and find eight icon pairs.",
+        "description": "Preview colorful fruit cards, then find their matching pairs.",
         "category": "Memory",
         "duration": "3–4 minutes",
         "cta": "Play Twin Trace"
@@ -141,14 +141,23 @@
     },
     "pictureForge": {
       "readyTitle": "Rebuild one complete picture",
-      "readyDescription": "Use the preview, then select two tiles to swap their positions until the picture is whole again.",
+      "readyDescription": "Choose a picture and difficulty, then use the preview to swap tiles until the picture is whole again.",
       "start": "Shuffle and start",
-      "previewAlt": "Illustration of a campus study corner in the morning",
+      "imageChoiceLabel": "Choose a picture",
+      "difficultyLabel": "Choose the number of tiles",
+      "difficultyNames": {
+        "3x3": "3 × 3",
+        "4x4": "4 × 4",
+        "5x5": "5 × 5"
+      },
+      "pieces": "Tiles",
+      "piecesValue": "{pieces} tiles",
       "previewLabel": "Reference picture",
       "moves": "Moves",
       "elapsed": "Active time",
       "secondsValue": "{seconds} seconds",
-      "boardLabel": "Three by three puzzle board",
+      "changeChallenge": "Change challenge",
+      "boardLabel": "{gridSize} by {gridSize} picture puzzle board",
       "tileLabel": "Picture tile {tile} at position {position}",
       "selectedStatus": "Position {position} selected. Choose a second tile to swap.",
       "swapStatus": "Positions {first} and {second} swapped.",
@@ -161,14 +170,30 @@
         "preview": "Use the reference picture to recognize where each tile belongs.",
         "swap": "Select one tile, then another tile to swap their positions.",
         "keyboard": "Use arrow keys to move and Enter or Space to select."
+      },
+      "imageNames": {
+        "studyCorner": "Study corner",
+        "fruitMarket": "Fruit market",
+        "berryGarden": "Berry garden",
+        "tropicalPlatter": "Tropical platter",
+        "orchardBasket": "Orchard basket",
+        "citrusTable": "Citrus table"
+      },
+      "imageAlts": {
+        "studyCorner": "Study corner overlooking a campus at sunrise",
+        "fruitMarket": "Colorful basket of fruit at an outdoor market",
+        "berryGarden": "Strawberries and berries on a plate in a garden",
+        "tropicalPlatter": "Tropical fruit platter with pineapple and dragon fruit",
+        "orchardBasket": "Harvest basket of apples, pears, peaches, and plums",
+        "citrusTable": "Bright citrus fruit arranged in a ceramic bowl"
       }
     },
     "twinTrace": {
       "playAreaLabel": "Twin Trace play area",
       "instructions": {
-        "reveal": "Reveal two cards to see the icons behind them.",
+        "reveal": "Watch the fruit cards during the opening preview, then reveal two cards at a time.",
         "match": "Matching cards stay open; different cards turn back over.",
-        "finish": "Find all eight pairs without a time limit."
+        "finish": "Find every pair before the board is complete."
       },
       "stats": {
         "moves": "Moves",
@@ -176,28 +201,43 @@
         "pairs": "Pairs"
       },
       "reset": "Shuffle again",
+      "changeDifficulty": "Change difficulty",
       "firstSelected": "First card revealed. Choose one more card.",
       "completedTitle": "All pairs found",
-      "matchFound": "{icon} pair found.",
+      "matchFound": "{fruit} pair found.",
       "mismatch": "The cards are different and will turn back over.",
-      "readyTitle": "Follow the trace of each icon",
-      "readyDescription": "Sixteen cards will be shuffled into eight pairs. The timer starts after you reveal the first card.",
+      "previewStatus": "All cards are shown for {seconds} seconds. Remember their positions.",
+      "previewComplete": "Preview finished. Choose your first card.",
+      "previewingTitle": "Take a moment to remember",
+      "previewingDescription": "The fruit cards will close after {seconds} seconds.",
+      "readyTitle": "Follow the trace of each fruit",
+      "readyDescription": "Choose a board size. Every game begins with a short fruit preview before the cards close.",
+      "difficultyLabel": "Choose the board size",
+      "difficultyNames": {
+        "4x4": "4 × 4",
+        "5x5": "5 × 5"
+      },
+      "pairCountValue": "{pairs} pairs · {cards} cards",
       "start": "Shuffle and start",
       "completedDescription": "You found every pair in {moves} moves and {time}.",
       "playAgain": "Play again",
-      "gridLabel": "Four by four card board",
-      "matchedCard": "Card {position}, matched {icon} pair",
-      "revealedCard": "Card {position}, revealed {icon} icon",
+      "gridLabel": "{gridSize} by {gridSize} fruit card board",
+      "matchedCard": "Card {position}, matched {fruit} pair",
+      "revealedCard": "Card {position}, revealed {fruit} card",
       "hiddenCard": "Card {position}, hidden",
-      "iconLabels": {
-        "bookOpen": "open book",
-        "compass": "compass",
-        "leaf": "leaf",
-        "lightbulb": "light bulb",
-        "music": "music note",
-        "rocket": "rocket",
-        "star": "star",
-        "telescope": "telescope"
+      "fruitLabels": {
+        "apple": "red apple",
+        "banana": "yellow banana",
+        "orange": "orange",
+        "kiwi": "green kiwi",
+        "blueberry": "blueberry",
+        "grapes": "purple grapes",
+        "dragonfruit": "pink dragon fruit",
+        "pineapple": "golden pineapple",
+        "coconut": "coconut",
+        "peach": "peach",
+        "pear": "green pear",
+        "watermelon": "watermelon"
       }
     },
     "brainSummit": {
