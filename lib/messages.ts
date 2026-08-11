@@ -199,7 +199,18 @@ export const MESSAGES: Record<string, string> = {
 
   // admin / emergency
   fetch_admin_modules_failed: 'Gagal memuat modul admin.',
+  fetch_admin_model_releases_failed: 'Gagal memuat rilis model.',
+  fetch_admin_releases_failed: 'Gagal memuat rilis.',
   fetch_admin_support_cases_failed: 'Gagal memuat tiket admin.',
+  create_model_release_failed: 'Gagal merilis model.',
+  create_ruleset_release_failed: 'Gagal merilis ruleset.',
+  create_network_release_failed: 'Gagal merilis ruleset jaringan.',
+  release_not_found: 'Rilis tidak ditemukan.',
+  release_validation_failed: 'Data rilis belum valid.',
+  artifact_unavailable: 'Artefak rilis belum tersedia.',
+  release_rollout_create_failed: 'Peluncuran rilis belum dapat dimulai.',
+  release_rollout_transition_failed:
+    'Status peluncuran rilis belum dapat diperbarui.',
   admin_overview_failed: 'Gagal memuat ringkasan operasional.',
   site_social_links_failed: 'Pengaturan sosial media belum dapat diproses.',
   audit_events_failed: 'Gagal memuat jejak audit.',
