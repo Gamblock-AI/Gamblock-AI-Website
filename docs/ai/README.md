@@ -44,7 +44,7 @@ daily missions, skill recommendations, self-regulation review loop.
 | SPK privacy settings | implemented | `SpkPrivacySettings` di halaman `/settings` (role `user`): panel 5 toggle privasi SPK/AI (master rekomendasi, data perlindungan, aktivitas pemulihan, konteks pribadi, personalisasi AI) dengan state dirty + Batal/Simpan, sinkron via `GET/PUT /v1/client/spk-preference`; badge menghitung hanya 5 flag (bukan field metadata API); saat master mati sub-kategori nonaktif/didim sebagai kill-switch dengan catatan penjelas + tooltip agar jelas bukan bug; copy menegaskan toggle mengatur penggunaan, bukan penyimpanan data |
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 
-Context version: `2026-08-11.1`
+Context version: `2026-08-12.2`
 
 ## Context load order
 
