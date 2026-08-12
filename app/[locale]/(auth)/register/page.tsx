@@ -25,6 +25,7 @@ type RegisterFormValues = {
   email: string;
   phone: string;
   password: string;
+  confirmPassword: string;
   terms: true;
 };
 
@@ -34,17 +35,25 @@ export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const registerSchema = z.object({
-    role: z.enum(['user', 'partner']),
-    name: z.string().min(3, { message: t('validation.nameMinimum') }),
-    email: z
-      .string()
-      .min(1, { message: t('validation.emailRequired') })
-      .email({ message: t('validation.emailInvalid') }),
-    phone: z.string().min(8, { message: t('validation.phoneRequired') }),
-    password: z.string().min(8, { message: t('validation.passwordMinimum') }),
-    terms: z.literal(true, { error: t('validation.termsRequired') }),
-  });
+  const registerSchema = z
+    .object({
+      role: z.enum(['user', 'partner']),
+      name: z.string().min(3, { message: t('validation.nameMinimum') }),
+      email: z
+        .string()
+        .min(1, { message: t('validation.emailRequired') })
+        .email({ message: t('validation.emailInvalid') }),
+      phone: z.string().min(8, { message: t('validation.phoneRequired') }),
+      password: z.string().min(8, { message: t('validation.passwordMinimum') }),
+      confirmPassword: z.string().min(1, {
+        message: t('validation.passwordConfirmRequired'),
+      }),
+      terms: z.literal(true, { error: t('validation.termsRequired') }),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('validation.passwordConfirmMismatch'),
+      path: ['confirmPassword'],
+    });
 
   const {
     register: formRegister,
@@ -54,7 +63,14 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: 'user', name: '', email: '', phone: '', password: '' },
+    defaultValues: {
+      role: 'user',
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    },
   });
 
   const role = useWatch({ control, name: 'role' });
@@ -198,6 +214,15 @@ export default function RegisterPage() {
           placeholder={t('text_265')}
           error={errors.password?.message}
           {...formRegister('password')}
+        />
+        <AuthField
+          label={t('confirmPasswordLabel')}
+          icon={Lock}
+          type="password"
+          autoComplete="new-password"
+          placeholder={t('confirmPasswordPlaceholder')}
+          error={errors.confirmPassword?.message}
+          {...formRegister('confirmPassword')}
         />
 
         <div className="space-y-1.5">
