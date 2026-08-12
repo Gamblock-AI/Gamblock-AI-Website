@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api-client';
 import { getLocalDateString, hydrateFromServer } from '@/lib/recovery/store';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { getRecoverySyncPreferences } from '@/lib/recovery/sync-preferences';
+import { refreshRecoveryAccount } from '@/lib/recovery/runtime';
 
 import {
   DailyCheckIn,
@@ -43,6 +44,10 @@ export function useRecoverySync() {
     if (user.role !== 'user') return;
 
     let active = true;
+
+    // Re-scope the local store to the authenticated account before hydrating,
+    // so an account switch never leaks another account's check-ins.
+    refreshRecoveryAccount();
 
     const preferences = getRecoverySyncPreferences();
     if (!preferences.intentions) {

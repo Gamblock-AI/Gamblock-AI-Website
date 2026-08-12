@@ -3,13 +3,19 @@
 import { useCallback, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 
+interface RequestCodeResponse {
+  accepted: boolean;
+  expires_in_seconds?: number;
+  preview_code?: string;
+}
+
 export function usePasswordReset() {
   const [loading, setLoading] = useState(false);
 
   const requestCode = useCallback(async (email: string) => {
     setLoading(true);
     try {
-      await apiClient('/auth/password-reset/request', {
+      return await apiClient<RequestCodeResponse>('/auth/password-reset/request', {
         method: 'POST',
         body: JSON.stringify({ email }),
       });

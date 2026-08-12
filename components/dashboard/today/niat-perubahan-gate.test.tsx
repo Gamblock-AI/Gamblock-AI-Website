@@ -1,9 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NiatPerubahanGate } from './niat-perubahan-gate';
+
+interface ModalProps {
+  needsIntention: boolean;
+  needsCheckIn: boolean;
+  onCompleted: () => void;
+}
 
 const mocks = vi.hoisted(() => ({
   apiClient: vi.fn(),
+  recoveryJourney: { todayCheckIn: true },
+  modalProps: {} as Partial<ModalProps>,
 }));
 
 vi.mock('@/lib/api-client', () => ({
@@ -15,17 +23,20 @@ vi.mock('@/hooks/use-local-user', () => ({
 }));
 
 vi.mock('@/hooks/use-recovery-journey', () => ({
-  useRecoveryJourney: () => ({ todayCheckIn: true }),
+  useRecoveryJourney: () => mocks.recoveryJourney,
 }));
 
 vi.mock('./niat-perubahan-modal', () => ({
-  NiatPerubahanModal: ({ onCompleted }: { onCompleted: () => void }) => (
-    <div role="dialog" aria-label="Niat Perubahan">
-      <button type="button" onClick={onCompleted}>
-        Selesaikan niat
-      </button>
-    </div>
-  ),
+  NiatPerubahanModal: (props: ModalProps) => {
+    mocks.modalProps = props;
+    return (
+      <div role="dialog" aria-label="Niat Perubahan">
+        <button type="button" onClick={props.onCompleted}>
+          Selesaikan niat
+        </button>
+      </div>
+    );
+  },
 }));
 
 vi.mock('@/components/dashboard/tour/dashboard-tour', () => ({
@@ -43,6 +54,11 @@ vi.mock('./gami-daily-recommendation', () => ({
     <div data-testid="gami-recommendation">Gami untuk {studentName}</div>
   ),
 }));
+
+beforeEach(() => {
+  mocks.recoveryJourney = { todayCheckIn: true };
+  mocks.modalProps = {};
+});
 
 describe('NiatPerubahanGate presentation queue', () => {
   it('shows Niat Perubahan, then the tour, then Gami without overlap', async () => {
@@ -74,5 +90,22 @@ describe('NiatPerubahanGate presentation queue', () => {
       'Gami untuk Alya'
     );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('offers the check-in step when a new account has no check-in today', async () => {
+    mocks.apiClient.mockResolvedValueOnce({});
+    mocks.recoveryJourney = { todayCheckIn: null };
+
+    render(
+      <NiatPerubahanGate studentName="Alya">
+        <main>Dashboard mahasiswa</main>
+      </NiatPerubahanGate>
+    );
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Niat Perubahan' })
+    ).toBeInTheDocument();
+    expect(mocks.modalProps.needsIntention).toBe(true);
+    expect(mocks.modalProps.needsCheckIn).toBe(true);
   });
 });

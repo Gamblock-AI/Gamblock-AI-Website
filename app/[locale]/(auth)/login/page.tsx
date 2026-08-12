@@ -6,10 +6,12 @@ import { type FormEvent, useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import {
+  beginVerificationFlow,
   completeInitialPasswordChange,
   login,
   persistAuthSession,
 } from '@/lib/auth';
+import type { AuthResponse } from '@/lib/auth';
 import { LoadingButton } from '@/components/common/loading-button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthField } from '@/components/auth/AuthField';
@@ -25,16 +27,6 @@ type LoginFormValues = {
   email: string;
   password: string;
 };
-
-interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  user: { id: string; email: string; display_name: string; role: string };
-  password_change_required?: boolean;
-  password_change_token?: string;
-}
 
 export default function LoginPage() {
   const t = useTranslations('loginPage');
@@ -63,6 +55,19 @@ export default function LoginPage() {
   });
 
   const completeLogin = (res: AuthResponse) => {
+    if (res.verification_required && res.verification_token) {
+      beginVerificationFlow(res);
+      router.push(ROUTES.VERIFY_PHONE);
+      return;
+    }
+    if (!res.access_token) {
+      reportDevelopmentError(
+        'Password sign-in returned an invalid response',
+        new Error('Authentication response did not include an access token.')
+      );
+      setError(t('loginError'));
+      return;
+    }
     persistAuthSession(res);
     const requestedNext = new URLSearchParams(window.location.search).get(
       'next'
@@ -70,7 +75,7 @@ export default function LoginPage() {
     const nextPath =
       requestedNext?.startsWith('/') && !requestedNext.startsWith('//')
         ? requestedNext
-        : defaultRouteForRole(res.user.role);
+        : defaultRouteForRole(res.user?.role);
     router.push(nextPath);
   };
 
@@ -81,7 +86,10 @@ export default function LoginPage() {
       const res = (await login(data.email, data.password)) as AuthResponse;
       if (res?.password_change_required && res.password_change_token) {
         setPasswordChangeToken(res.password_change_token);
-      } else if (res?.access_token) {
+      } else if (
+        res?.access_token ||
+        (res?.verification_required && res.verification_token)
+      ) {
         completeLogin(res);
       } else {
         reportDevelopmentError(

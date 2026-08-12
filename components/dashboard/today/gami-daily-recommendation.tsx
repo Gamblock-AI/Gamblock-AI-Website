@@ -82,7 +82,7 @@ interface GamiDailyRecommendationProps {
 }
 
 /**
- * Right-edge Gami coachmark for the daily SPK recommendation. Automatic
+ * Responsive Gami conversation for the daily SPK recommendation. Automatic
  * greetings happen once per backend recommendation ID; the launcher remains
  * available so the student can revisit the recommendation without being
  * interrupted again.
@@ -250,9 +250,9 @@ export function GamiDailyRecommendation({
         width={1254}
         height={1254}
         sizes="96px"
-        className="absolute -right-4 -top-1 h-24 w-24 object-contain sm:h-28 sm:w-28"
+        className="absolute -right-4 -top-1 h-24 w-24 object-contain drop-shadow-sm sm:h-28 sm:w-28"
       />
-      <span className="bg-navy/90 relative rounded-full px-2 py-1 text-[0.625rem] font-bold text-white shadow-sm">
+      <span className="bg-navy/90 relative rounded-full px-2.5 py-0.5 text-[0.625rem] font-bold text-white shadow-sm">
         {t('gamiLauncherShort')}
       </span>
     </motion.button>
@@ -263,19 +263,20 @@ export function GamiDailyRecommendation({
       {open ? (
         <motion.div
           key="gami-recommendation-overlay"
-          className="fixed inset-0 z-[45] overflow-hidden"
+          className="fixed inset-0 z-[45] overflow-x-hidden overflow-y-auto overscroll-contain"
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reduceMotion ? 0 : 0.2 }}
         >
           <div
-            className="bg-navy/55 absolute inset-0 backdrop-blur-[2px]"
+            className="bg-navy/60 fixed inset-0 backdrop-blur-sm transition-opacity"
             aria-hidden="true"
+            onClick={closeDialog}
           />
 
-          <div className="relative flex h-full items-end justify-end overflow-y-auto overscroll-contain px-3 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center sm:px-8 sm:py-6 lg:px-12">
-            <div className="flex w-full max-w-5xl flex-col items-end justify-end sm:flex-row sm:items-center">
+          <div className="relative flex min-h-full items-center justify-center p-3 sm:items-end sm:justify-end sm:overflow-hidden sm:px-6 sm:pt-6 sm:pb-0 md:px-8 lg:pr-0 lg:pl-12">
+            <div className="relative flex w-full max-w-[100rem] flex-col items-center justify-center gap-0 sm:flex-row sm:items-end sm:justify-end sm:gap-2 md:gap-3 lg:gap-4">
               <motion.section
                 ref={dialogRef}
                 role="dialog"
@@ -284,26 +285,33 @@ export function GamiDailyRecommendation({
                 aria-describedby="gami-recommendation-description"
                 tabIndex={-1}
                 onKeyDown={trapFocus}
-                initial={reduceMotion ? false : { opacity: 0, x: 36, y: 8 }}
-                animate={{ opacity: 1, x: 0, y: 0 }}
-                exit={{ opacity: 0, x: 24 }}
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 12 }}
                 transition={{ duration: reduceMotion ? 0 : 0.25, ease: 'easeOut' }}
-                className="border-navy/15 bg-card shadow-float relative z-20 mb-[-0.75rem] w-full max-w-[31rem] rounded-[1.75rem] border outline-none sm:mr-[-1rem] sm:mb-0"
+                className="border-navy/15 bg-card/95 shadow-float relative z-20 w-full max-w-[28rem] shrink-0 rounded-[2rem] border outline-none backdrop-blur-xl sm:-mr-16 sm:max-w-[33rem] sm:self-center md:-mr-24 lg:-mr-36 lg:max-w-[36rem] xl:-mr-44"
               >
+                {/* Desktop Speech Tail (Pointing Right toward Gami) */}
                 <span
-                  className="border-navy/15 bg-card absolute right-14 -bottom-2 size-4 rotate-45 border-r border-b sm:top-1/2 sm:-right-2 sm:bottom-auto"
+                  className="border-navy/15 bg-card pointer-events-none absolute -right-2 top-1/2 hidden size-4 -translate-y-1/2 rotate-45 border-t border-r sm:block"
                   aria-hidden="true"
                 />
+                {/* Mobile Speech Tail (Pointing Down toward Gami) */}
+                <span
+                  className="border-navy/15 bg-card pointer-events-none absolute -bottom-2 left-1/2 size-4 -translate-x-1/2 rotate-45 border-b border-r sm:hidden"
+                  aria-hidden="true"
+                />
+
                 <button
                   type="button"
                   onClick={closeDialog}
                   aria-label={t('gamiClose')}
-                  className="text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/30 absolute top-3 right-3 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2"
+                  className="text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/30 absolute top-4 right-4 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2"
                 >
                   <X className="size-4" aria-hidden="true" />
                 </button>
 
-                <div className="max-h-[min(67dvh,38rem)] overflow-y-auto p-5 pr-12 sm:p-6 sm:pr-14">
+                <div className="max-h-[min(55dvh,32rem)] overflow-y-auto p-5 sm:max-h-[min(72dvh,38rem)] sm:p-7 sm:pr-8">
                   <AnimatePresence mode="wait" initial={false}>
                     {step === 'greeting' ? (
                       <motion.div
@@ -315,28 +323,28 @@ export function GamiDailyRecommendation({
                       >
                         <h2
                           id="gami-recommendation-title"
-                          className="text-navy text-2xl leading-tight font-extrabold tracking-[-0.025em]"
+                          className="text-navy text-2xl leading-tight font-extrabold tracking-[-0.025em] sm:text-[1.75rem]"
                         >
                           {t('gamiGreetingTitle', { name: displayName })}
                         </h2>
                         <p
                           id="gami-recommendation-description"
-                          className="text-muted-foreground mt-3 text-sm leading-6"
+                          className="text-muted-foreground mt-3 text-sm leading-relaxed"
                         >
                           {t('gamiGreetingBody')}
                         </p>
-                        <div className="bg-azure/55 text-navy mt-4 flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs leading-5 font-semibold">
+                        <div className="bg-azure/50 border-sky/20 text-navy mt-4 flex items-start gap-2.5 rounded-2xl border p-3 text-xs leading-5">
                           <ShieldCheck
                             className="text-sky mt-0.5 size-4 shrink-0"
                             aria-hidden="true"
                           />
-                          {t('gamiPrivacyNote')}
+                          <span className="font-semibold">{t('gamiPrivacyNote')}</span>
                         </div>
                         <Button
                           type="button"
                           size="lg"
                           onClick={() => setStep('recommendation')}
-                          className="mt-5 w-full"
+                          className="mt-6 w-full gap-2 rounded-xl py-3 font-bold shadow-soft transition-all"
                         >
                           {t('gamiGreetingAction')}
                           <ArrowRight className="size-4" aria-hidden="true" />
@@ -633,41 +641,32 @@ export function GamiDailyRecommendation({
                 </div>
               </motion.section>
 
+              {/* Gami Mascot Stage */}
               <motion.div
-                initial={reduceMotion ? false : { opacity: 0, x: 180 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 120 }}
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.95, x: 40 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.95, x: 40 }}
                 transition={{
-                  duration: reduceMotion ? 0 : 0.45,
+                  duration: reduceMotion ? 0 : 0.3,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="pointer-events-none relative z-10 mr-[-2.5rem] h-40 w-44 shrink-0 sm:mr-[-3.5rem] sm:h-[25rem] sm:w-[22rem]"
+                className="pointer-events-none relative z-10 -mt-6 flex shrink-0 flex-col items-center justify-end self-center sm:mt-0 sm:items-end sm:self-end sm:-mr-8 md:-mr-10 lg:-mr-12"
                 aria-hidden="true"
               >
-                <motion.div
-                  animate={
-                    reduceMotion
-                      ? { opacity: 0.55 }
-                      : {
-                          opacity: [0.38, 0.72, 0.38],
-                          scale: [0.95, 1.08, 0.95],
-                        }
-                  }
-                  transition={
-                    reduceMotion
-                      ? { duration: 0 }
-                      : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }
-                  }
-                  className="bg-sky/35 absolute inset-[12%] rounded-full blur-3xl"
-                />
-                <div className="ring-sky/45 absolute inset-[8%] rounded-full ring-2 ring-offset-4 ring-offset-transparent" />
-                <Image
-                  src="/images/mascot/gami-daily-greeting.webp"
-                  alt=""
-                  fill
-                  sizes="(max-width: 639px) 176px, 352px"
-                  className="relative object-contain object-bottom"
-                />
+                {/* Ambient radiant lighting */}
+                <div className="bg-gradient-to-l from-sky/45 via-azure/35 to-transparent pointer-events-none absolute -right-16 inset-y-0 w-[42rem] rounded-full blur-3xl" />
+
+                {/* Mascot Character */}
+                <div className="relative flex items-center justify-center sm:items-end sm:justify-end">
+                  <Image
+                    src="/images/mascot/gami-daily-greeting.webp"
+                    alt=""
+                    width={1254}
+                    height={1254}
+                    priority
+                    className="h-auto w-[24rem] max-w-[94vw] object-contain object-bottom drop-shadow-[0_25px_50px_rgba(15,23,42,0.3)] sm:w-[32rem] sm:max-h-[90vh] md:w-[40rem] md:max-h-[95vh] lg:w-[48rem] lg:max-h-screen xl:w-[56rem]"
+                  />
+                </div>
               </motion.div>
             </div>
           </div>

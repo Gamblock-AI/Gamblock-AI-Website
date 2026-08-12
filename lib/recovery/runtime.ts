@@ -1,8 +1,8 @@
 import {
   ENGAGEMENT_STORAGE_KEYS,
   LEGACY_STORAGE_KEYS,
-  RECOVERY_STORAGE_KEY,
   recoveryLimits,
+  recoveryStorageKeyFor,
 } from './constants';
 import {
   createEmptyRecoveryState,
@@ -10,6 +10,7 @@ import {
   createId,
   focusPeriodFromDays,
 } from './date';
+import { readStoredUser } from '@/hooks/use-local-user';
 import { parseRecoveryState } from './schema';
 import type {
   RecoveryIntention,
@@ -22,11 +23,42 @@ const SERVER_SNAPSHOT: RecoveryState = createEmptyRecoveryState();
 const listeners = new Set<() => void>();
 
 let persistence: RecoveryPersistence = 'memory';
+let currentAccountId =
+  typeof window === 'undefined' ? '' : resolveAccountId();
 let currentState =
   typeof window === 'undefined' ? SERVER_SNAPSHOT : loadInitialClientState();
 let listeningForStorage = false;
 
+/** Resolve the authenticated account id from the stored profile. */
+function resolveAccountId(): string {
+  return readStoredUser().id ?? '';
+}
+
+/** Storage key scoped to the active account; falls back to the base key. */
+function activeStorageKey(): string {
+  return recoveryStorageKeyFor(currentAccountId);
+}
+
+/**
+ * Re-scope the store when the authenticated account changes (same-tab login
+ * switch or stale module state). Reloads from the account-specific key and
+ * notifies subscribers so a fresh account starts with an empty store.
+ */
+export function ensureRecoveryAccount(): void {
+  const next = resolveAccountId();
+  if (next === currentAccountId) return;
+  currentAccountId = next;
+  currentState = loadInitialClientState();
+  emitChange();
+}
+
+/** Explicit React trigger so account switches re-scope before hydration. */
+export function refreshRecoveryAccount(): void {
+  ensureRecoveryAccount();
+}
+
 export function getRecoverySnapshot(): RecoveryState {
+  ensureRecoveryAccount();
   return currentState;
 }
 
@@ -70,6 +102,7 @@ export function subscribeRecoveryStore(listener: () => void): () => void {
 export function updateRecoveryState(
   updater: (state: RecoveryState) => RecoveryState
 ): void {
+  ensureRecoveryAccount();
   const nextState = updater(currentState);
   if (nextState === currentState) return;
 
@@ -79,11 +112,12 @@ export function updateRecoveryState(
 }
 
 export function clearRecoveryRuntime(): void {
+  ensureRecoveryAccount();
   currentState = createEmptyRecoveryState();
 
   if (typeof window !== 'undefined') {
     try {
-      window.localStorage.removeItem(RECOVERY_STORAGE_KEY);
+      window.localStorage.removeItem(activeStorageKey());
       for (const key of LEGACY_STORAGE_KEYS) {
         window.localStorage.removeItem(key);
       }
@@ -111,7 +145,7 @@ function persistCurrentState(): void {
 
   try {
     window.localStorage.setItem(
-      RECOVERY_STORAGE_KEY,
+      activeStorageKey(),
       JSON.stringify(currentState)
     );
     persistence = 'local';
@@ -123,7 +157,7 @@ function persistCurrentState(): void {
 function loadInitialClientState(): RecoveryState {
   try {
     persistence = 'local';
-    const stored = window.localStorage.getItem(RECOVERY_STORAGE_KEY);
+    const stored = window.localStorage.getItem(activeStorageKey());
     if (stored) {
       return parseRecoveryState(stored) ?? createEmptyRecoveryState();
     }
@@ -153,7 +187,7 @@ function loadInitialClientState(): RecoveryState {
       intentionHistory: [createHistoryEvent(intention.id, 'created', now)],
     };
 
-    window.localStorage.setItem(RECOVERY_STORAGE_KEY, JSON.stringify(migrated));
+    window.localStorage.setItem(activeStorageKey(), JSON.stringify(migrated));
     for (const key of LEGACY_STORAGE_KEYS) {
       window.localStorage.removeItem(key);
     }
@@ -165,7 +199,7 @@ function loadInitialClientState(): RecoveryState {
 }
 
 function handleStorageEvent(event: StorageEvent): void {
-  if (event.key !== RECOVERY_STORAGE_KEY) return;
+  if (event.key !== activeStorageKey()) return;
 
   if (event.newValue === null) {
     currentState = createEmptyRecoveryState();

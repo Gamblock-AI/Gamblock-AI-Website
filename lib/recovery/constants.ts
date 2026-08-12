@@ -8,7 +8,17 @@ import type {
   WeeklyOutcome,
 } from './types';
 
+/**
+ * Base localStorage key for the private recovery store. The store is scoped
+ * per authenticated account (`${RECOVERY_STORAGE_KEY}:<accountId>`) so a new
+ * account never inherits another account's check-ins, intentions, or reviews.
+ * The unscoped base key is kept as the logged-out fallback.
+ */
 export const RECOVERY_STORAGE_KEY = 'gamblock:recovery:v1';
+
+export function recoveryStorageKeyFor(accountId: string): string {
+  return accountId ? `${RECOVERY_STORAGE_KEY}:${accountId}` : RECOVERY_STORAGE_KEY;
+}
 
 export const LEGACY_STORAGE_KEYS = [
   'gamblock_intention',

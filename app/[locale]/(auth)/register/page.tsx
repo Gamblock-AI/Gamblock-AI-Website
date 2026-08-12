@@ -5,8 +5,8 @@ import { Link } from '@/i18n/routing';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Mail, Lock, ArrowRight, User, Shield, Phone } from 'lucide-react';
-import { register } from '@/lib/auth';
-import { persistAuthSession } from '@/lib/auth';
+import { register, persistAuthSession, beginVerificationFlow } from '@/lib/auth';
+import type { AuthResponse } from '@/lib/auth';
 import { LoadingButton } from '@/components/common/loading-button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthField } from '@/components/auth/AuthField';
@@ -27,14 +27,6 @@ type RegisterFormValues = {
   password: string;
   terms: true;
 };
-
-interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  user: { id: string; email: string; display_name: string; role: string };
-}
 
 export default function RegisterPage() {
   const t = useTranslations('registerPage');
@@ -78,7 +70,10 @@ export default function RegisterPage() {
         data.role,
         data.phone
       )) as AuthResponse;
-      if (res?.access_token) {
+      if (res?.verification_required && res.verification_token) {
+        beginVerificationFlow(res);
+        router.push(ROUTES.VERIFY_PHONE);
+      } else if (res?.access_token) {
         persistAuthSession(res);
         router.push(
           data.role === 'partner' ? ROUTES.PARTNERS : ROUTES.DASHBOARD

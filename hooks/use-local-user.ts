@@ -24,7 +24,7 @@ let cachedUser: LocalUser = EMPTY_USER;
 let currentProfileRequest: Promise<LocalUser> | null = null;
 let loadedForToken: string | null = null;
 
-function readUser(): LocalUser {
+export function readStoredUser(): LocalUser {
   if (typeof window === 'undefined') return EMPTY_USER;
 
   const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -83,7 +83,7 @@ export async function refreshCurrentUser() {
       return profile;
     })
     .catch((err) => {
-      const cached = readUser();
+      const cached = readStoredUser();
       if (cached.id || cached.role) {
         loadedForToken = token;
         return cached;
@@ -100,7 +100,7 @@ export function updateLocalUser(
   updates: Partial<Pick<LocalUser, 'display_name' | 'avatar_url'>>
 ) {
   if (typeof window === 'undefined') return;
-  const current = readUser();
+  const current = readStoredUser();
   window.localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify({ ...current, ...updates })
@@ -109,7 +109,7 @@ export function updateLocalUser(
 }
 
 export function useLocalUser() {
-  const user = useSyncExternalStore(subscribe, readUser, () => EMPTY_USER);
+  const user = useSyncExternalStore(subscribe, readStoredUser, () => EMPTY_USER);
 
   useEffect(() => {
     const token = window.localStorage.getItem('gamblock_access_token');

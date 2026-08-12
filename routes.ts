@@ -21,6 +21,7 @@ export const ROUTES = {
   DATA_REQUESTS: '/data-requests',
   LOGIN: '/login',
   REGISTER: '/register',
+  VERIFY_PHONE: '/verify-phone',
   FORGOT_PASSWORD: '/forgot-password',
   PROFILE: '/profile',
   CREATE_GROUP: '/onboarding/create-group',

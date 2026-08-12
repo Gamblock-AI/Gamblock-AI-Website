@@ -12,14 +12,18 @@ import { LoadingButton } from '@/components/common/loading-button';
 
 type Copy = {
   email: string;
+  emailPlaceholder?: string;
   code: string;
+  codePlaceholder?: string;
   password: string;
+  passwordPlaceholder?: string;
   request: string;
   confirm: string;
   sent: string;
   success: string;
   detail: string;
   genericError: string;
+  previewCode?: (code: string) => string;
 };
 
 export function PasswordResetForm({ copy }: { copy: Copy }) {
@@ -30,14 +34,16 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
   const [password, setPassword] = useState('');
   const [requested, setRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState('');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     try {
       if (!requested) {
-        await requestCode(email.trim());
+        const result = await requestCode(email.trim());
         setRequested(true);
+        if (result?.preview_code) setPreview(result.preview_code);
         toastSuccess(copy.sent);
         return;
       }
@@ -61,11 +67,18 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
           {error}
         </p>
       ) : null}
+      {preview && copy.previewCode ? (
+        <p className="bg-azure/60 text-navy border-sky/20 flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold">
+          <KeyRound className="size-4 shrink-0" aria-hidden="true" />
+          {copy.previewCode(preview)}
+        </p>
+      ) : null}
       <AuthField
         label={copy.email}
         icon={Mail}
         type="email"
         autoComplete="email"
+        placeholder={copy.emailPlaceholder}
         required
         value={email}
         onChange={(event) => setEmail(event.target.value)}
@@ -76,6 +89,7 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
             label={copy.code}
             icon={KeyRound}
             autoComplete="one-time-code"
+            placeholder={copy.codePlaceholder}
             minLength={12}
             maxLength={14}
             required
@@ -87,6 +101,7 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
             icon={Lock}
             type="password"
             autoComplete="new-password"
+            placeholder={copy.passwordPlaceholder}
             minLength={8}
             required
             value={password}

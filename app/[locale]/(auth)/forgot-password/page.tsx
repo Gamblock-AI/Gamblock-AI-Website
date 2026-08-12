@@ -19,14 +19,18 @@ export default async function ForgotPasswordPage() {
       <PasswordResetForm
         copy={{
           email: t('email'),
+          emailPlaceholder: t('emailPlaceholder'),
           code: t('code'),
+          codePlaceholder: t('codePlaceholder'),
           password: t('password'),
+          passwordPlaceholder: t('passwordPlaceholder'),
           request: t('request'),
           confirm: t('confirm'),
           sent: t('sent'),
           success: t('success'),
           detail: t('detail'),
           genericError: t('genericError'),
+          previewCode: (code: string) => t('previewCode', { code }),
         }}
       />
     </AuthShell>
