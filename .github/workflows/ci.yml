@@ -38,12 +38,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Validate production public configuration
+      - name: Validate public configuration
         shell: bash
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_API_URL_STAGING: ${{ vars.NEXT_PUBLIC_API_URL_STAGING }}
+          NEXT_PUBLIC_APP_URL_STAGING: ${{ vars.NEXT_PUBLIC_APP_URL_STAGING }}
         run: |
           set -euo pipefail
           case "$NEXT_PUBLIC_API_URL" in
@@ -57,6 +59,18 @@ jobs:
           if [[ ! "$NEXT_PUBLIC_VAPID_PUBLIC_KEY" =~ ^B[A-Za-z0-9_-]{86}$ ]]; then
             echo "NEXT_PUBLIC_VAPID_PUBLIC_KEY must be a valid P-256 public key" >&2
             exit 1
+          fi
+          # Staging image build is optional: it runs only when the staging
+          # public URLs are configured as repository variables.
+          if [ -n "$NEXT_PUBLIC_API_URL_STAGING" ] || [ -n "$NEXT_PUBLIC_APP_URL_STAGING" ]; then
+            case "$NEXT_PUBLIC_API_URL_STAGING" in
+              https://*) ;;
+              *) echo "NEXT_PUBLIC_API_URL_STAGING must be a non-empty HTTPS URL" >&2; exit 1 ;;
+            esac
+            case "$NEXT_PUBLIC_APP_URL_STAGING" in
+              https://*) ;;
+              *) echo "NEXT_PUBLIC_APP_URL_STAGING must be a non-empty HTTPS URL" >&2; exit 1 ;;
+            esac
           fi
 
       - name: Set up Docker Buildx
@@ -91,6 +105,22 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push staging image
+        if: vars.NEXT_PUBLIC_API_URL_STAGING != '' && vars.NEXT_PUBLIC_APP_URL_STAGING != ''
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.IMAGE }}:staging
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL_STAGING }}
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL_STAGING }}
             NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
