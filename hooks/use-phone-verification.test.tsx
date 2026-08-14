@@ -10,7 +10,13 @@ const server = setupServer(
     'http://localhost:8080/v1/auth/phone-verification/verify',
     async ({ request }) => {
       requests.push((await request.json()) as Record<string, unknown>);
-      return HttpResponse.json({ data: { verified: true } });
+      return HttpResponse.json({
+        data: {
+          access_token: 'access-token',
+          refresh_token: 'refresh-token',
+          user: { id: 'u1', email: 'a@b.co', role: 'user' },
+        },
+      });
     }
   ),
   http.post(

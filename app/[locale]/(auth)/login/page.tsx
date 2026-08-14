@@ -56,7 +56,16 @@ export default function LoginPage() {
 
   const completeLogin = (res: AuthResponse) => {
     if (res.verification_required && res.verification_token) {
-      beginVerificationFlow(res);
+      const requestedNext = new URLSearchParams(window.location.search).get(
+        'next'
+      );
+      beginVerificationFlow(
+        res,
+        'login',
+        requestedNext && !requestedNext.startsWith('//')
+          ? requestedNext
+          : undefined
+      );
       router.push(ROUTES.VERIFY_PHONE);
       return;
     }

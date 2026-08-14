@@ -2,10 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-
-interface VerifyResponse {
-  verified: boolean;
-}
+import type { AuthResponse } from '@/lib/auth';
 
 interface ResendResponse {
   sent: boolean;
@@ -13,22 +10,29 @@ interface ResendResponse {
 }
 
 /**
- * Public WhatsApp OTP flow used by the registration/verify-phone page. Both
- * calls are token-authenticated (verification token from sign-in), so no
- * bearer session is required.
+ * Public WhatsApp OTP flow used by the registration/login verify-phone page.
+ * Both calls are token-authenticated (verification token from sign-in), so no
+ * bearer session is required. A successful verify returns the issued auth
+ * pair so a login-origin flow can continue straight to the dashboard.
  */
 export function usePhoneVerification() {
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
 
   const verifyCode = useCallback(
-    async (verificationToken: string, code: string): Promise<void> => {
+    async (
+      verificationToken: string,
+      code: string
+    ): Promise<AuthResponse | null> => {
       setVerifying(true);
       try {
-        await apiClient<VerifyResponse>('/auth/phone-verification/verify', {
-          method: 'POST',
-          body: JSON.stringify({ verification_token: verificationToken, code }),
-        });
+        return await apiClient<AuthResponse>(
+          '/auth/phone-verification/verify',
+          {
+            method: 'POST',
+            body: JSON.stringify({ verification_token: verificationToken, code }),
+          }
+        );
       } finally {
         setVerifying(false);
       }

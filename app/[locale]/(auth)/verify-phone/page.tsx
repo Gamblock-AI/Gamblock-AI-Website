@@ -5,13 +5,14 @@ import { KeyRound, RefreshCcw, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { ROUTES } from '@/routes';
+import { ROUTES, defaultRouteForRole } from '@/routes';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthField } from '@/components/auth/AuthField';
 import { LoadingButton } from '@/components/common/loading-button';
 import { usePhoneVerification } from '@/hooks/use-phone-verification';
 import {
   clearVerificationContext,
+  persistAuthSession,
   readVerificationContext,
   subscribeVerificationContext,
 } from '@/lib/auth';
@@ -64,8 +65,22 @@ export default function VerifyPhonePage() {
       return;
     }
     try {
-      await verifyCode(context.token, code.trim());
+      const verified = await verifyCode(context.token, code.trim());
+      const nextPath = context.next;
       clearVerificationContext();
+      if (
+        context.origin === 'login' &&
+        verified?.access_token &&
+        verified.refresh_token
+      ) {
+        persistAuthSession(verified);
+        const requestedNext =
+          nextPath?.startsWith('/') && !nextPath.startsWith('//')
+            ? nextPath
+            : defaultRouteForRole(verified.user?.role);
+        router.push(requestedNext);
+        return;
+      }
       router.push(ROUTES.LOGIN);
     } catch (err) {
       setError(friendlyMessage(err, t('verifyError')));
