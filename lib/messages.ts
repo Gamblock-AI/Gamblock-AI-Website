@@ -44,6 +44,7 @@ export const MESSAGES: Record<string, string> = {
     'Pengiriman verifikasi telah dipindahkan ke WhatsApp.',
   recent_auth_required:
     'Silakan masuk kembali sebelum menyelesaikan keputusan sensitif ini.',
+  student_only: 'Aplikasi ini hanya untuk akun mahasiswa.',
   admin_accounts_fetch_failed: 'Gagal memuat daftar akun.',
   admin_account_create_failed: 'Akun belum dapat dibuat.',
   admin_account_update_failed: 'Status akun belum dapat diperbarui.',
@@ -279,6 +280,7 @@ const MESSAGES_EN: Record<string, string> = {
     'Verification delivery has moved to WhatsApp.',
   recent_auth_required:
     'Please sign in again before completing this sensitive action.',
+  student_only: 'This app is only available for student accounts.',
   profile_not_found: 'Your profile could not be found.',
   profile_update_failed: 'Your profile could not be updated.',
   password_validation_failed:
