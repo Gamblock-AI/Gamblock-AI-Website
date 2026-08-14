@@ -76,21 +76,33 @@ export async function logout(refreshToken: string) {
 
 // WhatsApp OTP verification context. The verification token is short-lived and
 // session-scoped so it is never exposed in the URL or persisted across tabs.
+// The origin records whether the flow started at register or login so the
+// verify page can route a login-origin flow straight to the dashboard.
 const VERIFICATION_CONTEXT_KEY = 'gamblock:phone-verification';
+
+export type VerificationOrigin = 'register' | 'login';
 
 export interface VerificationContext {
   token: string;
   phone: string;
   previewCode: string;
+  origin: VerificationOrigin;
+  next?: string;
 }
 
-export function beginVerificationFlow(response: AuthResponse) {
+export function beginVerificationFlow(
+  response: AuthResponse,
+  origin: VerificationOrigin = 'register',
+  next?: string
+) {
   if (!response.verification_token) return;
   if (typeof window === 'undefined') return;
   const context: VerificationContext = {
     token: response.verification_token,
     phone: response.user?.phone_e164 ?? '',
     previewCode: response.phone_verification_preview_code ?? '',
+    origin,
+    next,
   };
   window.sessionStorage.setItem(
     VERIFICATION_CONTEXT_KEY,
@@ -113,6 +125,8 @@ function parseVerificationContext(
         token: parsed.token,
         phone: parsed.phone ?? '',
         previewCode: parsed.previewCode ?? '',
+        origin: parsed.origin === 'login' ? 'login' : 'register',
+        next: typeof parsed.next === 'string' ? parsed.next : undefined,
       };
     }
     return null;

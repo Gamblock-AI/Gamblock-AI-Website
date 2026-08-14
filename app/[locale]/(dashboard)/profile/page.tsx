@@ -1,13 +1,13 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   BadgeCheck,
   CircleAlert,
   KeyRound,
   Mail,
   Save,
-  Trash2,
   UserRound,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -24,7 +24,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AuthField } from '@/components/auth/AuthField';
-import { AvatarCropper } from '@/components/account/avatar-cropper';
 import { AvatarImage } from '@/components/account/avatar-image';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { Link } from '@/i18n/routing';
@@ -42,6 +41,14 @@ import {
   dynamicLabelKey,
 } from '@/lib/i18n/dynamic-labels';
 import { errorCode, friendlyMessage } from '@/lib/messages';
+
+const AvatarPhotoDialog = dynamic(
+  () =>
+    import('@/components/account/avatar-photo-dialog').then(
+      (module) => module.AvatarPhotoDialog
+    ),
+  { ssr: false }
+);
 
 interface PasswordFormValues {
   currentPassword: string;
@@ -61,7 +68,7 @@ export default function ProfilePage() {
     updatePassword,
   } = useProfileActions();
   const [saving, setSaving] = useState(false);
-  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState(false);
   const [passwordBusy, setPasswordBusy] = useState(false);
@@ -174,7 +181,6 @@ export default function ProfilePage() {
   };
 
   const uploadAvatar = async (avatar: File) => {
-    setAvatarBusy(true);
     try {
       const updated = await sendAvatar(avatar);
       updateLocalUser({
@@ -183,23 +189,22 @@ export default function ProfilePage() {
           : undefined,
       });
       toastSuccess(t('avatarUploadSuccess'));
+      return true;
     } catch (error) {
       toastError(error, t('avatarUploadError'));
-    } finally {
-      setAvatarBusy(false);
+      return false;
     }
   };
 
   const removeAvatar = async () => {
-    setAvatarBusy(true);
     try {
       await deleteAvatar();
       updateLocalUser({ avatar_url: undefined });
       toastSuccess(t('avatarRemoveSuccess'));
+      return true;
     } catch (error) {
       toastError(error, t('avatarRemoveError'));
-    } finally {
-      setAvatarBusy(false);
+      return false;
     }
   };
 
@@ -250,14 +255,19 @@ export default function ProfilePage() {
           }
         >
           <div className="border-border flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center">
-            <AvatarImage
-              avatarUrl={user.avatar_url}
-              alt={t('avatarAlt', {
-                name: user.display_name || t('profileFallback'),
-              })}
-              fallback={<UserRound className="size-8" aria-hidden="true" />}
-              className="bg-azure text-navy flex size-20 shrink-0 items-center justify-center rounded-2xl"
-            />
+            <button
+              type="button"
+              className="focus-visible:ring-navy/30 shrink-0 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              onClick={() => setAvatarDialogOpen(true)}
+              aria-label={t('avatarManage')}
+            >
+              <AvatarImage
+                avatarUrl={user.avatar_url}
+                alt=""
+                fallback={<UserRound className="size-8" aria-hidden="true" />}
+                className="bg-azure text-navy flex size-20 items-center justify-center rounded-2xl"
+              />
+            </button>
             <div className="min-w-0 flex-1">
               <h3 className="text-navy text-sm font-bold">
                 {t('avatarTitle')}
@@ -265,20 +275,6 @@ export default function ProfilePage() {
               <p className="text-muted-foreground mt-1 text-xs leading-5">
                 {t('avatarBody')}
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <AvatarCropper busy={avatarBusy} onCrop={uploadAvatar} />
-                {user.avatar_url ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={avatarBusy}
-                    onClick={() => void removeAvatar()}
-                  >
-                    <Trash2 className="size-4" aria-hidden="true" />
-                    {t('avatarRemove')}
-                  </Button>
-                ) : null}
-              </div>
             </div>
           </div>
 
@@ -457,6 +453,19 @@ export default function ProfilePage() {
           {t('accountTruthAction')}
         </Link>
       </DashboardPanel>
+      {avatarDialogOpen ? (
+        <AvatarPhotoDialog
+          open={avatarDialogOpen}
+          onOpenChange={setAvatarDialogOpen}
+          avatarUrl={user.avatar_url}
+          avatarAlt={t('avatarAlt', {
+            name: user.display_name || t('profileFallback'),
+          })}
+          fallback={<UserRound className="size-10" aria-hidden="true" />}
+          onUpload={uploadAvatar}
+          onDelete={removeAvatar}
+        />
+      ) : null}
     </DashboardPage>
   );
 }

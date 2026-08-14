@@ -87,7 +87,7 @@ export default function RegisterPage() {
         data.phone
       )) as AuthResponse;
       if (res?.verification_required && res.verification_token) {
-        beginVerificationFlow(res);
+        beginVerificationFlow(res, 'register');
         router.push(ROUTES.VERIFY_PHONE);
       } else if (res?.access_token) {
         persistAuthSession(res);

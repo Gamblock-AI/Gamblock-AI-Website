@@ -28,6 +28,7 @@ export interface MemberAggregate {
 export interface AccountabilityGroup {
   id: string;
   owner_name: string;
+  owner_avatar_url?: string;
   name: string;
   description: string;
   join_code?: string;
