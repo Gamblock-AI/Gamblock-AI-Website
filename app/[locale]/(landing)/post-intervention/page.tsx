@@ -122,25 +122,29 @@ export default function PostInterventionPage() {
             {/* Breathing exercise leads on mobile — it is the reason the
                 student landed here. */}
             <section
-              className="border-navy/15 shadow-soft overflow-hidden rounded-[1.75rem] border bg-white/85 backdrop-blur lg:order-2"
+              className="border-navy/10 shadow-soft relative overflow-hidden rounded-[2rem] border bg-white/90 backdrop-blur-md lg:order-2"
               aria-labelledby="grounding-title"
             >
-              <div className="border-border border-b p-5">
+              <div
+                className="pointer-events-none absolute -right-20 -bottom-20 size-72 rounded-full bg-gradient-to-tl from-sky/15 via-azure/30 to-transparent opacity-60 blur-2xl"
+                aria-hidden="true"
+              />
+              <div className="border-border/80 border-b p-5 sm:p-6">
                 <h2
                   id="grounding-title"
-                  className="text-navy text-xl font-bold"
+                  className="text-navy text-xl font-bold tracking-tight"
                 >
                   {t('groundingTitle')}
                 </h2>
-                <p className="text-muted-foreground mt-2 text-sm leading-6">
+                <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
                   {t('groundingDescription')}
                 </p>
               </div>
 
-              <div className="p-5 text-center">
+              <div className="p-5 text-center sm:p-6">
                 <motion.div
-                  className={`border-navy/15 bg-azure/60 relative mx-auto flex size-40 items-center justify-center rounded-full border sm:size-48 ${
-                    complete ? 'ring-sage/25 ring-4' : ''
+                  className={`relative mx-auto flex size-44 items-center justify-center rounded-full border border-sky/30 bg-gradient-to-b from-sky-light/40 via-azure/40 to-white shadow-inner sm:size-52 ${
+                    complete ? 'ring-sage/30 ring-4' : ''
                   }`}
                   animate={{ scale: breathScale }}
                   transition={{
@@ -151,14 +155,14 @@ export default function PostInterventionPage() {
                   <Image
                     src="/images/mascot/gami-meditate.webp"
                     alt=""
-                    width={112}
-                    height={112}
-                    className="animate-float-slow size-28 object-contain"
+                    width={120}
+                    height={120}
+                    className="animate-float-slow size-28 object-contain sm:size-32 drop-shadow-sm"
                     aria-hidden="true"
                   />
                   {complete ? (
                     <motion.span
-                      className="bg-sage absolute right-1 bottom-1 flex size-10 items-center justify-center rounded-full text-white shadow-sm"
+                      className="bg-sage shadow-soft absolute right-1.5 bottom-1.5 flex size-10 items-center justify-center rounded-full text-white"
                       initial={reduce ? false : { scale: 0.6, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -180,7 +184,7 @@ export default function PostInterventionPage() {
                         <p className="text-sage text-lg font-bold">
                           {t('completeTitle')}
                         </p>
-                        <p className="text-muted-foreground mt-2 text-sm leading-6">
+                        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
                           {t('completeBody')}
                         </p>
                       </>
@@ -189,10 +193,10 @@ export default function PostInterventionPage() {
                         <p className="text-navy text-lg font-bold">
                           {t(currentPhase.key)}
                         </p>
-                        <p className="text-navy mt-1 text-3xl font-extrabold tabular-nums">
+                        <p className="text-navy mt-1 text-3xl font-extrabold tracking-tight tabular-nums sm:text-4xl">
                           {t('seconds', { count: remaining })}
                         </p>
-                        <p className="text-muted-foreground mt-1 text-xs font-medium">
+                        <p className="text-muted-foreground mt-1 text-xs font-semibold uppercase tracking-wider">
                           {t('round', { current: round, total: TOTAL_ROUNDS })}
                         </p>
                       </>
@@ -211,20 +215,20 @@ export default function PostInterventionPage() {
                   {Array.from({ length: TOTAL_ROUNDS }, (_, index) => (
                     <span
                       key={index}
-                      className={`size-2.5 rounded-full transition-colors duration-300 motion-reduce:transition-none ${
+                      className={`h-2 rounded-full transition-all duration-300 motion-reduce:transition-none ${
                         complete || round > index + (started ? 0 : 1)
-                          ? 'bg-sage'
+                          ? 'bg-sage w-6'
                           : started && round === index + 1
-                            ? 'bg-navy/60'
-                            : 'bg-navy/15'
+                            ? 'bg-navy w-6'
+                            : 'bg-navy/15 w-2'
                       }`}
                     />
                   ))}
                 </div>
 
-                <div className="mt-5 grid gap-2">
+                <div className="mt-6 grid gap-2.5">
                   {!started ? (
-                    <Button size="lg" className="h-12 w-full" onClick={start}>
+                    <Button size="lg" className="h-12 w-full font-semibold shadow-sm" onClick={start}>
                       <Play className="size-4" aria-hidden="true" />
                       {t('start')}
                     </Button>
@@ -232,7 +236,7 @@ export default function PostInterventionPage() {
                     <Button
                       size="lg"
                       variant="outline"
-                      className="h-12 w-full"
+                      className="h-12 w-full font-semibold"
                       onClick={reset}
                     >
                       <RotateCcw className="size-4" aria-hidden="true" />
@@ -242,7 +246,7 @@ export default function PostInterventionPage() {
                     <>
                       <Button
                         size="lg"
-                        className="h-12 w-full"
+                        className="h-12 w-full font-semibold shadow-sm"
                         onClick={() => setRunning((current) => !current)}
                       >
                         {running ? (
@@ -254,7 +258,7 @@ export default function PostInterventionPage() {
                       </Button>
                       <Button
                         variant="ghost"
-                        className="h-11 w-full"
+                        className="text-muted-foreground hover:text-navy h-10 w-full"
                         onClick={reset}
                       >
                         <RotateCcw className="size-4" aria-hidden="true" />
@@ -267,78 +271,86 @@ export default function PostInterventionPage() {
             </section>
 
             <section
-              className="border-navy/15 bg-azure/45 shadow-soft rounded-[1.75rem] border p-5 backdrop-blur sm:p-8 lg:order-1"
+              className="border-navy/10 shadow-soft relative overflow-hidden rounded-[2rem] border bg-white/90 p-6 backdrop-blur-md sm:p-9 lg:order-1"
               aria-labelledby="post-intervention-title"
             >
-              <p className="text-sage text-xs font-bold tracking-[0.12em] uppercase">
-                {t('eyebrow')}
-              </p>
-              <h1
-                id="post-intervention-title"
-                className="text-navy mt-3 max-w-2xl text-3xl leading-tight font-extrabold tracking-tight sm:text-5xl"
-              >
-                {t('title')}
-              </h1>
-              <p className="text-muted-foreground mt-4 max-w-2xl text-sm leading-7 sm:text-base">
-                {t('description')}
-              </p>
+              <div
+                className="pointer-events-none absolute -top-24 -left-24 size-96 rounded-full bg-gradient-to-br from-azure/60 via-sky-light/20 to-transparent opacity-70 blur-3xl"
+                aria-hidden="true"
+              />
+              <div className="relative">
+                <span className="border-sage/25 bg-sage/[0.08] text-sage inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold tracking-wider uppercase">
+                  {t('eyebrow')}
+                </span>
+                <h1
+                  id="post-intervention-title"
+                  className="text-navy mt-4 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[2.65rem] lg:leading-[1.15]"
+                >
+                  {t('title')}
+                </h1>
+                <p className="text-muted-foreground mt-4 max-w-2xl text-sm leading-relaxed sm:text-base">
+                  {t('description')}
+                </p>
 
-              <div className="border-sage/20 mt-7 flex items-start gap-3 rounded-2xl border bg-white/80 p-4">
-                <LockKeyhole
-                  className="text-sage mt-0.5 size-5 shrink-0"
-                  aria-hidden="true"
-                />
-                <div>
-                  <h2 className="text-navy text-sm font-bold">
-                    {t('privacyTitle')}
-                  </h2>
-                  <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    {t('privacyBody')}
-                  </p>
+                <div className="border-sage/20 bg-sage/[0.04] mt-8 flex items-start gap-3.5 rounded-2xl border p-4 sm:p-5">
+                  <div className="border-sage/20 bg-sage/10 text-sage flex size-9 shrink-0 items-center justify-center rounded-xl border">
+                    <LockKeyhole className="size-4" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h2 className="text-navy text-sm font-bold">
+                      {t('privacyTitle')}
+                    </h2>
+                    <p className="text-muted-foreground mt-1 text-xs leading-relaxed sm:text-sm">
+                      {t('privacyBody')}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Button
-                  size="lg"
-                  nativeButton={false}
-                  className="h-12"
-                  render={<Link href={ROUTES.RECOVERY} />}
-                >
-                  {t('openRecovery')}
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  nativeButton={false}
-                  className="h-12"
-                  render={<Link href={ROUTES.HELP} />}
-                >
-                  <CircleHelp className="size-4" aria-hidden="true" />
-                  {t('openHelp')}
-                </Button>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    size="lg"
+                    nativeButton={false}
+                    className="h-12 px-6 font-semibold shadow-sm"
+                    render={<Link href={ROUTES.RECOVERY} />}
+                  >
+                    {t('openRecovery')}
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    nativeButton={false}
+                    className="border-navy/15 text-navy hover:bg-navy/5 h-12 px-5 font-semibold"
+                    render={<Link href={ROUTES.HELP} />}
+                  >
+                    <CircleHelp className="size-4" aria-hidden="true" />
+                    {t('openHelp')}
+                  </Button>
+                </div>
               </div>
             </section>
           </div>
 
           <section
-            className="border-sage/20 bg-sage/[0.055] mt-6 rounded-[1.5rem] border p-5 backdrop-blur sm:p-6"
+            className="border-navy/10 shadow-soft relative mt-6 overflow-hidden rounded-[1.75rem] border bg-white/90 p-6 backdrop-blur-md sm:p-7"
             aria-labelledby="post-support-title"
           >
+            <div
+              className="pointer-events-none absolute top-0 left-0 h-full w-1.5 bg-gradient-to-b from-sage to-sage-light"
+              aria-hidden="true"
+            />
             <div className="flex items-start gap-4">
-              <CircleHelp
-                className="text-sage mt-0.5 size-6 shrink-0"
-                aria-hidden="true"
-              />
+              <div className="border-sage/20 bg-sage/10 text-sage flex size-11 shrink-0 items-center justify-center rounded-2xl border">
+                <CircleHelp className="size-5" aria-hidden="true" />
+              </div>
               <div>
                 <h2
                   id="post-support-title"
-                  className="text-navy text-lg font-bold"
+                  className="text-navy text-lg font-bold sm:text-xl"
                 >
                   {t('supportTitle')}
                 </h2>
-                <p className="text-muted-foreground mt-2 max-w-3xl text-sm leading-6">
+                <p className="text-muted-foreground mt-1.5 max-w-3xl text-sm leading-relaxed sm:text-base">
                   {t('supportBody')}
                 </p>
               </div>
