@@ -23,6 +23,7 @@ import {
   getMobilePrimaryNavigation,
   isNavigationItemActive,
 } from './navigation-config';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 export function MobileNavigation() {
   const t = useTranslations('dashboardNav');
@@ -147,6 +148,15 @@ export function MobileNavigation() {
                   })}
                 </div>
               ))}
+
+              <div className="border-border border-t pt-4">
+                <div className="flex items-center justify-between px-3">
+                  <span className="text-muted-foreground text-xs font-semibold">
+                    {t('languageToggle')}
+                  </span>
+                  <LanguageSwitcher />
+                </div>
+              </div>
             </div>
           </DialogPrimitive.Popup>
         </DialogPrimitive.Viewport>

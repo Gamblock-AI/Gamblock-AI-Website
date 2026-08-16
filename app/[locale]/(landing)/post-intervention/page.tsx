@@ -6,13 +6,15 @@ import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpen,
   Check,
   CircleHelp,
-  LockKeyhole,
+  HeartPulse,
   Pause,
   Play,
   RotateCcw,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -118,160 +120,10 @@ export default function PostInterventionPage() {
             </span>
           </nav>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
-            {/* Breathing exercise leads on mobile — it is the reason the
-                student landed here. */}
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr] items-stretch">
+            {/* Left Card: Recovery Space & Next Steps */}
             <section
-              className="border-navy/10 shadow-soft relative overflow-hidden rounded-[2rem] border bg-white/90 backdrop-blur-md lg:order-2"
-              aria-labelledby="grounding-title"
-            >
-              <div
-                className="pointer-events-none absolute -right-20 -bottom-20 size-72 rounded-full bg-gradient-to-tl from-sky/15 via-azure/30 to-transparent opacity-60 blur-2xl"
-                aria-hidden="true"
-              />
-              <div className="border-border/80 border-b p-5 sm:p-6">
-                <h2
-                  id="grounding-title"
-                  className="text-navy text-xl font-bold tracking-tight"
-                >
-                  {t('groundingTitle')}
-                </h2>
-                <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-                  {t('groundingDescription')}
-                </p>
-              </div>
-
-              <div className="p-5 text-center sm:p-6">
-                <motion.div
-                  className={`relative mx-auto flex size-44 items-center justify-center rounded-full border border-sky/30 bg-gradient-to-b from-sky-light/40 via-azure/40 to-white shadow-inner sm:size-52 ${
-                    complete ? 'ring-sage/30 ring-4' : ''
-                  }`}
-                  animate={{ scale: breathScale }}
-                  transition={{
-                    duration: reduce ? 0 : running ? currentPhase.duration : 0.4,
-                    ease: 'easeInOut',
-                  }}
-                >
-                  <Image
-                    src="/images/mascot/gami-meditate.webp"
-                    alt=""
-                    width={120}
-                    height={120}
-                    className="animate-float-slow size-28 object-contain sm:size-32 drop-shadow-sm"
-                    aria-hidden="true"
-                  />
-                  {complete ? (
-                    <motion.span
-                      className="bg-sage shadow-soft absolute right-1.5 bottom-1.5 flex size-10 items-center justify-center rounded-full text-white"
-                      initial={reduce ? false : { scale: 0.6, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                      aria-hidden="true"
-                    >
-                      <Check className="size-5" />
-                    </motion.span>
-                  ) : null}
-                </motion.div>
-
-                <div
-                  className="mt-6 min-h-24"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  <FadeSwap swapKey={swapKey}>
-                    {complete ? (
-                      <>
-                        <p className="text-sage text-lg font-bold">
-                          {t('completeTitle')}
-                        </p>
-                        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                          {t('completeBody')}
-                        </p>
-                      </>
-                    ) : started ? (
-                      <>
-                        <p className="text-navy text-lg font-bold">
-                          {t(currentPhase.key)}
-                        </p>
-                        <p className="text-navy mt-1 text-3xl font-extrabold tracking-tight tabular-nums sm:text-4xl">
-                          {t('seconds', { count: remaining })}
-                        </p>
-                        <p className="text-muted-foreground mt-1 text-xs font-semibold uppercase tracking-wider">
-                          {t('round', { current: round, total: TOTAL_ROUNDS })}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-navy pt-5 text-lg font-bold">
-                        {t('phaseReady')}
-                      </p>
-                    )}
-                  </FadeSwap>
-                </div>
-
-                <div
-                  className="mt-3 flex items-center justify-center gap-2"
-                  aria-hidden="true"
-                >
-                  {Array.from({ length: TOTAL_ROUNDS }, (_, index) => (
-                    <span
-                      key={index}
-                      className={`h-2 rounded-full transition-all duration-300 motion-reduce:transition-none ${
-                        complete || round > index + (started ? 0 : 1)
-                          ? 'bg-sage w-6'
-                          : started && round === index + 1
-                            ? 'bg-navy w-6'
-                            : 'bg-navy/15 w-2'
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                <div className="mt-6 grid gap-2.5">
-                  {!started ? (
-                    <Button size="lg" className="h-12 w-full font-semibold shadow-sm" onClick={start}>
-                      <Play className="size-4" aria-hidden="true" />
-                      {t('start')}
-                    </Button>
-                  ) : complete ? (
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="h-12 w-full font-semibold"
-                      onClick={reset}
-                    >
-                      <RotateCcw className="size-4" aria-hidden="true" />
-                      {t('reset')}
-                    </Button>
-                  ) : (
-                    <>
-                      <Button
-                        size="lg"
-                        className="h-12 w-full font-semibold shadow-sm"
-                        onClick={() => setRunning((current) => !current)}
-                      >
-                        {running ? (
-                          <Pause className="size-4" aria-hidden="true" />
-                        ) : (
-                          <Play className="size-4" aria-hidden="true" />
-                        )}
-                        {running ? t('pause') : t('resume')}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="text-muted-foreground hover:text-navy h-10 w-full"
-                        onClick={reset}
-                      >
-                        <RotateCcw className="size-4" aria-hidden="true" />
-                        {t('reset')}
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            <section
-              className="border-navy/10 shadow-soft relative overflow-hidden rounded-[2rem] border bg-white/90 p-6 backdrop-blur-md sm:p-9 lg:order-1"
+              className="border-border/80 bg-card shadow-card relative flex h-full flex-col justify-between overflow-hidden rounded-[2rem] border p-6 backdrop-blur-md sm:p-7 order-2 md:order-1"
               aria-labelledby="post-intervention-title"
             >
               <div
@@ -279,38 +131,90 @@ export default function PostInterventionPage() {
                 aria-hidden="true"
               />
               <div className="relative">
-                <span className="border-sage/25 bg-sage/[0.08] text-sage inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold tracking-wider uppercase">
-                  {t('eyebrow')}
-                </span>
                 <h1
                   id="post-intervention-title"
-                  className="text-navy mt-4 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[2.65rem] lg:leading-[1.15]"
+                  className="text-navy max-w-2xl text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[2.25rem] lg:leading-[1.2]"
                 >
                   {t('title')}
                 </h1>
-                <p className="text-muted-foreground mt-4 max-w-2xl text-sm leading-relaxed sm:text-base">
+                <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-relaxed sm:text-base">
                   {t('description')}
                 </p>
 
-                <div className="border-sage/20 bg-sage/[0.04] mt-8 flex items-start gap-3.5 rounded-2xl border p-4 sm:p-5">
-                  <div className="border-sage/20 bg-sage/10 text-sage flex size-9 shrink-0 items-center justify-center rounded-xl border">
-                    <LockKeyhole className="size-4" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <h2 className="text-navy text-sm font-bold">
-                      {t('privacyTitle')}
-                    </h2>
-                    <p className="text-muted-foreground mt-1 text-xs leading-relaxed sm:text-sm">
-                      {t('privacyBody')}
-                    </p>
+                {/* Pathway Choice Cards */}
+                <div className="mt-5 space-y-2">
+                  <span className="text-xs font-bold text-navy uppercase tracking-wider">
+                    {t('optionsTitle')}
+                  </span>
+                  <div className="grid gap-2">
+                    <Link
+                      href={ROUTES.RECOVERY}
+                      className="group border-border/80 bg-background/50 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="border-border/80 bg-card text-navy group-hover:bg-navy group-hover:text-white flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border transition-colors shadow-2xs">
+                          <HeartPulse className="size-4 sm:size-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-navy truncate sm:text-sm">
+                            {t('optionRecoveryTitle')}
+                          </p>
+                          <p className="text-muted-foreground text-[11px] truncate sm:text-xs">
+                            {t('optionRecoveryDesc')}
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowRight className="text-muted-foreground group-hover:text-navy group-hover:translate-x-0.5 size-4 shrink-0 transition-transform" />
+                    </Link>
+
+                    <Link
+                      href={ROUTES.EDUCATION}
+                      className="group border-border/80 bg-background/50 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="border-border/80 bg-card text-navy group-hover:bg-navy group-hover:text-white flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border transition-colors shadow-2xs">
+                          <BookOpen className="size-4 sm:size-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-navy truncate sm:text-sm">
+                            {t('optionEducationTitle')}
+                          </p>
+                          <p className="text-muted-foreground text-[11px] truncate sm:text-xs">
+                            {t('optionEducationDesc')}
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowRight className="text-muted-foreground group-hover:text-navy group-hover:translate-x-0.5 size-4 shrink-0 transition-transform" />
+                    </Link>
+
+                    <Link
+                      href={ROUTES.HELP}
+                      className="group border-border/80 bg-background/50 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="border-border/80 bg-card text-navy group-hover:bg-navy group-hover:text-white flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border transition-colors shadow-2xs">
+                          <CircleHelp className="size-4 sm:size-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-navy truncate sm:text-sm">
+                            {t('optionHelpTitle')}
+                          </p>
+                          <p className="text-muted-foreground text-[11px] truncate sm:text-xs">
+                            {t('optionHelpDesc')}
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowRight className="text-muted-foreground group-hover:text-navy group-hover:translate-x-0.5 size-4 shrink-0 transition-transform" />
+                    </Link>
                   </div>
                 </div>
 
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                {/* CTA Buttons */}
+                <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
                   <Button
                     size="lg"
                     nativeButton={false}
-                    className="h-12 px-6 font-semibold shadow-sm"
+                    className="h-11 px-5 font-bold shadow-xs"
                     render={<Link href={ROUTES.RECOVERY} />}
                   >
                     {t('openRecovery')}
@@ -320,7 +224,7 @@ export default function PostInterventionPage() {
                     variant="outline"
                     size="lg"
                     nativeButton={false}
-                    className="border-navy/15 text-navy hover:bg-navy/5 h-12 px-5 font-semibold"
+                    className="border-border hover:border-navy/20 hover:bg-azure/40 text-navy h-11 px-4 font-bold"
                     render={<Link href={ROUTES.HELP} />}
                   >
                     <CircleHelp className="size-4" aria-hidden="true" />
@@ -329,28 +233,254 @@ export default function PostInterventionPage() {
                 </div>
               </div>
             </section>
+
+            {/* Right Card: Breathing Exercise & Grounding Hub */}
+            <section
+              className="border-border/80 bg-card shadow-card relative flex h-full flex-col justify-between overflow-hidden rounded-[2rem] border backdrop-blur-md order-1 md:order-2"
+              aria-labelledby="grounding-title"
+            >
+              <div
+                className="pointer-events-none absolute -right-20 -bottom-20 size-72 rounded-full bg-gradient-to-tl from-sky/15 via-azure/30 to-transparent opacity-60 blur-2xl"
+                aria-hidden="true"
+              />
+              <div>
+                <div className="border-border/60 border-b p-4 sm:p-5">
+                  <h2
+                    id="grounding-title"
+                    className="text-navy text-base font-bold tracking-tight sm:text-lg"
+                  >
+                    {t('groundingTitle')}
+                  </h2>
+                  <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+                    {t('groundingDescription')}
+                  </p>
+                </div>
+
+                <div className="p-4 sm:p-5 space-y-3">
+                  {/* Breathing Circle Arena */}
+                  <div className="flex justify-center">
+                    <motion.div
+                      className={`relative flex size-28 sm:size-32 aspect-square shrink-0 items-center justify-center rounded-full border border-sky/30 bg-gradient-to-b from-sky-light/40 via-azure/40 to-white shadow-inner ${
+                        complete ? 'ring-sage/30 ring-4' : ''
+                      }`}
+                      animate={{ scale: breathScale }}
+                      transition={{
+                        duration: reduce ? 0 : running ? currentPhase.duration : 0.4,
+                        ease: 'easeInOut',
+                      }}
+                    >
+                      <Image
+                        src="/images/mascot/gami-meditate.webp"
+                        alt=""
+                        width={120}
+                        height={120}
+                        className="animate-float-slow size-16 object-contain sm:size-18 drop-shadow-sm"
+                        aria-hidden="true"
+                      />
+                      {complete ? (
+                        <motion.span
+                          className="bg-sage shadow-soft absolute right-1 bottom-1 flex size-7 items-center justify-center rounded-full text-white"
+                          initial={reduce ? false : { scale: 0.6, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                          aria-hidden="true"
+                        >
+                          <Check className="size-3.5" />
+                        </motion.span>
+                      ) : null}
+                    </motion.div>
+                  </div>
+
+                  {/* Status & Timer */}
+                  <div
+                    className="flex min-h-[3rem] flex-col items-center justify-center text-center"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    <FadeSwap swapKey={swapKey}>
+                      {complete ? (
+                        <div>
+                          <p className="text-sage text-sm font-bold sm:text-base">
+                            {t('completeTitle')}
+                          </p>
+                          <p className="text-muted-foreground text-[11px] leading-relaxed sm:text-xs">
+                            {t('completeBody')}
+                          </p>
+                        </div>
+                      ) : started ? (
+                        <div>
+                          <p className="text-navy text-xs font-bold sm:text-sm">
+                            {t(currentPhase.key)}
+                          </p>
+                          <p className="text-navy font-extrabold tracking-tight tabular-nums text-xl sm:text-2xl">
+                            {t('seconds', { count: remaining })}
+                          </p>
+                          <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
+                            {t('round', { current: round, total: TOTAL_ROUNDS })}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-navy text-sm font-bold sm:text-base">
+                          {t('phaseReady')}
+                        </p>
+                      )}
+                    </FadeSwap>
+                  </div>
+
+                  {/* 3-Phase Timing Pills with live active highlight */}
+                  <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
+                    <div
+                      className={`rounded-lg border py-1.5 px-1 transition-all duration-200 ${
+                        started && !complete && phaseIndex === 0
+                          ? 'border-navy bg-navy text-white shadow-xs font-bold'
+                          : 'border-border/70 bg-background/50 text-muted-foreground'
+                      }`}
+                    >
+                      <span className="block text-[9px] font-semibold uppercase opacity-75">
+                        {t('phasePillInhale')}
+                      </span>
+                      <span className="text-[11px] font-bold">4 dtk</span>
+                    </div>
+                    <div
+                      className={`rounded-lg border py-1.5 px-1 transition-all duration-200 ${
+                        started && !complete && phaseIndex === 1
+                          ? 'border-navy bg-navy text-white shadow-xs font-bold'
+                          : 'border-border/70 bg-background/50 text-muted-foreground'
+                      }`}
+                    >
+                      <span className="block text-[9px] font-semibold uppercase opacity-75">
+                        {t('phasePillHold')}
+                      </span>
+                      <span className="text-[11px] font-bold">2 dtk</span>
+                    </div>
+                    <div
+                      className={`rounded-lg border py-1.5 px-1 transition-all duration-200 ${
+                        started && !complete && phaseIndex === 2
+                          ? 'border-navy bg-navy text-white shadow-xs font-bold'
+                          : 'border-border/70 bg-background/50 text-muted-foreground'
+                      }`}
+                    >
+                      <span className="block text-[9px] font-semibold uppercase opacity-75">
+                        {t('phasePillExhale')}
+                      </span>
+                      <span className="text-[11px] font-bold">6 dtk</span>
+                    </div>
+                  </div>
+
+                  {/* Round Progress Indicator */}
+                  <div
+                    className="flex items-center justify-center gap-1.5"
+                    aria-hidden="true"
+                  >
+                    {Array.from({ length: TOTAL_ROUNDS }, (_, index) => (
+                      <span
+                        key={index}
+                        className={`h-1 rounded-full transition-all duration-300 motion-reduce:transition-none ${
+                          complete || round > index + (started ? 0 : 1)
+                            ? 'bg-sage w-5'
+                            : started && round === index + 1
+                              ? 'bg-navy w-5'
+                              : 'bg-navy/15 w-1.5'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Controls */}
+                  <div className="grid gap-1.5">
+                    {!started ? (
+                      <Button size="lg" className="h-10 w-full font-bold shadow-xs" onClick={start}>
+                        <Play className="size-4" aria-hidden="true" />
+                        {t('start')}
+                      </Button>
+                    ) : complete ? (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="h-10 w-full font-bold"
+                        onClick={reset}
+                      >
+                        <RotateCcw className="size-4" aria-hidden="true" />
+                        {t('reset')}
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          size="lg"
+                          className="h-10 w-full font-bold shadow-xs"
+                          onClick={() => setRunning((current) => !current)}
+                        >
+                          {running ? (
+                            <Pause className="size-4" aria-hidden="true" />
+                          ) : (
+                            <Play className="size-4" aria-hidden="true" />
+                          )}
+                          {running ? t('pause') : t('resume')}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="text-muted-foreground hover:text-navy h-7 w-full text-xs font-semibold"
+                          onClick={reset}
+                        >
+                          <RotateCcw className="size-3" aria-hidden="true" />
+                          {t('reset')}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Grounding Insights & Benefits Section (Compact Inline List) */}
+              <div className="border-border/60 bg-muted/20 border-t p-3.5 sm:p-4">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-navy mb-2">
+                  <Sparkles className="size-3.5 text-navy/70" />
+                  <span>{t('groundingTipsTitle')}</span>
+                </div>
+                <div className="space-y-1.5 text-[11px] sm:text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span className="size-1.5 rounded-full bg-sage shrink-0" />
+                    <span>
+                      <strong className="font-bold text-navy">{t('groundingBenefit1Title')}:</strong>{' '}
+                      {t('groundingBenefit1Desc')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="size-1.5 rounded-full bg-sky-dark shrink-0" />
+                    <span>
+                      <strong className="font-bold text-navy">{t('groundingBenefit2Title')}:</strong>{' '}
+                      {t('groundingBenefit2Desc')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="size-1.5 rounded-full bg-navy shrink-0" />
+                    <span>
+                      <strong className="font-bold text-navy">{t('groundingBenefit3Title')}:</strong>{' '}
+                      {t('groundingBenefit3Desc')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
 
+          {/* Bottom Card: Emergency Support Callout */}
           <section
-            className="border-navy/10 shadow-soft relative mt-6 overflow-hidden rounded-[1.75rem] border bg-white/90 p-6 backdrop-blur-md sm:p-7"
+            className="border-border/80 bg-card shadow-card relative mt-6 overflow-hidden rounded-[1.75rem] border p-6 backdrop-blur-md sm:p-7"
             aria-labelledby="post-support-title"
           >
-            <div
-              className="pointer-events-none absolute top-0 left-0 h-full w-1.5 bg-gradient-to-b from-sage to-sage-light"
-              aria-hidden="true"
-            />
             <div className="flex items-start gap-4">
-              <div className="border-sage/20 bg-sage/10 text-sage flex size-11 shrink-0 items-center justify-center rounded-2xl border">
+              <div className="border-navy/10 bg-azure/60 text-navy flex size-11 shrink-0 items-center justify-center rounded-2xl border shadow-2xs">
                 <CircleHelp className="size-5" aria-hidden="true" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h2
                   id="post-support-title"
-                  className="text-navy text-lg font-bold sm:text-xl"
+                  className="text-navy text-base font-bold sm:text-lg"
                 >
                   {t('supportTitle')}
                 </h2>
-                <p className="text-muted-foreground mt-1.5 max-w-3xl text-sm leading-relaxed sm:text-base">
+                <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-relaxed sm:text-base">
                   {t('supportBody')}
                 </p>
               </div>

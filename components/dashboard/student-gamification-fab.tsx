@@ -40,7 +40,7 @@ export function StudentGamificationFab({
         type="button"
         size="lg"
         data-tour="tour-fab"
-        className="fixed right-4 bottom-5 z-40 gap-2 rounded-full border border-sky/60 font-bold shadow-float sm:right-6 sm:bottom-6"
+        className="fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 gap-2 rounded-full border border-sky/60 font-bold shadow-float sm:right-6 sm:bottom-6"
         onClick={() => setOpen(true)}
       >
         <Target className="size-4" />

@@ -17,10 +17,13 @@ import {
   FileLock2,
   LogOut,
   Settings,
+  Trophy,
   UserRound,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
+import { useExperienceProgress } from '@/hooks/use-experience-progress';
 import { notifyLocalUserChanged, useLocalUser } from '@/hooks/use-local-user';
 import { useRecoverySync } from '@/hooks/use-recovery-sync';
 import { ExperienceLevelChip } from './experience-level-chip';
@@ -35,6 +38,7 @@ export function Navbar() {
   const t = useTranslations('dashboardNav');
   const router = useRouter();
   const user = useLocalUser();
+  const experience = useExperienceProgress();
   useRecoverySync();
   const [profileOpen, setProfileOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -107,12 +111,22 @@ export function Navbar() {
   return (
     <>
       <header className="border-border/90 bg-card/92 sticky top-0 z-40 flex h-[4.5rem] shrink-0 items-center justify-between border-b px-4 backdrop-blur-md sm:px-6 lg:justify-between xl:px-8">
-        <div className="flex flex-1 items-center justify-start lg:hidden">
+        <div className="flex min-w-0 items-center justify-start lg:hidden">
           <Link
             href={ROUTES.DASHBOARD}
-            className="text-navy focus-visible:ring-navy/30 rounded-lg text-base font-extrabold tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            className="text-navy focus-visible:ring-navy/30 flex min-h-11 items-center gap-2.5 rounded-xl px-1 font-extrabold tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           >
-            Gamblock<span className="text-navy-light">-AI</span>
+            <Image
+              src="/images/gamblock-1.png"
+              alt=""
+              width={32}
+              height={32}
+              className="size-8 shrink-0 object-contain"
+              priority
+            />
+            <span className="text-base font-extrabold tracking-tight whitespace-nowrap text-navy">
+              Gamblock<span className="text-navy-light">-AI</span>
+            </span>
           </Link>
         </div>
 
@@ -128,7 +142,7 @@ export function Navbar() {
           </div>
           <div
             data-tour="tour-navbar-extra"
-            className="flex items-center gap-2 sm:gap-3"
+            className="hidden items-center gap-2 sm:flex sm:gap-3"
           >
             <ExperienceLevelChip />
             <LanguageSwitcher />
@@ -170,14 +184,31 @@ export function Navbar() {
                 className="animate-in border-border bg-card shadow-card fade-in slide-in-from-top-1 absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border p-2 duration-150 motion-reduce:animate-none"
               >
                 <div className="border-border border-b px-3 py-3">
-                  <p className="text-navy truncate text-sm font-bold">
-                    {user?.display_name || t('profileFallback')}
-                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-navy truncate text-sm font-bold">
+                      {user?.display_name || t('profileFallback')}
+                    </p>
+                    {user.role === 'user' && (
+                      <span className="bg-azure text-navy flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6875rem] font-bold sm:hidden">
+                        <Trophy className="text-sky size-3" />
+                        Lv {experience?.level ?? 1}
+                      </span>
+                    )}
+                  </div>
                   {user?.email && (
                     <p className="text-muted-foreground mt-0.5 truncate text-xs">
                       {user.email}
                     </p>
                   )}
+                </div>
+
+                <div className="border-border border-b px-3 py-2 sm:hidden">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground text-xs font-semibold">
+                      {t('languageToggle')}
+                    </span>
+                    <LanguageSwitcher />
+                  </div>
                 </div>
 
                 <div className="py-1">
