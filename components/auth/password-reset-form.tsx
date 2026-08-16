@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { KeyRound, Lock, Mail } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
@@ -23,10 +24,10 @@ type Copy = {
   success: string;
   detail: string;
   genericError: string;
-  previewCode?: (code: string) => string;
 };
 
 export function PasswordResetForm({ copy }: { copy: Copy }) {
+  const t = useTranslations('forgotPasswordPage');
   const router = useRouter();
   const { loading, requestCode, confirmReset } = usePasswordReset();
   const [email, setEmail] = useState('');
@@ -67,10 +68,10 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
           {error}
         </p>
       ) : null}
-      {preview && copy.previewCode ? (
+      {preview ? (
         <p className="bg-azure/60 text-navy border-sky/20 flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold">
           <KeyRound className="size-4 shrink-0" aria-hidden="true" />
-          {copy.previewCode(preview)}
+          {t('previewCode', { code: preview })}
         </p>
       ) : null}
       <AuthField

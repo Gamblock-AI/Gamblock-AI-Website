@@ -30,7 +30,6 @@ export default async function ForgotPasswordPage() {
           success: t('success'),
           detail: t('detail'),
           genericError: t('genericError'),
-          previewCode: (code: string) => t('previewCode', { code }),
         }}
       />
     </AuthShell>
