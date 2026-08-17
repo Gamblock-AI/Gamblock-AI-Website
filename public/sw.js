@@ -43,6 +43,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Do not intercept or cache assets in local development environments to avoid stale Turbopack/HMR chunks.
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    return;
+  }
+
   // Runtime cache-first for versioned/static assets.
   if (
     url.pathname.startsWith('/_next/static') ||

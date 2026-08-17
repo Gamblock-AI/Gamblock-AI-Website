@@ -9,7 +9,7 @@ function isExpectedClientRejection(error: unknown): boolean {
 }
 
 function describeError(error: unknown): unknown {
-  if (!error || typeof error !== 'object') return { type: typeof error };
+  if (!error || typeof error !== 'object') return { type: typeof error, value: String(error) };
 
   const diagnostic = error as Partial<Error> & {
     code?: string;
@@ -17,9 +17,19 @@ function describeError(error: unknown): unknown {
     diagnosticMessage?: string;
   };
 
+  const name =
+    diagnostic.name || (error instanceof Error ? error.constructor.name : undefined);
+  const message =
+    diagnostic.message ||
+    (error instanceof Error ? error.message : undefined) ||
+    (typeof (error as { toString?: () => string }).toString === 'function' &&
+    (error as { toString: () => string }).toString() !== '[object Object]'
+      ? (error as { toString: () => string }).toString()
+      : undefined);
+
   return {
-    name: diagnostic.name,
-    message: diagnostic.message,
+    name: name ?? 'Error',
+    message: message ?? String(error),
     code: diagnostic.code,
     status: diagnostic.status,
     technical: diagnostic.diagnosticMessage,

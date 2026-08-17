@@ -100,7 +100,7 @@ export default function PostInterventionPage() {
       <FixedBackground />
       <main
         id="main-content"
-        className="min-h-dvh px-5 py-6 sm:px-7 sm:py-10"
+        className="min-h-dvh px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10"
       >
         <div className="mx-auto w-full max-w-5xl">
           <nav
@@ -109,47 +109,47 @@ export default function PostInterventionPage() {
           >
             <Link
               href={ROUTES.HOME}
-              className="text-navy focus-visible:ring-navy/30 inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
+              className="text-navy focus-visible:ring-navy/30 inline-flex min-h-10 sm:min-h-11 items-center gap-2 rounded-xl text-xs sm:text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
               {t('leave')}
             </Link>
-            <span className="border-sage/25 bg-sage/[0.06] text-sage inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 text-xs font-semibold">
+            <span className="border-sage/25 bg-sage/[0.06] text-sage inline-flex min-h-10 sm:min-h-11 items-center gap-2 rounded-xl border px-3 text-xs font-semibold">
               <ShieldCheck className="size-4" aria-hidden="true" />
               Gamblock-AI
             </span>
           </nav>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr] items-stretch">
-            {/* Left Card: Recovery Space & Next Steps */}
+          <div className="mt-5 sm:mt-8 grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-[1.15fr_0.85fr] items-start">
+            {/* Primary Content Card: Recovery Space & Pathway Choices */}
             <section
-              className="border-border/80 bg-card shadow-card relative flex h-full flex-col justify-between overflow-hidden rounded-[2rem] border p-6 backdrop-blur-md sm:p-7 order-2 md:order-1"
+              className="border-border/80 bg-card shadow-card relative flex flex-col justify-between overflow-hidden rounded-2xl sm:rounded-[2rem] border p-4.5 sm:p-6 lg:p-7 backdrop-blur-md order-1"
               aria-labelledby="post-intervention-title"
             >
               <div
-                className="pointer-events-none absolute -top-24 -left-24 size-96 rounded-full bg-gradient-to-br from-azure/60 via-sky-light/20 to-transparent opacity-70 blur-3xl"
+                className="pointer-events-none absolute -top-24 -left-24 size-80 sm:size-96 rounded-full bg-gradient-to-br from-azure/60 via-sky-light/20 to-transparent opacity-70 blur-3xl"
                 aria-hidden="true"
               />
               <div className="relative">
                 <h1
                   id="post-intervention-title"
-                  className="text-navy max-w-2xl text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[2.25rem] lg:leading-[1.2]"
+                  className="text-navy max-w-2xl text-xl sm:text-2xl lg:text-[2rem] font-extrabold tracking-tight leading-snug sm:leading-tight"
                 >
                   {t('title')}
                 </h1>
-                <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-relaxed sm:text-base">
+                <p className="text-muted-foreground mt-2 sm:mt-3 max-w-2xl text-xs sm:text-sm lg:text-base leading-relaxed">
                   {t('description')}
                 </p>
 
                 {/* Pathway Choice Cards */}
-                <div className="mt-5 space-y-2">
-                  <span className="text-xs font-bold text-navy uppercase tracking-wider">
+                <div className="mt-4 sm:mt-5 space-y-2">
+                  <span className="text-[11px] sm:text-xs font-bold text-navy uppercase tracking-wider">
                     {t('optionsTitle')}
                   </span>
                   <div className="grid gap-2">
                     <Link
                       href={ROUTES.RECOVERY}
-                      className="group border-border/80 bg-background/50 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
+                      className="group border-border/80 bg-background/60 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="border-border/80 bg-card text-navy group-hover:bg-navy group-hover:text-white flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border transition-colors shadow-2xs">
@@ -169,7 +169,7 @@ export default function PostInterventionPage() {
 
                     <Link
                       href={ROUTES.EDUCATION}
-                      className="group border-border/80 bg-background/50 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
+                      className="group border-border/80 bg-background/60 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="border-border/80 bg-card text-navy group-hover:bg-navy group-hover:text-white flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border transition-colors shadow-2xs">
@@ -189,7 +189,7 @@ export default function PostInterventionPage() {
 
                     <Link
                       href={ROUTES.HELP}
-                      className="group border-border/80 bg-background/50 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
+                      className="group border-border/80 bg-background/60 hover:bg-azure/40 hover:border-navy/20 flex items-center justify-between rounded-xl border p-2.5 sm:p-3 transition-all duration-150"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="border-border/80 bg-card text-navy group-hover:bg-navy group-hover:text-white flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border transition-colors shadow-2xs">
@@ -210,11 +210,11 @@ export default function PostInterventionPage() {
                 </div>
 
                 {/* CTA Buttons */}
-                <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+                <div className="mt-5 sm:mt-6 flex flex-col gap-2.5 sm:flex-row">
                   <Button
                     size="lg"
                     nativeButton={false}
-                    className="h-11 px-5 font-bold shadow-xs"
+                    className="h-10 sm:h-11 w-full sm:w-auto px-5 font-bold shadow-xs text-xs sm:text-sm"
                     render={<Link href={ROUTES.RECOVERY} />}
                   >
                     {t('openRecovery')}
@@ -224,7 +224,7 @@ export default function PostInterventionPage() {
                     variant="outline"
                     size="lg"
                     nativeButton={false}
-                    className="border-border hover:border-navy/20 hover:bg-azure/40 text-navy h-11 px-4 font-bold"
+                    className="border-border hover:border-navy/20 hover:bg-azure/40 text-navy h-10 sm:h-11 w-full sm:w-auto px-4 font-bold text-xs sm:text-sm"
                     render={<Link href={ROUTES.HELP} />}
                   >
                     <CircleHelp className="size-4" aria-hidden="true" />
@@ -236,7 +236,7 @@ export default function PostInterventionPage() {
 
             {/* Right Card: Breathing Exercise & Grounding Hub */}
             <section
-              className="border-border/80 bg-card shadow-card relative flex h-full flex-col justify-between overflow-hidden rounded-[2rem] border backdrop-blur-md order-1 md:order-2"
+              className="border-border/80 bg-card shadow-card relative flex flex-col justify-between overflow-hidden rounded-2xl sm:rounded-[2rem] border backdrop-blur-md order-2"
               aria-labelledby="grounding-title"
             >
               <div
@@ -244,23 +244,23 @@ export default function PostInterventionPage() {
                 aria-hidden="true"
               />
               <div>
-                <div className="border-border/60 border-b p-4 sm:p-5">
+                <div className="border-border/60 border-b p-3.5 sm:p-5">
                   <h2
                     id="grounding-title"
-                    className="text-navy text-base font-bold tracking-tight sm:text-lg"
+                    className="text-navy text-sm sm:text-base font-bold tracking-tight"
                   >
                     {t('groundingTitle')}
                   </h2>
-                  <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+                  <p className="text-muted-foreground mt-0.5 text-[11px] sm:text-xs leading-relaxed">
                     {t('groundingDescription')}
                   </p>
                 </div>
 
-                <div className="p-4 sm:p-5 space-y-3">
+                <div className="p-3.5 sm:p-5 space-y-3">
                   {/* Breathing Circle Arena */}
                   <div className="flex justify-center">
                     <motion.div
-                      className={`relative flex size-28 sm:size-32 aspect-square shrink-0 items-center justify-center rounded-full border border-sky/30 bg-gradient-to-b from-sky-light/40 via-azure/40 to-white shadow-inner ${
+                      className={`relative flex size-24 sm:size-28 aspect-square shrink-0 items-center justify-center rounded-full border border-sky/30 bg-gradient-to-b from-sky-light/40 via-azure/40 to-white shadow-inner ${
                         complete ? 'ring-sage/30 ring-4' : ''
                       }`}
                       animate={{ scale: breathScale }}
@@ -274,12 +274,12 @@ export default function PostInterventionPage() {
                         alt=""
                         width={120}
                         height={120}
-                        className="animate-float-slow size-16 object-contain sm:size-18 drop-shadow-sm"
+                        className="animate-float-slow size-14 object-contain sm:size-16 drop-shadow-sm"
                         aria-hidden="true"
                       />
                       {complete ? (
                         <motion.span
-                          className="bg-sage shadow-soft absolute right-1 bottom-1 flex size-7 items-center justify-center rounded-full text-white"
+                          className="bg-sage shadow-soft absolute right-1 bottom-1 flex size-6.5 items-center justify-center rounded-full text-white"
                           initial={reduce ? false : { scale: 0.6, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -293,26 +293,26 @@ export default function PostInterventionPage() {
 
                   {/* Status & Timer */}
                   <div
-                    className="flex min-h-[3rem] flex-col items-center justify-center text-center"
+                    className="flex min-h-[2.75rem] flex-col items-center justify-center text-center"
                     aria-live="polite"
                     aria-atomic="true"
                   >
                     <FadeSwap swapKey={swapKey}>
                       {complete ? (
                         <div>
-                          <p className="text-sage text-sm font-bold sm:text-base">
+                          <p className="text-sage text-xs sm:text-sm font-bold">
                             {t('completeTitle')}
                           </p>
-                          <p className="text-muted-foreground text-[11px] leading-relaxed sm:text-xs">
+                          <p className="text-muted-foreground text-[11px] sm:text-xs leading-relaxed">
                             {t('completeBody')}
                           </p>
                         </div>
                       ) : started ? (
                         <div>
-                          <p className="text-navy text-xs font-bold sm:text-sm">
+                          <p className="text-navy text-xs font-bold">
                             {t(currentPhase.key)}
                           </p>
-                          <p className="text-navy font-extrabold tracking-tight tabular-nums text-xl sm:text-2xl">
+                          <p className="text-navy font-extrabold tracking-tight tabular-nums text-lg sm:text-xl">
                             {t('seconds', { count: remaining })}
                           </p>
                           <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
@@ -320,7 +320,7 @@ export default function PostInterventionPage() {
                           </p>
                         </div>
                       ) : (
-                        <p className="text-navy text-sm font-bold sm:text-base">
+                        <p className="text-navy text-xs sm:text-sm font-bold">
                           {t('phaseReady')}
                         </p>
                       )}
@@ -330,7 +330,7 @@ export default function PostInterventionPage() {
                   {/* 3-Phase Timing Pills with live active highlight */}
                   <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
                     <div
-                      className={`rounded-lg border py-1.5 px-1 transition-all duration-200 ${
+                      className={`rounded-lg border py-1 sm:py-1.5 px-1 transition-all duration-200 ${
                         started && !complete && phaseIndex === 0
                           ? 'border-navy bg-navy text-white shadow-xs font-bold'
                           : 'border-border/70 bg-background/50 text-muted-foreground'
@@ -342,7 +342,7 @@ export default function PostInterventionPage() {
                       <span className="text-[11px] font-bold">4 dtk</span>
                     </div>
                     <div
-                      className={`rounded-lg border py-1.5 px-1 transition-all duration-200 ${
+                      className={`rounded-lg border py-1 sm:py-1.5 px-1 transition-all duration-200 ${
                         started && !complete && phaseIndex === 1
                           ? 'border-navy bg-navy text-white shadow-xs font-bold'
                           : 'border-border/70 bg-background/50 text-muted-foreground'
@@ -354,7 +354,7 @@ export default function PostInterventionPage() {
                       <span className="text-[11px] font-bold">2 dtk</span>
                     </div>
                     <div
-                      className={`rounded-lg border py-1.5 px-1 transition-all duration-200 ${
+                      className={`rounded-lg border py-1 sm:py-1.5 px-1 transition-all duration-200 ${
                         started && !complete && phaseIndex === 2
                           ? 'border-navy bg-navy text-white shadow-xs font-bold'
                           : 'border-border/70 bg-background/50 text-muted-foreground'
@@ -377,9 +377,9 @@ export default function PostInterventionPage() {
                         key={index}
                         className={`h-1 rounded-full transition-all duration-300 motion-reduce:transition-none ${
                           complete || round > index + (started ? 0 : 1)
-                            ? 'bg-sage w-5'
+                            ? 'bg-sage w-4 sm:w-5'
                             : started && round === index + 1
-                              ? 'bg-navy w-5'
+                              ? 'bg-navy w-4 sm:w-5'
                               : 'bg-navy/15 w-1.5'
                         }`}
                       />
@@ -389,37 +389,37 @@ export default function PostInterventionPage() {
                   {/* Controls */}
                   <div className="grid gap-1.5">
                     {!started ? (
-                      <Button size="lg" className="h-10 w-full font-bold shadow-xs" onClick={start}>
-                        <Play className="size-4" aria-hidden="true" />
+                      <Button size="lg" className="h-9.5 sm:h-10 w-full font-bold shadow-xs text-xs sm:text-sm" onClick={start}>
+                        <Play className="size-3.5 sm:size-4" aria-hidden="true" />
                         {t('start')}
                       </Button>
                     ) : complete ? (
                       <Button
                         size="lg"
                         variant="outline"
-                        className="h-10 w-full font-bold"
+                        className="h-9.5 sm:h-10 w-full font-bold text-xs sm:text-sm"
                         onClick={reset}
                       >
-                        <RotateCcw className="size-4" aria-hidden="true" />
+                        <RotateCcw className="size-3.5 sm:size-4" aria-hidden="true" />
                         {t('reset')}
                       </Button>
                     ) : (
                       <>
                         <Button
                           size="lg"
-                          className="h-10 w-full font-bold shadow-xs"
+                          className="h-9.5 sm:h-10 w-full font-bold shadow-xs text-xs sm:text-sm"
                           onClick={() => setRunning((current) => !current)}
                         >
                           {running ? (
-                            <Pause className="size-4" aria-hidden="true" />
+                            <Pause className="size-3.5 sm:size-4" aria-hidden="true" />
                           ) : (
-                            <Play className="size-4" aria-hidden="true" />
+                            <Play className="size-3.5 sm:size-4" aria-hidden="true" />
                           )}
                           {running ? t('pause') : t('resume')}
                         </Button>
                         <Button
                           variant="ghost"
-                          className="text-muted-foreground hover:text-navy h-7 w-full text-xs font-semibold"
+                          className="text-muted-foreground hover:text-navy h-7 w-full text-[11px] sm:text-xs font-semibold"
                           onClick={reset}
                         >
                           <RotateCcw className="size-3" aria-hidden="true" />
@@ -431,9 +431,9 @@ export default function PostInterventionPage() {
                 </div>
               </div>
 
-              {/* Grounding Insights & Benefits Section (Compact Inline List) */}
-              <div className="border-border/60 bg-muted/20 border-t p-3.5 sm:p-4">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-navy mb-2">
+              {/* Grounding Insights & Benefits Section */}
+              <div className="border-border/60 bg-muted/20 border-t p-3 sm:p-4">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-navy mb-1.5">
                   <Sparkles className="size-3.5 text-navy/70" />
                   <span>{t('groundingTipsTitle')}</span>
                 </div>
@@ -466,21 +466,21 @@ export default function PostInterventionPage() {
 
           {/* Bottom Card: Emergency Support Callout */}
           <section
-            className="border-border/80 bg-card shadow-card relative mt-6 overflow-hidden rounded-[1.75rem] border p-6 backdrop-blur-md sm:p-7"
+            className="border-border/80 bg-card shadow-card relative mt-4 sm:mt-6 overflow-hidden rounded-2xl sm:rounded-[1.75rem] border p-4 sm:p-6 backdrop-blur-md"
             aria-labelledby="post-support-title"
           >
-            <div className="flex items-start gap-4">
-              <div className="border-navy/10 bg-azure/60 text-navy flex size-11 shrink-0 items-center justify-center rounded-2xl border shadow-2xs">
-                <CircleHelp className="size-5" aria-hidden="true" />
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="border-navy/10 bg-azure/60 text-navy flex size-9 sm:size-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl border shadow-2xs">
+                <CircleHelp className="size-4.5 sm:size-5" aria-hidden="true" />
               </div>
               <div className="min-w-0 flex-1">
                 <h2
                   id="post-support-title"
-                  className="text-navy text-base font-bold sm:text-lg"
+                  className="text-navy text-sm sm:text-base font-bold"
                 >
                   {t('supportTitle')}
                 </h2>
-                <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-relaxed sm:text-base">
+                <p className="text-muted-foreground mt-0.5 sm:mt-1 max-w-3xl text-xs sm:text-sm leading-relaxed">
                   {t('supportBody')}
                 </p>
               </div>
