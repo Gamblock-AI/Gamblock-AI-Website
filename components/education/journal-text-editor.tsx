@@ -64,7 +64,7 @@ export function JournalTextEditor({
     editorProps: {
       attributes: {
         class:
-          'prose prose-slate max-w-none min-h-60 sm:min-h-72 px-4 py-4 sm:px-6 sm:py-5 outline-none text-foreground text-sm sm:text-base leading-relaxed prose-headings:text-navy prose-headings:font-bold prose-blockquote:border-l-navy prose-blockquote:text-muted-foreground prose-img:rounded-xl prose-img:border prose-img:border-border prose-img:shadow-sm',
+          'rich-content prose max-w-none min-h-60 sm:min-h-72 px-4 py-4 sm:px-6 sm:py-5 outline-none text-foreground text-sm sm:text-base leading-relaxed prose-headings:text-navy prose-headings:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_li>p]:my-0 prose-blockquote:border-l-navy prose-blockquote:text-muted-foreground prose-img:rounded-xl prose-img:border prose-img:border-border prose-img:shadow-sm',
       },
     },
     onUpdate: ({ editor: current }) =>

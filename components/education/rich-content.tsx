@@ -186,11 +186,29 @@ function renderNode(
       return <h4 key={key}>{children}</h4>;
     }
     case 'bulletList':
-      return <ul key={key}>{children}</ul>;
+      return (
+        <ul
+          key={key}
+          className="marker:text-navy-light my-3 list-disc space-y-1 pl-6"
+        >
+          {children}
+        </ul>
+      );
     case 'orderedList':
-      return <ol key={key}>{children}</ol>;
+      return (
+        <ol
+          key={key}
+          className="marker:text-navy-light my-3 list-decimal space-y-1 pl-6 marker:font-semibold"
+        >
+          {children}
+        </ol>
+      );
     case 'listItem':
-      return <li key={key}>{children}</li>;
+      return (
+        <li key={key} className="my-1 [&>p]:my-0">
+          {children}
+        </li>
+      );
     case 'blockquote':
       return <blockquote key={key}>{children}</blockquote>;
     case 'codeBlock':
@@ -235,7 +253,7 @@ export function RichContent({
   labels?: MediaLabels;
 }) {
   return (
-    <div className="prose prose-slate prose-headings:text-navy prose-a:text-navy-light prose-blockquote:border-sky prose-blockquote:bg-azure/50 prose-blockquote:px-5 prose-blockquote:py-1 prose-blockquote:not-italic prose-li:marker:text-navy-light max-w-none">
+    <div className="rich-content prose prose-slate prose-headings:text-navy prose-a:text-navy-light prose-blockquote:border-sky prose-blockquote:bg-azure/50 prose-blockquote:px-5 prose-blockquote:py-1 prose-blockquote:not-italic prose-li:marker:text-navy-light max-w-none">
       {renderNode(document, 'root', mediaURLs, onMediaOpened, labels)}
     </div>
   );

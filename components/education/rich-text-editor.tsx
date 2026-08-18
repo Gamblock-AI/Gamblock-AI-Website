@@ -114,7 +114,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          'prose prose-slate max-w-none min-h-56 px-4 py-4 outline-none prose-headings:text-navy prose-a:text-navy-light [&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_p.is-editor-empty:first-child]:before:text-muted-foreground/50 [&_p.is-editor-empty:first-child]:before:float-left [&_p.is-editor-empty:first-child]:before:pointer-events-none [&_p.is-editor-empty:first-child]:before:h-0',
+          'rich-content prose max-w-none min-h-56 px-4 py-4 outline-none prose-headings:text-navy prose-a:text-navy-light [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_li>p]:my-0 [&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_p.is-editor-empty:first-child]:before:text-muted-foreground/50 [&_p.is-editor-empty:first-child]:before:float-left [&_p.is-editor-empty:first-child]:before:pointer-events-none [&_p.is-editor-empty:first-child]:before:h-0',
         ...(placeholder ? { 'data-placeholder': placeholder } : {}),
       },
     },
