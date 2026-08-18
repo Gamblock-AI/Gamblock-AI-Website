@@ -422,7 +422,7 @@ export function PartnerGroupsWorkspace({
                   t={t}
                   group={group}
                   members={membersByGroup[group.id] ?? []}
-                  code={revealedCodes[group.id]}
+                  code={revealedCodes[group.id] || group.join_code}
                   removalReasons={removalReasons}
                   setRemovalReasons={setRemovalReasons}
                   mutating={accountability.mutating}
@@ -509,6 +509,7 @@ function GroupCard({
   >({});
   const [searchQuery, setSearchQuery] = useState('');
   const [copied, setCopied] = useState(false);
+  const displayCode = code || group.join_code;
 
   const activeMembers = useMemo(
     () =>
@@ -602,21 +603,21 @@ function GroupCard({
               </span>
             </div>
             <span className="text-muted-foreground hidden sm:inline text-[0.6875rem]">
-              {code ? t('copyCode') : ''}
+              {displayCode ? t('copyCode') : ''}
             </span>
           </div>
 
           <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3">
-            {code ? (
+            {displayCode ? (
               <div className="flex items-center gap-2">
                 <code className="border-navy/20 bg-background text-navy font-mono text-sm font-bold tracking-[0.14em] rounded-lg border px-3 py-1.5 shadow-2xs">
-                  {code}
+                  {displayCode}
                 </code>
                 <Button
                   variant="outline"
                   size="sm"
                   aria-label={t('copyCode')}
-                  onClick={() => void handleCopy(code)}
+                  onClick={() => void handleCopy(displayCode)}
                   className="gap-1.5 text-xs h-8 px-2.5"
                 >
                   {copied ? (
@@ -637,7 +638,7 @@ function GroupCard({
             ) : (
               <div className="flex items-center gap-2">
                 <span className="border-border bg-background text-navy font-mono text-xs font-semibold rounded-lg border px-2.5 py-1">
-                  {t('codeHint', { hint: group.join_code_hint })}
+                  {group.join_code_hint ? t('codeHint', { hint: group.join_code_hint }) : '-'}
                 </span>
                 <span className="text-muted-foreground text-xs">
                   (Aktif di perangkat)
