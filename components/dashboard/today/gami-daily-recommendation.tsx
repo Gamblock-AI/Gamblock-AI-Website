@@ -275,8 +275,8 @@ export function GamiDailyRecommendation({
             onClick={closeDialog}
           />
 
-          <div className="relative flex min-h-full items-center justify-center p-3 sm:items-end sm:justify-end sm:overflow-hidden sm:px-6 sm:pt-6 sm:pb-0 md:px-8 lg:pr-0 lg:pl-12">
-            <div className="relative flex w-full max-w-[100rem] flex-col items-center justify-center gap-0 sm:flex-row sm:items-end sm:justify-end sm:gap-2 md:gap-3 lg:gap-4">
+          <div className="relative flex min-h-full items-center justify-center p-3 sm:items-center sm:justify-center sm:overflow-hidden sm:p-6 md:p-8 lg:items-end lg:justify-end lg:pr-0 lg:pl-12">
+            <div className="relative flex w-full max-w-[100rem] flex-col items-center justify-center gap-0 sm:flex-row sm:items-center sm:justify-center sm:gap-0 lg:items-end lg:justify-end">
               <motion.section
                 ref={dialogRef}
                 role="dialog"
@@ -289,7 +289,7 @@ export function GamiDailyRecommendation({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 12 }}
                 transition={{ duration: reduceMotion ? 0 : 0.25, ease: 'easeOut' }}
-                className="border-navy/15 bg-card/95 shadow-float relative z-20 w-full max-w-[28rem] shrink-0 rounded-[2rem] border outline-none backdrop-blur-xl sm:-mr-16 sm:max-w-[33rem] sm:self-center md:-mr-24 lg:-mr-36 lg:max-w-[36rem] xl:-mr-44"
+                className="border-navy/15 bg-card/95 shadow-float relative z-20 w-full max-w-[min(92vw,24rem)] shrink-0 rounded-[1.75rem] border outline-none backdrop-blur-xl sm:max-w-[24rem] sm:-mr-16 sm:rounded-[2rem] md:max-w-[28rem] md:-mr-20 lg:max-w-[34rem] lg:-mr-32 lg:self-center xl:max-w-[36rem] xl:-mr-44"
               >
                 {/* Desktop Speech Tail (Pointing Right toward Gami) */}
                 <span
@@ -298,7 +298,7 @@ export function GamiDailyRecommendation({
                 />
                 {/* Mobile Speech Tail (Pointing Down toward Gami) */}
                 <span
-                  className="border-navy/15 bg-card pointer-events-none absolute -bottom-2 left-1/2 size-4 -translate-x-1/2 rotate-45 border-b border-r sm:hidden"
+                  className="border-navy/15 bg-card pointer-events-none absolute -bottom-2 left-1/2 size-3.5 -translate-x-1/2 rotate-45 border-b border-r sm:hidden"
                   aria-hidden="true"
                 />
 
@@ -311,7 +311,7 @@ export function GamiDailyRecommendation({
                   <X className="size-4" aria-hidden="true" />
                 </button>
 
-                <div className="max-h-[min(55dvh,32rem)] overflow-y-auto p-5 sm:max-h-[min(72dvh,38rem)] sm:p-7 sm:pr-8">
+                <div className="max-h-[min(52dvh,24rem)] overflow-y-auto p-4 sm:max-h-[min(65dvh,30rem)] sm:p-6 md:max-h-[min(72dvh,36rem)] md:p-7 md:pr-8">
                   <AnimatePresence mode="wait" initial={false}>
                     {step === 'greeting' ? (
                       <motion.div
@@ -650,7 +650,7 @@ export function GamiDailyRecommendation({
                   duration: reduceMotion ? 0 : 0.3,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="pointer-events-none relative z-10 -mt-6 flex shrink-0 flex-col items-center justify-end self-center sm:mt-0 sm:items-end sm:self-end sm:-mr-8 md:-mr-10 lg:-mr-12"
+                className="pointer-events-none relative z-10 -mt-3 flex shrink-0 flex-col items-center justify-end self-center sm:mt-0 sm:items-end sm:self-center sm:-mr-6 md:-mr-8 lg:self-end lg:-mr-12"
                 aria-hidden="true"
               >
                 {/* Ambient radiant lighting */}
@@ -664,7 +664,7 @@ export function GamiDailyRecommendation({
                     width={1254}
                     height={1254}
                     priority
-                    className="h-auto w-[24rem] max-w-[94vw] object-contain object-bottom drop-shadow-[0_25px_50px_rgba(15,23,42,0.3)] sm:w-[32rem] sm:max-h-[90vh] md:w-[40rem] md:max-h-[95vh] lg:w-[48rem] lg:max-h-screen xl:w-[56rem]"
+                    className="h-auto w-[12rem] max-w-[50vw] object-contain object-bottom drop-shadow-[0_20px_40px_rgba(15,23,42,0.25)] sm:w-[22rem] sm:max-h-[65vh] md:w-[28rem] md:max-h-[75vh] lg:w-[44rem] lg:max-h-[95vh] xl:w-[52rem] xl:max-h-screen 2xl:w-[56rem]"
                   />
                 </div>
               </motion.div>
