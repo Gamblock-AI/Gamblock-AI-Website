@@ -986,14 +986,14 @@ export function LearningHubTab({
                     {(fieldErrors.title_id ? 1 : 0) +
                       (fieldErrors.summary_id ? 1 : 0) +
                       (fieldErrors.outcomes &&
-                      !draft?.document?.outcomes_id?.length
+                      !sanitizeOutcomes(draft?.document?.outcomes_id).length
                         ? 1
                         : 0) > 0 ? (
                       <span className="bg-destructive text-destructive-foreground text-[10px] font-extrabold rounded-full px-1.5 py-0.5 leading-none">
                         {(fieldErrors.title_id ? 1 : 0) +
                           (fieldErrors.summary_id ? 1 : 0) +
                           (fieldErrors.outcomes &&
-                          !draft?.document?.outcomes_id?.length
+                          !sanitizeOutcomes(draft?.document?.outcomes_id).length
                             ? 1
                             : 0)}
                       </span>
@@ -1012,14 +1012,14 @@ export function LearningHubTab({
                     {(fieldErrors.title_en ? 1 : 0) +
                       (fieldErrors.summary_en ? 1 : 0) +
                       (fieldErrors.outcomes &&
-                      !draft?.document?.outcomes_en?.length
+                      !sanitizeOutcomes(draft?.document?.outcomes_en).length
                         ? 1
                         : 0) > 0 ? (
                       <span className="bg-destructive text-destructive-foreground text-[10px] font-extrabold rounded-full px-1.5 py-0.5 leading-none">
                         {(fieldErrors.title_en ? 1 : 0) +
                           (fieldErrors.summary_en ? 1 : 0) +
                           (fieldErrors.outcomes &&
-                          !draft?.document?.outcomes_en?.length
+                          !sanitizeOutcomes(draft?.document?.outcomes_en).length
                             ? 1
                             : 0)}
                       </span>
@@ -2202,11 +2202,11 @@ export function LearningHubTab({
               >
                 <div>
                   <p className="text-xs font-bold">
-                    v{revision.revision_number} •{' '}
+                    v{revision.revision} •{' '}
                     {new Date(revision.created_at).toLocaleString()}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {revision.reason || t('learningHubNoReason')}
+                    {revision.kind}
                   </p>
                 </div>
                 <Button

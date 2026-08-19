@@ -51,7 +51,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
     const errorId = `${inputId}-error`;
     const t = useTranslations('authShell');
     const inputType = isPassword ? (show ? 'text' : 'password') : type;
-    const isRequired = required ?? props.required;
+    const isRequired = required;
 
     return (
       <div className="grid grid-cols-2 gap-y-2">
@@ -69,6 +69,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
             ref={ref}
             id={inputId}
             type={inputType}
+            required={required}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errorId : undefined}
             className={cn(

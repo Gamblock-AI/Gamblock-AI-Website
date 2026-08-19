@@ -1387,9 +1387,9 @@ export function ContentTab(props: ContentTabProps) {
           </div>
           <ThumbnailCropper
             busy={busy}
-            onCrop={(file, altText) => {
+            onCrop={async (file) => {
               clearFieldError('thumbnails');
-              return uploadThumb(file, altText);
+              await uploadThumb(file);
             }}
           />
         </div>
