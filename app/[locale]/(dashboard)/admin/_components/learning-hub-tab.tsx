@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Archive,
   BookOpen,
+  Check,
   History,
   Plus,
   Save,
@@ -24,6 +25,8 @@ import {
 import { NativeSelect } from '@/components/common/native-select';
 import { CompactTabNav } from '@/components/common/compact-tab-nav';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
+import { ThumbnailCropper } from '@/components/education/thumbnail-cropper';
+import { apiClientBlob } from '@/lib/api-client';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import type {
   AdminLearningHubItem,
@@ -67,13 +70,13 @@ const kinds = [
   'toolkit',
   'opportunity',
 ];
-const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-function collectItemTexts(draft: Draft, locale: string): string[] {
+function collectItemTexts(draft: Draft, locale: 'id' | 'en'): string[] {
   const suffix = `_${locale}`;
   const texts: string[] = [
-    draft[`title${suffix}` as keyof Draft] as string ?? '',
-    draft[`summary${suffix}` as keyof Draft] as string ?? '',
+    (draft[`title${suffix}` as keyof Draft] as string) ?? '',
+    (draft[`summary${suffix}` as keyof Draft] as string) ?? '',
+    (draft.document[`provider_description${suffix}`] as string) ?? '',
   ];
   const outcomes = draft.document[`outcomes${suffix}`] ?? [];
   if (Array.isArray(outcomes)) {
@@ -84,19 +87,28 @@ function collectItemTexts(draft: Draft, locale: string): string[] {
   return texts;
 }
 
-function applyItemTranslations(draft: Draft, locale: string, translations: string[]): void {
+function applyItemTranslations(
+  draft: Draft,
+  sourceLocale: 'id' | 'en',
+  targetLocale: 'id' | 'en',
+  translations: string[]
+): void {
   let idx = 0;
   const next = (): string => translations[idx++] ?? '';
-  const suffix = `_${locale}`;
-  (draft as Record<string, unknown>)[`title${suffix}`] = next();
-  (draft as Record<string, unknown>)[`summary${suffix}`] = next();
-  const outcomes = draft.document[`outcomes${suffix}`] ?? [];
-  if (Array.isArray(outcomes)) {
+  const targetSuffix = `_${targetLocale}`;
+  const sourceSuffix = `_${sourceLocale}`;
+
+  (draft as Record<string, unknown>)[`title${targetSuffix}`] = next();
+  (draft as Record<string, unknown>)[`summary${targetSuffix}`] = next();
+  draft.document[`provider_description${targetSuffix}`] = next();
+
+  const sourceOutcomes = draft.document[`outcomes${sourceSuffix}`] ?? [];
+  if (Array.isArray(sourceOutcomes)) {
     const mapped: string[] = [];
-    for (const o of outcomes) {
-      mapped.push(typeof o === 'string' ? next() : String(o));
+    for (let i = 0; i < sourceOutcomes.length; i++) {
+      mapped.push(next());
     }
-    draft.document[`outcomes${suffix}`] = mapped;
+    draft.document[`outcomes${targetSuffix}`] = mapped;
   }
 }
 
@@ -109,9 +121,26 @@ function list(document: Record<string, unknown>, key: string) {
   const value = document[key];
   if (Array.isArray(value))
     return value
-      .filter((item): item is string => typeof item === 'string')
+      .map((item) => (typeof item === 'string' ? item : ''))
       .join('\n');
   return typeof value === 'string' ? value : '';
+}
+
+function sanitizeOutcomes(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean);
+}
+
+function prepareDraftPayload(draft: Draft): Record<string, unknown> {
+  const doc = { ...draft.document };
+  doc.outcomes_id = sanitizeOutcomes(doc.outcomes_id);
+  doc.outcomes_en = sanitizeOutcomes(doc.outcomes_en);
+  return {
+    ...draft,
+    document: doc,
+  } as unknown as Record<string, unknown>;
 }
 
 function number(document: Record<string, unknown>, key: string) {
@@ -171,10 +200,70 @@ function editDocument(
   return { ...draft, document: { ...draft.document, [key]: value } };
 }
 
+function AdminLearningMediaPreview({ mediaID }: { mediaID: string }) {
+  const [src, setSrc] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl = '';
+
+    apiClientBlob(`/admin/content/media/${mediaID}`)
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setSrc(objectUrl);
+      })
+      .catch(() => {
+        if (!active) return;
+        setSrc(resolveEducationMediaURL(`/v1/education/media/${mediaID}`));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [mediaID]);
+
+  if (loading && !src) {
+    return (
+      <div className="border-border bg-muted/40 flex h-14 w-20 items-center justify-center rounded-lg border">
+        <span className="size-4 animate-spin rounded-full border-2 border-navy border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!src) {
+    return (
+      <span className="border-border text-muted-foreground flex h-14 w-20 items-center justify-center rounded-lg border text-xs">
+        -
+      </span>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      className="border-border h-14 w-20 rounded-lg border object-cover"
+    />
+  );
+}
+
 function LearningMediaField({
   label,
   help,
   mediaID,
+  aspect = 16 / 9,
+  cropperTitle,
+  cropperBody,
+  cropperLabel,
   uploading,
   onUpload,
   onChange,
@@ -182,65 +271,53 @@ function LearningMediaField({
   label: string;
   help?: string;
   mediaID: string;
+  aspect?: number;
+  cropperTitle?: string;
+  cropperBody?: string;
+  cropperLabel?: string;
   uploading: boolean;
   onUpload: (file: File) => Promise<void>;
   onChange: (value: string) => void;
 }) {
-  const t = useTranslations('adminPage');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const source = mediaID ? resolveEducationMediaURL(`/v1/education/media/${mediaID}`) : '';
   return (
-    <label className="space-y-2">
+    <div className="space-y-2">
       <span className="text-navy flex items-center text-xs font-bold">
         <span>{label}</span>
         <OptionalMark />
       </span>
-      {help ? <span className="text-muted-foreground block text-xs">{help}</span> : null}
-      <div className="flex items-center gap-3">
-        {source ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={source}
-            alt=""
-            className="border-border h-14 w-20 rounded-lg border object-cover"
-          />
+      {help ? (
+        <span className="text-muted-foreground block text-xs">{help}</span>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-3">
+        {mediaID ? (
+          <AdminLearningMediaPreview key={mediaID} mediaID={mediaID} />
         ) : (
           <span className="border-border text-muted-foreground flex h-14 w-20 items-center justify-center rounded-lg border text-xs">
             -
           </span>
         )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          className="hidden"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void onUpload(file);
-            event.target.value = '';
-          }}
+        <ThumbnailCropper
+          busy={uploading}
+          aspect={aspect}
+          title={cropperTitle}
+          body={cropperBody}
+          label={cropperLabel || (mediaID ? 'Ganti foto' : 'Pilih & Potong foto')}
+          buttonVariant="compact"
+          onCrop={onUpload}
         />
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={uploading}
-          onClick={() => inputRef.current?.click()}
-        >
-          {uploading ? '...' : t('learningHubUpload')}
-        </Button>
         {mediaID ? (
           <Button
             type="button"
             size="sm"
             variant="ghost"
             onClick={() => onChange('')}
+            className="text-muted-foreground hover:text-destructive h-8.5 px-2"
           >
             <Trash2 className="size-4" aria-hidden="true" />
           </Button>
         ) : null}
       </div>
-    </label>
+    </div>
   );
 }
 
@@ -295,16 +372,27 @@ export function LearningHubTab({
   ) => Promise<{ id: string }>;
 }) {
   const t = useTranslations('adminPage');
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const sectionParam = searchParams.get('section');
   const section = sectionParam === 'taxonomy' ? 'taxonomy' : 'items';
+  const langParam = searchParams.get('lang');
+  const locale: 'id' | 'en' = langParam === 'en' ? 'en' : 'id';
+  const itemParam = searchParams.get('item') || searchParams.get('id');
   const [filter, setFilter] = useState('');
-  const [selected, setSelected] = useState<AdminLearningHubItem | null>(null);
-  const [draft, setDraft] = useState<Draft | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createDraft, setCreateDraft] = useState<Draft>(() => emptyDraft());
-  const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
-  const [isCreateSlugCustom, setIsCreateSlugCustom] = useState(false);
+  const [prevItemParam, setPrevItemParam] = useState(itemParam);
+  const [selected, setSelected] = useState<AdminLearningHubItem | null>(() => {
+    if (!itemParam) return null;
+    return items.find((i) => i.id === itemParam || i.slug === itemParam) ?? null;
+  });
+  const [isCreating, setIsCreating] = useState(false);
+  const [draft, setDraft] = useState<Draft | null>(() => {
+    if (!itemParam) return null;
+    const found = items.find((i) => i.id === itemParam || i.slug === itemParam);
+    return found ? itemDraft(found) : null;
+  });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [mediaUploading, setMediaUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revisions, setRevisions] = useState<AdminLearningRevision[]>([]);
@@ -333,73 +421,181 @@ export function LearningHubTab({
   const clusterEdits = useRef(new Map<string, Cluster>());
   const programEdits = useRef(new Map<string, Program>());
 
+  if (!isCreating && itemParam !== prevItemParam) {
+    setPrevItemParam(itemParam);
+    const found = itemParam
+      ? items.find((i) => i.id === itemParam || i.slug === itemParam) ?? null
+      : null;
+    setSelected(found);
+    setDraft(found ? itemDraft(found) : null);
+    setFieldErrors({});
+  }
+
+  const setLocale = (newLocale: 'id' | 'en') => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('lang', newLocale);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
   const visibleItems = useMemo(
     () => (filter ? items.filter((item) => item.status === filter) : items),
     [filter, items]
   );
-  const createReady =
-    [
-      createDraft.title_id,
-      createDraft.title_en,
-      createDraft.summary_id,
-      createDraft.summary_en,
-    ].every((value) => value.trim().length > 0) &&
-    slugPattern.test(createDraft.slug);
 
-  const clearCreateError = (field: string) => {
-    setCreateErrors((prev) => {
-      if (!prev[field]) return prev;
+  const clearFieldError = (key: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
       const next = { ...prev };
-      delete next[field];
+      delete next[key];
       return next;
     });
   };
 
-  const validateCreate = () => {
+  const validateLearningItem = (d: Draft, requireReview: boolean): boolean => {
     const errors: Record<string, string> = {};
-    if (!createDraft.title_id.trim()) {
+
+    if (!d.title_id.trim()) {
       errors.title_id = 'Judul materi bahasa Indonesia wajib diisi.';
     }
-    if (!createDraft.title_en.trim()) {
+    if (!d.title_en.trim()) {
       errors.title_en = 'Judul materi bahasa Inggris wajib diisi.';
     }
-    if (!createDraft.slug.trim()) {
-      errors.slug = 'Slug materi wajib diisi.';
-    } else if (!slugPattern.test(createDraft.slug)) {
-      errors.slug = 'Format slug harus berupa huruf kecil, angka, dan tanda hubung (-).';
-    }
-    if (!createDraft.summary_id.trim()) {
+    if (!d.summary_id.trim()) {
       errors.summary_id = 'Ringkasan materi bahasa Indonesia wajib diisi.';
     }
-    if (!createDraft.summary_en.trim()) {
+    if (!d.summary_en.trim()) {
       errors.summary_en = 'Ringkasan materi bahasa Inggris wajib diisi.';
     }
-    setCreateErrors(errors);
-    return Object.keys(errors).length === 0;
+
+    const rawURL = text(d.document, 'url').trim();
+    if (rawURL) {
+      try {
+        const parsed = new URL(rawURL);
+        if (parsed.protocol !== 'https:') {
+          errors.url = 'Tautan harus menggunakan protokol HTTPS (https://...).';
+        }
+      } catch {
+        errors.url = 'Format tautan URL tidak valid.';
+      }
+    }
+
+    if (requireReview) {
+      if (!text(d.document, 'provider').trim()) {
+        errors.provider = 'Nama penyedia materi wajib diisi sebelum penerbitan/tinjauan.';
+      }
+      if (!rawURL) {
+        errors.url = 'Tautan materi wajib diisi sebelum penerbitan/tinjauan.';
+      }
+
+      const outcomesId = sanitizeOutcomes(d.document.outcomes_id);
+      const outcomesEn = sanitizeOutcomes(d.document.outcomes_en);
+      if (outcomesId.length === 0 && outcomesEn.length === 0) {
+        errors.outcomes = 'Minimal 1 capaian pembelajaran wajib diisi sebelum penerbitan/tinjauan.';
+      }
+
+      const clusters = Array.isArray(d.document.clusters)
+        ? d.document.clusters
+        : [];
+      const programs = Array.isArray(d.document.programs)
+        ? d.document.programs
+        : [];
+      if (clusters.length === 0) {
+        errors.clusters = 'Minimal 1 cluster keilmuan wajib dipilih sebelum penerbitan/tinjauan.';
+      }
+      if (programs.length === 0) {
+        errors.programs = 'Minimal 1 program studi wajib dipilih sebelum penerbitan/tinjauan.';
+      }
+
+      if (!text(d.document, 'reviewer_name').trim()) {
+        errors.reviewer_name = 'Nama peninjau kurikulum wajib diisi sebelum penerbitan/tinjauan.';
+      }
+      const reviewedAt = text(d.document, 'reviewed_at').trim();
+      if (!reviewedAt) {
+        errors.reviewed_at = 'Tanggal peninjauan wajib diisi sebelum penerbitan/tinjauan.';
+      } else if (!/^\d{4}-\d{2}-\d{2}$/.test(reviewedAt)) {
+        errors.reviewed_at = 'Format tanggal harus YYYY-MM-DD.';
+      }
+    }
+
+    setFieldErrors(errors);
+
+    const firstErrorKey = Object.keys(errors)[0];
+    if (firstErrorKey) {
+      if (firstErrorKey === 'title_id' || firstErrorKey === 'summary_id') {
+        setLocale('id');
+      } else if (firstErrorKey === 'title_en' || firstErrorKey === 'summary_en') {
+        setLocale('en');
+      }
+      setTimeout(() => {
+        const el = document.getElementById(`learning-field-${firstErrorKey}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.focus();
+        }
+      }, 50);
+      return false;
+    }
+    return true;
   };
 
   const selectItem = (item: AdminLearningHubItem) => {
+    setIsCreating(false);
     setSelected(item);
     setDraft(itemDraft(item));
+    setFieldErrors({});
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('item', item.id);
+    router.replace(`${pathname}?${params.toString()}`);
   };
 
-  const updateDraft = (next: Partial<Draft>) =>
+  const startCreate = () => {
+    setIsCreating(true);
+    setSelected(null);
+    setDraft(emptyDraft());
+    setFieldErrors({});
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('item');
+    params.delete('id');
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  const cancelCreate = () => {
+    setIsCreating(false);
+    setDraft(null);
+    setSelected(null);
+    setFieldErrors({});
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('item');
+    params.delete('id');
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  const updateDraft = (next: Partial<Draft>) => {
     setDraft((current) => (current ? { ...current, ...next } : current));
-  const updateDoc = (key: string, value: string | number | string[]) =>
+  };
+
+  const updateDoc = (key: string, value: string | number | string[]) => {
     setDraft((current) =>
       current ? editDocument(current, key, value) : current
     );
+    clearFieldError(key);
+    if (key === 'outcomes_id' || key === 'outcomes_en') {
+      clearFieldError('outcomes');
+    }
+  };
 
   const save = async () => {
     if (!selected || !draft) return;
+    if (!validateLearningItem(draft, false)) return;
     setBusy(true);
     try {
-      const saved = await saveItem(
-        selected,
-        draft as unknown as Record<string, unknown>
-      );
+      const payload = prepareDraftPayload(draft);
+      const saved = await saveItem(selected, payload);
       setSelected(saved);
       setDraft(itemDraft(saved));
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('item', saved.id);
+      router.replace(`${pathname}?${params.toString()}`);
       toastSuccess(t('learningHubSaved'));
     } catch (error) {
       toastError(error, t('learningHubSaveError'));
@@ -408,20 +604,33 @@ export function LearningHubTab({
     }
   };
 
-  const create = async () => {
-    if (!validateCreate()) return;
+  const handleCreate = async (publishAfter: boolean) => {
+    if (!draft) return;
+    if (!validateLearningItem(draft, publishAfter)) return;
     setBusy(true);
     try {
-      const created = await createItem(
-        createDraft as unknown as Record<string, unknown>
-      );
-      setSelected(created);
-      setDraft(itemDraft(created));
-      setCreateDraft(emptyDraft());
-      setCreateErrors({});
-      setIsCreateSlugCustom(false);
-      setCreateOpen(false);
-      toastSuccess(t('learningHubCreated'));
+      const payload = prepareDraftPayload(draft);
+      const created = await createItem(payload);
+      if (publishAfter) {
+        const published = await transitionItem(created.id, 'publish');
+        setSelected(published);
+        setDraft(itemDraft(published));
+        setIsCreating(false);
+        setFieldErrors({});
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('item', published.id);
+        router.replace(`${pathname}?${params.toString()}`);
+        toastSuccess(t('learningHubPublished'));
+      } else {
+        setSelected(created);
+        setDraft(itemDraft(created));
+        setIsCreating(false);
+        setFieldErrors({});
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('item', created.id);
+        router.replace(`${pathname}?${params.toString()}`);
+        toastSuccess(t('learningHubCreated'));
+      }
     } catch (error) {
       toastError(error, t('learningHubSaveError'));
     } finally {
@@ -432,12 +641,20 @@ export function LearningHubTab({
   const transition = async (
     action: 'submit-review' | 'publish' | 'archive'
   ) => {
-    if (!selected) return;
+    if (!selected || !draft) return;
+    if (action === 'publish' || action === 'submit-review') {
+      if (!validateLearningItem(draft, true)) return;
+    }
     setBusy(true);
     try {
-      const updated = await transitionItem(selected.id, action);
+      const payload = prepareDraftPayload(draft);
+      const saved = await saveItem(selected, payload);
+      const updated = await transitionItem(saved.id, action);
       setSelected(updated);
       setDraft(itemDraft(updated));
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('item', updated.id);
+      router.replace(`${pathname}?${params.toString()}`);
       toastSuccess(
         t(
           action === 'publish'
@@ -478,6 +695,9 @@ export function LearningHubTab({
       );
       setSelected(updated);
       setDraft(itemDraft(updated));
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('item', updated.id);
+      router.replace(`${pathname}?${params.toString()}`);
       setRollbackOpen(false);
       setRollbackRevision(null);
       setRollbackReason('');
@@ -576,7 +796,7 @@ export function LearningHubTab({
         }
         action={
           section === 'items' ? (
-            <Button onClick={() => setCreateOpen(true)} disabled={busy}>
+            <Button onClick={startCreate} disabled={busy}>
               <Plus className="size-4" />
               {t('learningHubNewItem')}
             </Button>
@@ -629,6 +849,26 @@ export function LearningHubTab({
             role="list"
             aria-label={t('learningHubItemsTitle')}
           >
+            {isCreating ? (
+              <div className="border-navy/40 bg-azure/80 text-navy ring-1 ring-navy/20 shadow-xs w-full rounded-xl border p-3 text-left">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-navy line-clamp-2 text-xs font-bold leading-snug">
+                    {draft?.title_id || draft?.slug || t('learningHubNewItem')}
+                  </span>
+                  <span className="bg-navy/10 text-navy rounded-full px-2 py-0.5 text-[0.6875rem] font-bold">
+                    Draf Baru
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[0.6875rem] text-muted-foreground">
+                  <span className="capitalize font-medium">
+                    {draft ? (t.has(`learningHubKind_${draft.kind}`) ? t(`learningHubKind_${draft.kind}`) : draft.kind) : ''}
+                  </span>
+                  <span className="font-mono bg-muted/60 px-1.5 py-0.5 rounded text-[0.625rem]">
+                    (belum disimpan)
+                  </span>
+                </div>
+              </div>
+            ) : null}
             {visibleItems.map((item) => (
               <button
                 key={item.id}
@@ -636,7 +876,7 @@ export function LearningHubTab({
                 onClick={() => selectItem(item)}
                 className={cn(
                   'w-full rounded-xl border p-3 text-left transition-all duration-150',
-                  selected?.id === item.id
+                  !isCreating && (selected?.id === item.id || itemParam === item.id)
                     ? 'border-navy/40 bg-azure/80 text-navy ring-1 ring-navy/20 shadow-xs'
                     : 'border-border/80 bg-card hover:border-navy/25 hover:bg-muted/35 shadow-2xs'
                 )}
@@ -659,7 +899,7 @@ export function LearningHubTab({
                 </div>
               </button>
             ))}
-            {!visibleItems.length ? (
+            {!visibleItems.length && !isCreating ? (
               <p className="text-muted-foreground py-8 text-center text-xs">
                 {t('learningHubNoItems')}
               </p>
@@ -678,7 +918,7 @@ export function LearningHubTab({
         </section>
 
         <section className="border-border/80 bg-card rounded-2xl border p-5 sm:p-6 shadow-2xs">
-          {!selected || !draft ? (
+          {!draft ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <span className="border-border/80 bg-muted/60 text-muted-foreground flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
                 <BookOpen className="size-6" aria-hidden="true" />
@@ -689,153 +929,331 @@ export function LearningHubTab({
               <p className="text-muted-foreground mt-1 max-w-sm text-xs">
                 {t('learningHubSelectItemBody')}
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={startCreate}
+                className="mt-4 rounded-xl font-medium"
+              >
+                <Plus className="size-4" />
+                {t('learningHubNewItem')}
+              </Button>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="border-border/60 bg-muted/70 text-muted-foreground rounded-md border px-2 py-0.5 font-mono text-[0.6875rem] font-semibold">
-                      {selected.slug}
-                    </span>
-                    <span className="text-muted-foreground font-mono text-[0.6875rem]">
-                      rev {selected.draft_revision}
-                    </span>
-                  </div>
+                  {!isCreating && selected ? (
+                    <div className="flex items-center gap-2">
+                      <span className="border-border/60 bg-muted/70 text-muted-foreground rounded-md border px-2 py-0.5 font-mono text-[0.6875rem] font-semibold">
+                        {selected.slug}
+                      </span>
+                      <span className="text-muted-foreground font-mono text-[0.6875rem]">
+                        rev {selected.draft_revision}
+                      </span>
+                    </div>
+                  ) : null}
                   <h2 className="text-navy mt-1 text-lg font-bold">
                     {draft.title_id ||
                       draft.slug ||
-                      t('learningHubEditorTitle')}
+                      (isCreating ? t('learningHubNewItem') : t('learningHubEditorTitle'))}
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
-                  <AdminStatusBadge status={selected.status} />
+                  {isCreating ? (
+                    <span className="bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                      Draf Baru
+                    </span>
+                  ) : selected ? (
+                    <AdminStatusBadge status={selected.status} />
+                  ) : null}
                 </div>
               </div>
 
-              {/* Translation utility bar */}
-              <div className="border-border/70 bg-muted/20 flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3">
-                <span className="text-navy text-xs font-semibold">
-                  {t('learningHubAutoTranslation')}
-                </span>
-                <div className="flex flex-wrap items-center gap-2">
-                  <TranslateButton
-                    sourceLang="id"
-                    targetLang="en"
-                    sourceTexts={collectItemTexts(draft, 'id')}
-                    onTranslated={(translations) => {
-                      applyItemTranslations(draft, 'en', translations);
-                      setDraft({ ...draft });
-                    }}
-                  />
-                  <TranslateButton
-                    sourceLang="en"
-                    targetLang="id"
-                    sourceTexts={collectItemTexts(draft, 'en')}
-                    onTranslated={(translations) => {
-                      applyItemTranslations(draft, 'id', translations);
-                      setDraft({ ...draft });
-                    }}
-                  />
+              {/* Language Selector Tab Bar & Contextual Translation Button */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="border-border bg-muted flex w-fit rounded-xl border p-1">
+                  <button
+                    type="button"
+                    onClick={() => setLocale('id')}
+                    className={`min-h-10 rounded-lg px-4 text-sm font-bold flex items-center gap-2 ${
+                      locale === 'id'
+                        ? 'bg-card text-navy shadow-sm'
+                        : 'text-muted-foreground hover:text-navy'
+                    }`}
+                  >
+                    <span>{t('languageIndonesian')}</span>
+                    {(fieldErrors.title_id ? 1 : 0) +
+                      (fieldErrors.summary_id ? 1 : 0) +
+                      (fieldErrors.outcomes &&
+                      !draft?.document?.outcomes_id?.length
+                        ? 1
+                        : 0) > 0 ? (
+                      <span className="bg-destructive text-destructive-foreground text-[10px] font-extrabold rounded-full px-1.5 py-0.5 leading-none">
+                        {(fieldErrors.title_id ? 1 : 0) +
+                          (fieldErrors.summary_id ? 1 : 0) +
+                          (fieldErrors.outcomes &&
+                          !draft?.document?.outcomes_id?.length
+                            ? 1
+                            : 0)}
+                      </span>
+                    ) : null}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLocale('en')}
+                    className={`min-h-10 rounded-lg px-4 text-sm font-bold flex items-center gap-2 ${
+                      locale === 'en'
+                        ? 'bg-card text-navy shadow-sm'
+                        : 'text-muted-foreground hover:text-navy'
+                    }`}
+                  >
+                    <span>{t('languageEnglish')}</span>
+                    {(fieldErrors.title_en ? 1 : 0) +
+                      (fieldErrors.summary_en ? 1 : 0) +
+                      (fieldErrors.outcomes &&
+                      !draft?.document?.outcomes_en?.length
+                        ? 1
+                        : 0) > 0 ? (
+                      <span className="bg-destructive text-destructive-foreground text-[10px] font-extrabold rounded-full px-1.5 py-0.5 leading-none">
+                        {(fieldErrors.title_en ? 1 : 0) +
+                          (fieldErrors.summary_en ? 1 : 0) +
+                          (fieldErrors.outcomes &&
+                          !draft?.document?.outcomes_en?.length
+                            ? 1
+                            : 0)}
+                      </span>
+                    ) : null}
+                  </button>
                 </div>
+
+                <TranslateButton
+                  sourceLang={locale === 'en' ? 'id' : 'en'}
+                  targetLang={locale === 'en' ? 'en' : 'id'}
+                  customLabel={
+                    locale === 'en'
+                      ? 'Terjemahkan ID ➔ EN'
+                      : 'Terjemahkan EN ➔ ID'
+                  }
+                  sourceTexts={collectItemTexts(
+                    draft,
+                    locale === 'en' ? 'id' : 'en'
+                  )}
+                  onTranslated={(translations) => {
+                    applyItemTranslations(
+                      draft,
+                      locale === 'en' ? 'id' : 'en',
+                      locale === 'en' ? 'en' : 'id',
+                      translations
+                    );
+                    setDraft({ ...draft });
+                  }}
+                />
               </div>
 
-              {/* Subsection 1: Basic Information */}
+              {/* Subsection 1: Bilingual Content (active locale) */}
               <div className="space-y-3">
                 <h3 className="text-navy text-xs font-bold uppercase tracking-wider">
-                  {t('learningHubBasicInfo')}
+                  {locale === 'id'
+                    ? 'Konten Bahasa Indonesia'
+                    : 'English Content'}
                 </h3>
                 <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubSlug')}</span>
-                      <RequiredMark />
-                    </span>
-                    <input
-                      className={adminFieldClassName}
-                      placeholder="analisis-data-statistika-terapan"
-                      value={draft.slug}
-                      onChange={(event) =>
-                        updateDraft({ slug: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubKind')}</span>
-                      <RequiredMark />
-                    </span>
-                    <NativeSelect
-                      value={draft.kind}
-                      onChange={(event) =>
-                        updateDraft({ kind: event.target.value })
-                      }
-                    >
-                      {kinds.map((kind) => (
-                        <option key={kind} value={kind}>
-                          {t(`learningHubKind_${kind}`)}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubTitleId')}</span>
-                      <RequiredMark />
-                    </span>
-                    <input
-                      className={adminFieldClassName}
-                      placeholder="Contoh: Pengenalan Analisis Data & Statistika Terapan"
-                      value={draft.title_id}
-                      onChange={(event) =>
-                        updateDraft({ title_id: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubTitleEn')}</span>
-                      <RequiredMark />
-                    </span>
-                    <input
-                      className={adminFieldClassName}
-                      placeholder="e.g. Introduction to Data Analysis & Applied Statistics"
-                      value={draft.title_en}
-                      onChange={(event) =>
-                        updateDraft({ title_en: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label className="space-y-1.5 sm:col-span-2">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubSummaryId')}</span>
-                      <RequiredMark />
-                    </span>
-                    <textarea
-                      className={`${adminFieldClassName} py-2`}
-                      rows={2}
-                      placeholder="Contoh: Ringkasan singkat materi mengenai silabus, target kompetensi, dan capaian pembelajaran..."
-                      value={draft.summary_id}
-                      onChange={(event) =>
-                        updateDraft({ summary_id: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label className="space-y-1.5 sm:col-span-2">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubSummaryEn')}</span>
-                      <RequiredMark />
-                    </span>
-                    <textarea
-                      className={`${adminFieldClassName} py-2`}
-                      rows={2}
-                      placeholder="e.g. Brief summary covering the syllabus, target competencies, and learning outcomes..."
-                      value={draft.summary_en}
-                      onChange={(event) =>
-                        updateDraft({ summary_en: event.target.value })
-                      }
-                    />
-                  </label>
+                  {locale === 'id' ? (
+                    <>
+                      <label className="space-y-1.5 sm:col-span-2">
+                        <span className="text-navy flex items-center text-xs font-bold">
+                          <span>{t('learningHubTitleId')}</span>
+                          <RequiredMark />
+                        </span>
+                        <input
+                          id="learning-field-title_id"
+                          className={cn(
+                            adminFieldClassName,
+                            fieldErrors.title_id &&
+                              'border-destructive focus-visible:border-destructive'
+                          )}
+                          placeholder="Contoh: Pengenalan Analisis Data & Statistika Terapan"
+                          value={draft.title_id}
+                          onChange={(event) => {
+                            const val = event.target.value;
+                            updateDraft({
+                              title_id: val,
+                              slug: slugify(val || draft.title_en),
+                            });
+                            clearFieldError('title_id');
+                          }}
+                        />
+                        <FieldError message={fieldErrors.title_id} />
+                      </label>
+
+                      <label className="space-y-1.5 sm:col-span-2">
+                        <span className="text-navy flex items-center text-xs font-bold">
+                          <span>{t('learningHubSummaryId')}</span>
+                          <RequiredMark />
+                        </span>
+                        <textarea
+                          id="learning-field-summary_id"
+                          className={cn(
+                            `${adminFieldClassName} py-2`,
+                            fieldErrors.summary_id &&
+                              'border-destructive focus-visible:border-destructive'
+                          )}
+                          rows={2}
+                          placeholder="Contoh: Ringkasan singkat materi mengenai silabus, target kompetensi, dan capaian pembelajaran..."
+                          value={draft.summary_id}
+                          onChange={(event) => {
+                            updateDraft({ summary_id: event.target.value });
+                            clearFieldError('summary_id');
+                          }}
+                        />
+                        <FieldError message={fieldErrors.summary_id} />
+                      </label>
+
+                      <label className="space-y-1.5 sm:col-span-2">
+                        <span className="text-navy flex items-center text-xs font-bold">
+                          <span>{t('providerDescriptionId')}</span>
+                          <OptionalMark />
+                        </span>
+                        <textarea
+                          className={`${adminFieldClassName} py-2`}
+                          rows={2}
+                          maxLength={200}
+                          placeholder="Contoh: Platform edukasi teknologi terkemuka dengan kurikulum terstandarisasi industri..."
+                          value={text(draft.document, 'provider_description_id')}
+                          onChange={(event) =>
+                            updateDoc(
+                              'provider_description_id',
+                              event.target.value
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label className="space-y-1.5 sm:col-span-2">
+                        <span className="text-navy flex items-center text-xs font-bold">
+                          <span>{t('learningHubOutcomesId')}</span>
+                          <OptionalMark />
+                        </span>
+                        <textarea
+                          id="learning-field-outcomes"
+                          className={cn(
+                            `${adminFieldClassName} py-2`,
+                            fieldErrors.outcomes &&
+                              'border-destructive focus-visible:border-destructive'
+                          )}
+                          rows={3}
+                          placeholder={`Contoh:\nMemahami konsep dasar analisis data\nMampu memvisualisasikan data kuantitatif\nMenerapkan analisis regresi pada studi kasus`}
+                          value={list(draft.document, 'outcomes_id')}
+                          onChange={(event) =>
+                            updateDoc(
+                              'outcomes_id',
+                              event.target.value.split('\n')
+                            )
+                          }
+                        />
+                        <FieldError message={fieldErrors.outcomes} />
+                      </label>
+                    </>
+                  ) : (
+                    <>
+                      <label className="space-y-1.5 sm:col-span-2">
+                        <span className="text-navy flex items-center text-xs font-bold">
+                          <span>{t('learningHubTitleEn')}</span>
+                          <RequiredMark />
+                        </span>
+                        <input
+                          id="learning-field-title_en"
+                          className={cn(
+                            adminFieldClassName,
+                            fieldErrors.title_en &&
+                              'border-destructive focus-visible:border-destructive'
+                          )}
+                          placeholder="e.g. Introduction to Data Analysis & Applied Statistics"
+                          value={draft.title_en}
+                          onChange={(event) => {
+                            const val = event.target.value;
+                            updateDraft({
+                              title_en: val,
+                              ...(!draft.title_id
+                                ? { slug: slugify(val) }
+                                : {}),
+                            });
+                            clearFieldError('title_en');
+                          }}
+                        />
+                        <FieldError message={fieldErrors.title_en} />
+                      </label>
+
+                      <label className="space-y-1.5 sm:col-span-2">
+                        <span className="text-navy flex items-center text-xs font-bold">
+                          <span>{t('learningHubSummaryEn')}</span>
+                          <RequiredMark />
+                        </span>
+                        <textarea
+                          id="learning-field-summary_en"
+                          className={cn(
+                            `${adminFieldClassName} py-2`,
+                            fieldErrors.summary_en &&
+                              'border-destructive focus-visible:border-destructive'
+                          )}
+                          rows={2}
+                          placeholder="e.g. Brief summary covering the syllabus, target competencies, and learning outcomes..."
+                          value={draft.summary_en}
+                          onChange={(event) => {
+                            updateDraft({ summary_en: event.target.value });
+                            clearFieldError('summary_en');
+                          }}
+                        />
+                        <FieldError message={fieldErrors.summary_en} />
+                      </label>
+
+                      <label className="space-y-1.5 sm:col-span-2">
+                        <span className="text-navy flex items-center text-xs font-bold">
+                          <span>{t('providerDescriptionEn')}</span>
+                          <OptionalMark />
+                        </span>
+                        <textarea
+                          className={`${adminFieldClassName} py-2`}
+                          rows={2}
+                          maxLength={200}
+                          placeholder="e.g. Leading technology education platform offering industry-standard curriculums..."
+                          value={text(draft.document, 'provider_description_en')}
+                          onChange={(event) =>
+                            updateDoc(
+                              'provider_description_en',
+                              event.target.value
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label className="space-y-1.5 sm:col-span-2">
+                        <span className="text-navy flex items-center text-xs font-bold">
+                          <span>{t('learningHubOutcomesEn')}</span>
+                          <OptionalMark />
+                        </span>
+                        <textarea
+                          id="learning-field-outcomes-en"
+                          className={cn(
+                            `${adminFieldClassName} py-2`,
+                            fieldErrors.outcomes &&
+                              'border-destructive focus-visible:border-destructive'
+                          )}
+                          rows={3}
+                          placeholder={`e.g.:\nUnderstand fundamental data analysis concepts\nAble to visualize quantitative datasets\nApply regression analysis in case studies`}
+                          value={list(draft.document, 'outcomes_en')}
+                          onChange={(event) =>
+                            updateDoc(
+                              'outcomes_en',
+                              event.target.value.split('\n')
+                            )
+                          }
+                        />
+                        <FieldError message={fieldErrors.outcomes} />
+                      </label>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -847,17 +1265,73 @@ export function LearningHubTab({
                 <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
                   <label className="space-y-1.5">
                     <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubKind')}</span>
+                      <RequiredMark />
+                    </span>
+                    <NativeSelect
+                      id="learning-field-kind"
+                      className={cn(
+                        fieldErrors.kind &&
+                          'border-destructive focus-visible:border-destructive'
+                      )}
+                      value={draft.kind}
+                      onChange={(event) => {
+                        updateDraft({ kind: event.target.value });
+                        clearFieldError('kind');
+                      }}
+                    >
+                      {kinds.map((kind) => (
+                        <option key={kind} value={kind}>
+                          {t(`learningHubKind_${kind}`)}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                    <FieldError message={fieldErrors.kind} />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubDurationMinutes')}</span>
+                      <OptionalMark />
+                    </span>
+                    <input
+                      id="learning-field-duration_minutes"
+                      className={cn(
+                        adminFieldClassName,
+                        fieldErrors.duration_minutes &&
+                          'border-destructive focus-visible:border-destructive'
+                      )}
+                      type="number"
+                      min={1}
+                      placeholder="45"
+                      value={number(draft.document, 'duration_minutes')}
+                      onChange={(event) =>
+                        updateDoc(
+                          'duration_minutes',
+                          Number(event.target.value)
+                        )
+                      }
+                    />
+                    <FieldError message={fieldErrors.duration_minutes} />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-navy flex items-center text-xs font-bold">
                       <span>{t('learningHubProvider')}</span>
                       <OptionalMark />
                     </span>
                     <input
-                      className={adminFieldClassName}
+                      id="learning-field-provider"
+                      className={cn(
+                        adminFieldClassName,
+                        fieldErrors.provider &&
+                          'border-destructive focus-visible:border-destructive'
+                      )}
                       placeholder="Contoh: Dicoding, Coursera, MIT OpenCourseWare"
                       value={text(draft.document, 'provider')}
                       onChange={(event) =>
                         updateDoc('provider', event.target.value)
                       }
                     />
+                    <FieldError message={fieldErrors.provider} />
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-navy flex items-center text-xs font-bold">
@@ -865,49 +1339,27 @@ export function LearningHubTab({
                       <OptionalMark />
                     </span>
                     <input
-                      className={adminFieldClassName}
+                      id="learning-field-url"
+                      className={cn(
+                        adminFieldClassName,
+                        fieldErrors.url &&
+                          'border-destructive focus-visible:border-destructive'
+                      )}
                       type="url"
                       placeholder="https://www.dicoding.com/academies/..."
                       value={text(draft.document, 'url')}
                       onChange={(event) => updateDoc('url', event.target.value)}
                     />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('providerDescriptionId')}</span>
-                      <OptionalMark />
-                    </span>
-                    <textarea
-                      className={`${adminFieldClassName} py-2`}
-                      rows={2}
-                      maxLength={200}
-                      placeholder="Contoh: Platform edukasi teknologi terkemuka dengan kurikulum terstandarisasi industri..."
-                      value={text(draft.document, 'provider_description_id')}
-                      onChange={(event) =>
-                        updateDoc('provider_description_id', event.target.value)
-                      }
-                    />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('providerDescriptionEn')}</span>
-                      <OptionalMark />
-                    </span>
-                    <textarea
-                      className={`${adminFieldClassName} py-2`}
-                      rows={2}
-                      maxLength={200}
-                      placeholder="e.g. Leading technology education platform offering industry-standard curriculums..."
-                      value={text(draft.document, 'provider_description_en')}
-                      onChange={(event) =>
-                        updateDoc('provider_description_en', event.target.value)
-                      }
-                    />
+                    <FieldError message={fieldErrors.url} />
                   </label>
                   <LearningMediaField
                     label={t('learningHubProviderLogo')}
                     help={t('learningHubProviderLogoHelp')}
                     mediaID={text(draft.document, 'provider_logo_media_id')}
+                    aspect={1 / 1}
+                    cropperTitle="Sesuaikan Logo Penyedia"
+                    cropperBody="Geser dan atur zoom logo penyedia. Gambar akan dipotong persegi 1:1."
+                    cropperLabel="Pilih & Potong Logo"
                     uploading={mediaUploading}
                     onUpload={async (file) => {
                       setMediaUploading(true);
@@ -917,6 +1369,7 @@ export function LearningHubTab({
                           'thumbnail'
                         );
                         updateDoc('provider_logo_media_id', media.id);
+                        toastSuccess('Logo penyedia berhasil diperbarui.');
                       } catch {
                         toastError(t('learningHubThumbnailError'));
                       } finally {
@@ -931,6 +1384,10 @@ export function LearningHubTab({
                     label={t('learningHubThumbnail')}
                     help={t('learningHubThumbnailHelp')}
                     mediaID={text(draft.document, 'thumbnail_media_id')}
+                    aspect={16 / 9}
+                    cropperTitle="Sesuaikan Thumbnail Kursus"
+                    cropperBody="Geser dan atur zoom gambar sampul kartu kursus (16:9)."
+                    cropperLabel="Pilih & Potong Thumbnail"
                     uploading={mediaUploading}
                     onUpload={async (file) => {
                       setMediaUploading(true);
@@ -940,6 +1397,7 @@ export function LearningHubTab({
                           'thumbnail'
                         );
                         updateDoc('thumbnail_media_id', media.id);
+                        toastSuccess('Thumbnail kursus berhasil diperbarui.');
                       } catch {
                         toastError(t('learningHubThumbnailError'));
                       } finally {
@@ -948,192 +1406,254 @@ export function LearningHubTab({
                     }}
                     onChange={(value) => updateDoc('thumbnail_media_id', value)}
                   />
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubDurationMinutes')}</span>
-                      <OptionalMark />
-                    </span>
-                    <input
-                      className={adminFieldClassName}
-                      type="number"
-                      min={1}
-                      placeholder="45"
-                      value={number(draft.document, 'duration_minutes')}
-                      onChange={(event) =>
-                        updateDoc(
-                          'duration_minutes',
-                          Number(event.target.value)
-                        )
-                      }
-                    />
-                  </label>
+                </div>
+              </div>
+
+              {/* Subsection 3: Taxonomy & Review */}
+              <div className="space-y-3">
+                <h3 className="text-navy text-xs font-bold uppercase tracking-wider">
+                  {t('learningHubOutcomesTaxonomy')}
+                </h3>
+                <div className="border-border/70 bg-muted/15 grid gap-4 rounded-xl border p-4 sm:grid-cols-2">
+                  {/* Cluster Selection */}
+                  <div className="space-y-2 sm:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-navy flex items-center text-xs font-bold">
+                        <span>{t('learningHubClusterSlugs')}</span>
+                        <OptionalMark />
+                      </span>
+                      {Array.isArray(draft.document.clusters) &&
+                      draft.document.clusters.length > 0 ? (
+                        <span className="text-muted-foreground text-[11px]">
+                          {draft.document.clusters.length} dipilih
+                        </span>
+                      ) : null}
+                    </div>
+                    {(taxonomy?.clusters?.length ?? 0) === 0 ? (
+                      <p className="text-muted-foreground rounded-xl border border-dashed p-3 text-xs">
+                        Belum ada data cluster taksonomi.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {taxonomy?.clusters?.map((cluster) => {
+                          const clusterList = Array.isArray(
+                            draft.document.clusters
+                          )
+                            ? (draft.document.clusters as string[])
+                            : [];
+                          const isSelected = clusterList.includes(cluster.slug);
+                          const title =
+                            locale === 'en'
+                              ? cluster.title_en || cluster.title_id
+                              : cluster.title_id || cluster.title_en;
+                          return (
+                            <button
+                              key={cluster.slug}
+                              type="button"
+                              onClick={() => {
+                                const next = isSelected
+                                  ? clusterList.filter(
+                                      (s) => s !== cluster.slug
+                                    )
+                                  : [...clusterList, cluster.slug];
+                                updateDoc('clusters', next);
+                              }}
+                              className={cn(
+                                'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs transition-all cursor-pointer',
+                                isSelected
+                                  ? 'border-navy bg-navy text-primary-foreground shadow-xs font-bold'
+                                  : 'border-border bg-card text-foreground hover:border-navy/40 hover:bg-muted/30 font-medium'
+                              )}
+                            >
+                              {isSelected ? (
+                                <Check className="size-3.5 stroke-[2.5]" />
+                              ) : null}
+                              <span>{title || cluster.slug}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <FieldError message={fieldErrors.clusters} />
+                  </div>
+
+                  {/* Program Selection */}
+                  <div className="space-y-2 sm:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-navy flex items-center text-xs font-bold">
+                        <span>{t('learningHubProgramSlugs')}</span>
+                        <OptionalMark />
+                      </span>
+                      {Array.isArray(draft.document.programs) &&
+                      draft.document.programs.length > 0 ? (
+                        <span className="text-muted-foreground text-[11px]">
+                          {draft.document.programs.length} dipilih
+                        </span>
+                      ) : null}
+                    </div>
+                    {(taxonomy?.programs?.length ?? 0) === 0 ? (
+                      <p className="text-muted-foreground rounded-xl border border-dashed p-3 text-xs">
+                        Belum ada data program studi taksonomi.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto rounded-xl border border-border/50 bg-background/50 p-2">
+                        {taxonomy?.programs?.map((program) => {
+                          const programList = Array.isArray(
+                            draft.document.programs
+                          )
+                            ? (draft.document.programs as string[])
+                            : [];
+                          const isSelected = programList.includes(program.slug);
+                          return (
+                            <button
+                              key={program.slug}
+                              type="button"
+                              onClick={() => {
+                                const next = isSelected
+                                  ? programList.filter(
+                                      (s) => s !== program.slug
+                                    )
+                                  : [...programList, program.slug];
+                                updateDoc('programs', next);
+                              }}
+                              className={cn(
+                                'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs transition-all cursor-pointer',
+                                isSelected
+                                  ? 'border-navy bg-navy text-primary-foreground shadow-xs font-bold'
+                                  : 'border-border bg-card text-foreground hover:border-navy/40 hover:bg-muted/30 font-medium'
+                              )}
+                            >
+                              {isSelected ? (
+                                <Check className="size-3.5 stroke-[2.5]" />
+                              ) : null}
+                              <span>
+                                {program.degree ? `${program.degree} ` : ''}
+                                {program.name || program.slug}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <FieldError message={fieldErrors.programs} />
+                  </div>
+
                   <label className="space-y-1.5">
                     <span className="text-navy flex items-center text-xs font-bold">
                       <span>{t('learningHubReviewer')}</span>
                       <OptionalMark />
                     </span>
                     <input
-                      className={adminFieldClassName}
+                      id="learning-field-reviewer_name"
+                      className={cn(
+                        adminFieldClassName,
+                        fieldErrors.reviewer_name &&
+                          'border-destructive focus-visible:border-destructive'
+                      )}
                       placeholder="Contoh: Dr. Budi Santoso, M.Kom. / Tim Kurikulum"
                       value={text(draft.document, 'reviewer_name')}
                       onChange={(event) =>
                         updateDoc('reviewer_name', event.target.value)
                       }
                     />
+                    <FieldError message={fieldErrors.reviewer_name} />
                   </label>
-                  <label className="space-y-1.5 sm:col-span-2">
+                  <label className="space-y-1.5">
                     <span className="text-navy flex items-center text-xs font-bold">
                       <span>{t('learningHubReviewedAt')}</span>
                       <OptionalMark />
                     </span>
                     <input
-                      className={adminFieldClassName}
+                      id="learning-field-reviewed_at"
+                      className={cn(
+                        adminFieldClassName,
+                        fieldErrors.reviewed_at &&
+                          'border-destructive focus-visible:border-destructive'
+                      )}
                       type="date"
                       value={text(draft.document, 'reviewed_at')}
                       onChange={(event) =>
                         updateDoc('reviewed_at', event.target.value)
                       }
                     />
-                  </label>
-                </div>
-              </div>
-
-              {/* Subsection 3: Outcomes & Taxonomy Slugs */}
-              <div className="space-y-3">
-                <h3 className="text-navy text-xs font-bold uppercase tracking-wider">{t('learningHubOutcomesTaxonomy')}</h3>
-                <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubOutcomesId')}</span>
-                      <OptionalMark />
-                    </span>
-                    <textarea
-                      className={`${adminFieldClassName} py-2`}
-                      rows={3}
-                      placeholder={`Contoh:\nMemahami konsep dasar analisis data\nMampu memvisualisasikan data kuantitatif\nMenerapkan analisis regresi pada studi kasus`}
-                      value={list(draft.document, 'outcomes_id')}
-                      onChange={(event) =>
-                        updateDoc(
-                          'outcomes_id',
-                          event.target.value
-                            .split('\n')
-                            .map((value) => value.trim())
-                            .filter(Boolean)
-                        )
-                      }
-                    />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubOutcomesEn')}</span>
-                      <OptionalMark />
-                    </span>
-                    <textarea
-                      className={`${adminFieldClassName} py-2`}
-                      rows={3}
-                      placeholder={`e.g.:\nUnderstand fundamental data analysis concepts\nAble to visualize quantitative datasets\nApply regression analysis in case studies`}
-                      value={list(draft.document, 'outcomes_en')}
-                      onChange={(event) =>
-                        updateDoc(
-                          'outcomes_en',
-                          event.target.value
-                            .split('\n')
-                            .map((value) => value.trim())
-                            .filter(Boolean)
-                        )
-                      }
-                    />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubClusterSlugs')}</span>
-                      <OptionalMark />
-                    </span>
-                    <input
-                      className={adminFieldClassName}
-                      placeholder="teknologi-informasi, sains-data"
-                      value={list(draft.document, 'clusters').replace(
-                        /\n/g,
-                        ', '
-                      )}
-                      onChange={(event) =>
-                        updateDoc(
-                          'clusters',
-                          event.target.value
-                            .split(',')
-                            .map((value) => value.trim())
-                            .filter(Boolean)
-                        )
-                      }
-                    />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-navy flex items-center text-xs font-bold">
-                      <span>{t('learningHubProgramSlugs')}</span>
-                      <OptionalMark />
-                    </span>
-                    <input
-                      className={adminFieldClassName}
-                      placeholder="s1-informatika, s1-sistem-informasi"
-                      value={list(draft.document, 'programs').replace(
-                        /\n/g,
-                        ', '
-                      )}
-                      onChange={(event) =>
-                        updateDoc(
-                          'programs',
-                          event.target.value
-                            .split(',')
-                            .map((value) => value.trim())
-                            .filter(Boolean)
-                        )
-                      }
-                    />
+                    <FieldError message={fieldErrors.reviewed_at} />
                   </label>
                 </div>
               </div>
 
               {/* Action Bar */}
               <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => void save()}
-                    disabled={busy}
-                    className="rounded-xl font-medium"
-                  >
-                    <Save className="size-4" />
-                    {t('learningHubSave')}
-                  </Button>
-                  <Button
-                    onClick={() => void transition('publish')}
-                    disabled={busy}
-                    className="shadow-soft rounded-xl font-bold"
-                  >
-                    <Send className="size-4" />
-                    {t('learningHubPublish')}
-                  </Button>
-                  {selected.status === 'published' ? (
+                {isCreating ? (
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => void transition('archive')}
+                      onClick={cancelCreate}
                       disabled={busy}
                       className="rounded-xl font-medium"
                     >
-                      <Archive className="size-4" />
-                      {t('learningHubArchive')}
+                      {t('cancel')}
                     </Button>
-                  ) : null}
-                </div>
-                <Button
-                  variant="ghost"
-                  onClick={() => void openHistory()}
-                  disabled={busy}
-                  className="text-muted-foreground hover:text-navy rounded-xl font-medium"
-                >
-                  <History className="size-4" />
-                  {t('learningHubHistory')}
-                </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => void handleCreate(false)}
+                      disabled={busy}
+                      className="rounded-xl font-medium"
+                    >
+                      <Plus className="size-4" />
+                      {t('learningHubCreateDraft')}
+                    </Button>
+                    <Button
+                      onClick={() => void handleCreate(true)}
+                      disabled={busy}
+                      className="shadow-soft rounded-xl font-bold"
+                    >
+                      <Send className="size-4" />
+                      {t('learningHubPublish')}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => void save()}
+                      disabled={busy}
+                      className="rounded-xl font-medium"
+                    >
+                      <Save className="size-4" />
+                      {t('learningHubSave')}
+                    </Button>
+                    <Button
+                      onClick={() => void transition('publish')}
+                      disabled={busy}
+                      className="shadow-soft rounded-xl font-bold"
+                    >
+                      <Send className="size-4" />
+                      {t('learningHubPublish')}
+                    </Button>
+                    {selected?.status === 'published' ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => void transition('archive')}
+                        disabled={busy}
+                        className="rounded-xl font-medium"
+                      >
+                        <Archive className="size-4" />
+                        {t('learningHubArchive')}
+                      </Button>
+                    ) : null}
+                  </div>
+                )}
+                {!isCreating && selected ? (
+                  <Button
+                    variant="ghost"
+                    onClick={() => void openHistory()}
+                    disabled={busy}
+                    className="text-muted-foreground hover:text-navy rounded-xl font-medium"
+                  >
+                    <History className="size-4" />
+                    {t('learningHubHistory')}
+                  </Button>
+                ) : null}
               </div>
             </div>
           )}
@@ -1665,214 +2185,6 @@ export function LearningHubTab({
         </section>
       </div>
       )}
-
-      <Dialog
-        open={createOpen}
-        onOpenChange={(open) => {
-          if (busy) return;
-          setCreateOpen(open);
-          if (!open) {
-            setCreateDraft(emptyDraft());
-            setCreateErrors({});
-            setIsCreateSlugCustom(false);
-          }
-        }}
-      >
-        <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t('learningHubNewItem')}</DialogTitle>
-            <DialogDescription>
-              {t('learningHubCreateDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1.5">
-              <span className="text-navy flex items-center text-xs font-bold">
-                <span>{t('learningHubTitleId')}</span>
-                <RequiredMark />
-              </span>
-              <input
-                className={cn(
-                  adminFieldClassName,
-                  createErrors.title_id && 'border-destructive focus-visible:border-destructive'
-                )}
-                placeholder="Contoh: Pengenalan Analisis Data & Statistika Terapan"
-                value={createDraft.title_id}
-                onChange={(event) => {
-                  const newTitle = event.target.value;
-                  setCreateDraft((current) => ({
-                    ...current,
-                    title_id: newTitle,
-                    ...(!isCreateSlugCustom
-                      ? { slug: slugify(newTitle || current.title_en) }
-                      : {}),
-                  }));
-                  clearCreateError('title_id');
-                  clearCreateError('slug');
-                }}
-              />
-              <FieldError message={createErrors.title_id} />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-navy flex items-center text-xs font-bold">
-                <span>{t('learningHubTitleEn')}</span>
-                <RequiredMark />
-              </span>
-              <input
-                className={cn(
-                  adminFieldClassName,
-                  createErrors.title_en && 'border-destructive focus-visible:border-destructive'
-                )}
-                placeholder="e.g. Introduction to Data Analysis & Applied Statistics"
-                value={createDraft.title_en}
-                onChange={(event) => {
-                  const newTitle = event.target.value;
-                  setCreateDraft((current) => ({
-                    ...current,
-                    title_en: newTitle,
-                    ...(!isCreateSlugCustom && !current.title_id
-                      ? { slug: slugify(newTitle) }
-                      : {}),
-                  }));
-                  clearCreateError('title_en');
-                  clearCreateError('slug');
-                }}
-              />
-              <FieldError message={createErrors.title_en} />
-            </label>
-            <label className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-navy flex items-center text-xs font-bold">
-                  <span>Slug</span>
-                  <RequiredMark />
-                </span>
-                {isCreateSlugCustom ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsCreateSlugCustom(false);
-                      setCreateDraft((current) => ({
-                        ...current,
-                        slug: slugify(current.title_id || current.title_en),
-                      }));
-                      clearCreateError('slug');
-                    }}
-                    className="text-navy text-[0.7rem] hover:underline"
-                  >{t('learningHubAutoSlug')}</button>
-                ) : null}
-              </div>
-              <input
-                className={cn(
-                  adminFieldClassName,
-                  createErrors.slug && 'border-destructive focus-visible:border-destructive'
-                )}
-                placeholder="pengenalan-analisis-data-statistika-terapan"
-                pattern="[a-z0-9-]+"
-                value={createDraft.slug}
-                onChange={(event) => {
-                  setIsCreateSlugCustom(true);
-                  setCreateDraft((current) => ({
-                    ...current,
-                    slug: event.target.value,
-                  }));
-                  clearCreateError('slug');
-                }}
-              />
-              <FieldError message={createErrors.slug} />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-navy flex items-center text-xs font-bold">
-                <span>{t('learningHubKind')}</span>
-                <RequiredMark />
-              </span>
-              <NativeSelect
-                value={createDraft.kind}
-                onChange={(event) =>
-                  setCreateDraft((current) => ({
-                    ...current,
-                    kind: event.target.value,
-                  }))
-                }
-              >
-                {kinds.map((kind) => (
-                  <option key={kind} value={kind}>
-                    {t(`learningHubKind_${kind}`)}
-                  </option>
-                ))}
-              </NativeSelect>
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-navy flex items-center text-xs font-bold">
-                <span>{t('learningHubSummaryId')}</span>
-                <RequiredMark />
-              </span>
-              <textarea
-                className={cn(
-                  `${adminFieldClassName} py-2`,
-                  createErrors.summary_id && 'border-destructive focus-visible:border-destructive'
-                )}
-                rows={3}
-                placeholder="Contoh: Ringkasan materi mengenai metodologi analisis data, interpretasi visual, dan studi kasus praktis..."
-                value={createDraft.summary_id}
-                onChange={(event) => {
-                  setCreateDraft((current) => ({
-                    ...current,
-                    summary_id: event.target.value,
-                  }));
-                  clearCreateError('summary_id');
-                }}
-              />
-              <FieldError message={createErrors.summary_id} />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-navy flex items-center text-xs font-bold">
-                <span>{t('learningHubSummaryEn')}</span>
-                <RequiredMark />
-              </span>
-              <textarea
-                className={cn(
-                  `${adminFieldClassName} py-2`,
-                  createErrors.summary_en && 'border-destructive focus-visible:border-destructive'
-                )}
-                rows={3}
-                placeholder="e.g. Course summary covering data analysis methodology, visual interpretation, and practical case studies..."
-                value={createDraft.summary_en}
-                onChange={(event) => {
-                  setCreateDraft((current) => ({
-                    ...current,
-                    summary_en: event.target.value,
-                  }));
-                  clearCreateError('summary_en');
-                }}
-              />
-              <FieldError message={createErrors.summary_en} />
-            </label>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setCreateOpen(false);
-                setIsCreateSlugCustom(false);
-                setCreateDraft(emptyDraft());
-                setCreateErrors({});
-              }}
-              disabled={busy}
-            >
-              {t('cancel')}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => void create()}
-              disabled={busy || !createReady}
-            >
-              <Plus className="size-4" />
-              {t('learningHubCreateDraft')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
         <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-xl">

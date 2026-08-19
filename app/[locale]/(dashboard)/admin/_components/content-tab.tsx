@@ -14,6 +14,7 @@ import {
   Save,
   Trash2,
   Upload,
+  Video,
   X,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -297,17 +298,10 @@ function hasRichTextContent(doc: unknown): boolean {
 type FieldErrors = Record<string, DraftValidationError>;
 
 function validateAllEducationDraft(
-  slug: string,
+  _slug: string,
   doc: AdminEducationDocument
 ): FieldErrors {
   const errors: FieldErrors = {};
-
-  if (!slug.trim()) {
-    errors['slug'] = {
-      message: 'Slug URL modul wajib diisi.',
-      fieldId: 'field-slug',
-    };
-  }
 
   if (!doc.translations.id.title.trim()) {
     errors['title_id'] = {
@@ -593,7 +587,6 @@ export function ContentTab(props: ContentTabProps) {
   const [document, setDocument] = useState<AdminEducationDocument | null>(null);
   const [busy, setBusy] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [isEditorSlugCustom, setIsEditorSlugCustom] = useState(false);
   const [revisions, setRevisions] = useState<AdminEducationRevision[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
@@ -667,11 +660,6 @@ export function ContentTab(props: ContentTabProps) {
         setSelected(educationModule);
         setSlug(educationModule.slug);
         setFieldErrors({});
-        const idTitle =
-          educationModule.draft_document?.translations?.id?.title ||
-          educationModule.title ||
-          '';
-        setIsEditorSlugCustom(educationModule.slug !== slugify(idTitle));
         setDocument(normalizeEducationDocument(educationModule.draft_document));
       })
       .catch((error) => {
@@ -691,33 +679,24 @@ export function ContentTab(props: ContentTabProps) {
     });
   const save = async () => {
     if (!selected || !document) return;
-    if (!slug.trim()) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        slug: {
-          message: 'Slug URL modul wajib diisi.',
-          fieldId: 'field-slug',
-        },
-      }));
-      const el =
-        typeof window !== 'undefined'
-          ? window.document.getElementById('field-slug')
-          : null;
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el?.focus();
-      toastValidationError('Slug URL modul wajib diisi.');
-      return;
-    }
+    const finalSlug =
+      slug.trim() ||
+      slugify(
+        document.translations.id.title ||
+          document.translations.en.title ||
+          'modul-edukasi'
+      );
     setBusy(true);
     try {
       const normalizedDoc = normalizeEducationDocument(document);
       const educationModule = await props.saveModule(
         selected,
-        slug,
+        finalSlug,
         normalizedDoc
       );
       setSelected(educationModule);
       setDocument(normalizeEducationDocument(educationModule.draft_document));
+      setSlug(educationModule.slug);
       toastSuccess(t('moduleSaved'));
     } catch (error) {
       toastError(error, t('moduleSaveError'));
@@ -1188,7 +1167,7 @@ export function ContentTab(props: ContentTabProps) {
       </div>
 
       <section className="border-border bg-card grid gap-5 rounded-2xl border p-5 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="text-navy text-xs font-bold">
             {t('moduleTitle')}
             <RequiredMark />
@@ -1208,50 +1187,12 @@ export function ContentTab(props: ContentTabProps) {
                 draft.translations[locale].title = newTitle;
               });
               clearFieldError(`title_${locale}`);
-              if (!isEditorSlugCustom) {
+              if (!slug || slug === slugify(translation.title)) {
                 setSlug(slugify(newTitle));
-                clearFieldError('slug');
               }
             }}
           />
           <FieldError message={fieldErrors[`title_${locale}`]?.message} />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-navy text-xs font-bold">
-              {t('thSlug')}
-              <RequiredMark />
-            </span>
-            {isEditorSlugCustom ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditorSlugCustom(false);
-                  setSlug(slugify(translation.title));
-                  clearFieldError('slug');
-                }}
-                className="text-navy text-[0.7rem] hover:underline"
-              >
-                Otomatiskan dari judul
-              </button>
-            ) : null}
-          </div>
-          <input
-            id="field-slug"
-            className={cn(
-              adminFieldClassName,
-              fieldErrors['slug'] &&
-                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
-            )}
-            placeholder="mengenali-perangkap-desain"
-            value={slug}
-            onChange={(event) => {
-              setSlug(event.target.value);
-              setIsEditorSlugCustom(true);
-              clearFieldError('slug');
-            }}
-          />
-          <FieldError message={fieldErrors['slug']?.message} />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-navy text-xs font-bold">
@@ -1263,8 +1204,7 @@ export function ContentTab(props: ContentTabProps) {
             value={document.audience}
             onChange={(event) =>
               mutate((draft) => {
-                draft.audience = event.target
-                  .value as AdminEducationDocument['audience'];
+                draft.audience = event.target.value as AdminEducationDocument['audience'];
               })
             }
           >
@@ -1584,9 +1524,41 @@ export function ContentTab(props: ContentTabProps) {
           </div>
         </div>
         {(document.videos?.length ?? 0) === 0 ? (
-          <p className="text-muted-foreground mt-4 text-center text-xs">
-            {t('noVideosYet')}
-          </p>
+          <div className="border-border/70 bg-muted/20 mt-4 flex flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-8 text-center">
+            <div className="bg-navy/5 text-navy dark:bg-navy/20 flex size-12 items-center justify-center rounded-2xl mb-3">
+              <Video className="size-6 text-muted-foreground/70" />
+            </div>
+            <p className="text-navy text-sm font-semibold">
+              {t('noVideosYet')}
+            </p>
+            <p className="text-muted-foreground mt-1 max-w-md text-xs leading-relaxed">
+              {t('videosHelp')}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={uploadVideo}
+                className="gap-1.5 rounded-xl text-xs font-semibold"
+              >
+                <Upload className="size-3.5" />
+                {t('uploadVideo')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => void addExternalVideo()}
+                className="gap-1.5 rounded-xl text-xs font-semibold"
+              >
+                <ExternalLink className="size-3.5" />
+                {t('addExternalVideo')}
+              </Button>
+            </div>
+          </div>
         ) : (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {(document.videos ?? []).map((video, index) => (

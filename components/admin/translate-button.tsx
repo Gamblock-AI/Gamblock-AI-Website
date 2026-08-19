@@ -10,6 +10,8 @@ interface TranslateButtonProps {
   sourceTexts: string[];
   sourceLang: 'id' | 'en';
   targetLang: 'id' | 'en';
+  customLabel?: string;
+  className?: string;
   onTranslated: (translations: string[]) => void;
 }
 
@@ -17,15 +19,18 @@ export function TranslateButton({
   sourceTexts,
   sourceLang,
   targetLang,
+  customLabel,
+  className,
   onTranslated,
 }: TranslateButtonProps) {
   const t = useTranslations('shared');
   const { translate, translating } = useTranslate();
 
   const label =
-    targetLang === 'en'
+    customLabel ||
+    (targetLang === 'en'
       ? t('adminTranslateToEN')
-      : t('adminTranslateToID');
+      : t('adminTranslateToID'));
 
   const nonEmpty = sourceTexts
     .map((s) => String(s ?? '').trim())
@@ -59,7 +64,7 @@ export function TranslateButton({
       size="sm"
       disabled={disabled}
       onClick={handleClick}
-      className="gap-1.5 rounded-xl text-xs"
+      className={className || "gap-1.5 rounded-xl text-xs font-semibold"}
     >
       {translating ? (
         <>

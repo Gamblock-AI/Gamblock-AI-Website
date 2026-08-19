@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, useState } from 'react';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { DashboardPage } from '@/components/dashboard/dashboard-page';
 import { AdminVerificationCard } from '@/components/dashboard/admin-verification-card';
@@ -29,31 +29,16 @@ export function AdminContentCreate() {
   const operations = useAdminOperations(verifiedRole, 'content');
   const [idTitle, setIDTitle] = useState('');
   const [enTitle, setENTitle] = useState('');
-  const [slug, setSlug] = useState('');
-  const [isSlugCustom, setIsSlugCustom] = useState(false);
   const [busy, setBusy] = useState(false);
-
-  const handleIDTitleChange = (val: string) => {
-    setIDTitle(val);
-    if (!isSlugCustom) setSlug(slugify(val || enTitle));
-  };
-
-  const handleENTitleChange = (val: string) => {
-    setENTitle(val);
-    if (!isSlugCustom && !idTitle) setSlug(slugify(val));
-  };
-
-  const handleSlugChange = (val: string) => {
-    setSlug(val);
-    setIsSlugCustom(true);
-  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const computedSlug = slugify(idTitle || enTitle || 'modul-edukasi');
+    if (!computedSlug) return;
     setBusy(true);
     try {
       const educationModule = await operations.createModule({
-        slug,
+        slug: computedSlug,
         document: makeDocument(idTitle, enTitle),
       });
       toastSuccess(t('moduleCreated'));
@@ -100,7 +85,7 @@ export function AdminContentCreate() {
               className={adminFieldClassName}
               placeholder="Contoh: Memahami Siklus Dorongan"
               value={idTitle}
-              onChange={(event) => handleIDTitleChange(event.target.value)}
+              onChange={(event) => setIDTitle(event.target.value)}
               required
             />
           </label>
@@ -114,36 +99,7 @@ export function AdminContentCreate() {
               className={adminFieldClassName}
               placeholder="Contoh: Understanding the Impulse Cycle"
               value={enTitle}
-              onChange={(event) => handleENTitleChange(event.target.value)}
-              required
-            />
-          </label>
-
-          <label className="space-y-2 sm:col-span-2">
-            <div className="flex items-center justify-between">
-              <span className="text-navy flex items-center text-xs font-bold">
-                <span>{t('thSlug')}</span>
-                <RequiredMark />
-              </span>
-              {isSlugCustom ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSlugCustom(false);
-                    setSlug(slugify(idTitle || enTitle));
-                  }}
-                  className="text-navy text-[0.7rem] hover:underline"
-                >
-                  {t('autoSlug')}
-                </button>
-              ) : null}
-            </div>
-            <input
-              className={adminFieldClassName}
-              placeholder="contoh-memahami-siklus-dorongan"
-              pattern="[a-z0-9-]+"
-              value={slug}
-              onChange={(event) => handleSlugChange(event.target.value)}
+              onChange={(event) => setENTitle(event.target.value)}
               required
             />
           </label>
@@ -156,9 +112,11 @@ export function AdminContentCreate() {
             >
               {t('cancel')}
             </Button>
-            <Button type="submit" disabled={busy || !slug.trim()}>
+            <Button
+              type="submit"
+              disabled={busy || !idTitle.trim() || !enTitle.trim()}
+            >
               {busy ? t('saving') : t('saveDraft')}
-              {!busy ? <Plus className="size-4" aria-hidden="true" /> : null}
             </Button>
           </div>
         </form>
