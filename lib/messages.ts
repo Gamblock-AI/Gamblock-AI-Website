@@ -113,6 +113,15 @@ export const MESSAGES: Record<string, string> = {
     'Permintaan menghubungi pendamping belum dapat dikirim.',
   partner_contact_transition_failed:
     'Status permintaan kontak belum dapat diperbarui.',
+  standalone_removal_failed: 'Pencopotan mandiri gagal diproses.',
+  standalone_removal_device_not_owned:
+    'Perangkat ini bukan milik akun Anda.',
+  standalone_removal_partner_active:
+    'Hubungan pendamping masih aktif; gunakan alur persetujuan pendamping.',
+  standalone_removal_already_active:
+    'Izin pencopotan masih aktif; tunggu hingga masa berlakunya berakhir.',
+  standalone_removal_sign_unavailable:
+    'Izin pencopotan tidak dapat diterbitkan saat ini.',
 
   // organizations
   name_required: 'Nama grup wajib diisi.',
