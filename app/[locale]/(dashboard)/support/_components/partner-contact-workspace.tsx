@@ -28,6 +28,7 @@ import {
 } from '@/hooks/use-accountability';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { Link } from '@/i18n/routing';
+import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { ROUTES } from '@/routes';
 
@@ -178,9 +179,10 @@ export function PartnerContactWorkspace() {
             <div className="space-y-2">
               <label
                 htmlFor="partner-contact-category"
-                className="text-navy block text-sm font-semibold"
+                className="text-navy flex items-center text-sm font-semibold"
               >
-                {t('partnerCategoryLabel')}
+                <span>{t('partnerCategoryLabel')}</span>
+                <RequiredMark />
               </label>
               <NativeSelect
                 id="partner-contact-category"
@@ -206,9 +208,10 @@ export function PartnerContactWorkspace() {
             <div className="space-y-2">
               <label
                 htmlFor="partner-contact-message"
-                className="text-navy block text-sm font-semibold"
+                className="text-navy flex items-center text-sm font-semibold"
               >
-                {t('partnerMessageLabel')}
+                <span>{t('partnerMessageLabel')}</span>
+                <OptionalMark />
               </label>
               <Textarea
                 id="partner-contact-message"

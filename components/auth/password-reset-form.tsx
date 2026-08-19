@@ -80,9 +80,13 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
         type="email"
         autoComplete="email"
         placeholder={copy.emailPlaceholder}
+        error={!requested ? (error || undefined) : undefined}
         required
         value={email}
-        onChange={(event) => setEmail(event.target.value)}
+        onChange={(event) => {
+          setEmail(event.target.value);
+          if (error) setError(null);
+        }}
       />
       {requested ? (
         <>
@@ -95,7 +99,10 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
             maxLength={14}
             required
             value={code}
-            onChange={(event) => setCode(event.target.value.toUpperCase())}
+            onChange={(event) => {
+              setCode(event.target.value.toUpperCase());
+              if (error) setError(null);
+            }}
           />
           <AuthField
             label={copy.password}
@@ -104,9 +111,13 @@ export function PasswordResetForm({ copy }: { copy: Copy }) {
             autoComplete="new-password"
             placeholder={copy.passwordPlaceholder}
             minLength={8}
+            error={error || undefined}
             required
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              if (error) setError(null);
+            }}
           />
         </>
       ) : null}

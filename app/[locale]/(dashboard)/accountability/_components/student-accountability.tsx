@@ -31,6 +31,7 @@ import {
   RequestStatus,
   type Translation,
 } from './accountability-shared';
+import { OptionalMark } from '@/components/common/form-field';
 
 type Accountability = ReturnType<typeof useAccountability>;
 type StudentDialog =
@@ -343,9 +344,10 @@ export function StudentAccountability({
                   <div>
                     <label
                       htmlFor="leave-reason"
-                      className="text-navy text-sm font-semibold"
+                      className="text-navy flex items-center text-sm font-semibold"
                     >
-                      {t('leaveReason')}
+                      <span>{t('leaveReason')}</span>
+                      <OptionalMark />
                     </label>
                     <Textarea
                       id="leave-reason"

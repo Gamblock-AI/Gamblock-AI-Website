@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RequiredMark } from '@/components/common/form-field';
 import {
   useRecoveryExperience,
   type WeeklyReview,
@@ -378,6 +379,7 @@ function TextAreaField({
   value,
   placeholder,
   error,
+  required = true,
   onChange,
 }: {
   id: string;
@@ -385,13 +387,15 @@ function TextAreaField({
   value: string;
   placeholder: string;
   error?: string;
+  required?: boolean;
   onChange: (value: string) => void;
 }) {
   const errorId = `${id}-error`;
   return (
     <div>
-      <label htmlFor={id} className="text-navy text-sm font-bold">
-        {label}
+      <label htmlFor={id} className="text-navy flex items-center text-sm font-bold">
+        <span>{label}</span>
+        {required ? <RequiredMark /> : null}
       </label>
       <textarea
         id={id}
@@ -414,6 +418,7 @@ function TextField({
   value,
   placeholder,
   error,
+  required = true,
   onChange,
 }: {
   id: string;
@@ -421,13 +426,15 @@ function TextField({
   value: string;
   placeholder: string;
   error?: string;
+  required?: boolean;
   onChange: (value: string) => void;
 }) {
   const errorId = `${id}-error`;
   return (
     <div>
-      <label htmlFor={id} className="text-navy text-sm font-bold">
-        {label}
+      <label htmlFor={id} className="text-navy flex items-center text-sm font-bold">
+        <span>{label}</span>
+        {required ? <RequiredMark /> : null}
       </label>
       <input
         id={id}

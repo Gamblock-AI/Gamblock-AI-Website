@@ -26,6 +26,7 @@ import { apiClient } from '@/lib/api-client';
 import { toastError } from '@/lib/feedback';
 import { recordDailyCheckIn } from '@/lib/recovery/check-in-actions';
 import type { MoodLevel, UrgeLevel } from '@/lib/recovery/types';
+import { RequiredMark } from '@/components/common/form-field';
 
 interface QuizAnswers {
   school_impact: string;
@@ -403,9 +404,10 @@ export function NiatPerubahanModal({
                       </span>
                       <p
                         id={`question-label-${key}`}
-                        className="text-foreground text-xs font-semibold sm:text-sm leading-snug pt-0.5"
+                        className="text-foreground flex items-center text-xs font-semibold sm:text-sm leading-snug pt-0.5"
                       >
-                        {label}
+                        <span>{label}</span>
+                        <RequiredMark />
                       </p>
                     </div>
 
@@ -492,9 +494,10 @@ export function NiatPerubahanModal({
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="niat-perubahan-text"
-                    className="text-foreground text-xs font-semibold"
+                    className="text-foreground flex items-center text-xs font-semibold"
                   >
-                    {t('niatInputLabel')}
+                    <span>{t('niatInputLabel')}</span>
+                    <RequiredMark />
                   </label>
                   <span
                     className={`text-[0.6875rem] font-medium transition-colors ${

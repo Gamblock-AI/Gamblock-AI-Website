@@ -12,6 +12,8 @@ import {
   resolveReauth,
   subscribeReauthDialog,
 } from '@/lib/reauth';
+import { RequiredMark } from '@/components/common/form-field';
+import { cn } from '@/lib/utils';
 
 /**
  * Global re-authentication prompt, mounted once in the dashboard layout and
@@ -91,7 +93,15 @@ export function ReauthDialog() {
               {t('reauthBody')}
             </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label
+              htmlFor="reauth-password"
+              className="text-navy mt-3 flex items-center text-xs font-bold"
+            >
+              <span>{t('reauthPasswordLabel')}</span>
+              <RequiredMark />
+            </label>
+
+            <div className="mt-1 flex flex-wrap items-center gap-2">
               <input
                 id="reauth-password"
                 type="password"
@@ -104,7 +114,15 @@ export function ReauthDialog() {
                 autoComplete="current-password"
                 autoFocus
                 placeholder={t('reauthPasswordLabel')}
-                className="border-input bg-background focus-visible:border-navy focus-visible:ring-navy/20 h-10 min-w-0 flex-1 basis-40 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'reauth-error' : undefined}
+                required
+                className={cn(
+                  'bg-background h-10 min-w-0 flex-1 basis-40 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2',
+                  error
+                    ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20'
+                    : 'border-input focus-visible:border-navy focus-visible:ring-navy/20'
+                )}
               />
               <Button
                 type="button"
@@ -128,7 +146,11 @@ export function ReauthDialog() {
             </div>
 
             {error ? (
-              <p className="mt-2 text-xs font-semibold text-red-600" role="alert">
+              <p
+                id="reauth-error"
+                className="text-destructive mt-2 text-xs font-semibold"
+                role="alert"
+              >
                 {invalidCredentials
                   ? t('reauthFailed')
                   : t('reauthFailedGeneric')}

@@ -11,6 +11,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { MoodLevel, UrgeLevel } from '@/lib/recovery/types';
 import { cn } from '@/lib/utils';
+import { RequiredMark } from '@/components/common/form-field';
 
 interface CheckInFieldsProps {
   mood: MoodLevel | null;
@@ -89,8 +90,9 @@ export function CheckInFields({
   return (
     <>
       <fieldset>
-        <legend className="text-foreground text-sm font-semibold">
-          {t('moodQuestion')}
+        <legend className="text-foreground flex items-center text-sm font-semibold">
+          <span>{t('moodQuestion')}</span>
+          <RequiredMark />
         </legend>
         <div
           className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5"
@@ -125,8 +127,9 @@ export function CheckInFields({
       </fieldset>
 
       <fieldset className="mt-4">
-        <legend className="text-foreground text-sm font-semibold">
-          {t('urgeQuestion')}
+        <legend className="text-foreground flex items-center text-sm font-semibold">
+          <span>{t('urgeQuestion')}</span>
+          <RequiredMark />
         </legend>
         <div
           className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5 lg:grid-cols-5 lg:gap-0"

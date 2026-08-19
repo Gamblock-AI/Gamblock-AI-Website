@@ -22,6 +22,7 @@ import {
   RequestStatus,
   type Translation,
 } from './accountability-shared';
+import { OptionalMark } from '@/components/common/form-field';
 
 type Accountability = ReturnType<typeof useAccountability>;
 type PartnerDialog =
@@ -200,9 +201,10 @@ export function PartnerAccountability({
                     </dl>
                     <label
                       htmlFor={`response-${request.id}`}
-                      className="text-navy mt-3 block text-sm font-semibold"
+                      className="text-navy mt-3 flex items-center text-sm font-semibold"
                     >
-                      {t('supportiveResponse')}
+                      <span>{t('supportiveResponse')}</span>
+                      <OptionalMark />
                     </label>
                     <Textarea
                       id={`response-${request.id}`}

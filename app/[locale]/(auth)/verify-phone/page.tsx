@@ -124,6 +124,8 @@ export default function VerifyPhonePage() {
           pattern="[0-9]*"
           placeholder={t('codePlaceholder')}
           value={code}
+          error={error || undefined}
+          required
           onChange={(event) =>
             setCode(event.target.value.replace(/\D/g, '').slice(0, 6))
           }

@@ -36,6 +36,11 @@ import {
   AdminStatusBadge,
   adminFieldClassName,
 } from './admin-shared';
+import {
+  FieldError,
+  OptionalMark,
+  RequiredMark,
+} from '@/components/common/form-field';
 import { TranslateButton } from '@/components/admin/translate-button';
 import { slugify } from './content-tab';
 import { ROUTES } from '@/routes';
@@ -186,7 +191,10 @@ function LearningMediaField({
   const source = mediaID ? resolveEducationMediaURL(`/v1/education/media/${mediaID}`) : '';
   return (
     <label className="space-y-2">
-      <span className="text-navy text-xs font-bold">{label}</span>
+      <span className="text-navy flex items-center text-xs font-bold">
+        <span>{label}</span>
+        <OptionalMark />
+      </span>
       {help ? <span className="text-muted-foreground block text-xs">{help}</span> : null}
       <div className="flex items-center gap-3">
         {source ? (
@@ -295,6 +303,7 @@ export function LearningHubTab({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState<Draft>(() => emptyDraft());
+  const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
   const [isCreateSlugCustom, setIsCreateSlugCustom] = useState(false);
   const [mediaUploading, setMediaUploading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -337,6 +346,38 @@ export function LearningHubTab({
     ].every((value) => value.trim().length > 0) &&
     slugPattern.test(createDraft.slug);
 
+  const clearCreateError = (field: string) => {
+    setCreateErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validateCreate = () => {
+    const errors: Record<string, string> = {};
+    if (!createDraft.title_id.trim()) {
+      errors.title_id = 'Judul materi bahasa Indonesia wajib diisi.';
+    }
+    if (!createDraft.title_en.trim()) {
+      errors.title_en = 'Judul materi bahasa Inggris wajib diisi.';
+    }
+    if (!createDraft.slug.trim()) {
+      errors.slug = 'Slug materi wajib diisi.';
+    } else if (!slugPattern.test(createDraft.slug)) {
+      errors.slug = 'Format slug harus berupa huruf kecil, angka, dan tanda hubung (-).';
+    }
+    if (!createDraft.summary_id.trim()) {
+      errors.summary_id = 'Ringkasan materi bahasa Indonesia wajib diisi.';
+    }
+    if (!createDraft.summary_en.trim()) {
+      errors.summary_en = 'Ringkasan materi bahasa Inggris wajib diisi.';
+    }
+    setCreateErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const selectItem = (item: AdminLearningHubItem) => {
     setSelected(item);
     setDraft(itemDraft(item));
@@ -368,6 +409,7 @@ export function LearningHubTab({
   };
 
   const create = async () => {
+    if (!validateCreate()) return;
     setBusy(true);
     try {
       const created = await createItem(
@@ -376,6 +418,7 @@ export function LearningHubTab({
       setSelected(created);
       setDraft(itemDraft(created));
       setCreateDraft(emptyDraft());
+      setCreateErrors({});
       setIsCreateSlugCustom(false);
       setCreateOpen(false);
       toastSuccess(t('learningHubCreated'));
@@ -704,7 +747,10 @@ export function LearningHubTab({
                 </h3>
                 <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">{t('learningHubSlug')}</span>
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubSlug')}</span>
+                      <RequiredMark />
+                    </span>
                     <input
                       className={adminFieldClassName}
                       placeholder="analisis-data-statistika-terapan"
@@ -715,8 +761,9 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      {t('learningHubKind')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubKind')}</span>
+                      <RequiredMark />
                     </span>
                     <NativeSelect
                       value={draft.kind}
@@ -732,8 +779,9 @@ export function LearningHubTab({
                     </NativeSelect>
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      {t('learningHubTitleId')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubTitleId')}</span>
+                      <RequiredMark />
                     </span>
                     <input
                       className={adminFieldClassName}
@@ -745,8 +793,9 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      {t('learningHubTitleEn')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubTitleEn')}</span>
+                      <RequiredMark />
                     </span>
                     <input
                       className={adminFieldClassName}
@@ -758,8 +807,9 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5 sm:col-span-2">
-                    <span className="text-navy text-xs font-bold">
-                      {t('learningHubSummaryId')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubSummaryId')}</span>
+                      <RequiredMark />
                     </span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
@@ -772,8 +822,9 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5 sm:col-span-2">
-                    <span className="text-navy text-xs font-bold">
-                      {t('learningHubSummaryEn')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubSummaryEn')}</span>
+                      <RequiredMark />
                     </span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
@@ -795,8 +846,9 @@ export function LearningHubTab({
                 </h3>
                 <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      {t('learningHubProvider')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubProvider')}</span>
+                      <OptionalMark />
                     </span>
                     <input
                       className={adminFieldClassName}
@@ -808,8 +860,9 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      {t('learningHubSourceUrl')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubSourceUrl')}</span>
+                      <OptionalMark />
                     </span>
                     <input
                       className={adminFieldClassName}
@@ -820,8 +873,9 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      {t('providerDescriptionId')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('providerDescriptionId')}</span>
+                      <OptionalMark />
                     </span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
@@ -835,8 +889,9 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      {t('providerDescriptionEn')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('providerDescriptionEn')}</span>
+                      <OptionalMark />
                     </span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
@@ -894,8 +949,9 @@ export function LearningHubTab({
                     onChange={(value) => updateDoc('thumbnail_media_id', value)}
                   />
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">
-                      {t('learningHubDurationMinutes')}
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubDurationMinutes')}</span>
+                      <OptionalMark />
                     </span>
                     <input
                       className={adminFieldClassName}
@@ -912,7 +968,10 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">{t('learningHubReviewer')}</span>
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubReviewer')}</span>
+                      <OptionalMark />
+                    </span>
                     <input
                       className={adminFieldClassName}
                       placeholder="Contoh: Dr. Budi Santoso, M.Kom. / Tim Kurikulum"
@@ -923,7 +982,10 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5 sm:col-span-2">
-                    <span className="text-navy text-xs font-bold">{t('learningHubReviewedAt')}</span>
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubReviewedAt')}</span>
+                      <OptionalMark />
+                    </span>
                     <input
                       className={adminFieldClassName}
                       type="date"
@@ -941,7 +1003,10 @@ export function LearningHubTab({
                 <h3 className="text-navy text-xs font-bold uppercase tracking-wider">{t('learningHubOutcomesTaxonomy')}</h3>
                 <div className="border-border/70 bg-muted/15 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">{t('learningHubOutcomesId')}</span>
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubOutcomesId')}</span>
+                      <OptionalMark />
+                    </span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
                       rows={3}
@@ -959,7 +1024,10 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">{t('learningHubOutcomesEn')}</span>
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubOutcomesEn')}</span>
+                      <OptionalMark />
+                    </span>
                     <textarea
                       className={`${adminFieldClassName} py-2`}
                       rows={3}
@@ -977,7 +1045,10 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">{t('learningHubClusterSlugs')}</span>
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubClusterSlugs')}</span>
+                      <OptionalMark />
+                    </span>
                     <input
                       className={adminFieldClassName}
                       placeholder="teknologi-informasi, sains-data"
@@ -997,7 +1068,10 @@ export function LearningHubTab({
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-navy text-xs font-bold">{t('learningHubProgramSlugs')}</span>
+                    <span className="text-navy flex items-center text-xs font-bold">
+                      <span>{t('learningHubProgramSlugs')}</span>
+                      <OptionalMark />
+                    </span>
                     <input
                       className={adminFieldClassName}
                       placeholder="s1-informatika, s1-sistem-informasi"
@@ -1599,6 +1673,7 @@ export function LearningHubTab({
           setCreateOpen(open);
           if (!open) {
             setCreateDraft(emptyDraft());
+            setCreateErrors({});
             setIsCreateSlugCustom(false);
           }
         }}
@@ -1611,10 +1686,16 @@ export function LearningHubTab({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">{t('learningHubTitleId')}</span>
+            <label className="space-y-1.5">
+              <span className="text-navy flex items-center text-xs font-bold">
+                <span>{t('learningHubTitleId')}</span>
+                <RequiredMark />
+              </span>
               <input
-                className={adminFieldClassName}
+                className={cn(
+                  adminFieldClassName,
+                  createErrors.title_id && 'border-destructive focus-visible:border-destructive'
+                )}
                 placeholder="Contoh: Pengenalan Analisis Data & Statistika Terapan"
                 value={createDraft.title_id}
                 onChange={(event) => {
@@ -1626,13 +1707,22 @@ export function LearningHubTab({
                       ? { slug: slugify(newTitle || current.title_en) }
                       : {}),
                   }));
+                  clearCreateError('title_id');
+                  clearCreateError('slug');
                 }}
               />
+              <FieldError message={createErrors.title_id} />
             </label>
-            <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">{t('learningHubTitleEn')}</span>
+            <label className="space-y-1.5">
+              <span className="text-navy flex items-center text-xs font-bold">
+                <span>{t('learningHubTitleEn')}</span>
+                <RequiredMark />
+              </span>
               <input
-                className={adminFieldClassName}
+                className={cn(
+                  adminFieldClassName,
+                  createErrors.title_en && 'border-destructive focus-visible:border-destructive'
+                )}
                 placeholder="e.g. Introduction to Data Analysis & Applied Statistics"
                 value={createDraft.title_en}
                 onChange={(event) => {
@@ -1644,12 +1734,18 @@ export function LearningHubTab({
                       ? { slug: slugify(newTitle) }
                       : {}),
                   }));
+                  clearCreateError('title_en');
+                  clearCreateError('slug');
                 }}
               />
+              <FieldError message={createErrors.title_en} />
             </label>
-            <label className="space-y-2">
+            <label className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-navy text-xs font-bold">Slug</span>
+                <span className="text-navy flex items-center text-xs font-bold">
+                  <span>Slug</span>
+                  <RequiredMark />
+                </span>
                 {isCreateSlugCustom ? (
                   <button
                     type="button"
@@ -1659,13 +1755,17 @@ export function LearningHubTab({
                         ...current,
                         slug: slugify(current.title_id || current.title_en),
                       }));
+                      clearCreateError('slug');
                     }}
                     className="text-navy text-[0.7rem] hover:underline"
                   >{t('learningHubAutoSlug')}</button>
                 ) : null}
               </div>
               <input
-                className={adminFieldClassName}
+                className={cn(
+                  adminFieldClassName,
+                  createErrors.slug && 'border-destructive focus-visible:border-destructive'
+                )}
                 placeholder="pengenalan-analisis-data-statistika-terapan"
                 pattern="[a-z0-9-]+"
                 value={createDraft.slug}
@@ -1675,12 +1775,15 @@ export function LearningHubTab({
                     ...current,
                     slug: event.target.value,
                   }));
+                  clearCreateError('slug');
                 }}
               />
+              <FieldError message={createErrors.slug} />
             </label>
-            <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">
-                {t('learningHubKind')}
+            <label className="space-y-1.5">
+              <span className="text-navy flex items-center text-xs font-bold">
+                <span>{t('learningHubKind')}</span>
+                <RequiredMark />
               </span>
               <NativeSelect
                 value={createDraft.kind}
@@ -1698,39 +1801,51 @@ export function LearningHubTab({
                 ))}
               </NativeSelect>
             </label>
-            <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">
-                {t('learningHubSummaryId')}
+            <label className="space-y-1.5">
+              <span className="text-navy flex items-center text-xs font-bold">
+                <span>{t('learningHubSummaryId')}</span>
+                <RequiredMark />
               </span>
               <textarea
-                className={`${adminFieldClassName} py-2`}
+                className={cn(
+                  `${adminFieldClassName} py-2`,
+                  createErrors.summary_id && 'border-destructive focus-visible:border-destructive'
+                )}
                 rows={3}
                 placeholder="Contoh: Ringkasan materi mengenai metodologi analisis data, interpretasi visual, dan studi kasus praktis..."
                 value={createDraft.summary_id}
-                onChange={(event) =>
+                onChange={(event) => {
                   setCreateDraft((current) => ({
                     ...current,
                     summary_id: event.target.value,
-                  }))
-                }
+                  }));
+                  clearCreateError('summary_id');
+                }}
               />
+              <FieldError message={createErrors.summary_id} />
             </label>
-            <label className="space-y-2">
-              <span className="text-navy text-xs font-bold">
-                {t('learningHubSummaryEn')}
+            <label className="space-y-1.5">
+              <span className="text-navy flex items-center text-xs font-bold">
+                <span>{t('learningHubSummaryEn')}</span>
+                <RequiredMark />
               </span>
               <textarea
-                className={`${adminFieldClassName} py-2`}
+                className={cn(
+                  `${adminFieldClassName} py-2`,
+                  createErrors.summary_en && 'border-destructive focus-visible:border-destructive'
+                )}
                 rows={3}
                 placeholder="e.g. Course summary covering data analysis methodology, visual interpretation, and practical case studies..."
                 value={createDraft.summary_en}
-                onChange={(event) =>
+                onChange={(event) => {
                   setCreateDraft((current) => ({
                     ...current,
                     summary_en: event.target.value,
-                  }))
-                }
+                  }));
+                  clearCreateError('summary_en');
+                }}
               />
+              <FieldError message={createErrors.summary_en} />
             </label>
           </div>
           <DialogFooter>
@@ -1741,6 +1856,7 @@ export function LearningHubTab({
                 setCreateOpen(false);
                 setIsCreateSlugCustom(false);
                 setCreateDraft(emptyDraft());
+                setCreateErrors({});
               }}
               disabled={busy}
             >
@@ -1766,21 +1882,19 @@ export function LearningHubTab({
               {t('learningHubHistoryDescription')}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {revisions.map((revision) => (
               <div
                 key={revision.id}
-                className="border-border flex items-center justify-between gap-3 rounded-xl border p-3"
+                className="border-border/80 flex items-center justify-between rounded-xl border p-3"
               >
                 <div>
-                  <p className="text-navy text-sm font-bold">
-                    rev {revision.revision} ·{' '}
-                    {t.has(`learningHubKind_${revision.kind}`)
-                      ? t(`learningHubKind_${revision.kind}`)
-                      : revision.kind}
+                  <p className="text-xs font-bold">
+                    v{revision.revision_number} •{' '}
+                    {new Date(revision.created_at).toLocaleString()}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {new Date(revision.created_at).toLocaleString()}
+                    {revision.reason || t('learningHubNoReason')}
                   </p>
                 </div>
                 <Button
@@ -1806,13 +1920,20 @@ export function LearningHubTab({
               {t('learningHubRollbackDescription')}
             </DialogDescription>
           </DialogHeader>
-          <textarea
-            className={`${adminFieldClassName} py-2`}
-            rows={4}
-            value={rollbackReason}
-            onChange={(event) => setRollbackReason(event.target.value)}
-            placeholder="Contoh: Pemulihan draf untuk memperbarui referensi kurikulum terbaru..."
-          />
+          <label className="space-y-1.5">
+            <span className="text-navy flex items-center text-xs font-bold">
+              <span>{t('reasonPrompt')}</span>
+              <RequiredMark />
+            </span>
+            <textarea
+              className={`${adminFieldClassName} py-2`}
+              rows={4}
+              value={rollbackReason}
+              onChange={(event) => setRollbackReason(event.target.value)}
+              placeholder="Contoh: Pemulihan draf untuk memperbarui referensi kurikulum terbaru..."
+              required
+            />
+          </label>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRollbackOpen(false)}>
               {t('cancel')}

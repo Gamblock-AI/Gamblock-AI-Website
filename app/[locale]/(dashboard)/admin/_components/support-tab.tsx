@@ -37,6 +37,7 @@ import {
   AdminStatusBadge,
   adminFieldClassName,
 } from './admin-shared';
+import { RequiredMark } from '@/components/common/form-field';
 
 interface SupportTabProps {
   userId?: string;
@@ -163,8 +164,9 @@ export function SupportTab(props: SupportTabProps) {
           className="space-y-4"
         >
           <div className="space-y-2">
-            <label className="text-navy block text-xs font-bold">
-              {t('reasonPrompt')}
+            <label className="text-navy flex items-center text-xs font-bold">
+              <span>{t('reasonPrompt')}</span>
+              <RequiredMark />
             </label>
             <textarea
               value={modalReason}
@@ -335,14 +337,20 @@ export function SupportTab(props: SupportTabProps) {
               onSubmit={(event) => void sendReply(event)}
               className="border-border mt-5 flex flex-col gap-3 border-t pt-4"
             >
-              <textarea
-                className={`${adminFieldClassName} min-h-28 py-3`}
-                value={reply}
-                onChange={(event) => setReply(event.target.value)}
-                placeholder={t('replyPlaceholder')}
-                maxLength={4000}
-                required
-              />
+              <label className="space-y-1.5">
+                <span className="text-navy flex items-center text-xs font-bold">
+                  <span>{t('reply')}</span>
+                  <RequiredMark />
+                </span>
+                <textarea
+                  className={`${adminFieldClassName} min-h-28 py-3`}
+                  value={reply}
+                  onChange={(event) => setReply(event.target.value)}
+                  placeholder={t('replyPlaceholder')}
+                  maxLength={4000}
+                  required
+                />
+              </label>
               <Button type="submit" className="self-end" disabled={busy}>
                 <MessageSquare className="size-4" />
                 {t('sendReply')}

@@ -14,6 +14,7 @@ import { ROUTES } from '@/routes';
 import { AdminHeader } from './admin-header';
 import { adminFieldClassName } from './admin-shared';
 import { makeDocument, slugify } from './content-tab';
+import { RequiredMark } from '@/components/common/form-field';
 
 /**
  * Dedicated create-module page. The module list's "Buat Modul" button lands
@@ -91,9 +92,9 @@ export function AdminContentCreate() {
           </div>
 
           <label className="space-y-2">
-            <span className="text-navy text-xs font-bold">
-              {t('titleIndonesian')}
-              <span className="text-destructive ml-1 font-bold" aria-hidden="true">*</span>
+            <span className="text-navy flex items-center text-xs font-bold">
+              <span>{t('titleIndonesian')}</span>
+              <RequiredMark />
             </span>
             <input
               className={adminFieldClassName}
@@ -105,9 +106,9 @@ export function AdminContentCreate() {
           </label>
 
           <label className="space-y-2">
-            <span className="text-navy text-xs font-bold">
-              {t('titleEnglish')}
-              <span className="text-destructive ml-1 font-bold" aria-hidden="true">*</span>
+            <span className="text-navy flex items-center text-xs font-bold">
+              <span>{t('titleEnglish')}</span>
+              <RequiredMark />
             </span>
             <input
               className={adminFieldClassName}
@@ -120,9 +121,9 @@ export function AdminContentCreate() {
 
           <label className="space-y-2 sm:col-span-2">
             <div className="flex items-center justify-between">
-              <span className="text-navy text-xs font-bold">
-                {t('thSlug')}
-                <span className="text-destructive ml-1 font-bold" aria-hidden="true">*</span>
+              <span className="text-navy flex items-center text-xs font-bold">
+                <span>{t('thSlug')}</span>
+                <RequiredMark />
               </span>
               {isSlugCustom ? (
                 <button

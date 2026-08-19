@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { useReminderPreference } from '@/hooks/use-reminder-preference';
 import { cn } from '@/lib/utils';
+import { RequiredMark } from '@/components/common/form-field';
 import { DashboardNotice } from './dashboard-page';
 
 /**
@@ -97,9 +98,10 @@ export function DailyReminderSettings() {
             <div className="min-w-0">
               <label
                 htmlFor="reminder-time"
-                className="text-navy text-sm font-bold"
+                className="text-navy flex items-center text-sm font-bold"
               >
-                {t('reminderTimeLabel')}
+                <span>{t('reminderTimeLabel')}</span>
+                <RequiredMark />
               </label>
               <p className="text-muted-foreground mt-1 text-xs leading-5">
                 {t('reminderTimeDesc')}

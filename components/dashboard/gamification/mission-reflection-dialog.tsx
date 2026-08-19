@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
+import { OptionalMark } from '@/components/common/form-field';
 import {
   Dialog,
   DialogContent,
@@ -101,7 +102,10 @@ export function MissionReflectionDialog({
         </div>
 
         <label className="text-navy text-sm font-bold">
-          {t('reflectionNote')}
+          <span className="flex items-center">
+            <span>{t('reflectionNote')}</span>
+            <OptionalMark />
+          </span>
           <textarea
             value={note}
             onChange={(event) => setNote(event.target.value)}
@@ -112,7 +116,10 @@ export function MissionReflectionDialog({
           />
         </label>
         <label className="text-navy text-sm font-bold">
-          {t('reflectionNextStep')}
+          <span className="flex items-center">
+            <span>{t('reflectionNextStep')}</span>
+            <OptionalMark />
+          </span>
           <input
             value={nextStep}
             onChange={(event) => setNextStep(event.target.value)}

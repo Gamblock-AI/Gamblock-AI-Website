@@ -4,8 +4,14 @@ import { useTranslations } from 'next-intl';
 import { NativeSelect } from '@/components/common/native-select';
 import { DashboardPanel } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import {
+  FieldError,
+  OptionalMark,
+  RequiredMark,
+} from '@/components/common/form-field';
 import { useSupportRequest } from '@/hooks/use-support-request';
-import { toastError, toastSuccess } from '@/lib/feedback';
+import { toastError, toastSuccess, toastValidationError } from '@/lib/feedback';
+import { cn } from '@/lib/utils';
 
 interface SupportRequestFormProps {
   submitting: boolean;
@@ -22,12 +28,47 @@ export function SupportRequestForm({
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('normal');
   const [impact, setImpact] = useState('question');
+  const [errors, setErrors] = useState<{
+    subject?: string;
+    description?: string;
+  }>({});
+
+  const clearError = (key: 'subject' | 'description') => {
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const cleanSubject = subject.trim();
     const cleanDescription = description.trim();
-    if (!cleanSubject || !cleanDescription) return;
+    const newErrors: { subject?: string; description?: string } = {};
+
+    if (!cleanSubject) {
+      newErrors.subject = 'Subjek tiket bantuan wajib diisi.';
+    }
+    if (!cleanDescription) {
+      newErrors.description = 'Deskripsi permasalahan wajib diisi.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      const firstFieldId = newErrors.subject
+        ? 'support-subject'
+        : 'support-description';
+      const el =
+        typeof window !== 'undefined'
+          ? window.document.getElementById(firstFieldId)
+          : null;
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.focus();
+      toastValidationError('Silakan lengkapi formulir tiket bantuan.');
+      return;
+    }
 
     try {
       await createCase({
@@ -41,6 +82,7 @@ export function SupportRequestForm({
       setDescription('');
       setPriority('normal');
       setImpact('question');
+      setErrors({});
       toastSuccess(t('success'));
     } catch (error) {
       toastError(error, t('error'));
@@ -57,6 +99,7 @@ export function SupportRequestForm({
     >
       <form
         onSubmit={(event) => void submit(event)}
+        noValidate
         className="flex flex-1 flex-col space-y-5"
       >
         <div className="grid gap-5 sm:grid-cols-2">
@@ -64,6 +107,7 @@ export function SupportRequestForm({
             id="support-category"
             label={t('categoryLabel')}
             value={category}
+            required
             onChange={setCategory}
           >
             <option value="technical_support">
@@ -79,6 +123,7 @@ export function SupportRequestForm({
             id="support-priority"
             label={t('priorityLabel')}
             value={priority}
+            required
             onChange={setPriority}
           >
             <option value="low">{t('priorities.low')}</option>
@@ -90,6 +135,7 @@ export function SupportRequestForm({
             id="support-impact"
             label={t('impactLabel')}
             value={impact}
+            optional
             onChange={setImpact}
             className="sm:col-span-2"
           >
@@ -99,40 +145,58 @@ export function SupportRequestForm({
             <option value="safety">{t('impacts.safetyConcern')}</option>
           </SupportSelect>
         </div>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-1.5">
           <label
             htmlFor="support-subject"
-            className="text-navy text-sm font-semibold"
+            className="text-navy flex items-center text-sm font-semibold"
           >
-            {t('subjectLabel')}
+            <span>{t('subjectLabel')}</span>
+            <RequiredMark />
           </label>
           <input
             id="support-subject"
             type="text"
             value={subject}
-            onChange={(event) => setSubject(event.target.value)}
+            onChange={(event) => {
+              setSubject(event.target.value);
+              clearError('subject');
+            }}
             placeholder={t('subjectPlaceholder')}
-            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+            className={cn(
+              'border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2',
+              errors.subject &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             required
           />
+          <FieldError message={errors.subject} />
         </div>
-        <div className="flex flex-1 flex-col space-y-2">
+        <div className="flex flex-1 flex-col gap-1.5">
           <label
             htmlFor="support-description"
-            className="text-navy text-sm font-semibold"
+            className="text-navy flex items-center text-sm font-semibold"
           >
-            {t('descriptionLabel')}
+            <span>{t('descriptionLabel')}</span>
+            <RequiredMark />
           </label>
           <textarea
             id="support-description"
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(event) => {
+              setDescription(event.target.value);
+              clearError('description');
+            }}
             placeholder={t('descriptionPlaceholder')}
             rows={6}
             aria-describedby="support-privacy-help"
-            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 min-h-40 w-full flex-1 resize-y rounded-xl border p-3 text-sm leading-6 outline-none focus-visible:ring-2"
+            className={cn(
+              'border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 min-h-40 w-full flex-1 resize-y rounded-xl border p-3 text-sm leading-6 outline-none focus-visible:ring-2',
+              errors.description &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             required
           />
+          <FieldError message={errors.description} />
           <p
             id="support-privacy-help"
             className="text-muted-foreground text-xs leading-5"
@@ -158,6 +222,8 @@ function SupportSelect({
   id,
   label,
   value,
+  required,
+  optional,
   onChange,
   className,
   children,
@@ -165,14 +231,18 @@ function SupportSelect({
   id: string;
   label: string;
   value: string;
+  required?: boolean;
+  optional?: boolean;
   onChange: (value: string) => void;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className={`space-y-2 ${className ?? ''}`}>
-      <label htmlFor={id} className="text-navy text-sm font-semibold">
-        {label}
+    <div className={`flex flex-col gap-1.5 ${className ?? ''}`}>
+      <label htmlFor={id} className="text-navy flex items-center text-sm font-semibold">
+        <span>{label}</span>
+        {required ? <RequiredMark /> : null}
+        {optional ? <OptionalMark /> : null}
       </label>
       <NativeSelect
         id={id}

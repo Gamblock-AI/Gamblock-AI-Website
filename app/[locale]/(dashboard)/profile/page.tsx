@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AuthField } from '@/components/auth/AuthField';
+import { FieldError, RequiredMark } from '@/components/common/form-field';
 import { AvatarImage } from '@/components/account/avatar-image';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { Link } from '@/i18n/routing';
@@ -68,6 +69,7 @@ export default function ProfilePage() {
     updatePassword,
   } = useProfileActions();
   const [saving, setSaving] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState(false);
@@ -167,7 +169,11 @@ export default function ProfilePage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const displayName = String(formData.get('displayName') ?? '').trim();
-    if (!displayName) return;
+    if (!displayName) {
+      setNameError(t('displayNameRequired') || 'Nama tampilan wajib diisi.');
+      return;
+    }
+    setNameError(null);
     setSaving(true);
     try {
       const updated = await updateDisplayName(displayName);
@@ -286,9 +292,10 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <label
                 htmlFor="display-name"
-                className="text-navy text-sm font-semibold"
+                className="text-navy flex items-center text-sm font-semibold"
               >
-                {t('displayNameLabel')}
+                <span>{t('displayNameLabel')}</span>
+                <RequiredMark />
               </label>
               <p
                 id="display-name-help"
@@ -308,10 +315,18 @@ export default function ProfilePage() {
                   defaultValue={user.display_name ?? ''}
                   aria-describedby="display-name-help"
                   autoComplete="name"
-                  className="border-input bg-background text-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-11 w-full rounded-xl border pr-4 pl-10 text-sm transition-colors outline-none focus-visible:ring-2"
+                  onChange={() => {
+                    if (nameError) setNameError(null);
+                  }}
+                  className={`bg-background text-foreground focus-visible:ring-navy/20 h-11 w-full rounded-xl border pr-4 pl-10 text-sm transition-colors outline-none focus-visible:ring-2 ${
+                    nameError
+                      ? 'border-destructive focus-visible:border-destructive'
+                      : 'border-input focus-visible:border-navy'
+                  }`}
                   required
                 />
               </div>
+              <FieldError message={nameError ?? undefined} />
             </div>
 
             <div className="space-y-2">
@@ -407,6 +422,7 @@ export default function ProfilePage() {
                 placeholder={t('currentPasswordPlaceholder')}
                 autoComplete="current-password"
                 error={passwordErrors.currentPassword?.message}
+                required
                 {...registerPassword('currentPassword')}
               />
               <AuthField
@@ -416,6 +432,7 @@ export default function ProfilePage() {
                 placeholder={t('newPasswordPlaceholder')}
                 autoComplete="new-password"
                 error={passwordErrors.newPassword?.message}
+                required
                 {...registerPassword('newPassword')}
               />
               <AuthField
@@ -425,6 +442,7 @@ export default function ProfilePage() {
                 placeholder={t('confirmPasswordPlaceholder')}
                 autoComplete="new-password"
                 error={passwordErrors.confirmPassword?.message}
+                required
                 {...registerPassword('confirmPassword')}
               />
               <p className="text-muted-foreground text-xs leading-5">

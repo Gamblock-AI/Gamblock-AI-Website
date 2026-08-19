@@ -42,6 +42,11 @@ import {
   AdminStatusBadge,
   adminFieldClassName,
 } from './admin-shared';
+import {
+  FieldError,
+  OptionalMark,
+  RequiredMark,
+} from '@/components/common/form-field';
 import { TranslateButton } from '@/components/admin/translate-button';
 
 const emptyRichText = () => ({ type: 'doc', content: [{ type: 'paragraph' }] });
@@ -532,31 +537,6 @@ function validateAllEducationDraft(
   }
 
   return errors;
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return (
-    <p className="text-destructive flex items-center gap-1 text-xs font-medium leading-normal">
-      <span aria-hidden="true">•</span> {message}
-    </p>
-  );
-}
-
-function RequiredMark() {
-  return (
-    <span className="text-destructive ml-1 font-bold" aria-hidden="true">
-      *
-    </span>
-  );
-}
-
-function OptionalMark({ text }: { text: string }) {
-  return (
-    <span className="text-muted-foreground ml-1.5 text-xs font-normal">
-      ({text})
-    </span>
-  );
 }
 
 interface ContentTabProps {
@@ -1641,20 +1621,30 @@ export function ContentTab(props: ContentTabProps) {
                     }
                   />
                   <input
-                    className={adminFieldClassName}
+                    className={cn(
+                      adminFieldClassName,
+                      fieldErrors[`video_alt_${index}_${locale}`] &&
+                        'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                    )}
                     placeholder={
                       locale === 'id'
                         ? `${t('altIndonesian')} *`
                         : `${t('altEnglish')} *`
                     }
                     value={video.alt_text?.[locale] ?? ''}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       mutate((draft) => {
                         if (!draft.videos[index].alt_text)
                           draft.videos[index].alt_text = {};
                         draft.videos[index].alt_text[locale] =
                           event.target.value;
-                      })
+                      });
+                      clearFieldError(`video_alt_${index}_${locale}`, 'media');
+                    }}
+                  />
+                  <FieldError
+                    message={
+                      fieldErrors[`video_alt_${index}_${locale}`]?.message
                     }
                   />
                   <div className="flex justify-end gap-1">

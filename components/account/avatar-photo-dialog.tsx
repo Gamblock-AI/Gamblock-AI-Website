@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { OptionalMark } from '@/components/common/form-field';
 
 const MAX_SOURCE_BYTES = 8 << 20;
 const MAX_AVATAR_BYTES = 2 << 20;
@@ -290,7 +291,10 @@ export function AvatarPhotoDialog({
         </Button>
       </div>
       <label className="text-navy flex items-center gap-3 text-sm font-semibold">
-        {t('avatarZoom')}
+        <span className="flex items-center">
+          <span>{t('avatarZoom')}</span>
+          <OptionalMark />
+        </span>
         <input
           className="flex-1 accent-blue-700"
           type="range"

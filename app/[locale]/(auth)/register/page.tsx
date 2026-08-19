@@ -19,6 +19,8 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
+import { RequiredMark } from '@/components/common/form-field';
+
 type RegisterFormValues = {
   role: 'user' | 'partner';
   name: string;
@@ -153,8 +155,9 @@ export default function RegisterPage() {
 
       {/* Role selector */}
       <div className="mb-5 space-y-2">
-        <label className="text-navy text-sm font-semibold">
-          {t('text_250')}
+        <label className="text-navy flex items-center text-sm font-semibold">
+          <span>{t('text_250')}</span>
+          <RequiredMark />
         </label>
         <div className="grid grid-cols-2 gap-3">
           {roles.map(({ value, icon: Icon, title, sub }) => (
@@ -186,6 +189,7 @@ export default function RegisterPage() {
           autoComplete="name"
           placeholder={t('text_263')}
           error={errors.name?.message}
+          required
           {...formRegister('name')}
         />
         <AuthField
@@ -195,6 +199,7 @@ export default function RegisterPage() {
           autoComplete="email"
           placeholder={t('text_264')}
           error={errors.email?.message}
+          required
           {...formRegister('email')}
         />
         <AuthField
@@ -204,6 +209,7 @@ export default function RegisterPage() {
           autoComplete="tel"
           placeholder={t('whatsappPlaceholder')}
           error={errors.phone?.message}
+          required
           {...formRegister('phone')}
         />
         <AuthField
@@ -213,6 +219,7 @@ export default function RegisterPage() {
           autoComplete="new-password"
           placeholder={t('text_265')}
           error={errors.password?.message}
+          required
           {...formRegister('password')}
         />
         <AuthField
@@ -222,6 +229,7 @@ export default function RegisterPage() {
           autoComplete="new-password"
           placeholder={t('confirmPasswordPlaceholder')}
           error={errors.confirmPassword?.message}
+          required
           {...formRegister('confirmPassword')}
         />
 
@@ -252,6 +260,7 @@ export default function RegisterPage() {
                 {t('text_257')}
               </Link>{' '}
               {t('text_258')}
+              <RequiredMark />
             </label>
           </div>
           {errors.terms && (

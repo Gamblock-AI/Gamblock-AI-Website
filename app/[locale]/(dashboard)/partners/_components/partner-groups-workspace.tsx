@@ -41,6 +41,7 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 import { StudentAvatar } from '@/components/dashboard/student-avatar';
 import {
   type AccountabilityGroup,
@@ -261,7 +262,7 @@ export function PartnerGroupsWorkspace({
                     className="flex flex-col gap-2 sm:flex-row"
                   >
                     <label htmlFor="phone-number" className="sr-only">
-                      {t('phoneLabel')}
+                      {t('phoneLabel')} *
                     </label>
                     <input
                       id="phone-number"
@@ -269,6 +270,7 @@ export function PartnerGroupsWorkspace({
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
                       placeholder="+6281234567890"
+                      aria-label={`${t('phoneLabel')} *`}
                       className="border-input bg-background focus-visible:ring-navy/20 h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
                       required
                     />
@@ -281,7 +283,7 @@ export function PartnerGroupsWorkspace({
                     className="flex flex-col gap-2 sm:flex-row"
                   >
                     <label htmlFor="phone-code" className="sr-only">
-                      {t('codeVerificationLabel')}
+                      {t('codeVerificationLabel')} *
                     </label>
                     <input
                       id="phone-code"
@@ -291,6 +293,7 @@ export function PartnerGroupsWorkspace({
                       onChange={(event) =>
                         setVerificationCode(event.target.value)
                       }
+                      aria-label={`${t('codeVerificationLabel')} *`}
                       placeholder={
                         previewCode || t('codeVerificationPlaceholder')
                       }
@@ -331,9 +334,10 @@ export function PartnerGroupsWorkspace({
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="group-name"
-                    className="text-navy block text-xs font-bold uppercase tracking-wider"
+                    className="text-navy flex items-center text-xs font-bold uppercase tracking-wider"
                   >
-                    {t('groupName')}
+                    <span>{t('groupName')}</span>
+                    <RequiredMark />
                   </label>
                   <span className="text-muted-foreground text-[0.6875rem]">
                     {groupName.length}/80
@@ -355,9 +359,10 @@ export function PartnerGroupsWorkspace({
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="group-description"
-                    className="text-navy block text-xs font-bold uppercase tracking-wider"
+                    className="text-navy flex items-center text-xs font-bold uppercase tracking-wider"
                   >
-                    {t('groupDescription')}
+                    <span>{t('groupDescription')}</span>
+                    <OptionalMark />
                   </label>
                   <span className="text-muted-foreground text-[0.6875rem]">
                     {groupDescription.length}/240
@@ -697,6 +702,7 @@ function GroupCard({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('searchStudents')}
+              aria-label={t('searchStudents')}
               className="border-input bg-background/80 focus-visible:ring-navy/20 h-9 w-full rounded-xl border pl-8.5 pr-3 text-xs outline-none focus-visible:ring-2"
             />
           </div>

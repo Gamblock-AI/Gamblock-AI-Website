@@ -216,6 +216,8 @@
     "reauthFailed": "Kata sandi salah. Coba lagi.",
     "reauthFailedGeneric": "Verifikasi gagal. Coba lagi.",
     "viewDetails": "Lihat detail",
-    "hideDetails": "Tutup detail"
+    "hideDetails": "Tutup detail",
+    "optional": "opsional",
+    "required": "wajib"
   }
 }

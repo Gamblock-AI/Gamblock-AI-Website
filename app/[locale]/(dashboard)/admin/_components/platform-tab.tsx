@@ -546,7 +546,7 @@ export function PlatformTab({
           </div>
 
           <div className="space-y-3 pt-1">
-            <AdminFormField label={t('fieldEmail')}>
+            <AdminFormField label={t('fieldEmail')} required>
               <input
                 className={adminFieldClassName}
                 type="email"
@@ -557,7 +557,7 @@ export function PlatformTab({
               />
             </AdminFormField>
 
-            <AdminFormField label={t('fieldPhone')}>
+            <AdminFormField label={t('fieldPhone')} required>
               <input
                 className={adminFieldClassName}
                 type="tel"
@@ -568,7 +568,7 @@ export function PlatformTab({
               />
             </AdminFormField>
 
-            <AdminFormField label={t('fieldDisplayName')}>
+            <AdminFormField label={t('fieldDisplayName')} required>
               <input
                 className={adminFieldClassName}
                 placeholder={t('fieldDisplayName')}
@@ -578,7 +578,7 @@ export function PlatformTab({
               />
             </AdminFormField>
 
-            <AdminFormField label={t('operatorRole')}>
+            <AdminFormField label={t('operatorRole')} required>
               <select
                 className={adminFieldClassName}
                 value={role}
@@ -590,7 +590,7 @@ export function PlatformTab({
               </select>
             </AdminFormField>
 
-            <AdminFormField label={t('changeReason')}>
+            <AdminFormField label={t('changeReason')} required>
               <input
                 className={adminFieldClassName}
                 placeholder={t('createAccountReasonPlaceholder')}
@@ -883,6 +883,7 @@ export function PlatformTab({
 
               <AdminFormField
                 label={t('accountReasonLabel')}
+                required
                 className="space-y-2"
               >
                 <input
@@ -983,6 +984,7 @@ export function PlatformTab({
             <AdminFormField
               label={t('changeReason')}
               help={t('socialReasonHelp')}
+              required
             >
               <input
                 className={adminFieldClassName}

@@ -1,5 +1,6 @@
 import { Mail } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { RequiredMark } from '@/components/common/form-field';
 
 interface PartnerEmailInputProps {
   id?: string;
@@ -24,8 +25,9 @@ export function PartnerEmailInput({
     <div className="space-y-2">
       {includeHelp ? (
         <>
-          <label htmlFor={inputId} className="text-navy text-sm font-semibold">
-            {t('partnerEmailLabel')}
+          <label htmlFor={inputId} className="text-navy flex items-center text-sm font-semibold">
+            <span>{t('partnerEmailLabel')}</span>
+            <RequiredMark />
           </label>
           <p id={helpId} className="text-muted-foreground text-xs leading-5">
             {t('partnerEmailHelp')}
@@ -45,6 +47,7 @@ export function PartnerEmailInput({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           aria-describedby={includeHelp ? helpId : undefined}
+          aria-label={includeHelp ? undefined : `${t('partnerEmailLabel')} *`}
           autoComplete="email"
           placeholder={t('partnerEmailPlaceholder')}
           disabled={disabled}

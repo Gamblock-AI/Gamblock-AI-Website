@@ -212,6 +212,7 @@ export default function LoginPage() {
           autoComplete="email"
           placeholder={t('text_245')}
           error={errors.email?.message}
+          required
           {...formRegister('email')}
         />
 
@@ -222,6 +223,7 @@ export default function LoginPage() {
           autoComplete="current-password"
           placeholder={t('text_246')}
           error={errors.password?.message}
+          required
           labelAdornment={
             <Link
               href={ROUTES.FORGOT_PASSWORD}

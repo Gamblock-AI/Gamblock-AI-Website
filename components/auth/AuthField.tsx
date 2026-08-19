@@ -10,11 +10,15 @@ import {
 import { Eye, EyeOff, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 
 interface AuthFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   icon: LucideIcon;
   error?: string;
+  required?: boolean;
+  optional?: boolean;
+  optionalText?: string;
   /** Optional element rendered to the right of the label (e.g. forgot link). */
   labelAdornment?: ReactNode;
 }
@@ -26,7 +30,18 @@ interface AuthFieldProps extends InputHTMLAttributes<HTMLInputElement> {
  */
 export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
   function AuthField(
-    { label, icon: Icon, error, labelAdornment, className, type, ...props },
+    {
+      label,
+      icon: Icon,
+      error,
+      required,
+      optional,
+      optionalText,
+      labelAdornment,
+      className,
+      type,
+      ...props
+    },
     ref
   ) {
     const isPassword = type === 'password';
@@ -36,11 +51,14 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
     const errorId = `${inputId}-error`;
     const t = useTranslations('authShell');
     const inputType = isPassword ? (show ? 'text' : 'password') : type;
+    const isRequired = required ?? props.required;
 
     return (
       <div className="grid grid-cols-2 gap-y-2">
-        <label htmlFor={inputId} className="text-navy text-sm font-semibold">
-          {label}
+        <label htmlFor={inputId} className="text-navy flex items-center text-sm font-semibold">
+          <span>{label}</span>
+          {isRequired ? <RequiredMark /> : null}
+          {optional ? <OptionalMark text={optionalText} /> : null}
         </label>
         <div className="group relative col-span-2">
           <Icon

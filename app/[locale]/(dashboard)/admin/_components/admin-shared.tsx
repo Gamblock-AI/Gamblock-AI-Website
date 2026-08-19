@@ -32,22 +32,34 @@ export function AdminSectionHeader({
   );
 }
 
+import { OptionalMark, RequiredMark } from '@/components/common/form-field';
+
 export function AdminFormField({
   label,
   help,
+  required,
+  optional,
+  optionalText,
   className,
   children,
 }: {
   label: string;
   help?: string;
+  required?: boolean;
+  optional?: boolean;
+  optionalText?: string;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <label className={`space-y-2 ${className ?? ''}`}>
-      <span className="text-navy text-xs font-bold">{label}</span>
+    <label className={`flex flex-col gap-1.5 ${className ?? ''}`}>
+      <span className="text-navy flex items-center text-xs font-bold">
+        <span>{label}</span>
+        {required ? <RequiredMark /> : null}
+        {optional ? <OptionalMark text={optionalText} /> : null}
+      </span>
       {help ? (
-        <span className="text-muted-foreground block text-xs leading-5">
+        <span className="text-muted-foreground block text-xs leading-normal">
           {help}
         </span>
       ) : null}

@@ -18,6 +18,7 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { SupportStatusBadge } from '@/components/dashboard/support-status-badge';
 import { Button } from '@/components/ui/button';
+import { RequiredMark } from '@/components/common/form-field';
 import { Textarea } from '@/components/ui/textarea';
 import { useSupportCase } from '@/hooks/use-support-request';
 import { Link } from '@/i18n/routing';
@@ -135,9 +136,10 @@ export default function SupportCaseDetailPage() {
               >
                 <label
                   htmlFor="support-reply"
-                  className="text-navy text-sm font-semibold"
+                  className="text-navy flex items-center text-sm font-semibold"
                 >
-                  {t('replyLabel')}
+                  <span>{t('replyLabel')}</span>
+                  <RequiredMark />
                 </label>
                 <Textarea
                   id="support-reply"

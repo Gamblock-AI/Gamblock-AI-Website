@@ -216,6 +216,8 @@
     "reauthFailed": "Incorrect password. Try again.",
     "reauthFailedGeneric": "Verification failed. Please try again.",
     "viewDetails": "View details",
-    "hideDetails": "Hide details"
+    "hideDetails": "Hide details",
+    "optional": "optional",
+    "required": "required"
   }
 }

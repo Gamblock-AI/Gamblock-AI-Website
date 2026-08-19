@@ -21,6 +21,7 @@ import {
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import { RequiredMark } from '@/components/common/form-field';
 import {
   type AccountabilityGroup,
   useAccountability,
@@ -85,9 +86,10 @@ export function StudentPartnersWorkspace({
             >
               <label
                 htmlFor="group-code"
-                className="text-navy block text-sm font-semibold"
+                className="text-navy flex items-center text-sm font-semibold"
               >
-                {t('codeLabel')}
+                <span>{t('codeLabel')}</span>
+                <RequiredMark />
               </label>
               <input
                 id="group-code"
