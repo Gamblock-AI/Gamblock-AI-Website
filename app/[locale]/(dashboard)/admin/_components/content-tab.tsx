@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Archive,
   ArrowDown,
@@ -11,7 +12,6 @@ import {
   ImageIcon,
   Plus,
   Save,
-  Send,
   Trash2,
   Upload,
   X,
@@ -30,14 +30,14 @@ import { RichTextEditor } from '@/components/education/rich-text-editor';
 import { ThumbnailCropper } from '@/components/education/thumbnail-cropper';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { apiClientBlob } from '@/lib/api-client';
-import { toastError, toastSuccess } from '@/lib/feedback';
+import { toastError, toastSuccess, toastValidationError } from '@/lib/feedback';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
   educationCategoryCodes,
 } from '@/lib/i18n/dynamic-labels';
 import { cn } from '@/lib/utils';
-import { useRouter } from '@/i18n/routing';
+import { usePathname, useRouter } from '@/i18n/routing';
 import {
   AdminStatusBadge,
   adminFieldClassName,
@@ -245,10 +245,318 @@ function normalizeEducationDocument(document: AdminEducationDocument) {
   const normalized = structuredClone(document);
   normalized.audience ||= 'all';
   normalized.experience_type ||= 'article';
+  normalized.reviewer_name ||= document.reviewer_name || '';
+  normalized.reviewed_at ||= document.reviewed_at || '';
   for (const locale of ['id', 'en'] as const) {
-    normalized.translations[locale].reviewer_role ||= document.reviewer_role;
+    normalized.translations[locale].reviewer_role ||= document.reviewer_role || '';
+  }
+  for (const section of normalized.sections) {
+    const idCheck = section.translations?.id?.knowledge_check;
+    const enCheck = section.translations?.en?.knowledge_check;
+    if (idCheck && enCheck) {
+      if (!enCheck.id || enCheck.id !== idCheck.id) {
+        enCheck.id = idCheck.id || `check-${crypto.randomUUID().slice(0, 8)}`;
+        idCheck.id = enCheck.id;
+      }
+      if (idCheck.correct_choice_id && !enCheck.choices.some((c) => c.id === enCheck.correct_choice_id)) {
+        enCheck.correct_choice_id = idCheck.correct_choice_id;
+      }
+      if (enCheck.correct_choice_id && !idCheck.choices.some((c) => c.id === idCheck.correct_choice_id)) {
+        idCheck.correct_choice_id = enCheck.correct_choice_id;
+      }
+    }
   }
   return normalized;
+}
+
+interface DraftValidationError {
+  message: string;
+  fieldId: string;
+  locale?: 'id' | 'en';
+}
+
+function hasRichTextContent(doc: unknown): boolean {
+  if (!doc) return false;
+  if (typeof doc === 'string') return doc.trim().length > 0;
+  if (Array.isArray(doc)) return doc.some(hasRichTextContent);
+  if (typeof doc === 'object') {
+    const obj = doc as Record<string, unknown>;
+    if (obj.text && typeof obj.text === 'string' && obj.text.trim().length > 0)
+      return true;
+    if (obj.content && Array.isArray(obj.content))
+      return obj.content.some(hasRichTextContent);
+  }
+  return false;
+}
+
+type FieldErrors = Record<string, DraftValidationError>;
+
+function validateAllEducationDraft(
+  slug: string,
+  doc: AdminEducationDocument
+): FieldErrors {
+  const errors: FieldErrors = {};
+
+  if (!slug.trim()) {
+    errors['slug'] = {
+      message: 'Slug URL modul wajib diisi.',
+      fieldId: 'field-slug',
+    };
+  }
+
+  if (!doc.translations.id.title.trim()) {
+    errors['title_id'] = {
+      message: 'Judul modul bahasa Indonesia wajib diisi.',
+      fieldId: 'field-title',
+      locale: 'id',
+    };
+  }
+  if (!doc.translations.en.title.trim()) {
+    errors['title_en'] = {
+      message: 'Judul modul bahasa Inggris wajib diisi.',
+      fieldId: 'field-title',
+      locale: 'en',
+    };
+  }
+
+  if (!doc.translations.id.summary.trim()) {
+    errors['summary_id'] = {
+      message: 'Ringkasan modul bahasa Indonesia wajib diisi.',
+      fieldId: 'field-summary',
+      locale: 'id',
+    };
+  }
+  if (!doc.translations.en.summary.trim()) {
+    errors['summary_en'] = {
+      message: 'Ringkasan modul bahasa Inggris wajib diisi.',
+      fieldId: 'field-summary',
+      locale: 'en',
+    };
+  }
+
+  if (!doc.translations.id.learning_objective.trim()) {
+    errors['learning_objective_id'] = {
+      message: 'Tujuan pembelajaran bahasa Indonesia wajib diisi.',
+      fieldId: 'field-learning-objective',
+      locale: 'id',
+    };
+  }
+  if (!doc.translations.en.learning_objective.trim()) {
+    errors['learning_objective_en'] = {
+      message: 'Tujuan pembelajaran bahasa Inggris wajib diisi.',
+      fieldId: 'field-learning-objective',
+      locale: 'en',
+    };
+  }
+
+  if (!doc.translations.id.disclaimer.trim()) {
+    errors['disclaimer_id'] = {
+      message: 'Catatan keselamatan (disclaimer) bahasa Indonesia wajib diisi.',
+      fieldId: 'field-disclaimer',
+      locale: 'id',
+    };
+  }
+  if (!doc.translations.en.disclaimer.trim()) {
+    errors['disclaimer_en'] = {
+      message: 'Catatan keselamatan (disclaimer) bahasa Inggris wajib diisi.',
+      fieldId: 'field-disclaimer',
+      locale: 'en',
+    };
+  }
+
+  if (doc.thumbnails.length === 0) {
+    errors['thumbnails'] = {
+      message: 'Minimal 1 gambar thumbnail modul wajib diunggah.',
+      fieldId: 'field-thumbnails',
+    };
+  }
+  for (let i = 0; i < doc.thumbnails.length; i++) {
+    const thumb = doc.thumbnails[i];
+    if (!thumb.alt_text?.id?.trim()) {
+      errors[`thumbnail_alt_${i}_id`] = {
+        message: `Teks alternatif thumbnail #${i + 1} (bahasa Indonesia) wajib diisi.`,
+        fieldId: `field-thumbnail-alt-${i}`,
+        locale: 'id',
+      };
+    }
+    if (!thumb.alt_text?.en?.trim()) {
+      errors[`thumbnail_alt_${i}_en`] = {
+        message: `Teks alternatif thumbnail #${i + 1} (bahasa Inggris) wajib diisi.`,
+        fieldId: `field-thumbnail-alt-${i}`,
+        locale: 'en',
+      };
+    }
+  }
+
+  for (let i = 0; i < (doc.videos || []).length; i++) {
+    const video = doc.videos[i];
+    if (!video.media_id) {
+      errors[`video_${i}`] = {
+        message: `Media video #${i + 1} belum valid.`,
+        fieldId: 'field-videos',
+      };
+    }
+    if (!video.alt_text?.id?.trim()) {
+      errors[`video_alt_${i}_id`] = {
+        message: `Teks alternatif video #${i + 1} (bahasa Indonesia) wajib diisi.`,
+        fieldId: 'field-videos',
+        locale: 'id',
+      };
+    }
+    if (!video.alt_text?.en?.trim()) {
+      errors[`video_alt_${i}_en`] = {
+        message: `Teks alternatif video #${i + 1} (bahasa Inggris) wajib diisi.`,
+        fieldId: 'field-videos',
+        locale: 'en',
+      };
+    }
+  }
+
+  if (doc.sections.length === 0) {
+    errors['sections'] = {
+      message: 'Minimal 1 bagian materi wajib dibuat.',
+      fieldId: 'field-sections',
+    };
+  }
+  for (let i = 0; i < doc.sections.length; i++) {
+    const section = doc.sections[i];
+    for (const loc of ['id', 'en'] as const) {
+      const locLabel = loc === 'id' ? 'bahasa Indonesia' : 'bahasa Inggris';
+      const tr = section.translations[loc];
+      if (!tr?.title?.trim()) {
+        errors[`section_${i}_title_${loc}`] = {
+          message: `Judul Bagian ${i + 1} (${locLabel}) wajib diisi.`,
+          fieldId: `field-section-${i}-title`,
+          locale: loc,
+        };
+      }
+      if (!hasRichTextContent(tr.content)) {
+        errors[`section_${i}_content_${loc}`] = {
+          message: `Isi materi Bagian ${i + 1} (${locLabel}) wajib diisi.`,
+          fieldId: `field-section-${i}-content`,
+          locale: loc,
+        };
+      }
+      const kc = tr.knowledge_check;
+      if (!kc?.question?.trim()) {
+        errors[`section_${i}_kc_question_${loc}`] = {
+          message: `Pertanyaan kuis Bagian ${i + 1} (${locLabel}) wajib diisi.`,
+          fieldId: `field-section-${i}-kc-question`,
+          locale: loc,
+        };
+      }
+      if (!kc.choices || kc.choices.length < 2) {
+        errors[`section_${i}_kc_choices_${loc}`] = {
+          message: `Kuis Bagian ${i + 1} (${locLabel}) membutuhkan minimal 2 pilihan jawaban.`,
+          fieldId: `field-section-${i}-kc-choices`,
+          locale: loc,
+        };
+      } else {
+        for (let c = 0; c < kc.choices.length; c++) {
+          if (!kc.choices[c].text.trim()) {
+            errors[`section_${i}_kc_choice_${c}_${loc}`] = {
+              message: `Pilihan jawaban ${c + 1} (${locLabel}) wajib diisi.`,
+              fieldId: `field-section-${i}-kc-choice-${c}`,
+              locale: loc,
+            };
+          }
+        }
+        if (
+          !kc.correct_choice_id ||
+          !kc.choices.some((c) => c.id === kc.correct_choice_id)
+        ) {
+          errors[`section_${i}_kc_correct_${loc}`] = {
+            message: `Kunci jawaban benar (${locLabel}) belum dipilih.`,
+            fieldId: `field-section-${i}-kc-choices`,
+            locale: loc,
+          };
+        }
+      }
+      if (!kc.explanation?.trim()) {
+        errors[`section_${i}_kc_explanation_${loc}`] = {
+          message: `Penjelasan jawaban kuis Bagian ${i + 1} (${locLabel}) wajib diisi.`,
+          fieldId: `field-section-${i}-kc-explanation`,
+          locale: loc,
+        };
+      }
+    }
+  }
+
+  if (!doc.reviewer_name?.trim()) {
+    errors['reviewer_name'] = {
+      message: 'Nama reviewer wajib diisi.',
+      fieldId: 'field-reviewer-name',
+    };
+  }
+  if (!doc.translations.id.reviewer_role?.trim() && !doc.reviewer_role?.trim()) {
+    errors['reviewer_role_id'] = {
+      message: 'Peran reviewer (bahasa Indonesia) wajib diisi.',
+      fieldId: 'field-reviewer-role',
+      locale: 'id',
+    };
+  }
+  if (!doc.translations.en.reviewer_role?.trim() && !doc.reviewer_role?.trim()) {
+    errors['reviewer_role_en'] = {
+      message: 'Peran reviewer (bahasa Inggris) wajib diisi.',
+      fieldId: 'field-reviewer-role',
+      locale: 'en',
+    };
+  }
+  if (!doc.reviewed_at?.trim()) {
+    errors['reviewed_at'] = {
+      message: 'Tanggal tinjauan reviewer wajib diisi.',
+      fieldId: 'field-reviewed-at',
+    };
+  }
+
+  if (doc.sources.length === 0) {
+    errors['sources'] = {
+      message: 'Minimal 1 sumber rujukan wajib ditambahkan.',
+      fieldId: 'field-sources',
+    };
+  }
+  for (let i = 0; i < doc.sources.length; i++) {
+    const source = doc.sources[i];
+    if (!source.title?.trim()) {
+      errors[`source_${i}_title`] = {
+        message: `Judul sumber rujukan #${i + 1} wajib diisi.`,
+        fieldId: `field-source-title-${i}`,
+      };
+    }
+    if (!source.url?.trim() || !source.url.startsWith('https://')) {
+      errors[`source_${i}_url`] = {
+        message: `URL sumber rujukan #${i + 1} harus menggunakan protokol HTTPS yang valid.`,
+        fieldId: `field-source-url-${i}`,
+      };
+    }
+  }
+
+  return errors;
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="text-destructive flex items-center gap-1 text-xs font-medium leading-normal">
+      <span aria-hidden="true">•</span> {message}
+    </p>
+  );
+}
+
+function RequiredMark() {
+  return (
+    <span className="text-destructive ml-1 font-bold" aria-hidden="true">
+      *
+    </span>
+  );
+}
+
+function OptionalMark({ text }: { text: string }) {
+  return (
+    <span className="text-muted-foreground ml-1.5 text-xs font-normal">
+      ({text})
+    </span>
+  );
 }
 
 interface ContentTabProps {
@@ -295,18 +603,50 @@ export function ContentTab(props: ContentTabProps) {
   const t = useTranslations('adminPage');
   const tDynamic = useTranslations('dynamicLabels');
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { getModule, moduleID } = props;
+  const langParam = searchParams.get('lang');
+  const locale: 'id' | 'en' = langParam === 'en' ? 'en' : 'id';
   const [selected, setSelected] = useState<AdminEducationModule | null>(null);
   const [slug, setSlug] = useState('');
   const [document, setDocument] = useState<AdminEducationDocument | null>(null);
-  const [locale, setLocale] = useState<'id' | 'en'>('id');
   const [busy, setBusy] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isEditorSlugCustom, setIsEditorSlugCustom] = useState(false);
   const [revisions, setRevisions] = useState<AdminEducationRevision[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
+
+  const clearFieldError = (...keys: string[]) => {
+    setFieldErrors((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const key of keys) {
+        if (next[key]) {
+          delete next[key];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  };
+
+  useEffect(() => {
+    if (moduleID && langParam !== 'id' && langParam !== 'en') {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('lang', 'id');
+      router.replace(`${pathname}?${params.toString()}`);
+    }
+  }, [langParam, moduleID, pathname, router, searchParams]);
+
+  const setLocale = (newLocale: 'id' | 'en') => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('lang', newLocale);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
   useEffect(() => {
     if (!selected) return;
@@ -336,12 +676,21 @@ export function ContentTab(props: ContentTabProps) {
     if (!moduleID || selected?.id === moduleID) return;
     let active = true;
 
-    void getModule(moduleID)
+    const matchedModule = props.modules.find(
+      (m) => m.id === moduleID || m.slug === moduleID
+    );
+    const targetID = matchedModule?.id || moduleID;
+
+    void getModule(targetID)
       .then((educationModule) => {
         if (!active) return;
         setSelected(educationModule);
         setSlug(educationModule.slug);
-        const idTitle = educationModule.draft_document?.translations?.id?.title || educationModule.title || '';
+        setFieldErrors({});
+        const idTitle =
+          educationModule.draft_document?.translations?.id?.title ||
+          educationModule.title ||
+          '';
         setIsEditorSlugCustom(educationModule.slug !== slugify(idTitle));
         setDocument(normalizeEducationDocument(educationModule.draft_document));
       })
@@ -352,7 +701,7 @@ export function ContentTab(props: ContentTabProps) {
     return () => {
       active = false;
     };
-  }, [getModule, moduleID, selected?.id, t]);
+  }, [getModule, moduleID, props.modules, selected?.id, t]);
   const mutate = (callback: (draft: AdminEducationDocument) => void) =>
     setDocument((current) => {
       if (!current) return current;
@@ -362,9 +711,31 @@ export function ContentTab(props: ContentTabProps) {
     });
   const save = async () => {
     if (!selected || !document) return;
+    if (!slug.trim()) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        slug: {
+          message: 'Slug URL modul wajib diisi.',
+          fieldId: 'field-slug',
+        },
+      }));
+      const el =
+        typeof window !== 'undefined'
+          ? window.document.getElementById('field-slug')
+          : null;
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.focus();
+      toastValidationError('Slug URL modul wajib diisi.');
+      return;
+    }
     setBusy(true);
     try {
-      const educationModule = await props.saveModule(selected, slug, document);
+      const normalizedDoc = normalizeEducationDocument(document);
+      const educationModule = await props.saveModule(
+        selected,
+        slug,
+        normalizedDoc
+      );
       setSelected(educationModule);
       setDocument(normalizeEducationDocument(educationModule.draft_document));
       toastSuccess(t('moduleSaved'));
@@ -378,10 +749,55 @@ export function ContentTab(props: ContentTabProps) {
     action: 'submit-review' | 'publish' | 'archive'
   ) => {
     if (!selected) return;
+
+    if (action === 'publish' && document) {
+      const errors = validateAllEducationDraft(slug, document);
+      setFieldErrors(errors);
+      const errorList = Object.values(errors);
+      if (errorList.length > 0) {
+        const targetError =
+          errorList.find((e) => !e.locale || e.locale === locale) ||
+          errorList[0];
+        if (targetError.locale && targetError.locale !== locale) {
+          setLocale(targetError.locale);
+        }
+        setTimeout(() => {
+          const el =
+            typeof window !== 'undefined'
+              ? window.document.getElementById(targetError.fieldId)
+              : null;
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if ('focus' in el && typeof el.focus === 'function') {
+              el.focus();
+            }
+          }
+        }, 120);
+        toastValidationError(
+          'Terdapat isian yang belum lengkap. Silakan periksa tanda merah pada formulir.'
+        );
+        return;
+      }
+    }
+
     setBusy(true);
     try {
-      const educationModule = await props.transitionModule(selected.id, action);
+      let currentSelected = selected;
+      if (action === 'publish' && document) {
+        const normalizedDoc = normalizeEducationDocument(document);
+        currentSelected = await props.saveModule(
+          selected,
+          slug,
+          normalizedDoc
+        );
+        setSelected(currentSelected);
+      }
+      const educationModule = await props.transitionModule(
+        currentSelected.id,
+        action
+      );
       setSelected(educationModule);
+      setDocument(normalizeEducationDocument(educationModule.draft_document));
       toastSuccess(
         t(
           action === 'publish'
@@ -567,7 +983,7 @@ export function ContentTab(props: ContentTabProps) {
                 <button
                   type="button"
                   key={module.id}
-                  onClick={() => router.push(`/admin/content/${module.id}`)}
+                  onClick={() => router.push(`/admin/content/${module.id}?lang=id`)}
                   className="group border-border/80 bg-card shadow-soft hover:shadow-md hover:border-navy/30 flex flex-col justify-between overflow-hidden rounded-2xl border text-left transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-navy/20"
                 >
                   <div>
@@ -673,33 +1089,31 @@ export function ContentTab(props: ContentTabProps) {
           <Button
             variant="outline"
             disabled={busy}
-            onClick={() => void transition('archive')}
+            onClick={() => void save()}
           >
-            <Archive className="size-4" />
-            {t('archive')}
+            <Save className="size-4" />
+            {t('saveDraft')}
           </Button>
           <Button
-            variant="outline"
-            disabled={busy || selected.status !== 'draft'}
-            onClick={() => void transition('submit-review')}
-          >
-            <Send className="size-4" />
-            {t('submitReview')}
-          </Button>
-          <Button
-            variant="outline"
-            disabled={busy || selected.status !== 'in_review'}
+            disabled={busy}
             onClick={() => void transition('publish')}
           >
             <Upload className="size-4" />
             {t('publish')}
           </Button>
-          <Button disabled={busy} onClick={() => void save()}>
-            <Save className="size-4" />
-            {t('saveDraft')}
-          </Button>
+          {selected.status === 'published' ? (
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => void transition('archive')}
+            >
+              <Archive className="size-4" />
+              {t('archive')}
+            </Button>
+          ) : null}
         </div>
       </div>
+
 
       {historyOpen ? (
         <section className="border-border bg-card rounded-2xl border p-5">
@@ -758,16 +1172,26 @@ export function ContentTab(props: ContentTabProps) {
           <button
             type="button"
             onClick={() => setLocale('id')}
-            className={`min-h-10 rounded-lg px-4 text-sm font-bold ${locale === 'id' ? 'bg-card text-navy shadow-sm' : 'text-muted-foreground'}`}
+            className={`min-h-10 rounded-lg px-4 text-sm font-bold flex items-center gap-2 ${locale === 'id' ? 'bg-card text-navy shadow-sm' : 'text-muted-foreground'}`}
           >
-            {t('languageIndonesian')}
+            <span>{t('languageIndonesian')}</span>
+            {Object.entries(fieldErrors).filter(([, v]) => !v.locale || v.locale === 'id').length > 0 ? (
+              <span className="bg-destructive text-destructive-foreground text-[10px] font-extrabold rounded-full px-1.5 py-0.5 leading-none">
+                {Object.entries(fieldErrors).filter(([, v]) => !v.locale || v.locale === 'id').length}
+              </span>
+            ) : null}
           </button>
           <button
             type="button"
             onClick={() => setLocale('en')}
-            className={`min-h-10 rounded-lg px-4 text-sm font-bold ${locale === 'en' ? 'bg-card text-navy shadow-sm' : 'text-muted-foreground'}`}
+            className={`min-h-10 rounded-lg px-4 text-sm font-bold flex items-center gap-2 ${locale === 'en' ? 'bg-card text-navy shadow-sm' : 'text-muted-foreground'}`}
           >
-            {t('languageEnglish')}
+            <span>{t('languageEnglish')}</span>
+            {Object.entries(fieldErrors).filter(([, v]) => v.locale === 'en').length > 0 ? (
+              <span className="bg-destructive text-destructive-foreground text-[10px] font-extrabold rounded-full px-1.5 py-0.5 leading-none">
+                {Object.entries(fieldErrors).filter(([, v]) => v.locale === 'en').length}
+              </span>
+            ) : null}
           </button>
         </div>
 
@@ -783,13 +1207,19 @@ export function ContentTab(props: ContentTabProps) {
         />
       </div>
 
-      <section className="border-border bg-card grid gap-4 rounded-2xl border p-5 sm:grid-cols-2">
-        <label className="space-y-2">
+      <section className="border-border bg-card grid gap-5 rounded-2xl border p-5 sm:grid-cols-2">
+        <label className="flex flex-col gap-1.5">
           <span className="text-navy text-xs font-bold">
             {t('moduleTitle')}
+            <RequiredMark />
           </span>
           <input
-            className={adminFieldClassName}
+            id="field-title"
+            className={cn(
+              adminFieldClassName,
+              fieldErrors[`title_${locale}`] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             placeholder="Contoh: Mengenali Perangkap Desain"
             value={translation.title}
             onChange={(event) => {
@@ -797,21 +1227,28 @@ export function ContentTab(props: ContentTabProps) {
               mutate((draft) => {
                 draft.translations[locale].title = newTitle;
               });
+              clearFieldError(`title_${locale}`);
               if (!isEditorSlugCustom) {
                 setSlug(slugify(newTitle));
+                clearFieldError('slug');
               }
             }}
           />
+          <FieldError message={fieldErrors[`title_${locale}`]?.message} />
         </label>
-        <label className="space-y-2">
+        <label className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-navy text-xs font-bold">{t('thSlug')}</span>
+            <span className="text-navy text-xs font-bold">
+              {t('thSlug')}
+              <RequiredMark />
+            </span>
             {isEditorSlugCustom ? (
               <button
                 type="button"
                 onClick={() => {
                   setIsEditorSlugCustom(false);
                   setSlug(slugify(translation.title));
+                  clearFieldError('slug');
                 }}
                 className="text-navy text-[0.7rem] hover:underline"
               >
@@ -820,17 +1257,27 @@ export function ContentTab(props: ContentTabProps) {
             ) : null}
           </div>
           <input
-            className={adminFieldClassName}
+            id="field-slug"
+            className={cn(
+              adminFieldClassName,
+              fieldErrors['slug'] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             placeholder="mengenali-perangkap-desain"
             value={slug}
             onChange={(event) => {
               setSlug(event.target.value);
               setIsEditorSlugCustom(true);
+              clearFieldError('slug');
             }}
           />
+          <FieldError message={fieldErrors['slug']?.message} />
         </label>
-        <label className="space-y-2">
-          <span className="text-navy text-xs font-bold">{t('audience')}</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-navy text-xs font-bold">
+            {t('audience')}
+            <RequiredMark />
+          </span>
           <select
             className={adminFieldClassName}
             value={document.audience}
@@ -846,9 +1293,10 @@ export function ContentTab(props: ContentTabProps) {
             <option value="all">{t('audienceAll')}</option>
           </select>
         </label>
-        <label className="space-y-2">
+        <label className="flex flex-col gap-1.5">
           <span className="text-navy text-xs font-bold">
             {t('experienceType')}
+            <RequiredMark />
           </span>
           <select
             className={adminFieldClassName}
@@ -869,8 +1317,11 @@ export function ContentTab(props: ContentTabProps) {
             </option>
           </select>
         </label>
-        <label className="space-y-2">
-          <span className="text-navy text-xs font-bold">{t('category')}</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-navy text-xs font-bold">
+            {t('category')}
+            <RequiredMark />
+          </span>
           <select
             className={adminFieldClassName}
             value={document.category}
@@ -899,8 +1350,11 @@ export function ContentTab(props: ContentTabProps) {
             ))}
           </select>
         </label>
-        <label className="space-y-2">
-          <span className="text-navy text-xs font-bold">{t('thDuration')}</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-navy text-xs font-bold">
+            {t('thDuration')}
+            <RequiredMark />
+          </span>
           <input
             type="number"
             min={1}
@@ -915,73 +1369,109 @@ export function ContentTab(props: ContentTabProps) {
             }
           />
         </label>
-        <label className="space-y-2 sm:col-span-2">
+        <label className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="text-navy text-xs font-bold">
             {t('moduleSummary')}
+            <RequiredMark />
           </span>
           <textarea
-            className={`${adminFieldClassName} min-h-24 py-3`}
+            id="field-summary"
+            className={cn(
+              `${adminFieldClassName} min-h-24 py-3`,
+              fieldErrors[`summary_${locale}`] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             placeholder={
               locale === 'id'
                 ? 'Contoh: Modul ini mengupas bias kognitif dan ilusi kontrol yang memicu dorongan bertaruh serta langkah praktis mengatasinya.'
                 : 'e.g. This module explores cognitive biases and illusions of control triggering betting urges along with practical mitigation.'
             }
             value={translation.summary}
-            onChange={(event) =>
+            onChange={(event) => {
               mutate((draft) => {
                 draft.translations[locale].summary = event.target.value;
-              })
-            }
+              });
+              clearFieldError(`summary_${locale}`);
+            }}
           />
+          <FieldError message={fieldErrors[`summary_${locale}`]?.message} />
         </label>
-        <label className="space-y-2">
+        <label className="flex flex-col gap-1.5">
           <span className="text-navy text-xs font-bold">
             {t('learningObjective')}
+            <RequiredMark />
           </span>
           <textarea
-            className={`${adminFieldClassName} min-h-24 py-3`}
+            id="field-learning-objective"
+            className={cn(
+              `${adminFieldClassName} min-h-24 py-3`,
+              fieldErrors[`learning_objective_${locale}`] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             placeholder={
               locale === 'id'
                 ? 'Contoh: Mahasiswa mampu mengenali pola pemicu dorongan dan mempraktikkan teknik jeda respons secara mandiri.'
                 : 'e.g. Students will be able to recognize impulse trigger patterns and independently practice response-pause techniques.'
             }
             value={translation.learning_objective}
-            onChange={(event) =>
+            onChange={(event) => {
               mutate((draft) => {
                 draft.translations[locale].learning_objective =
                   event.target.value;
-              })
-            }
+              });
+              clearFieldError(`learning_objective_${locale}`);
+            }}
           />
+          <FieldError message={fieldErrors[`learning_objective_${locale}`]?.message} />
         </label>
-        <label className="space-y-2">
-          <span className="text-navy text-xs font-bold">{t('disclaimer')}</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-navy text-xs font-bold">
+            {t('disclaimer')}
+            <RequiredMark />
+          </span>
           <textarea
-            className={`${adminFieldClassName} min-h-24 py-3`}
+            id="field-disclaimer"
+            className={cn(
+              `${adminFieldClassName} min-h-24 py-3`,
+              fieldErrors[`disclaimer_${locale}`] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             placeholder={
               locale === 'id'
                 ? 'Contoh: Modul ini bertujuan untuk psikoedukasi dan tidak menggantikan layanan konseling klinis profesional.'
                 : 'e.g. This module is intended for psychoeducation and does not replace professional clinical counseling services.'
             }
             value={translation.disclaimer}
-            onChange={(event) =>
+            onChange={(event) => {
               mutate((draft) => {
                 draft.translations[locale].disclaimer = event.target.value;
-              })
-            }
+              });
+              clearFieldError(`disclaimer_${locale}`);
+            }}
           />
+          <FieldError message={fieldErrors[`disclaimer_${locale}`]?.message} />
         </label>
       </section>
 
-      <section className="border-border bg-card rounded-2xl border p-5">
+      <section id="field-thumbnails" className={cn("border-border bg-card rounded-2xl border p-5", fieldErrors['thumbnails'] && "border-destructive")}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-navy font-extrabold">{t('thumbnails')}</h3>
+            <h3 className="text-navy font-extrabold">
+              {t('thumbnails')}
+              <RequiredMark />
+            </h3>
             <p className="text-muted-foreground mt-1 text-xs">
               {t('thumbnailsHelp')}
             </p>
+            <FieldError message={fieldErrors['thumbnails']?.message} />
           </div>
-          <ThumbnailCropper busy={busy} onCrop={uploadThumb} />
+          <ThumbnailCropper
+            busy={busy}
+            onCrop={(file, altText) => {
+              clearFieldError('thumbnails');
+              return uploadThumb(file, altText);
+            }}
+          />
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {document.thumbnails.map((thumb, index) => (
@@ -996,18 +1486,27 @@ export function ContentTab(props: ContentTabProps) {
               />
               <div className="space-y-2 p-3">
                 <input
-                  className={adminFieldClassName}
+                  id={`field-thumbnail-alt-${index}`}
+                  className={cn(
+                    adminFieldClassName,
+                    fieldErrors[`thumbnail_alt_${index}_${locale}`] &&
+                      'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                  )}
                   placeholder={
-                    locale === 'id' ? t('altIndonesian') : t('altEnglish')
+                    locale === 'id'
+                      ? `${t('altIndonesian')} *`
+                      : `${t('altEnglish')} *`
                   }
                   value={thumb.alt_text[locale]}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     mutate((draft) => {
                       draft.thumbnails[index].alt_text[locale] =
                         event.target.value;
-                    })
-                  }
+                    });
+                    clearFieldError(`thumbnail_alt_${index}_${locale}`);
+                  }}
                 />
+                <FieldError message={fieldErrors[`thumbnail_alt_${index}_${locale}`]?.message} />
                 <div className="flex justify-end gap-1">
                   <Button
                     type="button"
@@ -1071,7 +1570,10 @@ export function ContentTab(props: ContentTabProps) {
       <section className="border-border bg-card rounded-2xl border p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-navy font-extrabold">{t('videos')}</h3>
+            <h3 className="text-navy font-extrabold">
+              {t('videos')}
+              <OptionalMark text={t('optional')} />
+            </h3>
             <p className="text-muted-foreground mt-1 text-xs">
               {t('videosHelp')}
             </p>
@@ -1125,8 +1627,8 @@ export function ContentTab(props: ContentTabProps) {
                     className={adminFieldClassName}
                     placeholder={
                       locale === 'id'
-                        ? t('titleIndonesian')
-                        : t('titleEnglish')
+                        ? `${t('titleIndonesian')} (${t('optional')})`
+                        : `${t('titleEnglish')} (${t('optional')})`
                     }
                     value={video.title?.[locale] ?? ''}
                     onChange={(event) =>
@@ -1142,8 +1644,8 @@ export function ContentTab(props: ContentTabProps) {
                     className={adminFieldClassName}
                     placeholder={
                       locale === 'id'
-                        ? t('altIndonesian')
-                        : t('altEnglish')
+                        ? `${t('altIndonesian')} *`
+                        : `${t('altEnglish')} *`
                     }
                     value={video.alt_text?.[locale] ?? ''}
                     onChange={(event) =>
@@ -1212,7 +1714,8 @@ export function ContentTab(props: ContentTabProps) {
         )}
       </section>
 
-      <div className="space-y-4">
+      <div id="field-sections" className="space-y-4">
+        <FieldError message={fieldErrors['sections']?.message} />
         {document.sections.map((section, sectionIndex) => {
           const localized = section.translations[locale];
           return (
@@ -1229,173 +1732,238 @@ export function ContentTab(props: ContentTabProps) {
                   size="sm"
                   variant="ghost"
                   disabled={document.sections.length === 1}
-                  onClick={() =>
+                  onClick={() => {
                     mutate((draft) => {
                       draft.sections.splice(sectionIndex, 1);
                       draft.sections.forEach((item, order) => {
                         item.sort_order = order;
                       });
-                    })
-                  }
+                    });
+                    clearFieldError('sections');
+                  }}
                 >
                   <Trash2 className="size-4 text-destructive" />
                   {t('remove')}
                 </Button>
               </div>
-              <label className="mt-4 block space-y-2">
+              <label className="mt-4 flex flex-col gap-1.5">
                 <span className="text-navy text-xs font-bold">
                   {t('sectionTitle')}
+                  <RequiredMark />
                 </span>
                 <input
-                  className={adminFieldClassName}
+                  id={`field-section-${sectionIndex}-title`}
+                  className={cn(
+                    adminFieldClassName,
+                    fieldErrors[`section_${sectionIndex}_title_${locale}`] &&
+                      'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                  )}
                   placeholder={
                     locale === 'id'
                       ? 'Contoh: Mengenali Jebakan Ilusi Kontrol'
                       : 'e.g. Recognizing Illusion of Control Traps'
                   }
                   value={localized.title}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     mutate((draft) => {
                       draft.sections[sectionIndex].translations[locale].title =
                         event.target.value;
-                    })
-                  }
+                    });
+                    clearFieldError(`section_${sectionIndex}_title_${locale}`);
+                  }}
                 />
+                <FieldError message={fieldErrors[`section_${sectionIndex}_title_${locale}`]?.message} />
               </label>
-              <div className="mt-4 space-y-2">
+              <div
+                id={`field-section-${sectionIndex}-content`}
+                className="mt-4 flex flex-col gap-1.5"
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-navy text-xs font-bold">
                     {t('sectionContent')}
+                    <RequiredMark />
                   </span>
                   <span className="text-muted-foreground text-[0.6875rem]">
                     {t('sectionContentHelp')}
                   </span>
                 </div>
-                <RichTextEditor
-                  value={localized.content}
-                  placeholder={
-                    locale === 'id'
-                      ? 'Tuliskan materi dan penjelasan lengkap bagian ini di sini...'
-                      : 'Write the section content and detailed explanation here...'
-                  }
-                  onChange={(content) =>
-                    mutate((draft) => {
-                      draft.sections[sectionIndex].translations[
-                        locale
-                      ].content = content;
-                    })
-                  }
-                  onRequestMedia={requestContentMedia}
-                />
+                <div
+                  className={cn(
+                    'rounded-xl',
+                    fieldErrors[`section_${sectionIndex}_content_${locale}`] &&
+                      'ring-destructive rounded-xl ring-2'
+                  )}
+                >
+                  <RichTextEditor
+                    value={localized.content}
+                    placeholder={
+                      locale === 'id'
+                        ? 'Tuliskan materi dan penjelasan lengkap bagian ini di sini...'
+                        : 'Write the section content and detailed explanation here...'
+                    }
+                    onChange={(content) => {
+                      mutate((draft) => {
+                        draft.sections[sectionIndex].translations[
+                          locale
+                        ].content = content;
+                      });
+                      clearFieldError(
+                        `section_${sectionIndex}_content_${locale}`
+                      );
+                    }}
+                    onRequestMedia={requestContentMedia}
+                  />
+                </div>
+                <FieldError message={fieldErrors[`section_${sectionIndex}_content_${locale}`]?.message} />
               </div>
 
               <div className="mt-5 space-y-4 rounded-2xl border border-navy/15 bg-azure/50 p-4 sm:p-5">
                 <div className="border-navy/10 flex items-center justify-between border-b pb-3">
                   <h4 className="text-navy text-sm font-extrabold">
                     {t('knowledgeCheck')}
+                    <RequiredMark />
                   </h4>
                   <span className="text-muted-foreground text-[0.7rem]">
                     {t('choicesHelp')}
                   </span>
                 </div>
 
-                <label className="block space-y-1.5">
+                <label className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-navy text-xs font-bold">
                       {t('question')}
+                      <RequiredMark />
                     </span>
                     <span className="text-muted-foreground text-[0.6875rem]">
                       {t('questionHelp')}
                     </span>
                   </div>
                   <input
-                    className={adminFieldClassName}
+                    id={`field-section-${sectionIndex}-kc-question`}
+                    className={cn(
+                      adminFieldClassName,
+                      fieldErrors[`section_${sectionIndex}_kc_question_${locale}`] &&
+                        'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                    )}
                     placeholder={
                       locale === 'id'
                         ? 'Contoh: Manakah dari pernyataan berikut yang mencerminkan ilusi kontrol?'
                         : 'e.g. Which of the following statements reflects the illusion of control?'
                     }
                     value={localized.knowledge_check.question}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       mutate((draft) => {
                         draft.sections[sectionIndex].translations[
                           locale
                         ].knowledge_check.question = event.target.value;
-                      })
-                    }
+                      });
+                      clearFieldError(
+                        `section_${sectionIndex}_kc_question_${locale}`
+                      );
+                    }}
                   />
+                  <FieldError message={fieldErrors[`section_${sectionIndex}_kc_question_${locale}`]?.message} />
                 </label>
 
-                <div className="space-y-2.5">
+                <div
+                  id={`field-section-${sectionIndex}-kc-choices`}
+                  className="space-y-2.5"
+                >
                   <span className="text-navy block text-xs font-bold">
                     {t('choicesLabel')}
+                    <RequiredMark />
                   </span>
+                  <FieldError
+                    message={
+                      fieldErrors[`section_${sectionIndex}_kc_choices_${locale}`]?.message ||
+                      fieldErrors[`section_${sectionIndex}_kc_correct_${locale}`]?.message
+                    }
+                  />
                   <div className="space-y-2">
                     {localized.knowledge_check.choices.map(
                       (choice, choiceIndex) => (
                         <div
                           key={choice.id}
-                          className="flex items-center gap-2"
+                          className="flex flex-col gap-1"
                         >
-                          <input
-                            type="radio"
-                            name={`${section.id}-${locale}`}
-                            checked={
-                              localized.knowledge_check.correct_choice_id ===
-                              choice.id
-                            }
-                            onChange={() =>
-                              mutate((draft) => {
-                                draft.sections[sectionIndex].translations[
-                                  locale
-                                ].knowledge_check.correct_choice_id = choice.id;
-                              })
-                            }
-                            className="accent-navy size-4 cursor-pointer"
-                          />
-                          <input
-                            className={`${adminFieldClassName} flex-1`}
-                            placeholder={`${t('answer')} ${choiceIndex + 1}`}
-                            value={choice.text}
-                            onChange={(event) =>
-                              mutate((draft) => {
-                                draft.sections[sectionIndex].translations[
-                                  locale
-                                ].knowledge_check.choices[choiceIndex].text =
-                                  event.target.value;
-                              })
-                            }
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            disabled={
-                              localized.knowledge_check.choices.length <= 2
-                            }
-                            onClick={() =>
-                              mutate((draft) => {
-                                const sec = draft.sections[sectionIndex];
-                                for (const loc of ['id', 'en'] as const) {
-                                  const kc =
-                                    sec.translations[loc]?.knowledge_check;
-                                  if (kc && kc.choices.length > 2) {
-                                    kc.choices = kc.choices.filter(
-                                      (c) => c.id !== choice.id
-                                    );
-                                    if (kc.correct_choice_id === choice.id) {
-                                      kc.correct_choice_id =
-                                        kc.choices[0]?.id || '';
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name={`${section.id}-${locale}`}
+                              checked={
+                                localized.knowledge_check.correct_choice_id ===
+                                choice.id
+                              }
+                              onChange={() => {
+                                mutate((draft) => {
+                                  const sec = draft.sections[sectionIndex];
+                                  for (const loc of ['id', 'en'] as const) {
+                                    if (sec.translations[loc]?.knowledge_check) {
+                                      sec.translations[loc].knowledge_check.correct_choice_id = choice.id;
                                     }
                                   }
-                                }
-                              })
-                            }
-                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-9 shrink-0 rounded-xl disabled:opacity-30"
-                            title="Hapus pilihan"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                                });
+                                clearFieldError(
+                                  `section_${sectionIndex}_kc_correct_id`,
+                                  `section_${sectionIndex}_kc_correct_en`
+                                );
+                              }}
+                              className="accent-navy size-4 cursor-pointer"
+                            />
+                            <input
+                              id={`field-section-${sectionIndex}-kc-choice-${choiceIndex}`}
+                              className={cn(
+                                `${adminFieldClassName} flex-1`,
+                                fieldErrors[`section_${sectionIndex}_kc_choice_${choiceIndex}_${locale}`] &&
+                                  'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                              )}
+                              placeholder={`${t('answer')} ${choiceIndex + 1}`}
+                              value={choice.text}
+                              onChange={(event) => {
+                                mutate((draft) => {
+                                  draft.sections[sectionIndex].translations[
+                                    locale
+                                  ].knowledge_check.choices[choiceIndex].text =
+                                    event.target.value;
+                                });
+                                clearFieldError(
+                                  `section_${sectionIndex}_kc_choice_${choiceIndex}_${locale}`,
+                                  `section_${sectionIndex}_kc_choices_${locale}`
+                                );
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled={
+                                localized.knowledge_check.choices.length <= 2
+                              }
+                              onClick={() =>
+                                mutate((draft) => {
+                                  const sec = draft.sections[sectionIndex];
+                                  for (const loc of ['id', 'en'] as const) {
+                                    const kc =
+                                      sec.translations[loc]?.knowledge_check;
+                                    if (kc && kc.choices.length > 2) {
+                                      kc.choices = kc.choices.filter(
+                                        (c) => c.id !== choice.id
+                                      );
+                                      if (kc.correct_choice_id === choice.id) {
+                                        kc.correct_choice_id =
+                                          kc.choices[0]?.id || '';
+                                      }
+                                    }
+                                  }
+                                })
+                              }
+                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-9 shrink-0 rounded-xl disabled:opacity-30"
+                              title="Hapus pilihan"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                          <FieldError message={fieldErrors[`section_${sectionIndex}_kc_choice_${choiceIndex}_${locale}`]?.message} />
                         </div>
                       )
                     )}
@@ -1404,7 +1972,7 @@ export function ContentTab(props: ContentTabProps) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() =>
+                    onClick={() => {
                       mutate((draft) => {
                         const sec = draft.sections[sectionIndex];
                         const newId = `choice-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
@@ -1416,8 +1984,9 @@ export function ContentTab(props: ContentTabProps) {
                             });
                           }
                         }
-                      })
-                    }
+                      });
+                      clearFieldError(`section_${sectionIndex}_kc_choices_${locale}`);
+                    }}
                     className="border-navy/20 hover:border-navy/40 hover:bg-navy/5 text-navy rounded-xl border-dashed text-xs font-bold"
                   >
                     <Plus className="mr-1.5 size-3.5" />
@@ -1425,31 +1994,41 @@ export function ContentTab(props: ContentTabProps) {
                   </Button>
                 </div>
 
-                <label className="block space-y-1.5">
+                <label className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-navy text-xs font-bold">
                       {t('explanation')}
+                      <RequiredMark />
                     </span>
                     <span className="text-muted-foreground text-[0.6875rem]">
                       {t('explanationHelp')}
                     </span>
                   </div>
                   <textarea
-                    className={`${adminFieldClassName} min-h-20 py-3`}
+                    id={`field-section-${sectionIndex}-kc-explanation`}
+                    className={cn(
+                      `${adminFieldClassName} min-h-20 py-3`,
+                      fieldErrors[`section_${sectionIndex}_kc_explanation_${locale}`] &&
+                        'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                    )}
                     placeholder={
                       locale === 'id'
                         ? 'Contoh: Ilusi kontrol adalah keyakinan semu bahwa seseorang dapat memengaruhi hasil dari peristiwa yang sepenuhnya bersifat acak.'
                         : 'e.g. Illusion of control is the false belief that one can influence the outcome of entirely random events.'
                     }
                     value={localized.knowledge_check.explanation}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       mutate((draft) => {
                         draft.sections[sectionIndex].translations[
                           locale
                         ].knowledge_check.explanation = event.target.value;
-                      })
-                    }
+                      });
+                      clearFieldError(
+                        `section_${sectionIndex}_kc_explanation_${locale}`
+                      );
+                    }}
                   />
+                  <FieldError message={fieldErrors[`section_${sectionIndex}_kc_explanation_${locale}`]?.message} />
                 </label>
               </div>
             </section>
@@ -1458,79 +2037,118 @@ export function ContentTab(props: ContentTabProps) {
         <Button
           type="button"
           variant="outline"
-          onClick={() =>
+          onClick={() => {
             mutate((draft) => {
               draft.sections.push(makeSection(draft.sections.length));
-            })
-          }
+            });
+            clearFieldError('sections');
+          }}
         >
           <Plus className="size-4" />
           {t('addSection')}
         </Button>
       </div>
 
-      <section className="border-border bg-card grid gap-4 rounded-2xl border p-5 sm:grid-cols-3">
-        <label className="space-y-2">
+      <section className="border-border bg-card grid gap-5 rounded-2xl border p-5 sm:grid-cols-3">
+        <label className="flex flex-col gap-1.5">
           <span className="text-navy text-xs font-bold">
             {t('reviewerName')}
+            <RequiredMark />
           </span>
           <input
-            className={adminFieldClassName}
+            id="field-reviewer-name"
+            className={cn(
+              adminFieldClassName,
+              fieldErrors['reviewer_name'] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             placeholder={
               locale === 'id'
                 ? 'Contoh: Dr. Budi Santoso, M.Psi., Psikolog'
                 : 'e.g. Dr. Budi Santoso, M.Psi., Psychologist'
             }
             value={document.reviewer_name}
-            onChange={(event) =>
+            onChange={(event) => {
               mutate((draft) => {
                 draft.reviewer_name = event.target.value;
-              })
-            }
+              });
+              clearFieldError('reviewer_name');
+            }}
           />
+          <FieldError message={fieldErrors['reviewer_name']?.message} />
         </label>
-        <label className="space-y-2">
+        <label className="flex flex-col gap-1.5">
           <span className="text-navy text-xs font-bold">
             {t('reviewerRole')}
+            <RequiredMark />
           </span>
           <input
-            className={adminFieldClassName}
+            id="field-reviewer-role"
+            className={cn(
+              adminFieldClassName,
+              fieldErrors[`reviewer_role_${locale}`] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             placeholder={
               locale === 'id'
                 ? 'Contoh: Psikolog Klinis & Konselor Adiksi Perilaku'
                 : 'e.g. Clinical Psychologist & Behavioral Addiction Counselor'
             }
             value={translation.reviewer_role}
-            onChange={(event) =>
+            onChange={(event) => {
               mutate((draft) => {
                 draft.translations[locale].reviewer_role = event.target.value;
-              })
-            }
+              });
+              clearFieldError(`reviewer_role_${locale}`);
+            }}
           />
+          <FieldError message={fieldErrors[`reviewer_role_${locale}`]?.message} />
         </label>
-        <label className="space-y-2">
-          <span className="text-navy text-xs font-bold">{t('reviewedAt')}</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-navy text-xs font-bold">
+            {t('reviewedAt')}
+            <RequiredMark />
+          </span>
           <input
+            id="field-reviewed-at"
             type="date"
-            className={adminFieldClassName}
+            className={cn(
+              adminFieldClassName,
+              fieldErrors['reviewed_at'] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             value={document.reviewed_at}
-            onChange={(event) =>
+            onChange={(event) => {
               mutate((draft) => {
                 draft.reviewed_at = event.target.value;
-              })
-            }
+              });
+              clearFieldError('reviewed_at');
+            }}
           />
+          <FieldError message={fieldErrors['reviewed_at']?.message} />
         </label>
       </section>
 
-      <section className="border-border bg-card rounded-2xl border p-5">
+      <section
+        id="field-sources"
+        className={cn(
+          'border-border bg-card rounded-2xl border p-5',
+          fieldErrors['sources'] && 'border-destructive'
+        )}
+      >
         <div className="flex items-center justify-between">
-          <h3 className="text-navy font-extrabold">{t('sources')}</h3>
+          <div>
+            <h3 className="text-navy font-extrabold">
+              {t('sources')}
+              <RequiredMark />
+            </h3>
+            <FieldError message={fieldErrors['sources']?.message} />
+          </div>
           <Button
             type="button"
             size="sm"
             variant="outline"
-            onClick={() =>
+            onClick={() => {
               mutate((draft) => {
                 draft.sources.push({
                   title: '',
@@ -1538,8 +2156,9 @@ export function ContentTab(props: ContentTabProps) {
                   url: 'https://',
                   accessed_at: new Date().toISOString(),
                 });
-              })
-            }
+              });
+              clearFieldError('sources');
+            }}
           >
             <Plus className="size-4" />
             {t('addSource')}
@@ -1547,56 +2166,73 @@ export function ContentTab(props: ContentTabProps) {
         </div>
         <div className="mt-4 space-y-3">
           {document.sources.map((source, index) => (
-            <div
-              key={index}
-              className="bg-muted/60 grid gap-2 rounded-xl p-3 sm:grid-cols-[1fr_1fr_1.4fr_auto]"
-            >
-              <input
-                className={adminFieldClassName}
-                placeholder={t('sourceTitle')}
-                value={source.title}
-                onChange={(event) =>
-                  mutate((draft) => {
-                    draft.sources[index].title = event.target.value;
-                  })
-                }
-              />
-              <input
-                className={adminFieldClassName}
-                placeholder={t('publisher')}
-                value={source.publisher}
-                onChange={(event) =>
-                  mutate((draft) => {
-                    draft.sources[index].publisher = event.target.value;
-                  })
-                }
-              />
-              <label className="relative">
-                <ExternalLink className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+            <div key={index} className="flex flex-col gap-1.5">
+              <div className="bg-muted/60 grid gap-2 rounded-xl p-3 sm:grid-cols-[1fr_1fr_1.4fr_auto]">
                 <input
-                  className={`${adminFieldClassName} pl-10`}
-                  type="url"
-                  value={source.url}
+                  id={`field-source-title-${index}`}
+                  className={cn(
+                    adminFieldClassName,
+                    fieldErrors[`source_${index}_title`] &&
+                      'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                  )}
+                  placeholder={`${t('sourceTitle')} *`}
+                  value={source.title}
+                  onChange={(event) => {
+                    mutate((draft) => {
+                      draft.sources[index].title = event.target.value;
+                    });
+                    clearFieldError(`source_${index}_title`, 'sources');
+                  }}
+                />
+                <input
+                  className={adminFieldClassName}
+                  placeholder={`${t('publisher')} (${t('optional')})`}
+                  value={source.publisher}
                   onChange={(event) =>
                     mutate((draft) => {
-                      draft.sources[index].url = event.target.value;
+                      draft.sources[index].publisher = event.target.value;
                     })
                   }
                 />
-              </label>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                disabled={document.sources.length === 1}
-                onClick={() =>
-                  mutate((draft) => {
-                    draft.sources.splice(index, 1);
-                  })
+                <label className="relative">
+                  <ExternalLink className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <input
+                    id={`field-source-url-${index}`}
+                    className={cn(
+                      `${adminFieldClassName} pl-10`,
+                      fieldErrors[`source_${index}_url`] &&
+                        'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                    )}
+                    type="url"
+                    value={source.url}
+                    onChange={(event) => {
+                      mutate((draft) => {
+                        draft.sources[index].url = event.target.value;
+                      });
+                      clearFieldError(`source_${index}_url`, 'sources');
+                    }}
+                  />
+                </label>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  disabled={document.sources.length === 1}
+                  onClick={() =>
+                    mutate((draft) => {
+                      draft.sources.splice(index, 1);
+                    })
+                  }
+                >
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
+              </div>
+              <FieldError
+                message={
+                  fieldErrors[`source_${index}_title`]?.message ||
+                  fieldErrors[`source_${index}_url`]?.message
                 }
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
+              />
             </div>
           ))}
         </div>

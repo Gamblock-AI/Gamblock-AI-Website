@@ -12,6 +12,10 @@ export function toastSuccess(message: string) {
   toast.success(message);
 }
 
+export function toastValidationError(message: string) {
+  toast.error(message);
+}
+
 export function toastError(error: unknown, fallback?: string) {
   reportDevelopmentError('UI action failed', error);
   toast.error(friendlyMessage(error, fallback));

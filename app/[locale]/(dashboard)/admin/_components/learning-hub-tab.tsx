@@ -1023,36 +1023,23 @@ export function LearningHubTab({
               <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
+                    variant="outline"
                     onClick={() => void save()}
                     disabled={busy}
-                    className="shadow-soft rounded-xl font-bold"
+                    className="rounded-xl font-medium"
                   >
                     <Save className="size-4" />
                     {t('learningHubSave')}
                   </Button>
-                  {selected.status === 'draft' ? (
-                    <Button
-                      variant="outline"
-                      onClick={() => void transition('submit-review')}
-                      disabled={busy}
-                      className="rounded-xl font-medium"
-                    >
-                      <Send className="size-4" />
-                      {t('learningHubSubmit')}
-                    </Button>
-                  ) : null}
-                  {selected.status === 'in_review' ? (
-                    <Button
-                      onClick={() => void transition('publish')}
-                      disabled={busy}
-                      className="shadow-soft rounded-xl font-bold"
-                    >
-                      <Send className="size-4" />
-                      {t('learningHubPublish')}
-                    </Button>
-                  ) : null}
-                  {selected.status === 'published' ||
-                  selected.status === 'in_review' ? (
+                  <Button
+                    onClick={() => void transition('publish')}
+                    disabled={busy}
+                    className="shadow-soft rounded-xl font-bold"
+                  >
+                    <Send className="size-4" />
+                    {t('learningHubPublish')}
+                  </Button>
+                  {selected.status === 'published' ? (
                     <Button
                       variant="outline"
                       onClick={() => void transition('archive')}

@@ -56,7 +56,7 @@ export function AdminContentCreate() {
         document: makeDocument(idTitle, enTitle),
       });
       toastSuccess(t('moduleCreated'));
-      router.push(`/admin/content/${educationModule.id}`);
+      router.push(`/admin/content/${educationModule.id}?lang=id`);
     } catch (error) {
       toastError(error, t('moduleCreateError'));
     } finally {
@@ -93,6 +93,7 @@ export function AdminContentCreate() {
           <label className="space-y-2">
             <span className="text-navy text-xs font-bold">
               {t('titleIndonesian')}
+              <span className="text-destructive ml-1 font-bold" aria-hidden="true">*</span>
             </span>
             <input
               className={adminFieldClassName}
@@ -106,6 +107,7 @@ export function AdminContentCreate() {
           <label className="space-y-2">
             <span className="text-navy text-xs font-bold">
               {t('titleEnglish')}
+              <span className="text-destructive ml-1 font-bold" aria-hidden="true">*</span>
             </span>
             <input
               className={adminFieldClassName}
@@ -118,7 +120,10 @@ export function AdminContentCreate() {
 
           <label className="space-y-2 sm:col-span-2">
             <div className="flex items-center justify-between">
-              <span className="text-navy text-xs font-bold">{t('thSlug')}</span>
+              <span className="text-navy text-xs font-bold">
+                {t('thSlug')}
+                <span className="text-destructive ml-1 font-bold" aria-hidden="true">*</span>
+              </span>
               {isSlugCustom ? (
                 <button
                   type="button"
