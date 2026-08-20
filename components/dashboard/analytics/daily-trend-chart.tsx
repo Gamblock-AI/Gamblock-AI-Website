@@ -34,7 +34,7 @@ export function DailyTrendChart({ points }: { points: AnalyticsDay[] }) {
   const totalBlocked = points.reduce((sum, point) => sum + point.blocked, 0);
 
   return (
-    <div className="relative flex-1 flex flex-col justify-center rounded-2xl border border-border/80 bg-muted/30 p-2 sm:p-3 overflow-hidden shadow-2xs min-h-[190px]">
+    <div className="relative flex-1 flex flex-col justify-center rounded-2xl border border-border/80 bg-muted/20 p-2 sm:p-3 overflow-hidden shadow-2xs min-h-[190px]">
       <p className="sr-only">
         {t('trendSummary', { total: totalBlocked, days: points.length })}
       </p>
@@ -60,50 +60,75 @@ export function DailyTrendChart({ points }: { points: AnalyticsDay[] }) {
               y1={y}
               y2={y}
               stroke="currentColor"
-              className="text-border"
-              strokeDasharray="4 7"
+              className={totalBlocked > 0 ? 'text-border' : 'text-border/40'}
+              strokeDasharray="4 6"
             />
           );
         })}
 
-        {points.length > 1 && totalBlocked > 0 ? (
+        {totalBlocked > 0 && points.length > 1 ? (
           <path
             d={`M ${areaPoints}`}
             fill={`url(#${gradientId})`}
             stroke="none"
           />
         ) : null}
-        {points.length > 1 ? (
+
+        {totalBlocked > 0 && points.length > 1 ? (
           <polyline
             points={linePoints}
             fill="none"
             stroke="currentColor"
-            className={totalBlocked > 0 ? 'text-navy' : 'text-border/80'}
-            strokeWidth={totalBlocked > 0 ? '3' : '2'}
+            className="text-navy"
+            strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-        ) : null}
+        ) : (
+          <line
+            x1={LEFT}
+            x2={RIGHT}
+            y1={BOTTOM}
+            y2={BOTTOM}
+            stroke="currentColor"
+            className="text-border/60"
+            strokeWidth="1.5"
+          />
+        )}
+
         {points.map((point, index) => (
           <g key={point.date}>
-            <circle
-              cx={xFor(index)}
-              cy={yFor(point.blocked)}
-              r="5"
-              fill="currentColor"
-              className="text-card"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <circle
-              cx={xFor(index)}
-              cy={yFor(point.blocked)}
-              r="3"
-              fill="currentColor"
-              className={point.blocked > 0 ? 'text-sky' : 'text-border'}
-            />
+            {totalBlocked > 0 ? (
+              <>
+                <circle
+                  cx={xFor(index)}
+                  cy={yFor(point.blocked)}
+                  r="5"
+                  fill="currentColor"
+                  className="text-card"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <circle
+                  cx={xFor(index)}
+                  cy={yFor(point.blocked)}
+                  r="3"
+                  fill="currentColor"
+                  className={point.blocked > 0 ? 'text-sky' : 'text-border'}
+                />
+              </>
+            ) : (
+              <circle
+                cx={xFor(index)}
+                cy={BOTTOM}
+                r="2"
+                fill="currentColor"
+                className="text-border/50"
+              />
+            )}
           </g>
         ))}
+
         {points.map((point, index) =>
           index % labelStep === 0 ? (
             <text
@@ -120,20 +145,11 @@ export function DailyTrendChart({ points }: { points: AnalyticsDay[] }) {
       </svg>
 
       {totalBlocked === 0 ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3">
-          <div className="flex items-center gap-2.5 rounded-xl border border-border/80 bg-card/92 px-4 py-2.5 shadow-2xs backdrop-blur-xs">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-sage/15 text-sage-dark">
-              <ShieldCheck className="size-4" aria-hidden="true" />
-            </span>
-            <div>
-              <p className="text-navy text-xs font-bold leading-tight">
-                {t('dailyTrendEmptyTitle')}
-              </p>
-              <p className="text-muted-foreground mt-0.5 text-[0.6875rem] leading-tight">
-                {t('dailyTrendEmptyBody')}
-              </p>
-            </div>
-          </div>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center -translate-y-4 gap-1.5">
+          <ShieldCheck className="size-7.5 text-muted-foreground/45" aria-hidden="true" />
+          <span className="text-muted-foreground/60 text-[0.6875rem] font-medium tracking-tight">
+            {t('dailyTrendEmptyTitle')}
+          </span>
         </div>
       ) : null}
     </div>

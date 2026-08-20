@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, useEffect, useState } from 'react';
-import { ArrowLeft, MessageSquare, UserCheck } from 'lucide-react';
+import { ArrowLeft, FileClock, Inbox, MessageSquare, UserCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -418,7 +418,12 @@ export function SupportTab(props: SupportTabProps) {
           </TableHeader>
           <TableBody>
             {props.cases.length === 0 ? (
-              <AdminEmptyTable colSpan={6} text={t('noTickets')} />
+              <AdminEmptyTable
+                colSpan={6}
+                icon={Inbox}
+                text={t('noTickets')}
+                description={t('noTicketsDescription')}
+              />
             ) : (
               props.cases.map((item) => (
                 <TableRow key={item.id}>
@@ -482,7 +487,12 @@ export function SupportTab(props: SupportTabProps) {
           </TableHeader>
           <TableBody>
             {props.dataRequests.length === 0 ? (
-              <AdminEmptyTable colSpan={5} text={t('noDataRequests')} />
+              <AdminEmptyTable
+                colSpan={5}
+                icon={FileClock}
+                text={t('noDataRequests')}
+                description={t('noDataRequestsDescription')}
+              />
             ) : (
               props.dataRequests.map((request) => (
                 <TableRow key={request.id}>

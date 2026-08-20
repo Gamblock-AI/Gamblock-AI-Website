@@ -52,7 +52,7 @@ export function AnalyticsInsights({
         description={t('trendBody')}
         density="compact"
         className="xl:col-span-7"
-        contentClassName="flex-1 flex flex-col justify-end"
+        contentClassName="flex-1 flex flex-col"
         action={
           <div
             className="border-border bg-muted/45 inline-flex rounded-xl border p-1"
@@ -87,7 +87,7 @@ export function AnalyticsInsights({
         description={t('peakHoursBody')}
         density="compact"
         className="xl:col-span-5"
-        contentClassName="flex-1 flex flex-col justify-end"
+        contentClassName="flex-1 flex flex-col"
       >
         <PeakHoursChart hours={hourly} />
       </DashboardPanel>

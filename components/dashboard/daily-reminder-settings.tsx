@@ -40,31 +40,33 @@ export function DailyReminderSettings() {
 
   return (
     <section
-      className="border-border bg-card shadow-soft rounded-3xl border p-5 sm:p-6"
+      className="border-border/80 bg-card shadow-2xs rounded-2xl border p-4 sm:p-5 transition-all duration-200 hover:shadow-card"
       aria-labelledby="reminder-settings-title"
     >
-      <div className="flex items-center gap-3">
-        <span className="bg-navy flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm">
-          <BellRing className="size-5" aria-hidden="true" />
+      <div className="flex items-center gap-2.5">
+        <span className="bg-azure/80 text-navy ring-1 ring-navy/10 flex size-9 shrink-0 items-center justify-center rounded-lg shadow-2xs">
+          <BellRing className="size-4.5" aria-hidden="true" />
         </span>
-        <h2
-          id="reminder-settings-title"
-          className="text-navy min-w-0 text-lg font-bold"
-        >
-          {t('reminderTitle')}
-        </h2>
+        <div>
+          <h2
+            id="reminder-settings-title"
+            className="text-navy min-w-0 text-base font-bold"
+          >
+            {t('reminderTitle')}
+          </h2>
+          <p className="text-muted-foreground text-xs">
+            {t('reminderBody')}
+          </p>
+        </div>
       </div>
-      <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-6">
-        {t('reminderBody')}
-      </p>
 
-      <div className="divide-border border-border mt-5 divide-y rounded-2xl border">
-        <div className="flex items-center justify-between gap-4 p-4">
+      <div className="divide-border/60 border-border/80 mt-4 divide-y rounded-xl border">
+        <div className="flex items-center justify-between gap-4 p-3.5">
           <div className="min-w-0">
-            <p className="text-navy text-sm font-bold">
+            <p className="text-navy text-xs sm:text-sm font-bold">
               {t('reminderEnabledLabel')}
             </p>
-            <p className="text-muted-foreground mt-1 text-xs leading-5">
+            <p className="text-muted-foreground mt-0.5 text-xs">
               {t('reminderEnabledDesc')}
             </p>
           </div>

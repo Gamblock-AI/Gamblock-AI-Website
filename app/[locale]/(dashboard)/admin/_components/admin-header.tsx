@@ -1,5 +1,5 @@
+import type { LucideIcon } from 'lucide-react';
 import { ShieldCheck } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import {
   dynamicLabelFallback,
@@ -10,31 +10,37 @@ interface AdminHeaderProps {
   title: string;
   description: string;
   role?: string;
+  icon?: LucideIcon;
 }
 
-export function AdminHeader({ title, description, role }: AdminHeaderProps) {
+export function AdminHeader({
+  title,
+  description,
+  role,
+  icon: Icon = ShieldCheck,
+}: AdminHeaderProps) {
   const t = useTranslations('dynamicLabels');
   return (
-    <header className="border-border bg-card shadow-soft flex flex-col gap-3 rounded-3xl border p-5 sm:flex-row sm:items-center sm:justify-between">
+    <header className="border-border bg-card shadow-soft flex flex-col gap-3 rounded-2xl border px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
       <div className="flex items-center gap-3">
-        <div className="bg-navy flex size-11 items-center justify-center rounded-xl text-white">
-          <ShieldCheck className="size-6" aria-hidden="true" />
+        <div className="bg-navy/5 text-navy ring-1 ring-navy/10 flex size-10 shrink-0 items-center justify-center rounded-xl">
+          <Icon className="size-5" aria-hidden="true" />
         </div>
-        <div>
-          <h1 className="text-navy text-xl font-bold tracking-tight">
+        <div className="min-w-0">
+          <h1 className="text-navy text-base font-bold tracking-tight leading-snug sm:text-lg">
             {title}
           </h1>
-          <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-6">
+          <p className="text-muted-foreground mt-0.5 max-w-2xl text-xs leading-relaxed">
             {description}
           </p>
         </div>
       </div>
       {role ? (
-        <Badge variant="secondary" className="w-fit px-3 py-1.5">
+        <span className="border-navy/20 bg-navy/5 text-navy inline-flex w-fit shrink-0 items-center rounded-full border px-3 py-1 text-xs font-bold tracking-wide uppercase">
           {t(dynamicLabelKey('role', role), {
             value: dynamicLabelFallback(role),
           })}
-        </Badge>
+        </span>
       ) : null}
     </header>
   );

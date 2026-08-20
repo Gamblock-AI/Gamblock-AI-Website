@@ -8,6 +8,13 @@ import {
 } from '@/hooks/use-admin-operations';
 import { useLocalUser } from '@/hooks/use-local-user';
 import { useTranslations } from 'next-intl';
+import {
+  FileText,
+  GraduationCap,
+  KeyRound,
+  Settings2,
+  Tickets,
+} from 'lucide-react';
 import { AdminHeader } from './admin-header';
 import { AdminErrorState, AdminLoadingState } from './admin-state';
 import { ContentTab } from './content-tab';
@@ -33,22 +40,33 @@ export function AdminAreaClient({
   const operations = useAdminOperations(verifiedRole, area);
   const header =
     area === 'content'
-      ? { title: t('tabContent'), description: t('contentDescription') }
+      ? {
+          title: t('tabContent'),
+          description: t('contentDescription'),
+          icon: FileText,
+        }
       : area === 'learningHub'
         ? {
             title: t('tabLearningHub'),
             description: t('learningHubDescription'),
+            icon: GraduationCap,
           }
         : area === 'tickets'
-          ? { title: t('tabTickets'), description: t('supportDescription') }
+          ? {
+              title: t('tabTickets'),
+              description: t('supportDescription'),
+              icon: Tickets,
+            }
           : area === 'emergency'
             ? {
                 title: t('tabEmergency'),
                 description: t('emergencyDescription'),
+                icon: KeyRound,
               }
             : {
                 title: t('tabPlatform'),
                 description: t('platformDescription'),
+                icon: Settings2,
               };
 
   return (
@@ -57,6 +75,7 @@ export function AdminAreaClient({
         title={header.title}
         description={header.description}
         role={user.role}
+        icon={header.icon}
       />
       {!user.phone_verified_at ? (
         <AdminVerificationCard />

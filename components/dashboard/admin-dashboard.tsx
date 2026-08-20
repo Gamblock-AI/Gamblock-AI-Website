@@ -7,10 +7,9 @@ import {
   BookOpen,
   CircleAlert,
   KeyRound,
-  LayoutGrid,
-  Settings2,
   ShieldCheck,
   Tickets,
+  Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { AdminVerificationCard } from '@/components/dashboard/admin-verification-card';
@@ -86,20 +85,20 @@ export function AdminDashboard({ name }: { name: string }) {
       ) : (
         <>
           <section aria-labelledby="attention-title" data-tour="tour-admin-attention">
-            <div className="mb-3.5 flex items-center gap-2.5">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-amber/15 text-amber-900">
-                <AlertTriangle className="size-4" aria-hidden="true" />
+            <div className="mb-2.5 flex items-center gap-2">
+              <span className="flex size-7 items-center justify-center rounded-lg bg-amber/15 text-amber-900">
+                <AlertTriangle className="size-3.5" aria-hidden="true" />
               </span>
               <div>
-                <h2 id="attention-title" className="text-navy text-lg font-bold">
+                <h2 id="attention-title" className="text-navy text-base font-bold">
                   {t('attentionTitle')}
                 </h2>
-                <p className="text-muted-foreground text-xs sm:text-sm">
+                <p className="text-muted-foreground text-xs">
                   {t('attentionBody')}
                 </p>
               </div>
             </div>
-            <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <AttentionMetric
                 icon={BookOpen}
                 label={t('reviewContent')}
@@ -123,63 +122,6 @@ export function AdminDashboard({ name }: { name: string }) {
                 label={t('pendingEmergency')}
                 value={overview.pending_emergency ?? 0}
                 href={ROUTES.ADMIN_EMERGENCY}
-              />
-            </div>
-          </section>
-
-          <section aria-labelledby="workspace-title" data-tour="tour-admin-workspaces">
-            <div className="mb-3.5 flex items-center gap-2.5">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-azure text-navy">
-                <LayoutGrid className="size-4" aria-hidden="true" />
-              </span>
-              <div>
-                <h2
-                  id="workspace-title"
-                  className="text-navy text-lg font-bold"
-                >
-                  {t('workspaceTitle')}
-                </h2>
-                <p className="text-muted-foreground text-xs sm:text-sm">
-                  {t('workspaceBody')}
-                </p>
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <WorkspaceLink
-                href={ROUTES.ADMIN_CONTENT}
-                icon={BookOpen}
-                title={t('contentTitle')}
-                primaryLabel={t('draftContent')}
-                primaryValue={overview.draft_content ?? 0}
-                secondaryLabel={t('reviewContent')}
-                secondaryValue={overview.review_content ?? 0}
-              />
-              <WorkspaceLink
-                href={ROUTES.ADMIN_TICKETS}
-                icon={Tickets}
-                title={t('ticketTitle')}
-                primaryLabel={t('openTickets')}
-                primaryValue={overview.open_support ?? 0}
-                secondaryLabel={t('unassignedTickets')}
-                secondaryValue={overview.unassigned_support ?? 0}
-              />
-              <WorkspaceLink
-                href={ROUTES.ADMIN_EMERGENCY}
-                icon={KeyRound}
-                title={t('emergencyTitle')}
-                primaryLabel={t('pendingEmergency')}
-                primaryValue={overview.pending_emergency ?? 0}
-                secondaryLabel={t('dualControl')}
-                secondaryValue={t('required')}
-              />
-              <WorkspaceLink
-                href={ROUTES.ADMIN_PLATFORM}
-                icon={Settings2}
-                title={t('platformTitle')}
-                primaryLabel={t('activeAdmins')}
-                primaryValue={overview.active_operators ?? 0}
-                secondaryLabel={t('visibleSocial')}
-                secondaryValue={overview.visible_social_links ?? 0}
               />
             </div>
           </section>
@@ -236,8 +178,9 @@ export function AdminDashboard({ name }: { name: string }) {
                 emptyTitle={t('analyticsEmptyTitle')}
                 emptyBody={t('analyticsEmptyBody')}
                 metricsExtra={
-                  <ProtectedUsersMetric
+                  <AdminMetricsExtra
                     summary={analytics.data ?? platformFallback(period)}
+                    activeOperators={overview.active_operators ?? 0}
                   />
                 }
               />
@@ -263,16 +206,32 @@ function platformFallback(period: AnalyticsPeriod): AnalyticsSummary {
   };
 }
 
-function ProtectedUsersMetric({ summary }: { summary: AnalyticsSummary }) {
-  const t = useTranslations('analyticsDashboard');
+function AdminMetricsExtra({
+  summary,
+  activeOperators,
+}: {
+  summary: AnalyticsSummary;
+  activeOperators: number;
+}) {
+  const t = useTranslations('adminDashboard');
+  const tAnalytics = useTranslations('analyticsDashboard');
   return (
-    <AnalyticsMetric
-      icon={ShieldCheck}
-      tone="sage"
-      label={t('metricProtectedUsers')}
-      value={summary.protected_users ?? 0}
-      body={t('metricProtectedUsersBody')}
-    />
+    <>
+      <AnalyticsMetric
+        icon={ShieldCheck}
+        tone="sage"
+        label={tAnalytics('metricProtectedUsers')}
+        value={summary.protected_users ?? 0}
+        body={tAnalytics('metricProtectedUsersBody')}
+      />
+      <AnalyticsMetric
+        icon={Users}
+        tone="navy"
+        label={t('activeAdmins')}
+        value={activeOperators}
+        body={t('activeAdminsBody')}
+      />
+    </>
   );
 }
 
@@ -292,56 +251,56 @@ function AttentionMetric({
   const content = (
     <div
       className={cn(
-        'group relative flex flex-col justify-between rounded-2xl border p-4 shadow-2xs transition-all duration-200',
+        'group relative flex flex-col justify-between rounded-xl border p-4 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card',
         needsAttention
-          ? 'border-amber/40 bg-gradient-to-br from-amber/[0.08] via-card to-card hover:border-amber/60 hover:shadow-xs'
-          : 'border-border/80 bg-card hover:border-navy/20 hover:shadow-2xs'
+          ? 'border-amber/40 bg-gradient-to-br from-amber/[0.08] via-card to-card hover:border-amber/60'
+          : 'border-border/80 bg-card hover:border-navy/30'
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span
-          className={cn(
-            'flex size-9 items-center justify-center rounded-xl transition-colors',
-            needsAttention
-              ? 'bg-amber/20 text-amber-900 ring-1 ring-amber/30'
-              : 'bg-muted/60 text-navy'
-          )}
-        >
-          <Icon className="size-4.5" aria-hidden="true" />
-        </span>
-        {needsAttention ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber/40 bg-amber/15 px-2 py-0.5 text-[0.6875rem] font-bold text-amber-900">
-            <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-            {t('attentionRequired')}
-          </span>
-        ) : (
-          <span className="text-muted-foreground text-[0.6875rem] font-medium">
-            {t('underControl')}
-          </span>
-        )}
-      </div>
-
-      <div className="mt-3.5">
-        <p className="text-muted-foreground line-clamp-1 text-xs font-semibold">
-          {label}
-        </p>
-        <div className="mt-1 flex items-baseline justify-between">
-          <p
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <span
             className={cn(
-              'text-2xl font-black tabular-nums tracking-tight',
-              needsAttention ? 'text-amber-900' : 'text-navy'
+              'flex size-9 items-center justify-center rounded-lg transition-colors',
+              needsAttention
+                ? 'bg-amber/20 text-amber-900 ring-1 ring-amber/30'
+                : 'bg-azure/80 text-navy ring-1 ring-navy/10 group-hover:bg-navy group-hover:text-white'
             )}
           >
-            {value}
-          </p>
-          {href ? (
-            <span className="text-navy flex items-center gap-1 text-xs font-bold opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-              {t('openQueue')}
-              <ArrowRight className="size-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+            <Icon className="size-4.5" aria-hidden="true" />
+          </span>
+          <div className="flex items-center gap-2">
+            {needsAttention ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber/40 bg-amber/15 px-2 py-0.5 text-[0.625rem] font-bold text-amber-900 shadow-2xs">
+                <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                {t('attentionRequired')}
+              </span>
+            ) : null}
+            <span
+              className={cn(
+                'text-2xl sm:text-3xl font-black tabular-nums tracking-tight leading-none',
+                needsAttention ? 'text-amber-900' : 'text-navy'
+              )}
+            >
+              {value}
             </span>
-          ) : null}
+          </div>
         </div>
+
+        <p className="text-navy mt-3 line-clamp-1 text-xs sm:text-[0.8125rem] font-bold">
+          {label}
+        </p>
       </div>
+
+      {href ? (
+        <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2 text-[0.6875rem] font-semibold text-muted-foreground transition-colors group-hover:text-navy">
+          <span>{t('openQueue')}</span>
+          <ArrowRight
+            className="size-3 transition-transform duration-200 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </div>
+      ) : null}
     </div>
   );
 
@@ -349,82 +308,11 @@ function AttentionMetric({
     return (
       <Link
         href={href}
-        className="rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-navy/30"
+        className="rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-navy/30 block"
       >
         {content}
       </Link>
     );
   }
   return content;
-}
-
-function WorkspaceLink({
-  href,
-  icon: Icon,
-  title,
-  primaryLabel,
-  primaryValue,
-  secondaryLabel,
-  secondaryValue,
-}: {
-  href: string;
-  icon: LucideIcon;
-  title: string;
-  primaryLabel: string;
-  primaryValue: number | string;
-  secondaryLabel: string;
-  secondaryValue: number | string;
-}) {
-  const t = useTranslations('adminDashboard');
-  return (
-    <Link
-      href={href}
-      className="group relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-2xs outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-card focus-visible:ring-2 focus-visible:ring-navy/30"
-    >
-      <div>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-azure/80 text-navy ring-1 ring-navy/10 transition-colors group-hover:bg-navy group-hover:text-white">
-              <Icon className="size-5" aria-hidden="true" />
-            </span>
-            <h3 className="text-navy font-bold text-base leading-snug">
-              {title}
-            </h3>
-          </div>
-          <span className="flex size-7 items-center justify-center rounded-lg bg-muted/40 text-muted-foreground transition-all duration-200 group-hover:bg-navy group-hover:text-white">
-            <ArrowRight
-              className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
-          </span>
-        </div>
-
-        <dl className="mt-4 grid grid-cols-2 gap-2.5">
-          <div className="rounded-xl border border-border/60 bg-muted/30 p-2.5 transition-colors group-hover:border-navy/15 group-hover:bg-muted/45">
-            <dt className="text-muted-foreground truncate text-[0.6875rem] font-bold tracking-wider uppercase">
-              {primaryLabel}
-            </dt>
-            <dd className="text-navy mt-1 text-base font-black tabular-nums">
-              {primaryValue}
-            </dd>
-          </div>
-          <div className="rounded-xl border border-border/60 bg-muted/30 p-2.5 transition-colors group-hover:border-navy/15 group-hover:bg-muted/45">
-            <dt className="text-muted-foreground truncate text-[0.6875rem] font-bold tracking-wider uppercase">
-              {secondaryLabel}
-            </dt>
-            <dd className="text-navy mt-1 text-base font-black tabular-nums">
-              {secondaryValue}
-            </dd>
-          </div>
-        </dl>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs font-bold text-navy transition-colors group-hover:text-navy-light">
-        <span>{t('openWorkspace')}</span>
-        <span className="text-muted-foreground group-hover:text-navy text-[0.6875rem] font-medium flex items-center gap-1">
-          {t('accessWorkspace')} &rarr;
-        </span>
-      </div>
-    </Link>
-  );
 }

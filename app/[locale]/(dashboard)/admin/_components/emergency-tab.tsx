@@ -72,19 +72,19 @@ export function EmergencyTab({
           ))}
         </div>
       ) : !emergencyKey ? (
-        <Card className="border-border/80 bg-muted/10 flex min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-8 text-center">
-          <div className="bg-navy/5 text-navy flex size-12 items-center justify-center rounded-2xl">
-            <KeyRound className="size-6" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-navy text-sm font-semibold">
+        <div className="border-border bg-card shadow-soft flex flex-col items-center justify-center gap-3.5 rounded-2xl border py-10 sm:py-14 px-6 text-center">
+          <span className="bg-navy/5 text-navy flex size-12 items-center justify-center rounded-2xl ring-1 ring-navy/10">
+            <KeyRound className="size-6" aria-hidden="true" />
+          </span>
+          <div className="space-y-1.5 max-w-md mx-auto text-center">
+            <p className="text-navy text-sm font-bold text-center">
               {t('noEmergencyRequests')}
             </p>
-            <p className="text-muted-foreground max-w-sm text-xs">
+            <p className="text-muted-foreground text-xs leading-relaxed text-center">
               {t('noEmergencyRequestsBody')}
             </p>
           </div>
-        </Card>
+        </div>
       ) : null}
     </div>
   );

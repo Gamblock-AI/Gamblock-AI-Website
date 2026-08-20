@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { DataRequestRecord } from '@/hooks/use-data-requests';
+import { cn } from '@/lib/utils';
 import { getExportAvailability, getRequestStatus } from './request-status';
 
 interface DataRequestHistoryProps {
@@ -21,6 +22,7 @@ interface DataRequestHistoryProps {
   submittingExport: boolean;
   downloadingId: string | null;
   activeExport: boolean;
+  className?: string;
 }
 
 export function DataRequestHistory({
@@ -33,6 +35,7 @@ export function DataRequestHistory({
   submittingExport,
   downloadingId,
   activeExport,
+  className,
 }: DataRequestHistoryProps) {
   const t = useTranslations('dataRequestsWorkspace');
 
@@ -41,10 +44,13 @@ export function DataRequestHistory({
       icon={FileClock}
       title={t('historyTitle')}
       description={t('historyBody')}
+      density="compact"
+      className={cn('flex h-full flex-col', className)}
+      contentClassName="flex flex-1 flex-col justify-between"
       action={
         error ? (
-          <Button variant="outline" onClick={onRetry}>
-            <RefreshCw className="size-4" aria-hidden="true" />
+          <Button variant="outline" size="sm" className="rounded-lg" onClick={onRetry}>
+            <RefreshCw className="size-3.5" aria-hidden="true" />
             {t('retry')}
           </Button>
         ) : undefined
@@ -108,7 +114,7 @@ function DataRequestHistoryContent({
         icon={FileClock}
         title={t('emptyTitle')}
         hint={t('emptyBody')}
-        className="bg-muted/55 min-h-48"
+        className="bg-muted/30 min-h-36 py-8 rounded-xl"
       />
     );
   }
@@ -160,17 +166,17 @@ function DataRequestHistoryContent({
         return (
           <article
             key={request.id}
-            className="border-border bg-muted/25 grid gap-3 rounded-2xl border p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+            className="border-border/80 bg-card hover:border-navy/20 grid gap-3 rounded-xl border p-3.5 sm:p-4 shadow-2xs transition-all hover:shadow-card sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
           >
             <div className="min-w-0">
               <p className="text-navy text-sm font-bold">{type}</p>
-              <p className="text-muted-foreground mt-1 font-mono text-xs">
+              <p className="text-muted-foreground mt-0.5 font-mono text-[0.6875rem]">
                 {request.id}
               </p>
-              <p className="text-muted-foreground mt-2 text-xs">{date}</p>
+              <p className="text-muted-foreground mt-1.5 text-xs">{date}</p>
               {archiveMessage ? (
                 <p
-                  className="text-muted-foreground mt-2 text-xs leading-5"
+                  className="text-muted-foreground mt-1.5 text-xs leading-5"
                   role={request.status === 'failed' ? 'alert' : undefined}
                 >
                   {archiveMessage}
@@ -185,10 +191,11 @@ function DataRequestHistoryContent({
                 <Button
                   size="sm"
                   variant="outline"
+                  className="font-bold rounded-lg"
                   disabled={downloadingId !== null}
                   onClick={() => onDownload(request.id)}
                 >
-                  <Download className="size-4" aria-hidden="true" />
+                  <Download className="size-3.5" aria-hidden="true" />
                   {downloadingId === request.id
                     ? t('downloading')
                     : t('downloadAction')}
@@ -198,10 +205,11 @@ function DataRequestHistoryContent({
                 <Button
                   size="sm"
                   variant="outline"
+                  className="font-bold rounded-lg"
                   disabled={submittingExport || activeExport}
                   onClick={onCreateExport}
                 >
-                  <RefreshCw className="size-4" aria-hidden="true" />
+                  <RefreshCw className="size-3.5" aria-hidden="true" />
                   {submittingExport
                     ? t('submitting')
                     : activeExport

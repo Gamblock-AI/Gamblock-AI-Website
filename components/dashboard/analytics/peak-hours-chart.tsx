@@ -33,7 +33,7 @@ export function PeakHoursChart({ hours }: { hours: AnalyticsHour[] }) {
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
 
   return (
-    <div className="relative flex-1 flex flex-col justify-center rounded-2xl border border-border/80 bg-muted/30 p-2 sm:p-3 overflow-hidden shadow-2xs min-h-[190px]">
+    <div className="relative flex-1 flex flex-col justify-center rounded-2xl border border-border/80 bg-muted/20 p-2 sm:p-3 overflow-hidden shadow-2xs min-h-[190px]">
       <p className="sr-only">
         {t('hourlySummary', { total, peak: peakHours })}
       </p>
@@ -52,29 +52,35 @@ export function PeakHoursChart({ hours }: { hours: AnalyticsHour[] }) {
               y1={y}
               y2={y}
               stroke="currentColor"
-              className="text-border"
-              strokeDasharray="4 7"
+              className={total > 0 ? 'text-border' : 'text-border/40'}
+              strokeDasharray="4 6"
             />
           );
         })}
         {buckets.map((bucket) => {
           const isPeak = total > 0 && bucket.count > 0 && bucket.count === topCount;
-          const height = Math.max(0, BOTTOM - yFor(bucket.count));
+          const height =
+            total > 0
+              ? Math.max(0, BOTTOM - yFor(bucket.count))
+              : 5;
+          const yPos = total > 0 ? yFor(bucket.count) : BOTTOM - 5;
           return (
             <rect
               key={bucket.hour}
               x={LEFT + bucket.hour * slotWidth + (slotWidth - barWidth) / 2}
-              y={yFor(bucket.count)}
+              y={yPos}
               width={barWidth}
               height={height}
               rx={isPeak ? 3 : 2}
               fill="currentColor"
               className={
-                isPeak
-                  ? 'text-crimson'
-                  : bucket.count > 0
-                    ? 'text-cyan'
-                    : 'text-border/60'
+                total > 0
+                  ? isPeak
+                    ? 'text-crimson'
+                    : bucket.count > 0
+                      ? 'text-cyan'
+                      : 'text-border/60'
+                  : 'text-border/40'
               }
             />
           );
@@ -95,20 +101,11 @@ export function PeakHoursChart({ hours }: { hours: AnalyticsHour[] }) {
       </svg>
 
       {total === 0 ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3">
-          <div className="flex items-center gap-2.5 rounded-xl border border-border/80 bg-card/92 px-4 py-2.5 shadow-2xs backdrop-blur-xs">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-azure text-navy">
-              <Clock3 className="size-4" aria-hidden="true" />
-            </span>
-            <div>
-              <p className="text-navy text-xs font-bold leading-tight">
-                {t('peakHoursEmptyTitle')}
-              </p>
-              <p className="text-muted-foreground mt-0.5 text-[0.6875rem] leading-tight">
-                {t('peakHoursEmptyBody')}
-              </p>
-            </div>
-          </div>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center -translate-y-4 gap-1.5">
+          <Clock3 className="size-7.5 text-muted-foreground/45" aria-hidden="true" />
+          <span className="text-muted-foreground/60 text-[0.6875rem] font-medium tracking-tight">
+            {t('peakHoursEmptyTitle')}
+          </span>
         </div>
       ) : null}
     </div>

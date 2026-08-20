@@ -145,7 +145,6 @@ export const partnerMobileTourSteps: TourStep[] = [
 export const adminDesktopTourSteps: TourStep[] = [
   { target: 'tour-admin-welcome', titleKey: 'welcomeTitle', bodyKey: 'welcomeBody' },
   { target: 'tour-admin-attention', titleKey: 'attentionTitle', bodyKey: 'attentionBody' },
-  { target: 'tour-admin-workspaces', titleKey: 'workspacesTitle', bodyKey: 'workspacesBody' },
   { target: 'tour-admin-analytics', titleKey: 'analyticsTitle', bodyKey: 'analyticsBody' },
   { target: 'tour-sidebar-operations', titleKey: 'sidebarOperationsTitle', bodyKey: 'sidebarOperationsBody' },
   { target: 'tour-sidebar-today', titleKey: 'sidebarTodayTitle', bodyKey: 'sidebarTodayBody' },
@@ -158,7 +157,6 @@ export const adminDesktopTourSteps: TourStep[] = [
 export const adminMobileTourSteps: TourStep[] = [
   { target: 'tour-admin-welcome', titleKey: 'welcomeTitle', bodyKey: 'welcomeBody' },
   { target: 'tour-admin-attention', titleKey: 'attentionTitle', bodyKey: 'attentionBody' },
-  { target: 'tour-admin-workspaces', titleKey: 'workspacesTitle', bodyKey: 'workspacesBody' },
   { target: 'tour-admin-analytics', titleKey: 'analyticsTitle', bodyKey: 'analyticsBody' },
   { target: 'tour-mobile-primary', titleKey: 'mobilePrimaryTitle', bodyKey: 'mobilePrimaryBody' },
   { target: 'tour-mobile-more', titleKey: 'mobileMoreTitle', bodyKey: 'mobileMoreBody' },

@@ -6,7 +6,9 @@ import {
   Archive,
   BookOpen,
   Check,
+  GraduationCap,
   History,
+  ImageIcon,
   Plus,
   Save,
   Send,
@@ -35,7 +37,6 @@ import type {
 } from '@/hooks/use-admin-operations';
 import { cn } from '@/lib/utils';
 import {
-  AdminSectionHeader,
   AdminStatusBadge,
   adminFieldClassName,
 } from './admin-shared';
@@ -230,9 +231,17 @@ function AdminLearningMediaPreview({ mediaID }: { mediaID: string }) {
     };
   }, [mediaID]);
 
+  const isSquare = aspect === 1;
+  const sizeClasses = isSquare ? 'size-14' : 'h-14 w-24 sm:w-28';
+
   if (loading && !src) {
     return (
-      <div className="border-border bg-muted/40 flex h-14 w-20 items-center justify-center rounded-lg border">
+      <div
+        className={cn(
+          'border-border/80 bg-muted/40 flex items-center justify-center rounded-xl border',
+          sizeClasses
+        )}
+      >
         <span className="size-4 animate-spin rounded-full border-2 border-navy border-t-transparent" />
       </div>
     );
@@ -240,9 +249,14 @@ function AdminLearningMediaPreview({ mediaID }: { mediaID: string }) {
 
   if (!src) {
     return (
-      <span className="border-border text-muted-foreground flex h-14 w-20 items-center justify-center rounded-lg border text-xs">
-        -
-      </span>
+      <div
+        className={cn(
+          'border-border/80 bg-muted/25 text-muted-foreground/60 flex items-center justify-center rounded-xl border border-dashed shadow-2xs',
+          sizeClasses
+        )}
+      >
+        <ImageIcon className="size-5" aria-hidden="true" />
+      </div>
     );
   }
 
@@ -251,7 +265,10 @@ function AdminLearningMediaPreview({ mediaID }: { mediaID: string }) {
     <img
       src={src}
       alt=""
-      className="border-border h-14 w-20 rounded-lg border object-cover"
+      className={cn(
+        'border-border rounded-xl border object-cover shadow-2xs',
+        sizeClasses
+      )}
     />
   );
 }
@@ -279,6 +296,9 @@ function LearningMediaField({
   onUpload: (file: File) => Promise<void>;
   onChange: (value: string) => void;
 }) {
+  const isSquare = aspect === 1;
+  const sizeClasses = isSquare ? 'size-14' : 'h-14 w-24 sm:w-28';
+
   return (
     <div className="space-y-2">
       <span className="text-navy flex items-center text-xs font-bold">
@@ -290,11 +310,16 @@ function LearningMediaField({
       ) : null}
       <div className="flex flex-wrap items-center gap-3">
         {mediaID ? (
-          <AdminLearningMediaPreview key={mediaID} mediaID={mediaID} />
+          <AdminLearningMediaPreview key={mediaID} mediaID={mediaID} aspect={aspect} />
         ) : (
-          <span className="border-border text-muted-foreground flex h-14 w-20 items-center justify-center rounded-lg border text-xs">
-            -
-          </span>
+          <div
+            className={cn(
+              'border-border/80 bg-muted/25 text-muted-foreground/60 flex items-center justify-center rounded-xl border border-dashed shadow-2xs',
+              sizeClasses
+            )}
+          >
+            <ImageIcon className="size-5" aria-hidden="true" />
+          </div>
         )}
         <ThumbnailCropper
           busy={uploading}
@@ -782,27 +807,27 @@ export function LearningHubTab({
   };
 
   return (
-    <div className="space-y-5">
-      <AdminSectionHeader
-        title={
-          section === 'items'
-            ? t('learningHubItemsTitle')
-            : t('learningHubTaxonomyTitle')
-        }
-        description={
-          section === 'items'
-            ? t('learningHubItemsDescription')
-            : t('learningHubTaxonomyDescription')
-        }
-        action={
-          section === 'items' ? (
-            <Button onClick={startCreate} disabled={busy}>
-              <Plus className="size-4" />
-              {t('learningHubNewItem')}
-            </Button>
-          ) : undefined
-        }
-      />
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-1">
+        <div>
+          <h3 className="text-navy text-base font-bold">
+            {section === 'items'
+              ? t('learningHubItemsTitle')
+              : t('learningHubTaxonomyTitle')}
+          </h3>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            {section === 'items'
+              ? t('learningHubItemsDescription')
+              : t('learningHubTaxonomyDescription')}
+          </p>
+        </div>
+        {section === 'items' ? (
+          <Button size="sm" onClick={startCreate} disabled={busy}>
+            <Plus className="size-4" />
+            {t('learningHubNewItem')}
+          </Button>
+        ) : null}
+      </div>
 
       <CompactTabNav<'items' | 'taxonomy'>
         ariaLabel={t('learningHubTabNavigation')}
@@ -822,8 +847,13 @@ export function LearningHubTab({
       />
 
       {section === 'items' ? (
-      <div className="grid gap-5 xl:grid-cols-[20rem_minmax(0,1fr)] xl:items-start">
-        <section className="border-border/80 bg-card max-h-[calc(100vh-14rem)] min-h-[500px] flex flex-col rounded-2xl border p-4 shadow-2xs">
+      <div
+        className={cn(
+          'grid gap-5 xl:grid-cols-[20rem_minmax(0,1fr)]',
+          draft ? 'xl:items-start' : 'xl:items-stretch'
+        )}
+      >
+        <section className="border-border/80 bg-card max-h-[calc(100vh-14rem)] min-h-[500px] flex flex-col rounded-2xl border p-4 shadow-2xs h-full">
           <div className="mb-3 flex items-center justify-between gap-3 shrink-0 pb-3 border-b border-border/60">
             <label
               className="text-navy text-xs font-bold uppercase tracking-wider"
@@ -845,7 +875,7 @@ export function LearningHubTab({
             </NativeSelect>
           </div>
           <div
-            className="mt-1 flex-1 overflow-y-auto pr-1.5 space-y-2 min-h-0 focus:outline-none"
+            className="mt-1 flex-1 overflow-y-auto pr-1.5 space-y-2 min-h-0 focus:outline-none flex flex-col"
             role="list"
             aria-label={t('learningHubItemsTitle')}
           >
@@ -900,9 +930,19 @@ export function LearningHubTab({
               </button>
             ))}
             {!visibleItems.length && !isCreating ? (
-              <p className="text-muted-foreground py-8 text-center text-xs">
-                {t('learningHubNoItems')}
-              </p>
+              <div className="flex flex-1 flex-col items-center justify-center py-10 px-4 text-center w-full my-auto">
+                <span className="bg-navy/5 text-navy flex size-11 items-center justify-center rounded-2xl ring-1 ring-navy/10">
+                  <GraduationCap className="size-5" aria-hidden="true" />
+                </span>
+                <div className="mt-3 space-y-1 max-w-[14rem] mx-auto text-center">
+                  <p className="text-navy text-xs font-bold text-center">
+                    {t('learningHubNoItems')}
+                  </p>
+                  <p className="text-muted-foreground text-[0.75rem] leading-relaxed text-center">
+                    {t('learningHubNoItemsDescription')}
+                  </p>
+                </div>
+              </div>
             ) : null}
           </div>
           <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground shrink-0">
@@ -917,18 +957,25 @@ export function LearningHubTab({
           </div>
         </section>
 
-        <section className="border-border/80 bg-card rounded-2xl border p-5 sm:p-6 shadow-2xs">
+        <section
+          className={cn(
+            'border-border/80 bg-card rounded-2xl border p-5 sm:p-6 shadow-2xs',
+            !draft && 'flex flex-col justify-center min-h-[500px] h-full'
+          )}
+        >
           {!draft ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <span className="border-border/80 bg-muted/60 text-muted-foreground flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
+            <div className="flex flex-1 flex-col items-center justify-center py-10 text-center my-auto">
+              <span className="bg-navy/5 text-navy flex size-12 items-center justify-center rounded-2xl ring-1 ring-navy/10">
                 <BookOpen className="size-6" aria-hidden="true" />
               </span>
-              <p className="text-navy mt-3 text-sm font-bold">
-                {t('learningHubSelectItem')}
-              </p>
-              <p className="text-muted-foreground mt-1 max-w-sm text-xs">
-                {t('learningHubSelectItemBody')}
-              </p>
+              <div className="space-y-1.5 max-w-md mx-auto text-center mt-3">
+                <p className="text-navy text-sm font-bold text-center">
+                  {t('learningHubSelectItem')}
+                </p>
+                <p className="text-muted-foreground text-xs leading-relaxed text-center">
+                  {t('learningHubSelectItemBody')}
+                </p>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -1138,11 +1185,11 @@ export function LearningHubTab({
                         <textarea
                           id="learning-field-outcomes"
                           className={cn(
-                            `${adminFieldClassName} py-2`,
+                            `${adminFieldClassName} min-h-32 py-2.5 leading-relaxed`,
                             fieldErrors.outcomes &&
                               'border-destructive focus-visible:border-destructive'
                           )}
-                          rows={3}
+                          rows={6}
                           placeholder={`Contoh:\nMemahami konsep dasar analisis data\nMampu memvisualisasikan data kuantitatif\nMenerapkan analisis regresi pada studi kasus`}
                           value={list(draft.document, 'outcomes_id')}
                           onChange={(event) =>
@@ -1236,11 +1283,11 @@ export function LearningHubTab({
                         <textarea
                           id="learning-field-outcomes-en"
                           className={cn(
-                            `${adminFieldClassName} py-2`,
+                            `${adminFieldClassName} min-h-32 py-2.5 leading-relaxed`,
                             fieldErrors.outcomes &&
                               'border-destructive focus-visible:border-destructive'
                           )}
-                          rows={3}
+                          rows={6}
                           placeholder={`e.g.:\nUnderstand fundamental data analysis concepts\nAble to visualize quantitative datasets\nApply regression analysis in case studies`}
                           value={list(draft.document, 'outcomes_en')}
                           onChange={(event) =>

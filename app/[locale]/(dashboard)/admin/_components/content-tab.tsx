@@ -7,6 +7,7 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUp,
+  BookOpen,
   ExternalLink,
   History,
   ImageIcon,
@@ -50,7 +51,54 @@ import {
 } from '@/components/common/form-field';
 import { TranslateButton } from '@/components/admin/translate-button';
 
-const emptyRichText = () => ({ type: 'doc', content: [{ type: 'paragraph' }] });
+const emptyRichText = (): RichTextDocument => ({
+  type: 'doc',
+  content: [{ type: 'paragraph' }],
+});
+
+function collectRichTextStrings(doc: unknown): string[] {
+  const result: string[] = [];
+  function traverse(node: unknown) {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (const child of node) traverse(child);
+      return;
+    }
+    const obj = node as Record<string, unknown>;
+    if (typeof obj.text === 'string') {
+      result.push(obj.text);
+    }
+    if (Array.isArray(obj.content)) {
+      for (const child of obj.content) traverse(child);
+    }
+  }
+  traverse(doc);
+  return result;
+}
+
+function cloneAndTranslateRichText(
+  sourceDoc: unknown,
+  nextText: () => string
+): RichTextDocument {
+  if (!sourceDoc || typeof sourceDoc !== 'object') {
+    return emptyRichText();
+  }
+  function transform(node: unknown): unknown {
+    if (!node || typeof node !== 'object') return node;
+    if (Array.isArray(node)) {
+      return node.map(transform);
+    }
+    const obj = { ...(node as Record<string, unknown>) };
+    if (typeof obj.text === 'string') {
+      obj.text = nextText();
+    }
+    if (Array.isArray(obj.content)) {
+      obj.content = obj.content.map(transform) as RichTextDocument[];
+    }
+    return obj;
+  }
+  return transform(sourceDoc) as RichTextDocument;
+}
 
 function collectDocTexts(doc: AdminEducationDocument, localeKey: string): string[] {
   const texts: string[] = [];
@@ -71,6 +119,10 @@ function collectDocTexts(doc: AdminEducationDocument, localeKey: string): string
       const sTr = section.translations[localeKey as 'id' | 'en'];
       if (sTr) {
         push(sTr.title);
+        const richStrings = collectRichTextStrings(sTr.content);
+        for (const str of richStrings) {
+          push(str);
+        }
         if (sTr.knowledge_check) {
           push(sTr.knowledge_check.question);
           push(sTr.knowledge_check.explanation);
@@ -84,6 +136,10 @@ function collectDocTexts(doc: AdminEducationDocument, localeKey: string): string
       if (thumb.alt_text?.[localeKey]) {
         push(thumb.alt_text[localeKey]);
       }
+    }
+    for (const video of doc.videos ?? []) {
+      push(video.title?.[localeKey]);
+      push(video.alt_text?.[localeKey]);
     }
   }
   return texts;
@@ -103,10 +159,15 @@ function applyDocTranslations(
   tr.learning_objective = next();
   tr.disclaimer = next();
   tr.reviewer_role = next();
+  const sourceKey = targetKey === 'en' ? 'id' : 'en';
   for (const section of doc.sections) {
     const sTr = section.translations[targetKey as 'id' | 'en'];
+    const sourceSTr = section.translations[sourceKey as 'id' | 'en'];
     if (!sTr) continue;
     sTr.title = next();
+    if (sourceSTr?.content) {
+      sTr.content = cloneAndTranslateRichText(sourceSTr.content, next);
+    }
     if (sTr.knowledge_check) {
       sTr.knowledge_check.question = next();
       sTr.knowledge_check.explanation = next();
@@ -118,6 +179,12 @@ function applyDocTranslations(
   for (const thumb of doc.thumbnails) {
     if (!thumb.alt_text) thumb.alt_text = {};
     thumb.alt_text[targetKey] = next();
+  }
+  for (const video of doc.videos ?? []) {
+    if (!video.title) video.title = {};
+    video.title[targetKey] = next();
+    if (!video.alt_text) video.alt_text = {};
+    video.alt_text[targetKey] = next();
   }
 }
 
@@ -582,9 +649,17 @@ export function ContentTab(props: ContentTabProps) {
   const { getModule, moduleID } = props;
   const langParam = searchParams.get('lang');
   const locale: 'id' | 'en' = langParam === 'en' ? 'en' : 'id';
+  const isNew = moduleID === 'new';
+  const [prevModuleID, setPrevModuleID] = useState(moduleID);
+  const [isCreating, setIsCreating] = useState(isNew);
   const [selected, setSelected] = useState<AdminEducationModule | null>(null);
   const [slug, setSlug] = useState('');
-  const [document, setDocument] = useState<AdminEducationDocument | null>(null);
+  const [document, setDocument] = useState<AdminEducationDocument | null>(() => {
+    if (isNew) {
+      return makeDocument('', '');
+    }
+    return null;
+  });
   const [busy, setBusy] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [revisions, setRevisions] = useState<AdminEducationRevision[]>([]);
@@ -592,6 +667,32 @@ export function ContentTab(props: ContentTabProps) {
   const [isStuck, setIsStuck] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
+
+  if (moduleID !== prevModuleID) {
+    setPrevModuleID(moduleID);
+    if (moduleID === 'new') {
+      setIsCreating(true);
+      setSelected(null);
+      setSlug('');
+      setDocument(makeDocument('', ''));
+      setFieldErrors({});
+    } else if (!moduleID) {
+      setIsCreating(false);
+      setSelected(null);
+      setSlug('');
+      setDocument(null);
+      setFieldErrors({});
+    }
+  }
+
+  const startCreate = () => {
+    setIsCreating(true);
+    setSelected(null);
+    setSlug('');
+    setDocument(makeDocument('', ''));
+    setFieldErrors({});
+    router.push('/admin/content/new?lang=id');
+  };
 
   const clearFieldError = (...keys: string[]) => {
     setFieldErrors((prev) => {
@@ -622,7 +723,7 @@ export function ContentTab(props: ContentTabProps) {
   };
 
   useEffect(() => {
-    if (!selected) return;
+    if (!selected && !isCreating) return;
 
     const updateHeight = () => {
       if (stickyHeaderRef.current) {
@@ -643,10 +744,10 @@ export function ContentTab(props: ContentTabProps) {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateHeight);
     };
-  }, [selected]);
+  }, [selected, isCreating]);
 
   useEffect(() => {
-    if (!moduleID || selected?.id === moduleID) return;
+    if (!moduleID || moduleID === 'new' || selected?.id === moduleID) return;
     let active = true;
 
     const matchedModule = props.modules.find(
@@ -657,6 +758,7 @@ export function ContentTab(props: ContentTabProps) {
     void getModule(targetID)
       .then((educationModule) => {
         if (!active) return;
+        setIsCreating(false);
         setSelected(educationModule);
         setSlug(educationModule.slug);
         setFieldErrors({});
@@ -670,6 +772,7 @@ export function ContentTab(props: ContentTabProps) {
       active = false;
     };
   }, [getModule, moduleID, props.modules, selected?.id, t]);
+
   const mutate = (callback: (draft: AdminEducationDocument) => void) =>
     setDocument((current) => {
       if (!current) return current;
@@ -677,8 +780,9 @@ export function ContentTab(props: ContentTabProps) {
       callback(next);
       return next;
     });
+
   const save = async () => {
-    if (!selected || !document) return;
+    if (!document) return;
     const finalSlug =
       slug.trim() ||
       slugify(
@@ -689,26 +793,38 @@ export function ContentTab(props: ContentTabProps) {
     setBusy(true);
     try {
       const normalizedDoc = normalizeEducationDocument(document);
-      const educationModule = await props.saveModule(
-        selected,
-        finalSlug,
-        normalizedDoc
-      );
-      setSelected(educationModule);
-      setDocument(normalizeEducationDocument(educationModule.draft_document));
-      setSlug(educationModule.slug);
-      toastSuccess(t('moduleSaved'));
+      if (isCreating) {
+        const educationModule = await props.createModule({
+          slug: finalSlug,
+          document: normalizedDoc,
+        });
+        setIsCreating(false);
+        setSelected(educationModule);
+        setDocument(normalizeEducationDocument(educationModule.draft_document));
+        setSlug(educationModule.slug);
+        toastSuccess(t('moduleCreated'));
+        router.replace(`/admin/content/${educationModule.id}?lang=${locale}`);
+      } else if (selected) {
+        const educationModule = await props.saveModule(
+          selected,
+          finalSlug,
+          normalizedDoc
+        );
+        setSelected(educationModule);
+        setDocument(normalizeEducationDocument(educationModule.draft_document));
+        setSlug(educationModule.slug);
+        toastSuccess(t('moduleSaved'));
+      }
     } catch (error) {
       toastError(error, t('moduleSaveError'));
     } finally {
       setBusy(false);
     }
   };
+
   const transition = async (
     action: 'submit-review' | 'publish' | 'archive'
   ) => {
-    if (!selected) return;
-
     if (action === 'publish' && document) {
       const errors = validateAllEducationDraft(slug, document);
       setFieldErrors(errors);
@@ -742,29 +858,54 @@ export function ContentTab(props: ContentTabProps) {
     setBusy(true);
     try {
       let currentSelected = selected;
-      if (action === 'publish' && document) {
+      if (isCreating && document) {
+        const finalSlug =
+          slug.trim() ||
+          slugify(
+            document.translations.id.title ||
+              document.translations.en.title ||
+              'modul-edukasi'
+          );
         const normalizedDoc = normalizeEducationDocument(document);
+        currentSelected = await props.createModule({
+          slug: finalSlug,
+          document: normalizedDoc,
+        });
+        setIsCreating(false);
+        setSelected(currentSelected);
+      } else if (action === 'publish' && document && selected) {
+        const normalizedDoc = normalizeEducationDocument(document);
+        const finalSlug =
+          slug.trim() ||
+          slugify(
+            document.translations.id.title ||
+              document.translations.en.title ||
+              'modul-edukasi'
+          );
         currentSelected = await props.saveModule(
           selected,
-          slug,
+          finalSlug,
           normalizedDoc
         );
         setSelected(currentSelected);
       }
+      if (!currentSelected) return;
       const educationModule = await props.transitionModule(
         currentSelected.id,
         action
       );
       setSelected(educationModule);
       setDocument(normalizeEducationDocument(educationModule.draft_document));
+      setSlug(educationModule.slug);
+      if (isCreating) {
+        router.replace(`/admin/content/${educationModule.id}?lang=${locale}`);
+      }
       toastSuccess(
-        t(
-          action === 'publish'
-            ? 'modulePublished'
-            : action === 'archive'
-              ? 'moduleArchived'
-              : 'moduleSubmitted'
-        )
+        action === 'publish'
+          ? t('modulePublished')
+          : action === 'archive'
+            ? t('moduleArchived')
+            : t('moduleSubmitted')
       );
     } catch (error) {
       toastError(error, t('moduleTransitionError'));
@@ -909,14 +1050,14 @@ export function ContentTab(props: ContentTabProps) {
       }
     };
 
-  if (moduleID && selected?.id !== moduleID)
+  if (moduleID && moduleID !== 'new' && selected?.id !== moduleID)
     return (
       <div className="border-border bg-card flex min-h-72 items-center justify-center rounded-2xl border">
         <p className="text-muted-foreground text-sm">{t('loading')}</p>
       </div>
     );
 
-  if (!selected || !document)
+  if (!isCreating && (!selected || !document))
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between pb-1">
@@ -926,7 +1067,7 @@ export function ContentTab(props: ContentTabProps) {
               {t('contentDescription')}
             </p>
           </div>
-          <Button size="sm" onClick={() => router.push('/admin/content/new')}>
+          <Button size="sm" onClick={startCreate}>
             <Plus className="size-4" />
             {t('newModule')}
           </Button>
@@ -990,14 +1131,23 @@ export function ContentTab(props: ContentTabProps) {
               );
             })
           ) : (
-            <p className="border-border text-muted-foreground col-span-full rounded-2xl border border-dashed p-10 text-center text-sm">
-              {t('noModules')}
-            </p>
+            <div className="border-border bg-card shadow-soft col-span-full flex flex-col items-center justify-center gap-3.5 rounded-2xl border py-10 sm:py-14 px-6 text-center">
+              <span className="bg-navy/5 text-navy flex size-12 items-center justify-center rounded-2xl ring-1 ring-navy/10">
+                <BookOpen className="size-6" aria-hidden="true" />
+              </span>
+              <div className="space-y-1.5 max-w-md mx-auto text-center">
+                <p className="text-navy text-sm font-bold text-center">{t('noModules')}</p>
+                <p className="text-muted-foreground text-xs leading-relaxed text-center">
+                  {t('noModulesDescription')}
+                </p>
+              </div>
+            </div>
           )}
         </div>
       </div>
     );
 
+  if (!document) return null;
   const translation = document.translations[locale];
   return (
     <div className="space-y-5">
@@ -1017,6 +1167,7 @@ export function ContentTab(props: ContentTabProps) {
           <button
             type="button"
             onClick={() => {
+              setIsCreating(false);
               router.push('/admin/content');
             }}
             className="hover:bg-muted flex size-10 items-center justify-center rounded-xl"
@@ -1027,24 +1178,38 @@ export function ContentTab(props: ContentTabProps) {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-navy font-extrabold">
-                {translation.title || slug}
+                {translation.title || slug || (isCreating ? t('newModule') : '')}
               </h2>
-              <AdminStatusBadge status={selected.status} />
+              {isCreating ? (
+                <span className="bg-navy/10 text-navy rounded-full px-2 py-0.5 text-[0.6875rem] font-bold">
+                  Draf Baru
+                </span>
+              ) : selected ? (
+                <AdminStatusBadge status={selected.status} />
+              ) : null}
             </div>
             <p className="text-muted-foreground text-xs">
-              {t('draftRevision', { revision: selected.draft_revision })}
+              {isCreating ? (
+                <span className="font-mono text-[0.6875rem] text-muted-foreground">
+                  (belum disimpan)
+                </span>
+              ) : selected ? (
+                t('draftRevision', { revision: selected.draft_revision })
+              ) : null}
             </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            disabled={busy}
-            onClick={() => void openHistory()}
-          >
-            <History className="size-4" />
-            {t('revisionHistory')}
-          </Button>
+          {!isCreating && selected ? (
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => void openHistory()}
+            >
+              <History className="size-4" />
+              {t('revisionHistory')}
+            </Button>
+          ) : null}
           <Button
             variant="outline"
             disabled={busy}
@@ -1060,7 +1225,7 @@ export function ContentTab(props: ContentTabProps) {
             <Upload className="size-4" />
             {t('publish')}
           </Button>
-          {selected.status === 'published' ? (
+          {!isCreating && selected?.status === 'published' ? (
             <Button
               variant="outline"
               disabled={busy}
@@ -1157,6 +1322,11 @@ export function ContentTab(props: ContentTabProps) {
         <TranslateButton
           sourceLang={locale === 'en' ? 'id' : 'en'}
           targetLang={locale === 'en' ? 'en' : 'id'}
+          customLabel={
+            locale === 'en'
+              ? 'Terjemahkan ID ➔ EN'
+              : 'Terjemahkan EN ➔ ID'
+          }
           sourceTexts={collectDocTexts(document, locale === 'en' ? 'id' : 'en')}
           onTranslated={(translations) => {
             mutate((doc) => {
@@ -1740,14 +1910,48 @@ export function ContentTab(props: ContentTabProps) {
                 id={`field-section-${sectionIndex}-content`}
                 className="mt-4 flex flex-col gap-1.5"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-navy text-xs font-bold">
                     {t('sectionContent')}
                     <RequiredMark />
                   </span>
-                  <span className="text-muted-foreground text-[0.6875rem]">
-                    {t('sectionContentHelp')}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <TranslateButton
+                      sourceLang={locale === 'en' ? 'id' : 'en'}
+                      targetLang={locale === 'en' ? 'en' : 'id'}
+                      customLabel={
+                        locale === 'en'
+                          ? 'Terjemahkan ID ➔ EN'
+                          : 'Terjemahkan EN ➔ ID'
+                      }
+                      sourceTexts={collectRichTextStrings(
+                        section.translations[locale === 'en' ? 'id' : 'en']?.content
+                      )}
+                      onTranslated={(translations) => {
+                        mutate((draft) => {
+                          let idx = 0;
+                          const next = () => translations[idx++] ?? '';
+                          const sourceContent =
+                            draft.sections[sectionIndex].translations[
+                              locale === 'en' ? 'id' : 'en'
+                            ]?.content;
+                          draft.sections[sectionIndex].translations[
+                            locale
+                          ].content = cloneAndTranslateRichText(
+                            sourceContent,
+                            next
+                          );
+                        });
+                        clearFieldError(
+                          `section_${sectionIndex}_content_${locale}`
+                        );
+                      }}
+                      className="h-7 gap-1 px-2.5 text-[0.7rem]"
+                    />
+                    <span className="text-muted-foreground text-[0.6875rem]">
+                      {t('sectionContentHelp')}
+                    </span>
+                  </div>
                 </div>
                 <div
                   className={cn(

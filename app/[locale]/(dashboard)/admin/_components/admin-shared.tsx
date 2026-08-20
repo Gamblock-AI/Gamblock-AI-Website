@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { useTranslations } from 'next-intl';
+import { OptionalMark, RequiredMark } from '@/components/common/form-field';
+import { cn } from '@/lib/utils';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
@@ -31,8 +34,6 @@ export function AdminSectionHeader({
     </div>
   );
 }
-
-import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 
 export function AdminFormField({
   label,
@@ -79,17 +80,37 @@ export function AdminTableShell({ children }: { children: ReactNode }) {
 export function AdminEmptyTable({
   colSpan,
   text,
+  description,
+  icon: Icon,
+  className,
 }: {
   colSpan: number;
   text: string;
+  description?: string;
+  icon?: LucideIcon;
+  className?: string;
 }) {
   return (
-    <TableRow>
+    <TableRow className="hover:bg-transparent">
       <TableCell
         colSpan={colSpan}
-        className="text-muted-foreground h-28 text-center"
+        className={cn('!p-0 text-center select-none whitespace-normal', className)}
       >
-        {text}
+        <div className="flex flex-col items-center justify-center gap-3.5 py-10 sm:py-14 px-4 w-full text-center">
+          {Icon ? (
+            <span className="bg-navy/5 text-navy flex size-12 items-center justify-center rounded-2xl ring-1 ring-navy/10">
+              <Icon className="size-6" aria-hidden="true" />
+            </span>
+          ) : null}
+          <div className="space-y-1.5 max-w-md mx-auto text-center">
+            <p className="text-navy text-sm font-bold text-center">{text}</p>
+            {description ? (
+              <p className="text-muted-foreground text-xs leading-relaxed text-center">
+                {description}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </TableCell>
     </TableRow>
   );

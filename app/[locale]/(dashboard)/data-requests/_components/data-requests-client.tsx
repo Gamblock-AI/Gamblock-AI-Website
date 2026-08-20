@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { CircleAlert, Database } from 'lucide-react';
+import { Database } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
-  DashboardNotice,
   DashboardPage,
   DashboardPageHeader,
 } from '@/components/dashboard/dashboard-page';
@@ -60,36 +59,32 @@ export function DataRequestsClient() {
         title={t('title')}
         description={t('description')}
       />
-      <DashboardNotice
-        icon={CircleAlert}
-        title={t('localDataTitle')}
-        tone="navy"
-      >
-        {t('localDataBody')}
-      </DashboardNotice>
-      <DataRequestActions
-        submitting={submitting}
-        onExport={() => void submitRequest('export')}
-        onDelete={() => setDeleteOpen(true)}
-        allowDelete={canDelete}
-        activeExport={activeExport}
-        activeDeletion={activeDeletion}
-      />
-      <DataRequestHistory
-        requests={requests}
-        loading={loading}
-        error={error}
-        onRetry={() => void refetch()}
-        onCreateExport={() => void submitRequest('export')}
-        submittingExport={submitting === 'export'}
-        downloadingId={downloadingId}
-        activeExport={activeExport}
-        onDownload={(id) =>
-          void downloadExport(id).catch((downloadError) =>
-            toastError(downloadError, t('downloadError'))
-          )
-        }
-      />
+      <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
+        <DataRequestActions
+          submitting={submitting}
+          onExport={() => void submitRequest('export')}
+          onDelete={() => setDeleteOpen(true)}
+          allowDelete={canDelete}
+          activeExport={activeExport}
+          activeDeletion={activeDeletion}
+        />
+        <DataRequestHistory
+          requests={requests}
+          loading={loading}
+          error={error}
+          onRetry={() => void refetch()}
+          onCreateExport={() => void submitRequest('export')}
+          submittingExport={submitting === 'export'}
+          downloadingId={downloadingId}
+          activeExport={activeExport}
+          className="flex h-full flex-col"
+          onDownload={(id) =>
+            void downloadExport(id).catch((downloadError) =>
+              toastError(downloadError, t('downloadError'))
+            )
+          }
+        />
+      </div>
       {canDelete ? (
         <DeleteDataDialog
           open={deleteOpen}

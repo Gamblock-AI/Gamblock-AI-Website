@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminContentCreate } from '../../_components/content-create';
+import { AdminAreaClient } from '../../_components/admin-area-client';
 
 export default function AdminContentCreatePage() {
-  return <AdminContentCreate />;
+  return <AdminAreaClient area="content" moduleID="new" />;
 }
