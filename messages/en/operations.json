@@ -127,6 +127,7 @@
     "reviewRequest": "Review request",
     "approveAndIssue": "Approve & issue",
     "noEmergencyRequests": "There are no emergency access requests awaiting approval.",
+    "noEmergencyRequestsBody": "New requests from users requiring device recovery will appear here.",
     "keyReady": "Emergency key ready",
     "keyReadyBody": "Copy it now. This value is shown only after approval and is valid for one use within 24 hours.",
     "close": "Close",

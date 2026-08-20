@@ -127,6 +127,7 @@
     "reviewRequest": "Tinjau permintaan",
     "approveAndIssue": "Setujui & terbitkan",
     "noEmergencyRequests": "Belum ada permintaan akses darurat yang menunggu persetujuan.",
+    "noEmergencyRequestsBody": "Permintaan baru dari pengguna yang memerlukan pemulihan perangkat akan muncul di sini.",
     "keyReady": "Kunci darurat siap",
     "keyReadyBody": "Salin sekarang. Nilai ini hanya ditampilkan setelah persetujuan dan berlaku 24 jam untuk satu penggunaan.",
     "close": "Tutup",

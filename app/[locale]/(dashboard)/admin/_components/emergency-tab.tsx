@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock3, UserRoundCheck } from 'lucide-react';
+import { Clock3, KeyRound, UserRoundCheck } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -58,13 +58,10 @@ export function EmergencyTab({
           onClose={clearEmergencyKey}
         />
       ) : null}
-      <div className="space-y-3">
-        {requests.length === 0 ? (
-          <Card className="text-muted-foreground p-6 text-center text-sm">
-            {t('noEmergencyRequests')}
-          </Card>
-        ) : (
-          requests.map((request) => (
+
+      {requests.length > 0 ? (
+        <div className="space-y-3">
+          {requests.map((request) => (
             <EmergencyRequestCard
               key={request.id}
               request={request}
@@ -72,9 +69,23 @@ export function EmergencyTab({
               keyLoading={keyLoading}
               onApprove={() => void approve(request.id)}
             />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : !emergencyKey ? (
+        <Card className="border-border/80 bg-muted/10 flex min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-8 text-center">
+          <div className="bg-navy/5 text-navy flex size-12 items-center justify-center rounded-2xl">
+            <KeyRound className="size-6" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-navy text-sm font-semibold">
+              {t('noEmergencyRequests')}
+            </p>
+            <p className="text-muted-foreground max-w-sm text-xs">
+              {t('noEmergencyRequestsBody')}
+            </p>
+          </div>
+        </Card>
+      ) : null}
     </div>
   );
 }
