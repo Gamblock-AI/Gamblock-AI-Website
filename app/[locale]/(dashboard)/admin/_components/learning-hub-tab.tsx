@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Archive,
@@ -9,12 +9,14 @@ import {
   GraduationCap,
   History,
   ImageIcon,
+  Layers,
+  Pencil,
   Plus,
   Save,
   Send,
   Trash2,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -397,13 +399,15 @@ export function LearningHubTab({
   ) => Promise<{ id: string }>;
 }) {
   const t = useTranslations('adminPage');
+  const appLocale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const sectionParam = searchParams.get('section');
   const section = sectionParam === 'taxonomy' ? 'taxonomy' : 'items';
   const langParam = searchParams.get('lang');
-  const locale: 'id' | 'en' = langParam === 'en' ? 'en' : 'id';
+  const isEn = appLocale === 'en' || langParam === 'en';
+  const locale: 'id' | 'en' = isEn ? 'en' : 'id';
   const itemParam = searchParams.get('item') || searchParams.get('id');
   const [filter, setFilter] = useState('');
   const [prevItemParam, setPrevItemParam] = useState(itemParam);
@@ -437,14 +441,73 @@ export function LearningHubTab({
   const [newProgram, setNewProgram] = useState({
     slug: '',
     name: '',
+    name_id: '',
+    name_en: '',
     degree: 'S1',
     primary_cluster_slug: '',
     sort_order: 0,
   });
   const [editingCluster, setEditingCluster] = useState<Cluster | null>(null);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
-  const clusterEdits = useRef(new Map<string, Cluster>());
-  const programEdits = useRef(new Map<string, Program>());
+  const [clusterModalOpen, setClusterModalOpen] = useState(false);
+  const [programModalOpen, setProgramModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: 'cluster' | 'program';
+    id: string;
+    label: string;
+    relatedCount?: number;
+  } | null>(null);
+
+  const clusterMap = useMemo(() => {
+    const map = new Map<string, Cluster>();
+    for (const c of taxonomy?.clusters ?? []) {
+      map.set(c.slug, c);
+    }
+    return map;
+  }, [taxonomy?.clusters]);
+
+  const openCreateCluster = () => {
+    setEditingCluster(null);
+    setNewCluster({
+      slug: '',
+      title_id: '',
+      title_en: '',
+      description_id: '',
+      description_en: '',
+      sort_order: (taxonomy?.clusters?.length ?? 0) + 1,
+    });
+    setClusterModalOpen(true);
+  };
+
+  const openEditCluster = (cluster: Cluster) => {
+    setEditingCluster(cluster);
+    setClusterModalOpen(true);
+  };
+
+  const openCreateProgram = () => {
+    const firstActiveCluster = (taxonomy?.clusters ?? []).find((c) => c.active);
+    setEditingProgram(null);
+    setNewProgram({
+      slug: '',
+      name: '',
+      name_id: '',
+      name_en: '',
+      degree: 'S1',
+      primary_cluster_slug: firstActiveCluster?.slug ?? taxonomy?.clusters?.[0]?.slug ?? '',
+      sort_order: (taxonomy?.programs?.length ?? 0) + 1,
+    });
+    setProgramModalOpen(true);
+  };
+
+  const openEditProgram = (program: Program) => {
+    setEditingProgram({
+      ...program,
+      name_id: program.name_id || program.name,
+      name_en: program.name_en || program.name,
+    });
+    setProgramModalOpen(true);
+  };
 
   if (!isCreating && itemParam !== prevItemParam) {
     setPrevItemParam(itemParam);
@@ -525,7 +588,7 @@ export function LearningHubTab({
         ? d.document.programs
         : [];
       if (clusters.length === 0) {
-        errors.clusters = 'Minimal 1 cluster keilmuan wajib dipilih sebelum penerbitan/tinjauan.';
+        errors.clusters = 'Minimal 1 fakultas wajib dipilih sebelum penerbitan/tinjauan.';
       }
       if (programs.length === 0) {
         errors.programs = 'Minimal 1 program studi wajib dipilih sebelum penerbitan/tinjauan.';
@@ -734,30 +797,43 @@ export function LearningHubTab({
     }
   };
 
-  const createTaxonomy = async (kind: 'cluster' | 'program') => {
+  const handleSaveClusterModal = async () => {
+    const titleId = editingCluster ? editingCluster.title_id : newCluster.title_id;
+    const titleEn = editingCluster ? editingCluster.title_en : newCluster.title_en;
+    if (!titleId?.trim()) {
+      toastError('Judul fakultas (ID) wajib diisi');
+      return;
+    }
+    const slug = slugify(titleId || titleEn || 'fakultas');
+    if (!slug) {
+      toastError('Judul fakultas tidak valid');
+      return;
+    }
+
     setBusy(true);
     try {
-      if (kind === 'cluster') {
-        await createCluster(newCluster);
-        setNewCluster({
-          slug: '',
-          title_id: '',
-          title_en: '',
-          description_id: '',
-          description_en: '',
-          sort_order: 0,
+      if (editingCluster) {
+        await updateCluster(editingCluster.id, {
+          slug: editingCluster.slug || slug,
+          title_id: editingCluster.title_id.trim(),
+          title_en: (editingCluster.title_en || editingCluster.title_id).trim(),
+          description_id: editingCluster.description_id,
+          description_en: editingCluster.description_en,
+          sort_order: Number(editingCluster.sort_order) || 0,
+          active: editingCluster.active,
         });
       } else {
-        await createProgram(newProgram);
-        setNewProgram({
-          slug: '',
-          name: '',
-          degree: 'S1',
-          primary_cluster_slug: '',
-          sort_order: 0,
+        await createCluster({
+          ...newCluster,
+          slug,
+          title_id: newCluster.title_id.trim(),
+          title_en: (newCluster.title_en || newCluster.title_id).trim(),
+          sort_order: Number(newCluster.sort_order) || 0,
+          active: true,
         });
       }
       toastSuccess(t('learningHubTaxonomySaved'));
+      setClusterModalOpen(false);
     } catch (error) {
       toastError(error, t('learningHubTaxonomyError'));
     } finally {
@@ -765,20 +841,58 @@ export function LearningHubTab({
     }
   };
 
-  const saveCluster = async () => {
-    if (!editingCluster) return;
+  const handleSaveProgramModal = async () => {
+    const nameId = editingProgram
+      ? (editingProgram.name_id || editingProgram.name)
+      : (newProgram.name_id || newProgram.name);
+    const nameEn = editingProgram
+      ? (editingProgram.name_en || nameId)
+      : (newProgram.name_en || nameId);
+    if (!nameId?.trim()) {
+      toastError('Nama program studi (ID) wajib diisi');
+      return;
+    }
+    const primaryClusterSlug = editingProgram
+      ? editingProgram.primary_cluster_slug
+      : newProgram.primary_cluster_slug;
+    if (!primaryClusterSlug?.trim()) {
+      toastError('Silakan pilih fakultas induk');
+      return;
+    }
+    const slug = slugify(nameId || nameEn);
+    if (!slug) {
+      toastError('Nama program studi tidak valid');
+      return;
+    }
+
     setBusy(true);
     try {
-      await updateCluster(editingCluster.id, {
-        slug: editingCluster.slug,
-        title_id: editingCluster.title_id,
-        title_en: editingCluster.title_en,
-        description_id: editingCluster.description_id,
-        description_en: editingCluster.description_en,
-        sort_order: editingCluster.sort_order,
-        active: editingCluster.active,
-      });
+      if (editingProgram) {
+        await updateProgram(editingProgram.id, {
+          slug: editingProgram.slug || slug,
+          name: nameId.trim(),
+          name_id: nameId.trim(),
+          name_en: (nameEn || nameId).trim(),
+          degree: editingProgram.degree || 'S1',
+          primary_cluster_slug: primaryClusterSlug.trim(),
+          sort_order: Number(editingProgram.sort_order) || 0,
+          active: editingProgram.active,
+        });
+      } else {
+        await createProgram({
+          ...newProgram,
+          slug,
+          name: nameId.trim(),
+          name_id: nameId.trim(),
+          name_en: (nameEn || nameId).trim(),
+          degree: newProgram.degree || 'S1',
+          primary_cluster_slug: primaryClusterSlug.trim(),
+          sort_order: Number(newProgram.sort_order) || 0,
+          active: true,
+        });
+      }
       toastSuccess(t('learningHubTaxonomySaved'));
+      setProgramModalOpen(false);
     } catch (error) {
       toastError(error, t('learningHubTaxonomyError'));
     } finally {
@@ -786,19 +900,40 @@ export function LearningHubTab({
     }
   };
 
-  const saveProgram = async () => {
-    if (!editingProgram) return;
+  const handleDeleteCluster = (cluster: Cluster) => {
+    const activePrograms = (taxonomy?.programs ?? []).filter(
+      (p) => p.primary_cluster_slug === cluster.slug && p.active
+    );
+    setDeleteTarget({
+      type: 'cluster',
+      id: cluster.id,
+      label: cluster.title_id || cluster.title_en || cluster.slug,
+      relatedCount: activePrograms.length,
+    });
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteProgram = (program: Program) => {
+    setDeleteTarget({
+      type: 'program',
+      id: program.id,
+      label: program.name || program.slug,
+    });
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
     setBusy(true);
     try {
-      await updateProgram(editingProgram.id, {
-        slug: editingProgram.slug,
-        name: editingProgram.name,
-        degree: editingProgram.degree,
-        primary_cluster_slug: editingProgram.primary_cluster_slug,
-        sort_order: editingProgram.sort_order,
-        active: editingProgram.active,
-      });
+      if (deleteTarget.type === 'cluster') {
+        await deleteCluster(deleteTarget.id);
+      } else {
+        await deleteProgram(deleteTarget.id);
+      }
       toastSuccess(t('learningHubTaxonomySaved'));
+      setDeleteConfirmOpen(false);
+      setDeleteTarget(null);
     } catch (error) {
       toastError(error, t('learningHubTaxonomyError'));
     } finally {
@@ -1708,530 +1843,649 @@ export function LearningHubTab({
       </div>
       ) : (
       <div className="grid gap-5 lg:grid-cols-2">
-        <section className="border-border/80 bg-card rounded-2xl border p-5 shadow-2xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        {/* Left Column: Faculties (Fakultas) */}
+        <section className="border-border/80 bg-card rounded-2xl border p-5 shadow-2xs flex flex-col h-full">
+          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="bg-azure/80 text-navy ring-1 ring-navy/10 flex size-7 shrink-0 items-center justify-center rounded-lg shadow-2xs">
+                <Layers className="size-3.5" aria-hidden="true" />
+              </span>
               <h3 className="text-navy text-sm font-bold">{t('learningHubClusters')}</h3>
-              <span className="text-[0.6875rem] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60">
-                {taxonomy?.clusters?.length ?? 0} cluster
+              <span className="text-[0.6875rem] font-semibold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/60">
+                {taxonomy?.clusters?.length ?? 0} fakultas
               </span>
             </div>
-
-            <div className="mt-3 max-h-[360px] overflow-y-auto pr-1.5 space-y-2.5 min-h-0 focus:outline-none">
-              {(taxonomy?.clusters ?? []).map((cluster) => (
-                <div
-                  key={cluster.id}
-                  className="border-border/80 bg-muted/20 hover:bg-muted/35 hover:border-navy/20 grid gap-2.5 rounded-xl border p-3.5 shadow-2xs transition-all sm:grid-cols-[1fr_auto]"
-                >
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <input
-                      aria-label={`${cluster.slug} slug`}
-                      className={adminFieldClassName}
-                      placeholder="slug-klaster"
-                      defaultValue={cluster.slug}
-                      onChange={(event) =>
-                        clusterEdits.current.set(cluster.id, {
-                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                          slug: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label={`${cluster.slug} sort order`}
-                      className={adminFieldClassName}
-                      type="number"
-                      placeholder="0"
-                      defaultValue={cluster.sort_order}
-                      onChange={(event) =>
-                        clusterEdits.current.set(cluster.id, {
-                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                          sort_order: Number(event.target.value),
-                        })
-                      }
-                    />
-                    <input
-                      aria-label={`${cluster.slug} Indonesian title`}
-                      className={adminFieldClassName}
-                      placeholder="Judul klaster (ID)"
-                      defaultValue={cluster.title_id}
-                      onChange={(event) =>
-                        clusterEdits.current.set(cluster.id, {
-                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                          title_id: event.target.value,
-                          title: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label={`${cluster.slug} English title`}
-                      className={adminFieldClassName}
-                      placeholder="Cluster title (EN)"
-                      defaultValue={cluster.title_en}
-                      onChange={(event) =>
-                        clusterEdits.current.set(cluster.id, {
-                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                          title_en: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label={`${cluster.slug} Indonesian description`}
-                      className={adminFieldClassName}
-                      placeholder="Deskripsi klaster (ID)"
-                      defaultValue={cluster.description_id}
-                      onChange={(event) =>
-                        clusterEdits.current.set(cluster.id, {
-                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                          description_id: event.target.value,
-                          description: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label={`${cluster.slug} English description`}
-                      className={adminFieldClassName}
-                      placeholder="Cluster description (EN)"
-                      defaultValue={cluster.description_en}
-                      onChange={(event) =>
-                        clusterEdits.current.set(cluster.id, {
-                          ...(clusterEdits.current.get(cluster.id) ?? cluster),
-                          description_en: event.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center gap-1 sm:flex-col sm:justify-center">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const next =
-                          clusterEdits.current.get(cluster.id) ?? cluster;
-                        void updateCluster(cluster.id, {
-                          slug: next.slug,
-                          title_id: next.title_id,
-                          title_en: next.title_en,
-                          description_id: next.description_id,
-                          description_en: next.description_en,
-                          sort_order: next.sort_order,
-                          active: next.active,
-                        });
-                      }}
-                      className="hover:text-navy"
-                    >
-                      <Save className="size-4" />
-                    </Button>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => void deleteCluster(cluster.id)}
-                      className="hover:text-destructive text-muted-foreground"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <details className="border-border/80 bg-muted/15 mt-3.5 rounded-xl border p-3.5 transition-all">
-              <summary className="text-navy cursor-pointer text-xs font-bold uppercase tracking-wider">{t('learningHubClusterEditor')}</summary>
-              <div className="mt-3 space-y-3">
-                <NativeSelect
-                  value={editingCluster?.id ?? ''}
-                  onChange={(event) =>
-                    setEditingCluster(
-                      (taxonomy?.clusters ?? []).find(
-                        (cluster) => cluster.id === event.target.value
-                      ) ?? null
-                    )
-                  }
-                >
-                  <option value="">{t('learningHubSelectCluster')}</option>
-                  {(taxonomy?.clusters ?? []).map((cluster) => (
-                    <option key={cluster.id} value={cluster.id}>
-                      {cluster.title_id} ({cluster.slug})
-                    </option>
-                  ))}
-                </NativeSelect>
-                {editingCluster ? (
-                  <div className="grid gap-2.5 sm:grid-cols-2">
-                    <input
-                      aria-label="Cluster slug"
-                      className={adminFieldClassName}
-                      value={editingCluster.slug}
-                      onChange={(event) =>
-                        setEditingCluster({
-                          ...editingCluster,
-                          slug: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label="Cluster sort order"
-                      className={adminFieldClassName}
-                      type="number"
-                      value={editingCluster.sort_order}
-                      onChange={(event) =>
-                        setEditingCluster({
-                          ...editingCluster,
-                          sort_order: Number(event.target.value),
-                        })
-                      }
-                    />
-                    <input
-                      aria-label="Cluster Indonesian title"
-                      className={adminFieldClassName}
-                      value={editingCluster.title_id}
-                      onChange={(event) =>
-                        setEditingCluster({
-                          ...editingCluster,
-                          title_id: event.target.value,
-                          title: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label="Cluster English title"
-                      className={adminFieldClassName}
-                      value={editingCluster.title_en}
-                      onChange={(event) =>
-                        setEditingCluster({
-                          ...editingCluster,
-                          title_en: event.target.value,
-                        })
-                      }
-                    />
-                    <textarea
-                      aria-label="Cluster Indonesian description"
-                      className={`${adminFieldClassName} py-2`}
-                      rows={2}
-                      value={editingCluster.description_id}
-                      onChange={(event) =>
-                        setEditingCluster({
-                          ...editingCluster,
-                          description_id: event.target.value,
-                          description: event.target.value,
-                        })
-                      }
-                    />
-                    <textarea
-                      aria-label="Cluster English description"
-                      className={`${adminFieldClassName} py-2`}
-                      rows={2}
-                      value={editingCluster.description_en}
-                      onChange={(event) =>
-                        setEditingCluster({
-                          ...editingCluster,
-                          description_en: event.target.value,
-                        })
-                      }
-                    />
-                    <div className="flex items-center gap-2 sm:col-span-2">
-                      <TranslateButton
-                        sourceLang="id"
-                        targetLang="en"
-                        sourceTexts={[
-                          editingCluster.title_id,
-                          editingCluster.description_id,
-                        ]}
-                        onTranslated={([title, desc]) => {
-                          setEditingCluster({
-                            ...editingCluster,
-                            title_en: title,
-                            description_en: desc,
-                          });
-                        }}
-                      />
-                      <TranslateButton
-                        sourceLang="en"
-                        targetLang="id"
-                        sourceTexts={[
-                          editingCluster.title_en,
-                          editingCluster.description_en,
-                        ]}
-                        onTranslated={([title, desc]) => {
-                          setEditingCluster({
-                            ...editingCluster,
-                            title_id: title,
-                            description_id: desc,
-                          });
-                        }}
-                      />
-                    </div>
-                    <label className="text-muted-foreground flex items-center gap-2 text-xs">
-                      <input
-                        type="checkbox"
-                        checked={editingCluster.active}
-                        onChange={(event) =>
-                          setEditingCluster({
-                            ...editingCluster,
-                            active: event.target.checked,
-                          })
-                        }
-                      />{t('learningHubActiveInCatalog')}</label>
-                    <Button
-                      onClick={() => void saveCluster()}
-                      disabled={busy}
-                      className="rounded-xl font-bold"
-                    >
-                      <Save className="size-4" />
-                      {t('learningHubSave')}
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-            </details>
-          </div>
-
-          <div className="border-border/60 mt-4 pt-3.5 border-t grid gap-2 sm:grid-cols-2">
-            <input
-              className={adminFieldClassName}
-              placeholder="slug-klaster (mis. sains-data)"
-              value={newCluster.slug}
-              onChange={(event) =>
-                setNewCluster({ ...newCluster, slug: event.target.value })
-              }
-            />
-            <input
-              className={adminFieldClassName}
-              placeholder="Judul klaster ID (mis. Sains Data)"
-              value={newCluster.title_id}
-              onChange={(event) =>
-                setNewCluster({ ...newCluster, title_id: event.target.value })
-              }
-            />
-            <input
-              className={adminFieldClassName}
-              placeholder="Cluster title EN (e.g. Data Science)"
-              value={newCluster.title_en}
-              onChange={(event) =>
-                setNewCluster({ ...newCluster, title_en: event.target.value })
-              }
-            />
             <Button
-              variant="outline"
-              onClick={() => void createTaxonomy('cluster')}
-              disabled={busy}
-              className="rounded-xl font-medium"
+              size="sm"
+              onClick={openCreateCluster}
+              className="rounded-xl font-bold text-xs h-8 bg-navy text-white hover:bg-navy-light shadow-2xs"
             >
-              <Plus className="size-4" />
+              <Plus className="size-3.5 mr-1" />
               {t('learningHubAdd')}
             </Button>
+          </div>
+
+          <div className="mt-3.5 flex-1 max-h-[560px] overflow-y-auto pr-1 space-y-2.5 min-h-[140px] focus:outline-none">
+            {(taxonomy?.clusters ?? []).length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-border/80 bg-muted/15">
+                <Layers className="size-8 text-muted-foreground/40 mb-2" />
+                <p className="text-xs font-semibold text-muted-foreground">Belum ada fakultas</p>
+                <p className="text-[0.6875rem] text-muted-foreground/80 mt-0.5">Tambahkan fakultas pertama Anda.</p>
+              </div>
+            ) : (
+              (taxonomy?.clusters ?? []).map((cluster) => {
+                const connectedProgramsCount = (taxonomy?.programs ?? []).filter(
+                  (p) => p.primary_cluster_slug === cluster.slug
+                ).length;
+                const clusterTitle = isEn
+                  ? (cluster.title_en || cluster.title_id || 'Faculty')
+                  : (cluster.title_id || cluster.title_en || 'Fakultas');
+                const clusterDescription = isEn
+                  ? (cluster.description_en || cluster.description_id || '')
+                  : (cluster.description_id || cluster.description_en || '');
+
+                return (
+                  <div
+                    key={cluster.id}
+                    className="border-border/80 bg-card hover:border-navy/30 hover:shadow-xs group flex flex-col justify-between rounded-xl border p-3.5 shadow-2xs transition-all gap-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <h4 className="text-navy text-sm font-bold truncate">
+                          {clusterTitle}
+                        </h4>
+                        {clusterDescription ? (
+                          <p className="text-muted-foreground pt-0.5 text-xs line-clamp-2 leading-relaxed">
+                            {clusterDescription}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditCluster(cluster)}
+                          className="h-7 px-2 text-xs font-semibold rounded-lg hover:border-navy/30 hover:bg-navy/5 text-navy"
+                        >
+                          <Pencil className="size-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          onClick={() => void handleDeleteCluster(cluster)}
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5 font-medium text-[0.6875rem] text-navy/80 bg-muted/40 px-2 py-0.5 rounded-md border border-border/40">
+                        <GraduationCap className="size-3 text-navy/60 shrink-0" />
+                        {connectedProgramsCount} Program Studi
+                      </span>
+                      <span className="text-[0.6875rem] font-medium text-muted-foreground">
+                        Urutan #{cluster.sort_order}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
 
-        <section className="border-border/80 bg-card rounded-2xl border p-5 shadow-2xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        {/* Right Column: Programs (Program Studi) */}
+        <section className="border-border/80 bg-card rounded-2xl border p-5 shadow-2xs flex flex-col h-full">
+          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="bg-azure/80 text-navy ring-1 ring-navy/10 flex size-7 shrink-0 items-center justify-center rounded-lg shadow-2xs">
+                <GraduationCap className="size-3.5" aria-hidden="true" />
+              </span>
               <h3 className="text-navy text-sm font-bold">{t('learningHubPrograms')}</h3>
               <span className="text-[0.6875rem] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60">
-                {taxonomy?.programs ?? [] ? taxonomy?.programs?.length : 0} program
+                {taxonomy?.programs?.length ?? 0} program
               </span>
             </div>
-
-            <div className="mt-3 max-h-[360px] overflow-y-auto pr-1.5 space-y-2.5 min-h-0 focus:outline-none">
-              {(taxonomy?.programs ?? []).map((program) => (
-                <div
-                  key={program.id}
-                  className="border-border/80 bg-muted/20 hover:bg-muted/35 hover:border-navy/20 grid gap-2.5 rounded-xl border p-3.5 shadow-2xs transition-all sm:grid-cols-[1fr_1fr_auto]"
-                >
-                  <input
-                    className={adminFieldClassName}
-                    placeholder="Nama program studi"
-                    defaultValue={program.name}
-                    onChange={(event) =>
-                      programEdits.current.set(program.id, {
-                        ...(programEdits.current.get(program.id) ?? program),
-                        name: event.target.value,
-                      })
-                    }
-                  />
-                  <span className="text-muted-foreground self-center font-mono text-xs">
-                    {program.slug}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const next =
-                          programEdits.current.get(program.id) ?? program;
-                        void updateProgram(program.id, {
-                          slug: next.slug,
-                          name: next.name,
-                          degree: next.degree,
-                          primary_cluster_slug: next.primary_cluster_slug,
-                          sort_order: next.sort_order,
-                          active: next.active,
-                        });
-                      }}
-                      className="hover:text-navy"
-                    >
-                      <Save className="size-4" />
-                    </Button>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => void deleteProgram(program.id)}
-                      className="hover:text-destructive text-muted-foreground"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <details className="border-border/80 bg-muted/15 mt-3.5 rounded-xl border p-3.5 transition-all">
-              <summary className="text-navy cursor-pointer text-xs font-bold uppercase tracking-wider">{t('learningHubProgramEditor')}</summary>
-              <div className="mt-3 space-y-3">
-                <NativeSelect
-                  value={editingProgram?.id ?? ''}
-                  onChange={(event) =>
-                    setEditingProgram(
-                      (taxonomy?.programs ?? []).find(
-                        (program) => program.id === event.target.value
-                      ) ?? null
-                    )
-                  }
-                >
-                  <option value="">{t('learningHubSelectProgram')}</option>
-                  {(taxonomy?.programs ?? []).map((program) => (
-                    <option key={program.id} value={program.id}>
-                      {program.name} ({program.slug})
-                    </option>
-                  ))}
-                </NativeSelect>
-                {editingProgram ? (
-                  <div className="grid gap-2.5 sm:grid-cols-2">
-                    <input
-                      aria-label="Program slug"
-                      className={adminFieldClassName}
-                      placeholder="s1-informatika"
-                      value={editingProgram.slug}
-                      onChange={(event) =>
-                        setEditingProgram({
-                          ...editingProgram,
-                          slug: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label="Program name"
-                      className={adminFieldClassName}
-                      placeholder="Nama program studi (mis. S1 Informatika)"
-                      value={editingProgram.name}
-                      onChange={(event) =>
-                        setEditingProgram({
-                          ...editingProgram,
-                          name: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label="Program degree"
-                      className={adminFieldClassName}
-                      placeholder="Jenjang (mis. S1 / D3 / S2)"
-                      value={editingProgram.degree}
-                      onChange={(event) =>
-                        setEditingProgram({
-                          ...editingProgram,
-                          degree: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label="Primary cluster slug"
-                      className={adminFieldClassName}
-                      placeholder="Slug klaster utama (mis. teknologi-informasi)"
-                      value={editingProgram.primary_cluster_slug}
-                      onChange={(event) =>
-                        setEditingProgram({
-                          ...editingProgram,
-                          primary_cluster_slug: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label="Program sort order"
-                      className={adminFieldClassName}
-                      type="number"
-                      placeholder="0"
-                      value={editingProgram.sort_order}
-                      onChange={(event) =>
-                        setEditingProgram({
-                          ...editingProgram,
-                          sort_order: Number(event.target.value),
-                        })
-                      }
-                    />
-                    <label className="text-muted-foreground flex items-center gap-2 text-xs">
-                      <input
-                        type="checkbox"
-                        checked={editingProgram.active}
-                        onChange={(event) =>
-                          setEditingProgram({
-                            ...editingProgram,
-                            active: event.target.checked,
-                          })
-                        }
-                      />{t('learningHubActiveInCatalog')}</label>
-                    <Button
-                      onClick={() => void saveProgram()}
-                      disabled={busy}
-                      className="rounded-xl font-bold"
-                    >
-                      <Save className="size-4" />
-                      {t('learningHubSave')}
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-            </details>
-          </div>
-
-          <div className="border-border/60 mt-4 pt-3.5 border-t grid gap-2 sm:grid-cols-2">
-            <input
-              className={adminFieldClassName}
-              placeholder="slug-program (mis. s1-informatika)"
-              value={newProgram.slug}
-              onChange={(event) =>
-                setNewProgram({ ...newProgram, slug: event.target.value })
-              }
-            />
-            <input
-              className={adminFieldClassName}
-              placeholder="Nama program studi (mis. S1 Informatika)"
-              value={newProgram.name}
-              onChange={(event) =>
-                setNewProgram({ ...newProgram, name: event.target.value })
-              }
-            />
-            <input
-              className={adminFieldClassName}
-              placeholder="Cluster slug (mis. teknologi-informasi)"
-              value={newProgram.primary_cluster_slug}
-              onChange={(event) =>
-                setNewProgram({
-                  ...newProgram,
-                  primary_cluster_slug: event.target.value,
-                })
-              }
-            />
             <Button
-              variant="outline"
-              onClick={() => void createTaxonomy('program')}
-              disabled={busy}
-              className="rounded-xl font-medium"
+              size="sm"
+              onClick={openCreateProgram}
+              className="rounded-xl font-bold text-xs h-8 bg-navy text-white hover:bg-navy-light shadow-2xs"
             >
-              <Plus className="size-4" />
+              <Plus className="size-3.5 mr-1" />
               {t('learningHubAdd')}
             </Button>
+          </div>
+
+          <div className="mt-3.5 flex-1 max-h-[560px] overflow-y-auto pr-1 space-y-2.5 min-h-[140px] focus:outline-none">
+            {(taxonomy?.programs ?? []).length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-border/80 bg-muted/15">
+                <GraduationCap className="size-8 text-muted-foreground/40 mb-2" />
+                <p className="text-xs font-semibold text-muted-foreground">Belum ada program studi</p>
+                <p className="text-[0.6875rem] text-muted-foreground/80 mt-0.5">Tambahkan program studi pertama Anda.</p>
+              </div>
+            ) : (
+              (taxonomy?.programs ?? []).map((program) => {
+                const parentCluster = clusterMap.get(program.primary_cluster_slug);
+                const programName = isEn
+                  ? (program.name_en || program.name_id || program.name)
+                  : (program.name_id || program.name_en || program.name);
+                const facultyName = parentCluster
+                  ? (isEn
+                      ? (parentCluster.title_en || parentCluster.title_id || parentCluster.slug)
+                      : (parentCluster.title_id || parentCluster.title_en || parentCluster.slug))
+                  : program.primary_cluster_slug || (isEn ? 'Unassigned' : 'Belum dihubungkan');
+
+                return (
+                  <div
+                    key={program.id}
+                    className="border-border/80 bg-card hover:border-navy/30 hover:shadow-xs group flex flex-col justify-between rounded-xl border p-3.5 shadow-2xs transition-all gap-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="text-navy text-sm font-bold truncate">
+                            {programName}
+                          </h4>
+                          {program.degree ? (
+                            <span className="text-[0.6875rem] font-bold text-navy bg-azure/60 border border-navy/15 px-2 py-0.5 rounded-md shadow-2xs">
+                              Jenjang {program.degree}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Layers className="size-3 text-navy/70 shrink-0" />
+                          <span className="font-semibold text-navy/80">Fakultas:</span>
+                          <span className="text-foreground font-medium truncate">
+                            {facultyName}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditProgram(program)}
+                          className="h-7 px-2 text-xs font-semibold rounded-lg hover:border-navy/30 hover:bg-navy/5 text-navy"
+                        >
+                          <Pencil className="size-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          onClick={() => void handleDeleteProgram(program)}
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                      <span className="text-[0.6875rem] font-medium text-muted-foreground">
+                        Urutan #{program.sort_order}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
       </div>
       )}
+
+      {/* Cluster Modal Dialog */}
+      <Dialog open={clusterModalOpen} onOpenChange={setClusterModalOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingCluster ? `Edit Fakultas: ${editingCluster.title_id || 'Fakultas'}` : 'Tambah Fakultas Baru'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingCluster ? 'Perbarui informasi dan deskripsi fakultas.' : 'Buat fakultas baru untuk pengelompokan program studi dan kurikulum.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3.5 py-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-navy text-xs font-bold block mb-1">
+                  Nama Fakultas (ID) <span className="text-crimson">*</span>
+                </label>
+                <input
+                  className={adminFieldClassName}
+                  placeholder="mis. Fakultas Sains & Teknologi"
+                  value={editingCluster ? editingCluster.title_id : newCluster.title_id}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (editingCluster) {
+                      setEditingCluster({ ...editingCluster, title_id: val, title: val });
+                    } else {
+                      setNewCluster({ ...newCluster, title_id: val });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-navy text-xs font-bold block mb-1">
+                  Nama Fakultas (EN)
+                </label>
+                <input
+                  className={adminFieldClassName}
+                  placeholder="e.g. Faculty of Science & Technology"
+                  value={editingCluster ? editingCluster.title_en : newCluster.title_en}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (editingCluster) {
+                      setEditingCluster({ ...editingCluster, title_en: val });
+                    } else {
+                      setNewCluster({ ...newCluster, title_en: val });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-navy text-xs font-bold block mb-1">
+                  Deskripsi (ID)
+                </label>
+                <textarea
+                  className={`${adminFieldClassName} py-2`}
+                  rows={2}
+                  placeholder="Deskripsi singkat fakultas..."
+                  value={editingCluster ? editingCluster.description_id : newCluster.description_id}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (editingCluster) {
+                      setEditingCluster({ ...editingCluster, description_id: val, description: val });
+                    } else {
+                      setNewCluster({ ...newCluster, description_id: val });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-navy text-xs font-bold block mb-1">
+                  Deskripsi (EN)
+                </label>
+                <textarea
+                  className={`${adminFieldClassName} py-2`}
+                  rows={2}
+                  placeholder="Short description of the faculty..."
+                  value={editingCluster ? editingCluster.description_en : newCluster.description_en}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (editingCluster) {
+                      setEditingCluster({ ...editingCluster, description_en: val });
+                    } else {
+                      setNewCluster({ ...newCluster, description_en: val });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <TranslateButton
+                sourceLang="id"
+                targetLang="en"
+                customLabel="Terjemahkan ID ➔ EN"
+                sourceTexts={[
+                  editingCluster ? editingCluster.title_id : newCluster.title_id,
+                  editingCluster ? editingCluster.description_id : newCluster.description_id,
+                ]}
+                onTranslated={([title, desc]) => {
+                  if (editingCluster) {
+                    setEditingCluster({ ...editingCluster, title_en: title, description_en: desc });
+                  } else {
+                    setNewCluster({ ...newCluster, title_en: title, description_en: desc });
+                  }
+                }}
+              />
+              <TranslateButton
+                sourceLang="en"
+                targetLang="id"
+                customLabel="Terjemahkan EN ➔ ID"
+                sourceTexts={[
+                  editingCluster ? editingCluster.title_en : newCluster.title_en,
+                  editingCluster ? editingCluster.description_en : newCluster.description_en,
+                ]}
+                onTranslated={([title, desc]) => {
+                  if (editingCluster) {
+                    setEditingCluster({ ...editingCluster, title_id: title, title: title, description_id: desc, description: desc });
+                  } else {
+                    setNewCluster({ ...newCluster, title_id: title, description_id: desc });
+                  }
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="text-navy text-xs font-bold block mb-1">
+                Urutan Tampilan
+              </label>
+              <input
+                type="number"
+                className={adminFieldClassName}
+                placeholder="0"
+                value={editingCluster ? editingCluster.sort_order : newCluster.sort_order}
+                onChange={(e) => {
+                  const sort_order = Number(e.target.value);
+                  if (editingCluster) {
+                    setEditingCluster({ ...editingCluster, sort_order });
+                  } else {
+                    setNewCluster({ ...newCluster, sort_order });
+                  }
+                }}
+              />
+            </div>
+
+            {editingCluster ? (
+              <label className="text-navy flex items-center gap-2 text-xs font-medium cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  className="rounded border-border/80"
+                  checked={editingCluster.active}
+                  onChange={(e) =>
+                    setEditingCluster({ ...editingCluster, active: e.target.checked })
+                  }
+                />
+                {t('learningHubActiveInCatalog')}
+              </label>
+            ) : null}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setClusterModalOpen(false)}
+              className="rounded-xl font-medium"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={() => void handleSaveClusterModal()}
+              disabled={busy}
+              className="rounded-xl font-bold bg-navy text-white hover:bg-navy-light shadow-2xs"
+            >
+              <Save className="size-4 mr-1.5" />
+              {editingCluster ? t('learningHubSave') : 'Tambah Fakultas'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Program Modal Dialog */}
+      <Dialog open={programModalOpen} onOpenChange={setProgramModalOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingProgram ? `Edit Program Studi: ${editingProgram.name}` : 'Tambah Program Studi Baru'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingProgram ? 'Perbarui informasi program studi dan asosiasi fakultas.' : 'Buat program studi baru untuk target kurikulum dan rekomendasi materi.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3.5 py-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-navy text-xs font-bold block mb-1">
+                  Nama Program Studi (ID) <span className="text-crimson">*</span>
+                </label>
+                <input
+                  className={adminFieldClassName}
+                  placeholder="mis. Informatika"
+                  value={editingProgram ? (editingProgram.name_id ?? editingProgram.name) : newProgram.name_id}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (editingProgram) {
+                      setEditingProgram({ ...editingProgram, name_id: val, name: val });
+                    } else {
+                      setNewProgram({ ...newProgram, name_id: val, name: val });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-navy text-xs font-bold block mb-1">
+                  Nama Program Studi (EN)
+                </label>
+                <input
+                  className={adminFieldClassName}
+                  placeholder="e.g. Informatics"
+                  value={editingProgram ? (editingProgram.name_en ?? editingProgram.name) : newProgram.name_en}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (editingProgram) {
+                      setEditingProgram({ ...editingProgram, name_en: val });
+                    } else {
+                      setNewProgram({ ...newProgram, name_en: val });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <TranslateButton
+                sourceLang="id"
+                targetLang="en"
+                customLabel="Terjemahkan ID ➔ EN"
+                sourceTexts={[
+                  editingProgram ? (editingProgram.name_id || editingProgram.name) : newProgram.name_id,
+                ]}
+                onTranslated={([name]) => {
+                  if (editingProgram) {
+                    setEditingProgram({ ...editingProgram, name_en: name });
+                  } else {
+                    setNewProgram({ ...newProgram, name_en: name });
+                  }
+                }}
+              />
+              <TranslateButton
+                sourceLang="en"
+                targetLang="id"
+                customLabel="Terjemahkan EN ➔ ID"
+                sourceTexts={[
+                  editingProgram ? (editingProgram.name_en || '') : newProgram.name_en,
+                ]}
+                onTranslated={([name]) => {
+                  if (editingProgram) {
+                    setEditingProgram({ ...editingProgram, name_id: name, name });
+                  } else {
+                    setNewProgram({ ...newProgram, name_id: name, name });
+                  }
+                }}
+              />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-navy text-xs font-bold block mb-1">
+                  Jenjang Pendidikan
+                </label>
+                <NativeSelect
+                  value={editingProgram ? editingProgram.degree : newProgram.degree}
+                  onChange={(e) => {
+                    const degree = e.target.value;
+                    if (editingProgram) {
+                      setEditingProgram({ ...editingProgram, degree });
+                    } else {
+                      setNewProgram({ ...newProgram, degree });
+                    }
+                  }}
+                >
+                  <option value="S1">S1 (Sarjana)</option>
+                  <option value="D3">D3 (Diploma 3)</option>
+                  <option value="D4">D4 (Sarjana Terapan)</option>
+                  <option value="S2">S2 (Magister)</option>
+                  <option value="S3">S3 (Doktor)</option>
+                  <option value="Profesi">Profesi / Spesialis</option>
+                </NativeSelect>
+              </div>
+              <div>
+                <label className="text-navy text-xs font-bold block mb-1">
+                  Fakultas Induk <span className="text-crimson">*</span>
+                </label>
+                <NativeSelect
+                  value={editingProgram ? editingProgram.primary_cluster_slug : newProgram.primary_cluster_slug}
+                  onChange={(e) => {
+                    const primary_cluster_slug = e.target.value;
+                    if (editingProgram) {
+                      setEditingProgram({ ...editingProgram, primary_cluster_slug });
+                    } else {
+                      setNewProgram({ ...newProgram, primary_cluster_slug });
+                    }
+                  }}
+                >
+                  <option value="">-- Pilih Fakultas Induk --</option>
+                  {(taxonomy?.clusters ?? []).filter((c) => c.active).length === 0 && (
+                    <option value="" disabled>
+                      Belum ada fakultas aktif — buat fakultas terlebih dahulu
+                    </option>
+                  )}
+                  {(taxonomy?.clusters ?? []).filter((c) => c.active).map((cluster) => {
+                    const label = isEn
+                      ? (cluster.title_en || cluster.title_id || cluster.slug)
+                      : (cluster.title_id || cluster.title_en || cluster.slug);
+                    return (
+                      <option key={cluster.id} value={cluster.slug}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </NativeSelect>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-navy text-xs font-bold block mb-1">
+                Urutan Tampilan
+              </label>
+              <input
+                type="number"
+                className={adminFieldClassName}
+                placeholder="0"
+                value={editingProgram ? editingProgram.sort_order : newProgram.sort_order}
+                onChange={(e) => {
+                  const sort_order = Number(e.target.value);
+                  if (editingProgram) {
+                    setEditingProgram({ ...editingProgram, sort_order });
+                  } else {
+                    setNewProgram({ ...newProgram, sort_order });
+                  }
+                }}
+              />
+            </div>
+
+            {editingProgram ? (
+              <label className="text-navy flex items-center gap-2 text-xs font-medium cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  className="rounded border-border/80"
+                  checked={editingProgram.active}
+                  onChange={(e) =>
+                    setEditingProgram({ ...editingProgram, active: e.target.checked })
+                  }
+                />
+                {t('learningHubActiveInCatalog')}
+              </label>
+            ) : null}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setProgramModalOpen(false)}
+              className="rounded-xl font-medium"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={() => void handleSaveProgramModal()}
+              disabled={busy}
+              className="rounded-xl font-bold bg-navy text-white hover:bg-navy-light shadow-2xs"
+            >
+              <Save className="size-4 mr-1.5" />
+              {editingProgram ? t('learningHubSave') : 'Tambah Program'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmOpen(false);
+            setDeleteTarget(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="size-4 shrink-0" />
+              {deleteTarget?.type === 'cluster'
+                ? 'Hapus Fakultas?'
+                : 'Hapus Program Studi?'}
+            </DialogTitle>
+            <DialogDescription>
+              {deleteTarget?.type === 'cluster' && (deleteTarget.relatedCount ?? 0) > 0
+                ? 'Fakultas ini masih memiliki program studi aktif dan tidak dapat dihapus.'
+                : `Anda akan menghapus ${deleteTarget?.type === 'cluster' ? 'fakultas' : 'program studi'} ini secara permanen. Tindakan ini tidak dapat dibatalkan.`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteTarget?.type === 'cluster' && (deleteTarget.relatedCount ?? 0) > 0 ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive font-medium">
+              Tidak dapat menghapus fakultas &quot;{deleteTarget.label}&quot; karena masih terhubung dengan{' '}
+              <strong>{deleteTarget.relatedCount} program studi aktif</strong>.
+              Hapus atau pindahkan program studi tersebut terlebih dahulu.
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 text-sm">
+              <span className="font-semibold text-foreground">
+                &quot;{deleteTarget?.label}&quot;
+              </span>
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteConfirmOpen(false);
+                setDeleteTarget(null);
+              }}
+              className="rounded-xl font-medium"
+            >
+              Batal
+            </Button>
+            {!(deleteTarget?.type === 'cluster' && (deleteTarget.relatedCount ?? 0) > 0) && (
+              <Button
+                onClick={() => void handleConfirmDelete()}
+                disabled={busy}
+                variant="destructive"
+                className="rounded-xl font-bold"
+              >
+                <Trash2 className="size-4 mr-1.5" />
+                Hapus Permanen
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
         <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-xl">

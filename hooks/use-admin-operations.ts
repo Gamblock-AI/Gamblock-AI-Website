@@ -160,6 +160,8 @@ export interface AdminLearningTaxonomy {
     institution_id: string;
     slug: string;
     name: string;
+    name_id?: string;
+    name_en?: string;
     degree: string;
     primary_cluster_slug: string;
     sort_order: number;
