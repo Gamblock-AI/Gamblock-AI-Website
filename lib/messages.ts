@@ -177,7 +177,8 @@ export const MESSAGES: Record<string, string> = {
 
   // quick approval
   token_required: 'Tautan persetujuan tidak lengkap.',
-  invalid_token: 'Tautan persetujuan tidak valid atau sudah kedaluwarsa.',
+  invalid_token:
+    'Sesi atau token tidak valid atau sudah kedaluwarsa. Silakan masuk kembali.',
   invalid_input: 'Pilihan persetujuan belum lengkap.',
   resolve_failed: 'Gagal memproses permohonan.',
 
@@ -303,7 +304,8 @@ const MESSAGES_EN: Record<string, string> = {
   group_code_required: 'Group code is required.',
   text_required: 'Reflection text is required.',
   token_required: 'The approval link is incomplete.',
-  invalid_token: 'The link or token is invalid or has expired.',
+  invalid_token:
+    'The session or token is invalid or has expired. Please sign in again.',
   invalid_input: 'The submitted choice is incomplete.',
   summary_required: 'A support request summary is required.',
   support_case_failed: 'The support request could not be sent.',

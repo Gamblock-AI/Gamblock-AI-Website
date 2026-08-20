@@ -199,6 +199,10 @@ async function performApiRequest<T>(
       ]),
       credentials: 'include',
     });
+    if (retriedResponse.status === 401) {
+      clearBrowserSession();
+      redirectToLogin();
+    }
     return await unwrap(retriedResponse);
   } catch (error) {
     clearBrowserSession();
