@@ -116,12 +116,10 @@ export function AdminAreaClient({
         />
       ) : area === 'emergency' ? (
         <EmergencyTab
-          userId={user.id}
           requests={operations.emergencyRequests}
           emergencyKey={operations.emergencyKey}
           keyLoading={operations.keyLoading}
           clearEmergencyKey={operations.clearEmergencyKey}
-          reviewEmergencyKey={operations.reviewEmergencyKey}
           approveEmergencyKey={operations.approveEmergencyKey}
         />
       ) : (

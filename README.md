@@ -268,7 +268,7 @@ partner decision and history surface. The unified `admin` operations panel
 provides separate Content, Learning Hub, Tickets, Emergency Access, and Platform
 destinations for revision/rollback authoring, claim-owned support replies,
 eligible data-request actions, direct three-role account provisioning, safe
-social links, audit history, and dual-control emergency access. Admins do not
+social links, audit history, and audited emergency access. Admins do not
 use the requester `/support` surface. Enabled non-null social links
 are rendered in the landing footer; empty settings produce no icon.
 

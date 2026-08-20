@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Clock3, UserRoundCheck } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { EmergencyKeyRequest } from '@/hooks/use-admin-operations';
@@ -9,22 +8,18 @@ import { toastError, toastSuccess } from '@/lib/feedback';
 import { EmergencyKeyCard } from './emergency-key-card';
 
 interface EmergencyTabProps {
-  userId?: string;
   requests: EmergencyKeyRequest[];
   emergencyKey: string | null;
   keyLoading: boolean;
   clearEmergencyKey: () => void;
-  reviewEmergencyKey: (requestId: string) => Promise<void>;
   approveEmergencyKey: (requestId: string) => Promise<string>;
 }
 
 export function EmergencyTab({
-  userId,
   requests,
   emergencyKey,
   keyLoading,
   clearEmergencyKey,
-  reviewEmergencyKey,
   approveEmergencyKey,
 }: EmergencyTabProps) {
   const t = useTranslations('adminPage');
@@ -36,15 +31,6 @@ export function EmergencyTab({
       await approveEmergencyKey(requestId);
       setKeyCopied(false);
       toastSuccess(t('requestApproved'));
-    } catch (error) {
-      toastError(error, t('keyError'));
-    }
-  };
-
-  const review = async (requestId: string) => {
-    try {
-      await reviewEmergencyKey(requestId);
-      toastSuccess(t('requestReviewed'));
     } catch (error) {
       toastError(error, t('keyError'));
     }
@@ -84,8 +70,6 @@ export function EmergencyTab({
               request={request}
               dateFormatter={dateFormatter}
               keyLoading={keyLoading}
-              currentUserId={userId}
-              onReview={() => void review(request.id)}
               onApprove={() => void approve(request.id)}
             />
           ))
@@ -99,8 +83,6 @@ interface EmergencyRequestCardProps {
   request: EmergencyKeyRequest;
   dateFormatter: Intl.DateTimeFormat;
   keyLoading: boolean;
-  currentUserId?: string;
-  onReview: () => void;
   onApprove: () => void;
 }
 
@@ -108,8 +90,6 @@ function EmergencyRequestCard({
   request,
   dateFormatter,
   keyLoading,
-  currentUserId,
-  onReview,
   onApprove,
 }: EmergencyRequestCardProps) {
   const t = useTranslations('adminPage');
@@ -138,17 +118,11 @@ function EmergencyRequestCard({
           </p>
         </div>
       </div>
-      {request.status === 'pending' ? (
-        <Button disabled={keyLoading} onClick={onReview}>
-          {t('reviewRequest')}
-        </Button>
-      ) : request.reviewed_by === currentUserId ? (
-        <Badge variant="secondary">{t('needsOtherAdmin')}</Badge>
-      ) : (
+      {request.status === 'pending' || request.status === 'reviewed' ? (
         <Button disabled={keyLoading} onClick={onApprove}>
           {t('approveAndIssue')}
         </Button>
-      )}
+      ) : null}
     </Card>
   );
 }
