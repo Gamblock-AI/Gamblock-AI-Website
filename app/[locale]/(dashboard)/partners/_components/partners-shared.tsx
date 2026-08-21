@@ -156,22 +156,31 @@ export function RelationshipStep({
   number,
   title,
   body,
+  icon: Icon,
 }: {
   number: number;
   title: string;
   body: string;
+  icon?: LucideIcon;
 }) {
   return (
-    <li className="flex gap-3">
-      <span className="bg-navy flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-        {number}
-      </span>
-      <span>
-        <span className="text-navy block text-sm font-bold">{title}</span>
-        <span className="text-muted-foreground mt-1 block text-sm leading-6">
+    <li className="border-border/70 bg-muted/15 hover:bg-muted/25 hover:border-navy/20 group flex flex-col justify-between rounded-xl border p-3.5 sm:p-4 transition-all duration-200">
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="bg-navy text-white flex size-6 items-center justify-center rounded-md text-[11px] font-black">
+            {number}
+          </span>
+          {Icon ? (
+            <span className="bg-azure/80 text-navy flex size-6 items-center justify-center rounded-md">
+              <Icon className="size-3" aria-hidden="true" />
+            </span>
+          ) : null}
+        </div>
+        <h4 className="text-navy mt-2.5 text-xs sm:text-sm font-bold tracking-tight">{title}</h4>
+        <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
           {body}
-        </span>
-      </span>
+        </p>
+      </div>
     </li>
   );
 }

@@ -254,7 +254,11 @@ export function PartnerAccountability({
                 );
               })
             ) : (
-              <EmptyLine title={t('noDecisions')} body={t('noDecisionsBody')} />
+              <EmptyLine
+                icon={ShieldCheck}
+                title={t('noDecisions')}
+                body={t('noDecisionsBody')}
+              />
             )}
           </div>
         </DashboardPanel>
@@ -369,7 +373,11 @@ export function PartnerAccountability({
                 );
               })
             ) : (
-              <EmptyLine title={t('noLeaves')} body={t('noLeavesBody')} />
+              <EmptyLine
+                icon={UserRoundCheck}
+                title={t('noLeaves')}
+                body={t('noLeavesBody')}
+              />
             )}
           </div>
         </DashboardPanel>

@@ -21,6 +21,7 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Pagination } from '@/components/dashboard/pagination';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Link, useRouter } from '@/i18n/routing';
 import { slugifyProvider } from '@/lib/skills/external-platforms';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
@@ -221,9 +222,12 @@ export function SkillsHubClient() {
             </Button>
           </div>
         ) : providers.length === 0 ? (
-          <p className="text-muted-foreground mt-2 rounded-2xl border border-dashed p-8 text-center text-sm">
-            {t('noProviders')}
-          </p>
+          <EmptyState
+            icon={GraduationCap}
+            title={t('noProvidersTitle')}
+            hint={t('noProvidersHint')}
+            className="py-10"
+          />
         ) : (
           <div>
             <div className="mb-6">

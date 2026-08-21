@@ -204,8 +204,8 @@ export function PartnerGroupsWorkspace({
             tone="sage"
             subtitle={
               activeMembers > 0
-                ? `${activeMembers} mahasiswa`
-                : 'Belum ada'
+                ? t('activeStudentsCount', { count: activeMembers })
+                : t('noneYet')
             }
           />
           <StatOverviewCard
@@ -213,11 +213,11 @@ export function PartnerGroupsWorkspace({
             label={t('pendingDecisionsLabel')}
             value={pendingDecisions}
             tone={pendingDecisions > 0 ? 'amber' : 'navy'}
-            subtitle={pendingDecisions > 0 ? undefined : 'Tidak ada antrean'}
+            subtitle={pendingDecisions > 0 ? undefined : t('noQueue')}
             badge={
               pendingDecisions > 0
                 ? {
-                    text: `${pendingDecisions} perlu tindakan`,
+                    text: t('actionRequiredCount', { count: pendingDecisions }),
                     tone: 'amber',
                   }
                 : undefined
@@ -228,11 +228,11 @@ export function PartnerGroupsWorkspace({
             label={t('pendingContactsLabel')}
             value={pendingContacts}
             tone={pendingContacts > 0 ? 'azure' : 'navy'}
-            subtitle={pendingContacts > 0 ? undefined : 'Tidak ada antrean'}
+            subtitle={pendingContacts > 0 ? undefined : t('noQueue')}
             badge={
               pendingContacts > 0
                 ? {
-                    text: `${pendingContacts} baru`,
+                    text: t('newCount', { count: pendingContacts }),
                     tone: 'navy',
                   }
                 : undefined
@@ -315,26 +315,26 @@ export function PartnerGroupsWorkspace({
       ) : null}
 
       {/* 2-Column Section: Buat Grup (Left) and Grup & Anggota (Right) */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(21rem,0.72fr)_minmax(0,1.28fr)] xl:items-start">
+      <div className="grid gap-6 xl:grid-cols-[minmax(21rem,0.72fr)_minmax(0,1.28fr)] xl:items-stretch">
         {/* 2. Buat Grup Card */}
         <DashboardPanel
           icon={UsersRound}
           title={t('createGroupTitle')}
           description={t('createGroupBody')}
           density="compact"
-          fullHeight={false}
+          fullHeight
           className="shadow-2xs"
         >
           <form
             onSubmit={(event) => void createGroup(event)}
-            className="flex flex-col gap-4"
+            className="flex flex-1 flex-col justify-between gap-4"
           >
             <div className="space-y-3.5">
               <div>
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="group-name"
-                    className="text-navy flex items-center text-xs font-bold uppercase tracking-wider"
+                    className="text-navy flex items-center text-xs font-bold sm:text-sm"
                   >
                     <span>{t('groupName')}</span>
                     <RequiredMark />
@@ -359,7 +359,7 @@ export function PartnerGroupsWorkspace({
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="group-description"
-                    className="text-navy flex items-center text-xs font-bold uppercase tracking-wider"
+                    className="text-navy flex items-center text-xs font-bold sm:text-sm"
                   >
                     <span>{t('groupDescription')}</span>
                     <OptionalMark />
@@ -377,17 +377,6 @@ export function PartnerGroupsWorkspace({
                   placeholder={t('groupDescriptionPlaceholder')}
                   className="border-input bg-background focus-visible:ring-navy/25 mt-1.5 resize-none rounded-xl text-sm transition-colors outline-none focus-visible:ring-2"
                 />
-              </div>
-
-              {/* Privacy & Security Tip Callout */}
-              <div className="border-border/70 bg-azure/20 flex items-start gap-2.5 rounded-xl border p-3">
-                <ShieldCheck
-                  className="text-navy mt-0.5 size-4 shrink-0"
-                  aria-hidden="true"
-                />
-                <p className="text-foreground/85 text-xs leading-relaxed">
-                  {t('groupSecurityTip')}
-                </p>
               </div>
             </div>
 
@@ -416,41 +405,48 @@ export function PartnerGroupsWorkspace({
           title={t('groupsTitle')}
           description={t('groupsBody')}
           density="compact"
-          fullHeight={false}
+          fullHeight
           className="shadow-2xs"
         >
-          <div className="space-y-4">
+          <div className="flex flex-1 flex-col">
             {accountability.workspace.groups.length ? (
-              accountability.workspace.groups.map((group) => (
-                <GroupCard
-                  key={group.id}
-                  t={t}
-                  group={group}
-                  members={membersByGroup[group.id] ?? []}
-                  code={revealedCodes[group.id] || group.join_code}
-                  removalReasons={removalReasons}
-                  setRemovalReasons={setRemovalReasons}
-                  mutating={accountability.mutating}
-                  onRotate={() => void rotate(group)}
-                  onDelete={() =>
-                    void run(
-                      accountability.deleteGroup(group.id),
-                      t('groupDeleted')
-                    )
-                  }
-                  onRemove={(membership) =>
-                    void run(
-                      accountability.removeMember(
-                        membership.id,
-                        removalReasons[membership.id] ?? ''
-                      ),
-                      t('memberRemoved')
-                    )
-                  }
-                />
-              ))
+              <div className="space-y-4">
+                {accountability.workspace.groups.map((group) => (
+                  <GroupCard
+                    key={group.id}
+                    t={t}
+                    group={group}
+                    members={membersByGroup[group.id] ?? []}
+                    code={revealedCodes[group.id] || group.join_code}
+                    removalReasons={removalReasons}
+                    setRemovalReasons={setRemovalReasons}
+                    mutating={accountability.mutating}
+                    onRotate={() => void rotate(group)}
+                    onDelete={() =>
+                      void run(
+                        accountability.deleteGroup(group.id),
+                        t('groupDeleted')
+                      )
+                    }
+                    onRemove={(membership) =>
+                      void run(
+                        accountability.removeMember(
+                          membership.id,
+                          removalReasons[membership.id] ?? ''
+                        ),
+                        t('memberRemoved')
+                      )
+                    }
+                  />
+                ))}
+              </div>
             ) : (
-              <EmptyLine title={t('noGroups')} body={t('noGroupsBody')} />
+              <EmptyLine
+                icon={FolderKanban}
+                title={t('noGroups')}
+                body={t('noGroupsBody')}
+                className="flex-1"
+              />
             )}
           </div>
         </DashboardPanel>
@@ -848,7 +844,9 @@ function GroupCard({
                           value={
                             membership.aggregate.check_in_days !== undefined &&
                             membership.aggregate.check_in_days !== null
-                              ? `${membership.aggregate.check_in_days} hari`
+                              ? t('checkInDaysCount', {
+                                  count: membership.aggregate.check_in_days,
+                                })
                               : t('notShared')
                           }
                           icon={Calendar}
@@ -866,10 +864,7 @@ function GroupCard({
                       {/* Privacy Note */}
                       <p className="text-muted-foreground flex items-center gap-1.5 text-[0.6875rem]">
                         <Lock className="size-3 shrink-0" />
-                        <span>
-                          Data di atas adalah ringkasan agregat yang disetujui
-                          siswa.
-                        </span>
+                        <span>{t('aggregateConsentNote')}</span>
                       </p>
 
                       {/* Member Removal Action */}

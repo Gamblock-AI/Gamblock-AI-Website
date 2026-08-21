@@ -203,7 +203,13 @@ function editDocument(
   return { ...draft, document: { ...draft.document, [key]: value } };
 }
 
-function AdminLearningMediaPreview({ mediaID }: { mediaID: string }) {
+function AdminLearningMediaPreview({
+  mediaID,
+  aspect,
+}: {
+  mediaID: string;
+  aspect?: number;
+}) {
   const [src, setSrc] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
 

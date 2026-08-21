@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { DashboardStatus } from '@/components/dashboard/dashboard-page';
 import { cn } from '@/lib/utils';
@@ -38,18 +39,36 @@ export function RequestStatus({
 }
 
 export function EmptyLine({
+  icon: Icon,
   title,
   body,
   className,
 }: {
+  icon?: LucideIcon;
   title: string;
   body: string;
   className?: string;
 }) {
   return (
-    <div className={cn('border-border rounded-xl border border-dashed p-4', className)}>
-      <p className="text-navy font-semibold">{title}</p>
-      <p className="text-muted-foreground mt-1 text-sm leading-6">{body}</p>
+    <div
+      className={cn(
+        'border-border/80 bg-muted/20 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center',
+        className
+      )}
+    >
+      {Icon ? (
+        <span className="border-border/80 bg-card text-muted-foreground/80 flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+      ) : null}
+      <p className={cn('text-navy text-sm font-bold', Icon ? 'mt-3' : '')}>
+        {title}
+      </p>
+      {body ? (
+        <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-relaxed">
+          {body}
+        </p>
+      ) : null}
     </div>
   );
 }

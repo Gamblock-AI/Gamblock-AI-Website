@@ -1,8 +1,9 @@
 'use client';
 
-import { ArrowRight, BookOpen, RefreshCw } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle2, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { EducationModule } from '@/hooks/use-education';
 import { Link } from '@/i18n/routing';
@@ -54,11 +55,11 @@ export function LearningNextStep({
           <span className="sr-only">{t('learningLoading')}</span>
         </div>
       ) : error ? (
-        <div className="border-border bg-muted/30 mt-4 rounded-xl border border-dashed p-4">
+        <div className="border-border/80 bg-muted/20 mt-4 flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center">
           <p className="text-muted-foreground text-sm leading-6">
             {t('learningError')}
           </p>
-          <Button variant="outline" className="mt-3 min-h-11" onClick={onRetry}>
+          <Button variant="outline" className="mt-3 min-h-10 rounded-xl" onClick={onRetry}>
             <RefreshCw className="size-4" aria-hidden="true" />
             {t('learningRetry')}
           </Button>
@@ -109,10 +110,13 @@ export function LearningNextStep({
           </Link>
         </div>
       ) : (
-        <div className="border-border bg-muted/30 mt-4 rounded-xl border border-dashed p-4">
-          <p className="text-muted-foreground text-sm leading-6">
-            {allCompleted ? t('learningAllDone') : t('learningEmpty')}
-          </p>
+        <div className="mt-4 flex flex-1 flex-col">
+          <EmptyState
+            icon={allCompleted ? CheckCircle2 : BookOpen}
+            title={allCompleted ? t('learningAllDone') : t('learningEmpty')}
+            hint={t('learningCatalogBody')}
+            className="flex-1 h-full min-h-36 py-6"
+          />
         </div>
       )}
     </section>

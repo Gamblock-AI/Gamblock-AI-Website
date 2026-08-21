@@ -9,4 +9,15 @@ describe('EmptyState', () => {
     expect(screen.getByText('Belum ada member')).toBeInTheDocument();
     expect(screen.getByText('Bagikan kode grup')).toBeInTheDocument();
   });
+
+  it('renders action when provided', () => {
+    render(
+      <EmptyState
+        icon={Users}
+        title="Belum ada member"
+        action={<button type="button">Tambah Member</button>}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Tambah Member' })).toBeInTheDocument();
+  });
 });

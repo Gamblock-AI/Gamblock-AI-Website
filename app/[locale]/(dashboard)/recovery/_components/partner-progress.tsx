@@ -172,18 +172,16 @@ export function PartnerProgress() {
         >
           <div className="flex-1 space-y-3">
             {flagged.length === 0 ? (
-              <div className="border-sage/35 bg-sage/[0.08] flex items-start gap-3 rounded-2xl border p-4 shadow-2xs">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sage/20 text-sage-dark">
-                  <ShieldCheck className="size-4.5" aria-hidden="true" />
+              <div className="border-border/80 bg-muted/20 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center">
+                <span className="border-border/80 bg-card text-muted-foreground/80 flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
+                  <ShieldCheck className="size-5" aria-hidden="true" />
                 </span>
-                <div>
-                  <p className="text-navy text-sm font-bold">
-                    {p('monitorAllGood')}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-                    {p('monitorAllGoodBody')}
-                  </p>
-                </div>
+                <p className="text-navy mt-3 text-sm font-bold">
+                  {p('monitorAllGood')}
+                </p>
+                <p className="text-muted-foreground mt-1 max-w-xs text-xs leading-relaxed">
+                  {p('monitorAllGoodBody')}
+                </p>
               </div>
             ) : (
               flagged.map(({ member, flags }) => (
@@ -209,7 +207,9 @@ export function PartnerProgress() {
                           </p>
                         </div>
                       </div>
-                      <DashboardStatus tone="amber">Perhatian</DashboardStatus>
+                      <DashboardStatus tone="amber">
+                        {p('attentionBadge')}
+                      </DashboardStatus>
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-1.5">
@@ -256,8 +256,8 @@ export function PartnerProgress() {
             </span>
             <span className="font-semibold text-amber-800">
               {flagged.length > 0
-                ? `${flagged.length} perlu tindakan`
-                : 'Semua aman'}
+                ? p('monitorActionRequired', { count: flagged.length })
+                : p('monitorAllClear')}
             </span>
           </div>
         </DashboardPanel>
@@ -268,12 +268,6 @@ export function PartnerProgress() {
           description={p('sharedBody')}
           density="compact"
           className="xl:col-span-7"
-          action={
-            <span className="text-muted-foreground inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/40 px-3 py-1 text-xs font-semibold">
-              <ShieldCheck className="size-3.5 text-sage" aria-hidden="true" />
-              {p('sharedEyebrow')}
-            </span>
-          }
         >
           <div className="flex-1 space-y-3">
             {accountability.workspace.members.map((member) => (
@@ -335,7 +329,9 @@ export function PartnerProgress() {
                     label={p('participation')}
                     value={
                       member.aggregate.check_in_days !== undefined
-                        ? `${member.aggregate.check_in_days}/7 hari`
+                        ? p('checkInDaysValue', {
+                            count: member.aggregate.check_in_days,
+                          })
                         : undefined
                     }
                   />
@@ -344,12 +340,11 @@ export function PartnerProgress() {
             ))}
 
             {accountability.workspace.members.length === 0 ? (
-              <div className="border-border/80 bg-muted/20 flex min-h-32 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center">
-                <Users
-                  className="text-muted-foreground size-6"
-                  aria-hidden="true"
-                />
-                <p className="text-muted-foreground mt-2 text-sm">
+              <div className="border-border/80 bg-muted/20 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center">
+                <span className="border-border/80 bg-card text-muted-foreground/80 flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
+                  <Users className="size-5" aria-hidden="true" />
+                </span>
+                <p className="text-navy mt-3 text-sm font-bold">
                   {p('noMembers')}
                 </p>
               </div>
@@ -362,32 +357,34 @@ export function PartnerProgress() {
               {p('aggregateOnly')}
             </span>
             <span className="font-semibold text-navy">
-              {accountability.workspace.members.length} anggota
+              {p('membersCount', {
+                count: accountability.workspace.members.length,
+              })}
             </span>
           </div>
         </DashboardPanel>
       </div>
 
-      <div className="border-navy/15 bg-gradient-to-r from-azure/35 via-background to-azure/20 flex flex-col gap-4 rounded-2xl border p-5 shadow-2xs sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-soft">
-            <LockKeyhole className="size-5" aria-hidden="true" />
+      <div className="relative overflow-hidden rounded-2xl border border-navy/15 bg-gradient-to-r from-azure/35 via-card to-azure/20 p-3.5 sm:px-5 sm:py-3.5 shadow-2xs flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="flex size-9 sm:size-9.5 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-2xs border border-white/10">
+            <LockKeyhole className="size-4 sm:size-4.5" aria-hidden="true" />
           </span>
-          <div>
-            <p className="text-navy font-bold text-sm sm:text-base">
+          <div className="min-w-0">
+            <p className="text-navy font-bold text-xs sm:text-sm tracking-tight">
               {p('privacyBoundary')}
             </p>
-            <p className="text-muted-foreground mt-1 max-w-3xl text-xs leading-relaxed sm:text-sm">
+            <p className="text-muted-foreground mt-0.5 max-w-2xl text-xs leading-relaxed">
               {p('privacyBoundaryBody')}
             </p>
           </div>
         </div>
         <Link
           href={ROUTES.PARTNERS}
-          className="bg-navy text-white hover:bg-navy-light focus-visible:ring-navy/30 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold shadow-soft transition-all duration-200 outline-none focus-visible:ring-2 hover:shadow-md"
+          className="group inline-flex min-h-8.5 sm:min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-navy px-3.5 sm:px-4 text-xs font-semibold text-white shadow-2xs transition-all duration-200 outline-none hover:bg-navy-light hover:shadow-xs focus-visible:ring-2 focus-visible:ring-navy/30 active:scale-98"
         >
           <span>{p('managePartner')}</span>
-          <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1" />
+          <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
         </Link>
       </div>
     </DashboardPage>

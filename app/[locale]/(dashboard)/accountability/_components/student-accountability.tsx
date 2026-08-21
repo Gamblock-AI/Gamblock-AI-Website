@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import {
+  ArrowRight,
   CircleAlert,
   Clock3,
   RotateCcw,
@@ -11,11 +12,11 @@ import {
 } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import {
-  DashboardNotice,
   DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Textarea } from '@/components/ui/textarea';
 import type {
   SharingPreferences,
@@ -94,20 +95,20 @@ export function StudentAccountability({
 
   if (!membership) {
     return (
-      <DashboardNotice
+      <EmptyState
         icon={UserRoundCheck}
         title={t('noGroupTitle')}
+        hint={t('noGroupBody')}
         action={
           <Link
             href={ROUTES.PARTNERS}
-            className="border-border bg-background text-foreground hover:bg-muted focus-visible:ring-navy/30 inline-flex min-h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 motion-reduce:transition-none"
+            className="bg-navy hover:bg-navy-light focus-visible:ring-navy/30 inline-flex min-h-9 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold text-white transition-colors outline-none focus-visible:ring-2 shadow-2xs"
           >
             {t('openPartners')}
+            <ArrowRight className="size-3.5" aria-hidden="true" />
           </Link>
         }
-      >
-        {t('noGroupBody')}
-      </DashboardNotice>
+      />
     );
   }
 
@@ -322,9 +323,9 @@ export function StudentAccountability({
               </article>
             ) : (
               <EmptyLine
+                icon={ShieldCheck}
                 title={t('noPendingApproval')}
                 body={t('nativeRequestBody')}
-                className="p-3 [&>p:last-child]:leading-5"
               />
             )}
           </DashboardPanel>
@@ -486,6 +487,7 @@ export function StudentAccountability({
           </div>
         ) : (
           <EmptyLine
+            icon={Clock3}
             title={t('historyEmptyTitle')}
             body={t('historyEmptyBody')}
           />

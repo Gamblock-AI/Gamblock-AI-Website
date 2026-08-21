@@ -50,19 +50,19 @@ export function DataRequestActions({
           <div className="mt-3 grid grid-cols-2 gap-2 text-[0.6875rem]">
             <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/20 p-2">
               <ShieldCheck className="size-3.5 text-sage-dark shrink-0" aria-hidden="true" />
-              <span className="font-semibold text-navy truncate">Log Perlindungan</span>
+              <span className="font-semibold text-navy truncate">{t('protectionLogs')}</span>
             </div>
             <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/20 p-2">
               <LockKeyhole className="size-3.5 text-navy shrink-0" aria-hidden="true" />
-              <span className="font-semibold text-navy truncate">Entri Terenkripsi</span>
+              <span className="font-semibold text-navy truncate">{t('encryptedEntries')}</span>
             </div>
             <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/20 p-2">
               <FileArchive className="size-3.5 text-navy shrink-0" aria-hidden="true" />
-              <span className="font-semibold text-navy truncate">Format Standar</span>
+              <span className="font-semibold text-navy truncate">{t('standardFormat')}</span>
             </div>
             <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/20 p-2">
               <Clock className="size-3.5 text-amber-800 shrink-0" aria-hidden="true" />
-              <span className="font-semibold text-navy truncate">Masa Unduh 7 Hari</span>
+              <span className="font-semibold text-navy truncate">{t('downloadWindow')}</span>
             </div>
           </div>
         </div>
@@ -95,7 +95,7 @@ export function DataRequestActions({
           contentClassName="flex flex-1 flex-col justify-between"
           action={
             <span className="rounded-md border border-crimson/25 bg-crimson/10 px-2 py-0.5 text-[0.6875rem] font-bold text-crimson-dark shadow-2xs">
-              Permanen
+              {t('permanentBadge')}
             </span>
           }
         >
@@ -103,7 +103,7 @@ export function DataRequestActions({
             <div className="mt-3 rounded-lg border border-crimson/20 bg-crimson/[0.04] p-2.5 flex items-start gap-2">
               <AlertTriangle className="size-3.5 text-crimson shrink-0 mt-0.5" aria-hidden="true" />
               <p className="text-[0.6875rem] text-crimson-dark leading-relaxed font-medium">
-                Penghapusan mencakup seluruh identitas akun, log perlindungan, dan entri pemulihan dari server.
+                {t('deleteWarning')}
               </p>
             </div>
           </div>

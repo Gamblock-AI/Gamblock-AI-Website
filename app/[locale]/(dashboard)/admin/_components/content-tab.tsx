@@ -27,6 +27,7 @@ import type {
   AdminEducationRevision,
   AdminModuleDraft,
 } from '@/hooks/use-admin-operations';
+import type { RichTextDocument } from '@/hooks/use-education';
 import type { EditorMediaSelection } from '@/components/education/rich-text-editor';
 import { RichTextEditor } from '@/components/education/rich-text-editor';
 import { ThumbnailCropper } from '@/components/education/thumbnail-cropper';
@@ -1278,7 +1279,7 @@ export function ContentTab(props: ContentTabProps) {
                   size="sm"
                   variant="outline"
                   disabled={
-                    busy || revision.revision === selected.draft_revision
+                    busy || revision.revision === selected?.draft_revision
                   }
                   onClick={() => void rollback(revision.id)}
                 >

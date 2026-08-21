@@ -114,7 +114,7 @@ function DataRequestHistoryContent({
         icon={FileClock}
         title={t('emptyTitle')}
         hint={t('emptyBody')}
-        className="bg-muted/30 min-h-36 py-8 rounded-xl"
+        className="flex-1 h-full min-h-48"
       />
     );
   }

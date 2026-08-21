@@ -1,6 +1,7 @@
 'use client';
 
 import { type FormEvent, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
   CircleAlert,
@@ -19,6 +20,7 @@ import {
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Textarea } from '@/components/ui/textarea';
 import { StudentAvatar } from '@/components/dashboard/student-avatar';
 import { ExpandableRow } from '@/components/dashboard/expandable-row';
@@ -30,6 +32,7 @@ import { useLocalUser } from '@/hooks/use-local-user';
 import { Link } from '@/i18n/routing';
 import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 import { toastError, toastSuccess } from '@/lib/feedback';
+import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
 
 export function PartnerContactWorkspace() {
@@ -109,21 +112,23 @@ export function PartnerContactWorkspace() {
 
   if (!isPartner && !membership) {
     return (
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(19rem,0.85fr)]">
-        <DashboardPanel
+      <div className="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(19rem,0.85fr)]">
+        <EmptyState
           icon={UserRoundCheck}
           title={t('partnerUnavailableTitle')}
-          description={t('partnerUnavailableBody')}
-        >
-          <Link
-            href={ROUTES.PARTNERS}
-            className="bg-navy hover:bg-navy-light focus-visible:ring-navy/30 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-white transition-colors outline-none focus-visible:ring-2"
-          >
-            {t('partnerUnavailableAction')}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        </DashboardPanel>
-        <ContactBoundary isPartner={false} />
+          hint={t('partnerUnavailableBody')}
+          action={
+            <Link
+              href={ROUTES.PARTNERS}
+              className="bg-navy hover:bg-navy-light focus-visible:ring-navy/30 inline-flex min-h-9 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold text-white transition-colors outline-none focus-visible:ring-2 shadow-2xs"
+            >
+              {t('partnerUnavailableAction')}
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          }
+          className="h-full flex-1"
+        />
+        <ContactBoundary isPartner={false} fullHeight />
       </div>
     );
   }
@@ -152,7 +157,7 @@ export function PartnerContactWorkspace() {
             </DashboardStatus>
           }
         >
-          <div className="space-y-3">
+          <div className="flex flex-1 flex-col justify-between gap-3">
             <ContactRequestList
               requests={incoming}
               isPartner
@@ -162,10 +167,12 @@ export function PartnerContactWorkspace() {
               expanded={expanded}
               onToggle={toggleExpanded}
               onTransition={(id, status) => void transition(id, status)}
+              emptyIcon={MessageCircleHeart}
               emptyTitle={t('incomingEmpty')}
               emptyBody={t('incomingEmptyBody')}
+              emptyClassName="flex-1"
             />
-            <ContactBoundary isPartner />
+            {incoming.length > 0 ? <ContactBoundary isPartner /> : null}
           </div>
         </DashboardPanel>
       ) : (
@@ -245,46 +252,75 @@ export function PartnerContactWorkspace() {
         }
         className={`h-full ${isPartner ? 'xl:col-span-7' : 'xl:col-span-5'}`}
       >
-        <ContactRequestList
-          requests={isPartner ? history : contacts.requests}
-          isPartner={isPartner}
-          mutating={contacts.mutating}
-          locale={locale}
-          currentTime={currentTime}
-          expanded={expanded}
-          onToggle={toggleExpanded}
-          limit={isPartner ? 5 : 2}
-          onTransition={(id, status) => void transition(id, status)}
-          emptyTitle={
-            isPartner
-              ? t('incomingHistoryEmpty')
-              : t('partnerHistoryEmpty')
-          }
-          emptyBody={
-            isPartner
-              ? t('incomingHistoryEmptyBody')
-              : t('partnerHistoryEmptyBody')
-          }
-        />
+        <div className="flex flex-1 flex-col justify-between">
+          <ContactRequestList
+            requests={isPartner ? history : contacts.requests}
+            isPartner={isPartner}
+            mutating={contacts.mutating}
+            locale={locale}
+            currentTime={currentTime}
+            expanded={expanded}
+            onToggle={toggleExpanded}
+            limit={isPartner ? 5 : 2}
+            onTransition={(id, status) => void transition(id, status)}
+            emptyIcon={Clock3}
+            emptyTitle={
+              isPartner
+                ? t('incomingHistoryEmpty')
+                : t('partnerHistoryEmpty')
+            }
+            emptyBody={
+              isPartner
+                ? t('incomingHistoryEmptyBody')
+                : t('partnerHistoryEmptyBody')
+            }
+            emptyClassName="flex-1"
+          />
+        </div>
       </DashboardPanel>
     </div>
   );
 }
 
-function ContactBoundary({ isPartner }: { isPartner: boolean }) {
+function ContactBoundary({
+  isPartner,
+  fullHeight,
+}: {
+  isPartner: boolean;
+  fullHeight?: boolean;
+}) {
   const t = useTranslations('supportWorkspace');
+
+  if (fullHeight) {
+    return (
+      <div className="border-sage/30 bg-gradient-to-br from-sage/[0.12] via-card to-sage/[0.04] shadow-soft flex h-full flex-col items-center justify-center rounded-2xl border p-6 sm:p-8 text-center">
+        <span className="border-sage/25 bg-sage/15 text-sage-dark flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
+          <ShieldCheck className="size-5" aria-hidden="true" />
+        </span>
+        <p className="text-navy mt-3 text-sm font-bold">
+          {isPartner ? t('incomingBoundaryTitle') : t('partnerBoundaryTitle')}
+        </p>
+        <p className="text-muted-foreground mt-1 max-w-xs text-xs leading-relaxed">
+          {isPartner ? t('incomingBoundaryBody') : t('partnerBoundaryBody')}
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="border-sage/30 bg-sage/[0.07] rounded-xl border p-4">
-      <div className="flex items-start gap-3">
-        <ShieldCheck
-          className="text-sage mt-0.5 size-5 shrink-0"
-          aria-hidden="true"
-        />
-        <div>
-          <p className="text-navy text-sm font-bold">
+    <div className="border-sage/25 bg-gradient-to-r from-sage/[0.08] via-card to-sage/[0.03] rounded-xl border p-3 sm:px-3.5 sm:py-2.5 shadow-2xs">
+      <div className="flex items-start gap-2.5">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-sage/15 text-sage-dark border border-sage/20">
+          <ShieldCheck
+            className="size-3.5"
+            aria-hidden="true"
+          />
+        </span>
+        <div className="min-w-0">
+          <p className="text-navy text-xs font-bold">
             {isPartner ? t('incomingBoundaryTitle') : t('partnerBoundaryTitle')}
           </p>
-          <p className="text-muted-foreground mt-1 text-sm leading-6">
+          <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
             {isPartner ? t('incomingBoundaryBody') : t('partnerBoundaryBody')}
           </p>
         </div>
@@ -302,8 +338,10 @@ function ContactRequestList({
   expanded,
   onToggle,
   limit,
+  emptyIcon,
   emptyTitle,
   emptyBody,
+  emptyClassName,
   onTransition,
 }: {
   requests: PartnerContactRequest[];
@@ -314,8 +352,10 @@ function ContactRequestList({
   expanded: Record<string, boolean>;
   onToggle: (id: string) => void;
   limit?: number;
+  emptyIcon?: LucideIcon;
   emptyTitle: string;
   emptyBody: string;
+  emptyClassName?: string;
   onTransition: (id: string, status: string) => void;
 }) {
   const t = useTranslations('supportWorkspace');
@@ -325,10 +365,19 @@ function ContactRequestList({
   });
 
   if (!requests.length) {
+    const Icon = emptyIcon || (isPartner ? MessageCircleHeart : Send);
     return (
-      <div className="border-border rounded-xl border border-dashed p-4">
-        <p className="text-navy font-semibold">{emptyTitle}</p>
-        <p className="text-muted-foreground mt-1 text-sm leading-6">
+      <div
+        className={cn(
+          'border-border/80 bg-muted/20 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center',
+          emptyClassName
+        )}
+      >
+        <span className="border-border/80 bg-card text-muted-foreground/80 flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <p className="text-navy mt-3 text-sm font-bold">{emptyTitle}</p>
+        <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-relaxed">
           {emptyBody}
         </p>
       </div>

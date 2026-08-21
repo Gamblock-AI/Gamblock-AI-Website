@@ -302,22 +302,23 @@ export function GamiDailyRecommendation({
                   aria-hidden="true"
                 />
 
-                <button
-                  type="button"
-                  onClick={closeDialog}
-                  aria-label={t('gamiClose')}
-                  className="text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/30 absolute top-4 right-4 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2"
-                >
-                  <X className="size-4" aria-hidden="true" />
-                </button>
+                <div className="relative overflow-hidden rounded-[inherit]">
+                  <button
+                    type="button"
+                    onClick={closeDialog}
+                    aria-label={t('gamiClose')}
+                    className="text-muted-foreground hover:bg-muted hover:text-navy focus-visible:ring-navy/30 absolute top-4 right-4 z-20 flex size-9 cursor-pointer items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2"
+                  >
+                    <X className="size-4" aria-hidden="true" />
+                  </button>
 
-                <div className="max-h-[min(52dvh,24rem)] overflow-y-auto p-4 sm:max-h-[min(65dvh,30rem)] sm:p-6 md:max-h-[min(72dvh,36rem)] md:p-7 md:pr-8">
-                  <AnimatePresence mode="wait" initial={false}>
-                    {step === 'greeting' ? (
-                      <motion.div
-                        key="greeting"
-                        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
+                  <div className="max-h-[min(52dvh,24rem)] overflow-y-auto overscroll-contain p-4 sm:max-h-[min(65dvh,30rem)] sm:p-6 md:max-h-[min(72dvh,36rem)] md:p-7 md:pr-8 [scrollbar-width:thin] [scrollbar-color:rgba(22,41,76,0.2)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-navy/20 hover:[&::-webkit-scrollbar-thumb]:bg-navy/40">
+                    <AnimatePresence mode="wait" initial={false}>
+                      {step === 'greeting' ? (
+                        <motion.div
+                          key="greeting"
+                          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
                         transition={{ duration: reduceMotion ? 0 : 0.18 }}
                       >
@@ -639,7 +640,8 @@ export function GamiDailyRecommendation({
                     )}
                   </AnimatePresence>
                 </div>
-              </motion.section>
+              </div>
+            </motion.section>
 
               {/* Gami Mascot Stage */}
               <motion.div

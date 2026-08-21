@@ -200,7 +200,7 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
                 label={t('activeGroups')}
                 value={activeGroups}
                 tone="navy"
-                subtitle="Aktif"
+                subtitle={t('active')}
               />
               <SummaryMetric
                 icon={UserCheck}
@@ -209,8 +209,8 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
                 tone="sage"
                 subtitle={
                   activeMembers.length > 0
-                    ? `${activeMembers.length} mahasiswa`
-                    : 'Belum ada'
+                    ? t('studentCount', { count: activeMembers.length })
+                    : t('noneYet')
                 }
               />
               <SummaryMetric
@@ -221,8 +221,8 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
                 attention={pendingApprovals + pendingExits > 0}
                 subtitle={
                   pendingApprovals + pendingExits > 0
-                    ? 'Perlu tindakan'
-                    : 'Tidak ada antrean'
+                    ? t('actionRequired')
+                    : t('noQueue')
                 }
               />
               <SummaryMetric
@@ -233,8 +233,8 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
                 attention={pendingContacts > 0}
                 subtitle={
                   pendingContacts > 0
-                    ? `${pendingContacts} baru`
-                    : 'Tidak ada antrean'
+                    ? t('newCount', { count: pendingContacts })
+                    : t('noQueue')
                 }
               />
             </div>

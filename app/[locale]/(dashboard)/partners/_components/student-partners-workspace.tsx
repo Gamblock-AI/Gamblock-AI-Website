@@ -21,6 +21,7 @@ import {
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { RequiredMark } from '@/components/common/form-field';
 import {
   type AccountabilityGroup,
@@ -30,7 +31,6 @@ import { toastError, toastSuccess } from '@/lib/feedback';
 import { ROUTES } from '@/routes';
 import {
   BoundaryItem,
-  EmptyLine,
   formatDate,
   Info,
   QuickLink,
@@ -73,70 +73,126 @@ export function StudentPartnersWorkspace({
 
   if (!membership) {
     return (
-      <div className="space-y-5">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(21rem,0.85fr)]">
+      <div className="space-y-4">
+        <div className="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(21rem,0.85fr)]">
           <DashboardPanel
             icon={KeyRound}
             title={t('joinTitle')}
             description={t('joinBody')}
+            density="compact"
+            fullHeight
+            className="flex h-full flex-col justify-between"
           >
-            <form
-              onSubmit={(event) => void previewCode(event)}
-              className="space-y-4"
-            >
-              <label
-                htmlFor="group-code"
-                className="text-navy flex items-center text-sm font-semibold"
+            <div className="flex flex-1 flex-col justify-between gap-3.5">
+              <form
+                onSubmit={(event) => void previewCode(event)}
+                className="space-y-1.5"
               >
-                <span>{t('codeLabel')}</span>
-                <RequiredMark />
-              </label>
-              <input
-                id="group-code"
-                value={code}
-                onChange={(event) => setCode(event.target.value)}
-                minLength={8}
-                maxLength={12}
-                autoCapitalize="characters"
-                autoComplete="off"
-                placeholder={t('codePlaceholder')}
-                className="border-input bg-background text-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-12 w-full rounded-xl border px-4 font-mono text-base tracking-[0.18em] uppercase outline-none focus-visible:ring-2"
-                required
-              />
-              <Button
-                type="submit"
-                size="lg"
-                disabled={accountability.mutating}
-              >
-                {t('previewGroup')}
-              </Button>
-            </form>
+                <label
+                  htmlFor="group-code"
+                  className="text-navy flex items-center text-xs font-semibold"
+                >
+                  <span>{t('codeLabel')}</span>
+                  <RequiredMark />
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    id="group-code"
+                    value={code}
+                    onChange={(event) => setCode(event.target.value)}
+                    minLength={8}
+                    maxLength={12}
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    placeholder={t('codePlaceholder')}
+                    className="border-border/80 bg-background text-navy focus-visible:border-navy focus-visible:ring-navy/20 h-10 flex-1 rounded-xl border px-3.5 font-mono text-sm font-bold tracking-[0.2em] uppercase placeholder:font-sans placeholder:font-normal placeholder:tracking-normal placeholder:text-muted-foreground/60 outline-none transition-all focus-visible:ring-2 shadow-none"
+                    required
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={accountability.mutating || !code.trim()}
+                    className="min-h-10 px-4 text-xs font-bold gap-1.5 shadow-none shrink-0"
+                  >
+                    <KeyRound className="size-3.5" aria-hidden="true" />
+                    {t('previewGroup')}
+                  </Button>
+                </div>
+              </form>
+
+              <div className="grid gap-2 sm:grid-cols-2 border-t border-border/60 pt-3">
+                <div className="border-border/70 bg-muted/15 rounded-xl p-2.5 flex items-start gap-2.5">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-sage/15 text-sage-dark border border-sage/20">
+                    <Lock className="size-3.5" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-navy text-xs font-bold">{t('guaranteePrivateTitle')}</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed mt-0.5">
+                      {t('guaranteePrivateBody')}
+                    </p>
+                  </div>
+                </div>
+                <div className="border-border/70 bg-muted/15 rounded-xl p-2.5 flex items-start gap-2.5">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-azure/80 text-navy">
+                    <SlidersHorizontal className="size-3.5" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-navy text-xs font-bold">{t('guaranteeControlTitle')}</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed mt-0.5">
+                      {t('guaranteeControlBody')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </DashboardPanel>
 
           <DashboardPanel
             icon={ShieldCheck}
             title={t('confirmTitle')}
             description={t('confirmBody')}
+            density="compact"
+            fullHeight
+            className="flex h-full flex-col justify-between"
           >
             {preview ? (
-              <div className="border-sage/35 bg-sage/[0.08] rounded-xl border p-4">
-                <p className="text-navy font-bold">{preview.name}</p>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {t('managedBy', { name: preview.owner_name })}
-                </p>
-                {preview.description ? (
-                  <p className="text-foreground mt-3 text-sm leading-6">
-                    {preview.description}
-                  </p>
-                ) : null}
-                <Button className="mt-4 w-full" onClick={() => void join()}>
+              <div className="border-sage/30 bg-gradient-to-br from-sage/[0.12] via-card to-sage/[0.04] flex h-full flex-1 flex-col justify-between rounded-xl border p-4 shadow-none">
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="border-sage/25 bg-sage/20 text-sage-dark flex size-9 shrink-0 items-center justify-center rounded-lg border">
+                      <UsersRound className="size-4" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-navy truncate text-sm font-bold">
+                        {preview.name}
+                      </p>
+                      <span className="border-sage/25 bg-sage/10 text-sage-dark mt-0.5 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold">
+                        <UserCheck className="size-2.5" aria-hidden="true" />
+                        {t('managedBy', { name: preview.owner_name })}
+                      </span>
+                    </div>
+                  </div>
+                  {preview.description ? (
+                    <p className="text-muted-foreground border-border/60 mt-2.5 border-t pt-2.5 text-xs leading-relaxed">
+                      {preview.description}
+                    </p>
+                  ) : null}
+                </div>
+                <Button
+                  className="bg-navy hover:bg-navy-light mt-3 min-h-9 w-full gap-1.5 text-xs font-bold shadow-none"
+                  onClick={() => void join()}
+                  disabled={accountability.mutating}
+                >
+                  <ShieldCheck className="size-3.5" aria-hidden="true" />
                   {t('confirmJoin')}
                 </Button>
               </div>
             ) : (
-              <EmptyLine
+              <EmptyState
+                icon={KeyRound}
                 title={t('previewEmpty')}
-                body={t('previewEmptyBody')}
+                hint={t('previewEmptyBody')}
+                className="border-border/70 bg-muted/15 flex-1 h-full min-h-32 py-4 px-3 shadow-none rounded-xl border-dashed"
               />
             )}
           </DashboardPanel>
@@ -146,20 +202,24 @@ export function StudentPartnersWorkspace({
           icon={HeartHandshake}
           title={t('setupStepsTitle')}
           description={t('setupStepsBody')}
+          density="compact"
         >
-          <ol className="grid gap-5 md:grid-cols-3">
+          <ol className="grid gap-3 md:grid-cols-3">
             <RelationshipStep
               number={1}
+              icon={KeyRound}
               title={t('setupSteps.preview.title')}
               body={t('setupSteps.preview.body')}
             />
             <RelationshipStep
               number={2}
+              icon={ShieldCheck}
               title={t('setupSteps.consent.title')}
               body={t('setupSteps.consent.body')}
             />
             <RelationshipStep
               number={3}
+              icon={SlidersHorizontal}
               title={t('setupSteps.control.title')}
               body={t('setupSteps.control.body')}
             />
