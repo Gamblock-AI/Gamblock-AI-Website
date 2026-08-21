@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 import { cn } from '@/lib/utils';
@@ -116,14 +115,91 @@ export function AdminEmptyTable({
   );
 }
 
-export function AdminStatusBadge({ status }: { status: string }) {
+const statusBadgeStyles: Record<string, string> = {
+  // Published / Active / Success / Resolved (Sage / Emerald Green)
+  published:
+    'border-sage/40 bg-sage/15 text-sage-dark dark:bg-sage/25 dark:text-sage-light dark:border-sage/40',
+  active:
+    'border-sage/40 bg-sage/15 text-sage-dark dark:bg-sage/25 dark:text-sage-light dark:border-sage/40',
+  approved:
+    'border-sage/40 bg-sage/15 text-sage-dark dark:bg-sage/25 dark:text-sage-light dark:border-sage/40',
+  resolved:
+    'border-sage/40 bg-sage/15 text-sage-dark dark:bg-sage/25 dark:text-sage-light dark:border-sage/40',
+  completed:
+    'border-sage/40 bg-sage/15 text-sage-dark dark:bg-sage/25 dark:text-sage-light dark:border-sage/40',
+
+  // Draft / New (Azure / Navy / Neutral)
+  draft:
+    'border-navy/20 bg-azure/85 text-navy dark:bg-navy/35 dark:text-sky-light dark:border-navy/40',
+
+  // In Review / Pending / In Progress (Amber / Warm Orange)
+  in_review:
+    'border-amber/40 bg-amber/15 text-amber-900 dark:bg-amber/25 dark:text-amber-300 dark:border-amber/40',
+  pending:
+    'border-amber/40 bg-amber/15 text-amber-900 dark:bg-amber/25 dark:text-amber-300 dark:border-amber/40',
+  waiting_internal:
+    'border-amber/40 bg-amber/15 text-amber-900 dark:bg-amber/25 dark:text-amber-300 dark:border-amber/40',
+  processing:
+    'border-amber/40 bg-amber/15 text-amber-900 dark:bg-amber/25 dark:text-amber-300 dark:border-amber/40',
+  queued:
+    'border-amber/40 bg-amber/15 text-amber-900 dark:bg-amber/25 dark:text-amber-300 dark:border-amber/40',
+
+  // Archived / Closed / Paused / Rolled back (Muted / Slate Gray)
+  archived:
+    'border-border/90 bg-muted text-muted-foreground dark:bg-muted/50 dark:text-muted-foreground',
+  closed:
+    'border-border/90 bg-muted text-muted-foreground dark:bg-muted/50 dark:text-muted-foreground',
+  paused:
+    'border-border/90 bg-muted text-muted-foreground dark:bg-muted/50 dark:text-muted-foreground',
+  rolled_back:
+    'border-border/90 bg-muted text-muted-foreground dark:bg-muted/50 dark:text-muted-foreground',
+
+  // Waiting user / Action needed (Sky / Cyan Blue)
+  waiting_user:
+    'border-sky/40 bg-sky/20 text-navy-dark dark:bg-sky/25 dark:text-sky-light dark:border-sky/40',
+  pending_confirmation:
+    'border-sky/40 bg-sky/20 text-navy-dark dark:bg-sky/25 dark:text-sky-light dark:border-sky/40',
+
+  // Rejected / Failed / Cancelled / Revoked (Crimson / Red)
+  rejected:
+    'border-crimson/30 bg-crimson/15 text-crimson-dark dark:bg-crimson/25 dark:text-crimson-light dark:border-crimson/40',
+  failed:
+    'border-crimson/30 bg-crimson/15 text-crimson-dark dark:bg-crimson/25 dark:text-crimson-light dark:border-crimson/40',
+  cancelled:
+    'border-crimson/30 bg-crimson/15 text-crimson-dark dark:bg-crimson/25 dark:text-crimson-light dark:border-crimson/40',
+  revoked:
+    'border-crimson/30 bg-crimson/15 text-crimson-dark dark:bg-crimson/25 dark:text-crimson-light dark:border-crimson/40',
+};
+
+export function AdminStatusBadge({
+  status,
+  className,
+  size = 'default',
+}: {
+  status: string;
+  className?: string;
+  size?: 'sm' | 'default';
+}) {
   const t = useTranslations('dynamicLabels');
-  const active = status === 'published' || status === 'resolved';
+  const normalized = status.toLowerCase().trim();
+  const colorClass =
+    statusBadgeStyles[normalized] ??
+    'border-border/80 bg-muted text-muted-foreground';
+
   return (
-    <Badge variant={active ? 'default' : 'secondary'}>
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full border font-bold transition-colors select-none shadow-2xs backdrop-blur-xs whitespace-nowrap shrink-0',
+        size === 'sm'
+          ? 'px-2 py-0.5 text-[0.625rem] leading-tight'
+          : 'px-2.5 py-0.5 text-xs',
+        colorClass,
+        className
+      )}
+    >
       {t(dynamicLabelKey('status', status), {
         value: dynamicLabelFallback(status),
       })}
-    </Badge>
+    </span>
   );
 }

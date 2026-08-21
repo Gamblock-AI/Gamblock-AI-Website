@@ -37,6 +37,8 @@ import type {
   AdminAccount,
   AdminSiteSocialLink,
 } from '@/hooks/use-admin-operations';
+import { Pagination } from '@/components/dashboard/pagination';
+import { usePagination } from '@/hooks/use-pagination';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
 import {
@@ -228,6 +230,7 @@ export function PlatformTab({
 }: PlatformTabProps) {
   const t = useTranslations('adminPage');
   const tDynamic = useTranslations('dynamicLabels');
+  const tPagination = useTranslations('pagination');
   const initialLinks = useMemo(
     () =>
       PLATFORMS.map((platform, index) => {
@@ -264,17 +267,25 @@ export function PlatformTab({
     reason: string;
   } | null>(null);
 
-  const ACCOUNT_PAGE_SIZE = 10;
-  const [accountPage, setAccountPage] = useState(1);
-  const totalAccountPages = Math.max(
-    1,
-    Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE)
-  );
-  const safeAccountPage = Math.min(accountPage, totalAccountPages);
-  const pageAccounts = accounts.slice(
-    (safeAccountPage - 1) * ACCOUNT_PAGE_SIZE,
-    safeAccountPage * ACCOUNT_PAGE_SIZE
-  );
+  const {
+    pagedItems: pageAccounts,
+    page: accountPage,
+    totalPages: totalAccountPages,
+    setPage: setAccountPage,
+    startIndex: accountsStartIndex,
+    endIndex: accountsEndIndex,
+    totalItems: totalAccounts,
+  } = usePagination({ items: accounts, pageSize: 6 });
+
+  const {
+    pagedItems: pageAuditEvents,
+    page: auditPage,
+    totalPages: totalAuditPages,
+    setPage: setAuditPage,
+    startIndex: auditStartIndex,
+    endIndex: auditEndIndex,
+    totalItems: totalAuditEvents,
+  } = usePagination({ items: auditEvents, pageSize: 10 });
 
   const localizeRole = (accountRole: string) =>
     tDynamic(dynamicLabelKey('role', accountRole), {
@@ -715,50 +726,22 @@ export function PlatformTab({
               )}
             </TableBody>
           </Table>
-          {accounts.length > ACCOUNT_PAGE_SIZE ? (
-            <div className="border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-5">
-              <p className="text-muted-foreground text-xs">
-                {t('accountsShowing', {
-                  from: (safeAccountPage - 1) * ACCOUNT_PAGE_SIZE + 1,
-                  to: Math.min(
-                    safeAccountPage * ACCOUNT_PAGE_SIZE,
-                    accounts.length
-                  ),
-                  count: accounts.length,
+          {totalAccounts > 0 ? (
+            <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
+              <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+                {tPagination('showingRange', {
+                  start: accountsStartIndex,
+                  end: accountsEndIndex,
+                  total: totalAccounts,
                 })}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={safeAccountPage <= 1}
-                  onClick={() =>
-                    setAccountPage((current) => Math.max(current - 1, 1))
-                  }
-                >
-                  {t('pagePrev')}
-                </Button>
-                <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap">
-                  {t('pageOf', {
-                    current: safeAccountPage,
-                    total: totalAccountPages,
-                  })}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={safeAccountPage >= totalAccountPages}
-                  onClick={() =>
-                    setAccountPage((current) =>
-                      Math.min(current + 1, totalAccountPages)
-                    )
-                  }
-                >
-                  {t('pageNext')}
-                </Button>
-              </div>
+              </span>
+              <Pagination
+                currentPage={accountPage}
+                totalPages={totalAccountPages}
+                onPageChange={setAccountPage}
+                variant="flat"
+                size="sm"
+              />
             </div>
           ) : null}
         </div>
@@ -801,7 +784,7 @@ export function PlatformTab({
                 description={t('noAuditDescription')}
               />
             ) : (
-              auditEvents.map((event) => (
+              pageAuditEvents.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell className="text-muted-foreground font-mono text-xs whitespace-nowrap">
                     {new Date(event.created_at).toLocaleString()}
@@ -827,6 +810,24 @@ export function PlatformTab({
             )}
           </TableBody>
         </Table>
+        {totalAuditEvents > 0 ? (
+          <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
+            <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+              {tPagination('showingRange', {
+                start: auditStartIndex,
+                end: auditEndIndex,
+                total: totalAuditEvents,
+              })}
+            </span>
+            <Pagination
+              currentPage={auditPage}
+              totalPages={totalAuditPages}
+              onPageChange={setAuditPage}
+              variant="flat"
+              size="sm"
+            />
+          </div>
+        ) : null}
       </section>
 
       {/* Account Action Confirmation Modal */}

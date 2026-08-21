@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useMemo, useState } from 'react';
+import { use, useMemo } from 'react';
 import {
   ArrowLeft,
   Clock3,
@@ -10,6 +10,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { DashboardPage } from '@/components/dashboard/dashboard-page';
 import { Pagination } from '@/components/dashboard/pagination';
+import { usePagination } from '@/hooks/use-pagination';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
 import { slugifyProvider } from '@/lib/skills/external-platforms';
@@ -106,12 +107,6 @@ export default function ProviderDetailPage({
   const locale = useLocale();
   const { providerSlug } = use(params);
   const hub = useLearningHub(locale);
-  const [page, setPage] = useState(1);
-  const [activeSlug, setActiveSlug] = useState(providerSlug);
-  if (activeSlug !== providerSlug) {
-    setActiveSlug(providerSlug);
-    setPage(1);
-  }
 
   const providerItems = useMemo(
     () =>
@@ -121,16 +116,17 @@ export default function ProviderDetailPage({
     [hub.catalog, providerSlug]
   );
 
+  const {
+    page,
+    setPage,
+    totalPages,
+    paginatedItems: pagedItems,
+  } = usePagination({
+    items: providerItems,
+    pageSize: COURSES_PER_PAGE,
+  });
+
   const provider = providerItems[0];
-  const totalPages = Math.max(
-    1,
-    Math.ceil(providerItems.length / COURSES_PER_PAGE)
-  );
-  const safePage = Math.min(page, totalPages);
-  const pagedItems = providerItems.slice(
-    (safePage - 1) * COURSES_PER_PAGE,
-    safePage * COURSES_PER_PAGE
-  );
 
   return (
     <DashboardPage>
@@ -191,11 +187,13 @@ export default function ProviderDetailPage({
               <CourseCard key={item.id} item={item} />
             ))}
           </div>
-          <Pagination
-            currentPage={safePage}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
+          <div className="mt-8 flex justify-center">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          </div>
         </div>
       )}
     </DashboardPage>

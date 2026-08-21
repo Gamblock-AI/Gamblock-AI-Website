@@ -219,5 +219,13 @@
     "hideDetails": "Tutup detail",
     "optional": "opsional",
     "required": "wajib"
+  },
+  "pagination": {
+    "paginationLabel": "Navigasi halaman",
+    "prev": "Halaman sebelumnya",
+    "next": "Halaman berikutnya",
+    "pageOf": "Halaman {current} dari {total}",
+    "showingRange": "Menampilkan {start}–{end} dari {total}",
+    "noItems": "Tidak ada data"
   }
 }

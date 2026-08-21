@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Archive,
@@ -13,6 +13,7 @@ import {
   ImageIcon,
   Plus,
   Save,
+  Search,
   Trash2,
   Upload,
   Video,
@@ -20,6 +21,9 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/dashboard/pagination';
+import { usePagination } from '@/hooks/use-pagination';
+import { ThumbnailPlaceholder } from '@/components/education/thumbnail-placeholder';
 import type {
   AdminEducationDocument,
   AdminEducationMedia,
@@ -643,6 +647,7 @@ export function slugify(text: string) {
 export function ContentTab(props: ContentTabProps) {
   const t = useTranslations('adminPage');
   const tDynamic = useTranslations('dynamicLabels');
+  const tPagination = useTranslations('pagination');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -667,6 +672,36 @@ export function ContentTab(props: ContentTabProps) {
   const [isStuck, setIsStuck] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
+
+  const [catalogQuery, setCatalogQuery] = useState('');
+  const [catalogStatus, setCatalogStatus] = useState<string>('all');
+
+  const filteredModules = useMemo(() => {
+    const q = catalogQuery.trim().toLowerCase();
+    return props.modules.filter((m) => {
+      const matchesQuery =
+        !q ||
+        (m.title || '').toLowerCase().includes(q) ||
+        (m.slug || '').toLowerCase().includes(q) ||
+        (m.summary || '').toLowerCase().includes(q);
+      const matchesStatus =
+        catalogStatus === 'all' || m.status === catalogStatus;
+      return matchesQuery && matchesStatus;
+    });
+  }, [props.modules, catalogQuery, catalogStatus]);
+
+  const {
+    page: catalogPage,
+    setPage: setCatalogPage,
+    totalPages: catalogTotalPages,
+    paginatedItems: pagedModules,
+    totalItems: catalogTotalItems,
+    startIndex: catalogStartIndex,
+    endIndex: catalogEndIndex,
+  } = usePagination({
+    items: filteredModules,
+    pageSize: 6,
+  });
 
   if (moduleID !== prevModuleID) {
     setPrevModuleID(moduleID);
@@ -1060,7 +1095,7 @@ export function ContentTab(props: ContentTabProps) {
   if (!isCreating && (!selected || !document))
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-1">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-1">
           <div>
             <h3 className="text-navy text-base font-bold">Katalog Modul Edukasi</h3>
             <p className="text-muted-foreground mt-0.5 text-xs">
@@ -1072,9 +1107,70 @@ export function ContentTab(props: ContentTabProps) {
             {t('newModule')}
           </Button>
         </div>
+
+        <div className="border-border/80 bg-card shadow-soft flex flex-col gap-3 rounded-2xl border p-3.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <input
+                type="text"
+                value={catalogQuery}
+                onChange={(e) => {
+                  setCatalogQuery(e.target.value);
+                  setCatalogPage(1);
+                }}
+                placeholder="Cari judul, slug, atau ringkasan..."
+                className="border-border/80 bg-muted/40 text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-9 w-full rounded-xl border pl-9 pr-3 text-xs outline-none focus-visible:ring-2"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0">
+              {(['all', 'draft', 'in_review', 'published', 'archived'] as const).map((status) => {
+                const isActive = catalogStatus === status;
+                const statusLabel =
+                  status === 'all'
+                    ? 'Semua'
+                    : tDynamic(dynamicLabelKey('status', status), {
+                        value: dynamicLabelFallback(status),
+                      });
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => {
+                      setCatalogStatus(status);
+                      setCatalogPage(1);
+                    }}
+                    className={cn(
+                      'rounded-xl px-2.5 py-1 text-xs font-bold transition-colors whitespace-nowrap',
+                      isActive
+                        ? 'bg-navy text-white shadow-2xs'
+                        : 'border border-border/70 bg-muted/30 text-muted-foreground hover:bg-muted/70 hover:text-navy'
+                    )}
+                  >
+                    {statusLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="text-muted-foreground/80 flex items-center text-xs font-semibold shrink-0">
+            {catalogTotalItems > 0 ? (
+              <span>
+                {tPagination('showingRange', {
+                  start: catalogStartIndex,
+                  end: catalogEndIndex,
+                  total: catalogTotalItems,
+                })}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {props.modules.length ? (
-            props.modules.map((module) => {
+          {pagedModules.length ? (
+            pagedModules.map((module) => {
               const firstThumb =
                 module.draft_document?.thumbnails?.[0] ||
                 module.published_document?.thumbnails?.[0];
@@ -1099,12 +1195,10 @@ export function ContentTab(props: ContentTabProps) {
                         </div>
                       </div>
                     ) : (
-                      <div className="relative aspect-video w-full overflow-hidden border-b border-border/60 bg-gradient-to-br from-navy/10 via-azure/35 to-azure/60">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="bg-card/85 border-navy/15 text-navy/40 flex size-11 items-center justify-center rounded-2xl border shadow-xs backdrop-blur-md transition-transform duration-300 group-hover:scale-110">
-                            <ImageIcon className="size-5" />
-                          </div>
-                        </div>
+                      <div className="relative aspect-video w-full overflow-hidden">
+                        <ThumbnailPlaceholder
+                          title={module.title || module.slug}
+                        />
                         <div className="absolute top-3 right-3 z-10">
                           <AdminStatusBadge status={module.status} />
                         </div>
@@ -1130,6 +1224,27 @@ export function ContentTab(props: ContentTabProps) {
                 </button>
               );
             })
+          ) : props.modules.length > 0 ? (
+            <div className="border-border bg-card shadow-soft col-span-full flex flex-col items-center justify-center gap-3 rounded-2xl border py-12 px-6 text-center">
+              <Search className="text-muted-foreground size-8 opacity-60" />
+              <div className="space-y-1">
+                <p className="text-navy text-sm font-bold">Tidak ada modul yang cocok</p>
+                <p className="text-muted-foreground text-xs">
+                  Coba ubah kata kunci pencarian atau filter status.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setCatalogQuery('');
+                  setCatalogStatus('all');
+                  setCatalogPage(1);
+                }}
+              >
+                Reset Filter
+              </Button>
+            </div>
           ) : (
             <div className="border-border bg-card shadow-soft col-span-full flex flex-col items-center justify-center gap-3.5 rounded-2xl border py-10 sm:py-14 px-6 text-center">
               <span className="bg-navy/5 text-navy flex size-12 items-center justify-center rounded-2xl ring-1 ring-navy/10">
@@ -1144,6 +1259,25 @@ export function ContentTab(props: ContentTabProps) {
             </div>
           )}
         </div>
+
+        {catalogTotalPages > 1 ? (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 pt-2">
+            <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+              {tPagination('showingRange', {
+                start: catalogStartIndex,
+                end: catalogEndIndex,
+                total: catalogTotalItems,
+              })}
+            </span>
+            <Pagination
+              currentPage={catalogPage}
+              totalPages={catalogTotalPages}
+              onPageChange={setCatalogPage}
+              variant="flat"
+              size="sm"
+            />
+          </div>
+        ) : null}
       </div>
     );
 
@@ -1181,7 +1315,7 @@ export function ContentTab(props: ContentTabProps) {
                 {translation.title || slug || (isCreating ? t('newModule') : '')}
               </h2>
               {isCreating ? (
-                <span className="bg-navy/10 text-navy rounded-full px-2 py-0.5 text-[0.6875rem] font-bold">
+                <span className="border-navy/20 bg-azure/85 text-navy inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-2xs">
                   Draf Baru
                 </span>
               ) : selected ? (

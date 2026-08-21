@@ -20,6 +20,7 @@ import {
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Pagination } from '@/components/dashboard/pagination';
+import { usePagination } from '@/hooks/use-pagination';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Link, useRouter } from '@/i18n/routing';
@@ -96,7 +97,6 @@ export function SkillsHubClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
-  const [page, setPage] = useState(1);
   const urlTimerRef = useRef<number | null>(null);
 
   const providers: LearningProvider[] = useMemo(() => {
@@ -142,15 +142,15 @@ export function SkillsHubClient() {
     );
   }, [locale, providers, query]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredProviders.length / PROVIDERS_PER_PAGE)
-  );
-  const safePage = Math.min(page, totalPages);
-  const pagedProviders = filteredProviders.slice(
-    (safePage - 1) * PROVIDERS_PER_PAGE,
-    safePage * PROVIDERS_PER_PAGE
-  );
+  const {
+    page,
+    setPage,
+    totalPages,
+    paginatedItems: pagedProviders,
+  } = usePagination({
+    items: filteredProviders,
+    pageSize: PROVIDERS_PER_PAGE,
+  });
 
   const handleChange = (value: string) => {
     setQuery(value);
@@ -334,11 +334,13 @@ export function SkillsHubClient() {
                     );
                   })}
                 </div>
-                <Pagination
-                  currentPage={safePage}
-                  totalPages={totalPages}
-                  onPageChange={setPage}
-                />
+                <div className="mt-8 flex justify-center">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                  />
+                </div>
               </div>
             )}
           </div>

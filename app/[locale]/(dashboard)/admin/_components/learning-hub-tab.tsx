@@ -13,8 +13,10 @@ import {
   Pencil,
   Plus,
   Save,
+  Search,
   Send,
   Trash2,
+  X,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -38,6 +40,12 @@ import type {
   AdminLearningTaxonomy,
 } from '@/hooks/use-admin-operations';
 import { cn } from '@/lib/utils';
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
+import { InfiniteScrollSentinel } from '@/components/common/infinite-scroll-sentinel';
+import {
+  dynamicLabelFallback,
+  dynamicLabelKey,
+} from '@/lib/i18n/dynamic-labels';
 import {
   AdminStatusBadge,
   adminFieldClassName,
@@ -405,10 +413,11 @@ export function LearningHubTab({
   ) => Promise<{ id: string }>;
 }) {
   const t = useTranslations('adminPage');
+  const tDynamic = useTranslations('dynamicLabels');
   const appLocale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
   const sectionParam = searchParams.get('section');
   const section = sectionParam === 'taxonomy' ? 'taxonomy' : 'items';
   const langParam = searchParams.get('lang');
@@ -416,6 +425,7 @@ export function LearningHubTab({
   const locale: 'id' | 'en' = isEn ? 'en' : 'id';
   const itemParam = searchParams.get('item') || searchParams.get('id');
   const [filter, setFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [prevItemParam, setPrevItemParam] = useState(itemParam);
   const [selected, setSelected] = useState<AdminLearningHubItem | null>(() => {
     if (!itemParam) return null;
@@ -531,10 +541,51 @@ export function LearningHubTab({
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  const visibleItems = useMemo(
-    () => (filter ? items.filter((item) => item.status === filter) : items),
-    [filter, items]
+  const visibleItems = useMemo(() => {
+    let result = items;
+    if (filter) {
+      result = result.filter((item) => item.status === filter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (item) =>
+          item.title_id?.toLowerCase().includes(q) ||
+          item.title_en?.toLowerCase().includes(q) ||
+          item.slug?.toLowerCase().includes(q) ||
+          item.kind?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [filter, searchQuery, items]);
+
+  const {
+    displayedItems: displayedVisibleItems,
+    hasMore: hasMoreItems,
+    sentinelRef: itemsSentinelRef,
+    displayedCount: displayedItemsCount,
+    totalCount: totalItemsCount,
+  } = useInfiniteScroll({ items: visibleItems, initialBatchSize: 15, batchSize: 15 });
+
+  const clustersList = useMemo(
+    () => taxonomy?.clusters ?? [],
+    [taxonomy?.clusters]
   );
+  const {
+    displayedItems: displayedClusters,
+    hasMore: hasMoreClusters,
+    sentinelRef: clustersSentinelRef,
+  } = useInfiniteScroll({ items: clustersList, initialBatchSize: 15, batchSize: 15 });
+
+  const programsList = useMemo(
+    () => taxonomy?.programs ?? [],
+    [taxonomy?.programs]
+  );
+  const {
+    displayedItems: displayedPrograms,
+    hasMore: hasMorePrograms,
+    sentinelRef: programsSentinelRef,
+  } = useInfiniteScroll({ items: programsList, initialBatchSize: 15, batchSize: 15 });
 
   const clearFieldError = (key: string) => {
     setFieldErrors((prev) => {
@@ -995,25 +1046,61 @@ export function LearningHubTab({
         )}
       >
         <section className="border-border/80 bg-card max-h-[calc(100vh-14rem)] min-h-[500px] flex flex-col rounded-2xl border p-4 shadow-2xs h-full">
-          <div className="mb-3 flex items-center justify-between gap-3 shrink-0 pb-3 border-b border-border/60">
-            <label
-              className="text-navy text-xs font-bold uppercase tracking-wider"
-              htmlFor="learning-hub-status-filter"
-            >
-              {t('learningHubStatusFilter')}
-            </label>
-            <NativeSelect
-              id="learning-hub-status-filter"
-              className="h-8.5 w-auto min-w-32 text-xs font-medium"
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-            >
-              <option value="">{t('learningHubAllStatuses')}</option>
-              <option value="draft">draft</option>
-              <option value="in_review">in_review</option>
-              <option value="published">published</option>
-              <option value="archived">archived</option>
-            </NativeSelect>
+          <div className="mb-3 flex flex-col gap-2.5 shrink-0 pb-3 border-b border-border/60">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <label
+                  htmlFor="learning-hub-status-filter"
+                  className="text-navy text-xs font-bold uppercase tracking-wider"
+                >
+                  {t('learningHubStatusFilter')}
+                </label>
+                <span className="bg-muted/80 text-muted-foreground text-[0.6875rem] font-bold px-1.5 py-0.5 rounded-md border border-border/60">
+                  {totalItemsCount}
+                </span>
+              </div>
+              <NativeSelect
+                id="learning-hub-status-filter"
+                className="h-8.5 w-auto min-w-32 text-xs font-medium"
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              >
+                <option value="">{t('learningHubAllStatuses')}</option>
+                <option value="draft">
+                  {tDynamic(dynamicLabelKey('status', 'draft'), { value: dynamicLabelFallback('draft') })}
+                </option>
+                <option value="in_review">
+                  {tDynamic(dynamicLabelKey('status', 'in_review'), { value: dynamicLabelFallback('in_review') })}
+                </option>
+                <option value="published">
+                  {tDynamic(dynamicLabelKey('status', 'published'), { value: dynamicLabelFallback('published') })}
+                </option>
+                <option value="archived">
+                  {tDynamic(dynamicLabelKey('status', 'archived'), { value: dynamicLabelFallback('archived') })}
+                </option>
+              </NativeSelect>
+            </div>
+
+            <div className="relative w-full">
+              <Search className="text-muted-foreground/70 pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari materi atau slug..."
+                className="border-border/80 bg-muted/30 text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-8.5 w-full rounded-xl border pl-8 pr-7 text-xs outline-none focus-visible:ring-2"
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="text-muted-foreground hover:text-navy absolute top-1/2 right-2 -translate-y-1/2 p-0.5"
+                  aria-label="Hapus pencarian"
+                >
+                  <X className="size-3.5" />
+                </button>
+              ) : null}
+            </div>
           </div>
           <div
             className="mt-1 flex-1 overflow-y-auto pr-1.5 space-y-2 min-h-0 focus:outline-none flex flex-col"
@@ -1026,7 +1113,7 @@ export function LearningHubTab({
                   <span className="text-navy line-clamp-2 text-xs font-bold leading-snug">
                     {draft?.title_id || draft?.slug || t('learningHubNewItem')}
                   </span>
-                  <span className="bg-navy/10 text-navy rounded-full px-2 py-0.5 text-[0.6875rem] font-bold">
+                  <span className="border-navy/20 bg-azure/85 text-navy inline-flex items-center rounded-full border px-2 py-0.5 text-[0.625rem] font-bold shadow-2xs">
                     Draf Baru
                   </span>
                 </div>
@@ -1040,7 +1127,7 @@ export function LearningHubTab({
                 </div>
               </div>
             ) : null}
-            {visibleItems.map((item) => (
+            {displayedVisibleItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -1056,7 +1143,7 @@ export function LearningHubTab({
                   <span className="text-navy line-clamp-2 text-xs font-bold leading-snug">
                     {item.title_id || item.slug}
                   </span>
-                  <AdminStatusBadge status={item.status} />
+                  <AdminStatusBadge status={item.status} size="sm" />
                 </div>
                 <div className="mt-2 flex items-center justify-between text-[0.6875rem] text-muted-foreground">
                   <span className="capitalize font-medium">
@@ -1070,6 +1157,11 @@ export function LearningHubTab({
                 </div>
               </button>
             ))}
+            <InfiniteScrollSentinel
+              hasMore={hasMoreItems}
+              sentinelRef={itemsSentinelRef}
+              loadingText="Memuat materi lainnya..."
+            />
             {!visibleItems.length && !isCreating ? (
               <div className="flex flex-1 flex-col items-center justify-center py-10 px-4 text-center w-full my-auto">
                 <span className="bg-navy/5 text-navy flex size-11 items-center justify-center rounded-2xl ring-1 ring-navy/10">
@@ -1088,11 +1180,13 @@ export function LearningHubTab({
           </div>
           <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground shrink-0">
             <span className="text-[0.6875rem] font-medium">
-              {t('learningHubTotalItems', { count: visibleItems.length })}
+              {displayedItemsCount < totalItemsCount
+                ? `Menampilkan ${displayedItemsCount} dari ${totalItemsCount} materi`
+                : t('learningHubTotalItems', { count: totalItemsCount })}
             </span>
             {filter ? (
               <span className="text-[0.6875rem] font-semibold text-navy">
-                Filter: {filter}
+                Filter: {tDynamic(dynamicLabelKey('status', filter), { value: dynamicLabelFallback(filter) })}
               </span>
             ) : null}
           </div>
@@ -1872,74 +1966,81 @@ export function LearningHubTab({
           </div>
 
           <div className="mt-3.5 flex-1 max-h-[560px] overflow-y-auto pr-1 space-y-2.5 min-h-[140px] focus:outline-none">
-            {(taxonomy?.clusters ?? []).length === 0 ? (
+            {clustersList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-border/80 bg-muted/15">
                 <Layers className="size-8 text-muted-foreground/40 mb-2" />
                 <p className="text-xs font-semibold text-muted-foreground">Belum ada fakultas</p>
                 <p className="text-[0.6875rem] text-muted-foreground/80 mt-0.5">Tambahkan fakultas pertama Anda.</p>
               </div>
             ) : (
-              (taxonomy?.clusters ?? []).map((cluster) => {
-                const connectedProgramsCount = (taxonomy?.programs ?? []).filter(
-                  (p) => p.primary_cluster_slug === cluster.slug
-                ).length;
-                const clusterTitle = isEn
-                  ? (cluster.title_en || cluster.title_id || 'Faculty')
-                  : (cluster.title_id || cluster.title_en || 'Fakultas');
-                const clusterDescription = isEn
-                  ? (cluster.description_en || cluster.description_id || '')
-                  : (cluster.description_id || cluster.description_en || '');
+              <>
+                {displayedClusters.map((cluster) => {
+                  const connectedProgramsCount = (taxonomy?.programs ?? []).filter(
+                    (p) => p.primary_cluster_slug === cluster.slug
+                  ).length;
+                  const clusterTitle = isEn
+                    ? (cluster.title_en || cluster.title_id || 'Faculty')
+                    : (cluster.title_id || cluster.title_en || 'Fakultas');
+                  const clusterDescription = isEn
+                    ? (cluster.description_en || cluster.description_id || '')
+                    : (cluster.description_id || cluster.description_en || '');
 
-                return (
-                  <div
-                    key={cluster.id}
-                    className="border-border/80 bg-card hover:border-navy/30 hover:shadow-xs group flex flex-col justify-between rounded-xl border p-3.5 shadow-2xs transition-all gap-2.5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1 space-y-0.5">
-                        <h4 className="text-navy text-sm font-bold truncate">
-                          {clusterTitle}
-                        </h4>
-                        {clusterDescription ? (
-                          <p className="text-muted-foreground pt-0.5 text-xs line-clamp-2 leading-relaxed">
-                            {clusterDescription}
-                          </p>
-                        ) : null}
+                  return (
+                    <div
+                      key={cluster.id}
+                      className="border-border/80 bg-card hover:border-navy/30 hover:shadow-xs group flex flex-col justify-between rounded-xl border p-3.5 shadow-2xs transition-all gap-2.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <h4 className="text-navy text-sm font-bold truncate">
+                            {clusterTitle}
+                          </h4>
+                          {clusterDescription ? (
+                            <p className="text-muted-foreground pt-0.5 text-xs line-clamp-2 leading-relaxed">
+                              {clusterDescription}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEditCluster(cluster)}
+                            className="h-7 px-2 text-xs font-semibold rounded-lg hover:border-navy/30 hover:bg-navy/5 text-navy"
+                          >
+                            <Pencil className="size-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            onClick={() => void handleDeleteCluster(cluster)}
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-1 shrink-0 pt-0.5">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEditCluster(cluster)}
-                          className="h-7 px-2 text-xs font-semibold rounded-lg hover:border-navy/30 hover:bg-navy/5 text-navy"
-                        >
-                          <Pencil className="size-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          onClick={() => void handleDeleteCluster(cluster)}
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
+                      <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5 font-medium text-[0.6875rem] text-navy/80 bg-muted/40 px-2 py-0.5 rounded-md border border-border/40">
+                          <GraduationCap className="size-3 text-navy/60 shrink-0" />
+                          {connectedProgramsCount} Program Studi
+                        </span>
+                        <span className="text-[0.6875rem] font-medium text-muted-foreground">
+                          Urutan #{cluster.sort_order}
+                        </span>
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5 font-medium text-[0.6875rem] text-navy/80 bg-muted/40 px-2 py-0.5 rounded-md border border-border/40">
-                        <GraduationCap className="size-3 text-navy/60 shrink-0" />
-                        {connectedProgramsCount} Program Studi
-                      </span>
-                      <span className="text-[0.6875rem] font-medium text-muted-foreground">
-                        Urutan #{cluster.sort_order}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+                <InfiniteScrollSentinel
+                  hasMore={hasMoreClusters}
+                  sentinelRef={clustersSentinelRef}
+                  loadingText="Memuat fakultas lainnya..."
+                />
+              </>
             )}
           </div>
         </section>
@@ -1967,80 +2068,87 @@ export function LearningHubTab({
           </div>
 
           <div className="mt-3.5 flex-1 max-h-[560px] overflow-y-auto pr-1 space-y-2.5 min-h-[140px] focus:outline-none">
-            {(taxonomy?.programs ?? []).length === 0 ? (
+            {programsList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-border/80 bg-muted/15">
                 <GraduationCap className="size-8 text-muted-foreground/40 mb-2" />
                 <p className="text-xs font-semibold text-muted-foreground">Belum ada program studi</p>
                 <p className="text-[0.6875rem] text-muted-foreground/80 mt-0.5">Tambahkan program studi pertama Anda.</p>
               </div>
             ) : (
-              (taxonomy?.programs ?? []).map((program) => {
-                const parentCluster = clusterMap.get(program.primary_cluster_slug);
-                const programName = isEn
-                  ? (program.name_en || program.name_id || program.name)
-                  : (program.name_id || program.name_en || program.name);
-                const facultyName = parentCluster
-                  ? (isEn
-                      ? (parentCluster.title_en || parentCluster.title_id || parentCluster.slug)
-                      : (parentCluster.title_id || parentCluster.title_en || parentCluster.slug))
-                  : program.primary_cluster_slug || (isEn ? 'Unassigned' : 'Belum dihubungkan');
+              <>
+                {displayedPrograms.map((program) => {
+                  const parentCluster = clusterMap.get(program.primary_cluster_slug);
+                  const programName = isEn
+                    ? (program.name_en || program.name_id || program.name)
+                    : (program.name_id || program.name_en || program.name);
+                  const facultyName = parentCluster
+                    ? (isEn
+                        ? (parentCluster.title_en || parentCluster.title_id || parentCluster.slug)
+                        : (parentCluster.title_id || parentCluster.title_en || parentCluster.slug))
+                    : program.primary_cluster_slug || (isEn ? 'Unassigned' : 'Belum dihubungkan');
 
-                return (
-                  <div
-                    key={program.id}
-                    className="border-border/80 bg-card hover:border-navy/30 hover:shadow-xs group flex flex-col justify-between rounded-xl border p-3.5 shadow-2xs transition-all gap-2.5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h4 className="text-navy text-sm font-bold truncate">
-                            {programName}
-                          </h4>
-                          {program.degree ? (
-                            <span className="text-[0.6875rem] font-bold text-navy bg-azure/60 border border-navy/15 px-2 py-0.5 rounded-md shadow-2xs">
-                              Jenjang {program.degree}
+                  return (
+                    <div
+                      key={program.id}
+                      className="border-border/80 bg-card hover:border-navy/30 hover:shadow-xs group flex flex-col justify-between rounded-xl border p-3.5 shadow-2xs transition-all gap-2.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="text-navy text-sm font-bold truncate">
+                              {programName}
+                            </h4>
+                            {program.degree ? (
+                              <span className="text-[0.6875rem] font-bold text-navy bg-azure/60 border border-navy/15 px-2 py-0.5 rounded-md shadow-2xs">
+                                Jenjang {program.degree}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Layers className="size-3 text-navy/70 shrink-0" />
+                            <span className="font-semibold text-navy/80">Fakultas:</span>
+                            <span className="text-foreground font-medium truncate">
+                              {facultyName}
                             </span>
-                          ) : null}
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Layers className="size-3 text-navy/70 shrink-0" />
-                          <span className="font-semibold text-navy/80">Fakultas:</span>
-                          <span className="text-foreground font-medium truncate">
-                            {facultyName}
-                          </span>
+                        <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEditProgram(program)}
+                            className="h-7 px-2 text-xs font-semibold rounded-lg hover:border-navy/30 hover:bg-navy/5 text-navy"
+                          >
+                            <Pencil className="size-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            onClick={() => void handleDeleteProgram(program)}
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 shrink-0 pt-0.5">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEditProgram(program)}
-                          className="h-7 px-2 text-xs font-semibold rounded-lg hover:border-navy/30 hover:bg-navy/5 text-navy"
-                        >
-                          <Pencil className="size-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          onClick={() => void handleDeleteProgram(program)}
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
+                      <div className="flex items-center justify-end border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                        <span className="text-[0.6875rem] font-medium text-muted-foreground">
+                          Urutan #{program.sort_order}
+                        </span>
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-end border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                      <span className="text-[0.6875rem] font-medium text-muted-foreground">
-                        Urutan #{program.sort_order}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+                <InfiniteScrollSentinel
+                  hasMore={hasMorePrograms}
+                  sentinelRef={programsSentinelRef}
+                  loadingText="Memuat program studi lainnya..."
+                />
+              </>
             )}
           </div>
         </section>

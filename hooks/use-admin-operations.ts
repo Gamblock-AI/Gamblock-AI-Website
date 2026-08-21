@@ -284,6 +284,56 @@ const EMPTY_STATE: AdminOperationsState = {
   auditEvents: [],
 };
 
+export type PaginatedData<T> = {
+  items: T[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_more: boolean;
+};
+
+export function unwrapItems<T>(payload: T[] | PaginatedData<T> | null | undefined): T[] {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === 'object' && 'items' in payload && Array.isArray((payload as PaginatedData<T>).items)) {
+    return (payload as PaginatedData<T>).items;
+  }
+  return [];
+}
+
+export function normalizePaginated<T>(
+  payload: T[] | PaginatedData<T> | null | undefined,
+  defaultPage = 1,
+  defaultLimit = 10
+): PaginatedData<T> {
+  if (!payload) {
+    return { items: [], total_count: 0, page: defaultPage, page_size: defaultLimit, total_pages: 1, has_more: false };
+  }
+  if (Array.isArray(payload)) {
+    const total = payload.length;
+    const totalPages = Math.max(1, Math.ceil(total / defaultLimit));
+    return {
+      items: payload,
+      total_count: total,
+      page: defaultPage,
+      page_size: defaultLimit,
+      total_pages: totalPages,
+      has_more: defaultPage < totalPages,
+    };
+  }
+  return {
+    items: payload.items ?? [],
+    total_count: payload.total_count ?? (payload.items ? payload.items.length : 0),
+    page: payload.page ?? defaultPage,
+    page_size: payload.page_size ?? defaultLimit,
+    total_pages:
+      payload.total_pages ??
+      Math.max(1, Math.ceil((payload.total_count ?? 0) / (payload.page_size ?? defaultLimit))),
+    has_more: payload.has_more ?? false,
+  };
+}
+
 async function fetchAdminOperations(
   capabilities: AdminCapabilities,
   area: AdminArea
@@ -304,45 +354,45 @@ async function fetchAdminOperations(
       ? apiClient<AdminOverview>('/admin/overview')
       : Promise.resolve(null),
     capabilities.content && (area === 'content' || area === 'all')
-      ? apiClient<AdminEducationModule[]>('/admin/content/modules')
+      ? apiClient<AdminEducationModule[] | PaginatedData<AdminEducationModule>>('/admin/content/modules')
       : Promise.resolve([]),
     capabilities.learningHub && (area === 'learningHub' || area === 'all')
-      ? apiClient<AdminLearningHubItem[]>('/admin/content/learning-hub/items')
+      ? apiClient<AdminLearningHubItem[] | PaginatedData<AdminLearningHubItem>>('/admin/content/learning-hub/items')
       : Promise.resolve([]),
     capabilities.learningHub && (area === 'learningHub' || area === 'all')
       ? apiClient<AdminLearningTaxonomy>('/admin/content/learning-hub/taxonomy')
       : Promise.resolve(null),
     capabilities.support && (area === 'tickets' || area === 'all')
-      ? apiClient<AdminSupportCase[]>('/admin/support-cases')
+      ? apiClient<AdminSupportCase[] | PaginatedData<AdminSupportCase>>('/admin/support-cases')
       : Promise.resolve([]),
     capabilities.support && (area === 'tickets' || area === 'all')
-      ? apiClient<AdminDataRequest[]>('/admin/data-requests')
+      ? apiClient<AdminDataRequest[] | PaginatedData<AdminDataRequest>>('/admin/data-requests')
       : Promise.resolve([]),
     capabilities.emergency && (area === 'emergency' || area === 'all')
-      ? apiClient<EmergencyKeyRequest[]>('/admin/emergency-key-requests')
+      ? apiClient<EmergencyKeyRequest[] | PaginatedData<EmergencyKeyRequest>>('/admin/emergency-key-requests')
       : Promise.resolve([]),
     capabilities.platform && (area === 'platform' || area === 'all')
-      ? apiClient<AdminAccount[]>('/admin/accounts')
+      ? apiClient<AdminAccount[] | PaginatedData<AdminAccount>>('/admin/accounts')
       : Promise.resolve([]),
     capabilities.platform && (area === 'platform' || area === 'all')
       ? apiClient<AdminSiteSocialLink[]>('/admin/site-social-links')
       : Promise.resolve([]),
     capabilities.platform && (area === 'platform' || area === 'all')
-      ? apiClient<AdminAuditEvent[]>('/admin/audit-events')
+      ? apiClient<AdminAuditEvent[] | PaginatedData<AdminAuditEvent>>('/admin/audit-events')
       : Promise.resolve([]),
   ]);
 
   return {
     overview,
-    modules: modules ?? [],
-    learningHubItems: learningHubItems ?? [],
+    modules: unwrapItems(modules),
+    learningHubItems: unwrapItems(learningHubItems),
     learningHubTaxonomy,
-    cases: cases ?? [],
-    dataRequests: dataRequests ?? [],
-    emergencyRequests: emergencyRequests ?? [],
-    accounts: operators ?? [],
+    cases: unwrapItems(cases),
+    dataRequests: unwrapItems(dataRequests),
+    emergencyRequests: unwrapItems(emergencyRequests),
+    accounts: unwrapItems(operators),
     socialLinks: socialLinks ?? [],
-    auditEvents: auditEvents ?? [],
+    auditEvents: unwrapItems(auditEvents),
   };
 }
 
@@ -638,6 +688,84 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
     clearEmergencyKey: () => setEmergencyKey(null),
     reviewEmergencyKey,
     approveEmergencyKey,
+    fetchModules: (params?: { page?: number; limit?: number; status?: string; q?: string }) => {
+      const qp = new URLSearchParams();
+      if (params?.page) qp.set('page', String(params.page));
+      if (params?.limit) qp.set('limit', String(params.limit));
+      if (params?.status) qp.set('status', params.status);
+      if (params?.q) qp.set('q', params.q);
+      const query = qp.toString();
+      return apiClient<PaginatedData<AdminEducationModule> | AdminEducationModule[]>(
+        `/admin/content/modules${query ? `?${query}` : ''}`
+      ).then((res) => normalizePaginated(res, params?.page || 1, params?.limit || 10));
+    },
+    fetchLearningHubItems: (params?: { page?: number; limit?: number; status?: string; q?: string }) => {
+      const qp = new URLSearchParams();
+      if (params?.page) qp.set('page', String(params.page));
+      if (params?.limit) qp.set('limit', String(params.limit));
+      if (params?.status) qp.set('status', params.status);
+      if (params?.q) qp.set('q', params.q);
+      const query = qp.toString();
+      return apiClient<PaginatedData<AdminLearningHubItem> | AdminLearningHubItem[]>(
+        `/admin/content/learning-hub/items${query ? `?${query}` : ''}`
+      ).then((res) => normalizePaginated(res, params?.page || 1, params?.limit || 15));
+    },
+    fetchSupportCases: (params?: { page?: number; limit?: number; status?: string; priority?: string; q?: string }) => {
+      const qp = new URLSearchParams();
+      if (params?.page) qp.set('page', String(params.page));
+      if (params?.limit) qp.set('limit', String(params.limit));
+      if (params?.status) qp.set('status', params.status);
+      if (params?.priority) qp.set('priority', params.priority);
+      if (params?.q) qp.set('q', params.q);
+      const query = qp.toString();
+      return apiClient<PaginatedData<AdminSupportCase> | AdminSupportCase[]>(
+        `/admin/support-cases${query ? `?${query}` : ''}`
+      ).then((res) => normalizePaginated(res, params?.page || 1, params?.limit || 10));
+    },
+    fetchDataRequests: (params?: { page?: number; limit?: number; status?: string; type?: string }) => {
+      const qp = new URLSearchParams();
+      if (params?.page) qp.set('page', String(params.page));
+      if (params?.limit) qp.set('limit', String(params.limit));
+      if (params?.status) qp.set('status', params.status);
+      if (params?.type) qp.set('type', params.type);
+      const query = qp.toString();
+      return apiClient<PaginatedData<AdminDataRequest> | AdminDataRequest[]>(
+        `/admin/data-requests${query ? `?${query}` : ''}`
+      ).then((res) => normalizePaginated(res, params?.page || 1, params?.limit || 10));
+    },
+    fetchAccounts: (params?: { page?: number; limit?: number; role?: string; q?: string }) => {
+      const qp = new URLSearchParams();
+      if (params?.page) qp.set('page', String(params.page));
+      if (params?.limit) qp.set('limit', String(params.limit));
+      if (params?.role) qp.set('role', params.role);
+      if (params?.q) qp.set('q', params.q);
+      const query = qp.toString();
+      return apiClient<PaginatedData<AdminAccount> | AdminAccount[]>(
+        `/admin/accounts${query ? `?${query}` : ''}`
+      ).then((res) => normalizePaginated(res, params?.page || 1, params?.limit || 10));
+    },
+    fetchAuditEvents: (params?: { page?: number; limit?: number; action?: string; actor?: string; q?: string }) => {
+      const qp = new URLSearchParams();
+      if (params?.page) qp.set('page', String(params.page));
+      if (params?.limit) qp.set('limit', String(params.limit));
+      if (params?.action) qp.set('action', params.action);
+      if (params?.actor) qp.set('actor', params.actor);
+      if (params?.q) qp.set('q', params.q);
+      const query = qp.toString();
+      return apiClient<PaginatedData<AdminAuditEvent> | AdminAuditEvent[]>(
+        `/admin/audit-events${query ? `?${query}` : ''}`
+      ).then((res) => normalizePaginated(res, params?.page || 1, params?.limit || 10));
+    },
+    fetchEmergencyRequests: (params?: { page?: number; limit?: number; status?: string }) => {
+      const qp = new URLSearchParams();
+      if (params?.page) qp.set('page', String(params.page));
+      if (params?.limit) qp.set('limit', String(params.limit));
+      if (params?.status) qp.set('status', params.status);
+      const query = qp.toString();
+      return apiClient<PaginatedData<EmergencyKeyRequest> | EmergencyKeyRequest[]>(
+        `/admin/emergency-key-requests${query ? `?${query}` : ''}`
+      ).then((res) => normalizePaginated(res, params?.page || 1, params?.limit || 5));
+    },
     createModule,
     getModule,
     saveModule,

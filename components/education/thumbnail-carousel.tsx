@@ -1,9 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { EducationThumbnail } from '@/hooks/use-education';
 import { resolveEducationMediaURL } from './media-url';
+import { ThumbnailPlaceholder } from './thumbnail-placeholder';
 import { useTranslations } from 'next-intl';
 
 export function ThumbnailCarousel({
@@ -31,13 +32,10 @@ export function ThumbnailCarousel({
 
   if (!current) {
     return (
-      <div
-        className={`bg-azure/45 text-navy/45 flex items-center justify-center ${
-          fullHeight ? 'h-full w-full min-h-full' : 'aspect-video'
-        }`}
-      >
-        <ImageIcon className="size-8" aria-hidden="true" />
-      </div>
+      <ThumbnailPlaceholder
+        title={title}
+        className={fullHeight ? 'h-full w-full min-h-full' : 'aspect-video'}
+      />
     );
   }
 

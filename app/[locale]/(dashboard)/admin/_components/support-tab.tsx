@@ -26,6 +26,8 @@ import type {
   AdminSupportCase,
 } from '@/hooks/use-admin-operations';
 import { SupportStatusBadge } from '@/components/dashboard/support-status-badge';
+import { Pagination } from '@/components/dashboard/pagination';
+import { usePagination } from '@/hooks/use-pagination';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { useRouter } from '@/i18n/routing';
 import {
@@ -56,6 +58,7 @@ interface SupportTabProps {
 export function SupportTab(props: SupportTabProps) {
   const t = useTranslations('adminPage');
   const tDynamic = useTranslations('dynamicLabels');
+  const tPagination = useTranslations('pagination');
   const router = useRouter();
   const { caseID, getSupportCase } = props;
   const [selected, setSelected] = useState<AdminSupportCase | null>(null);
@@ -69,6 +72,26 @@ export function SupportTab(props: SupportTabProps) {
     itemSummary?: string;
   } | null>(null);
   const [modalReason, setModalReason] = useState('');
+
+  const {
+    pagedItems: pagedCases,
+    page: casesPage,
+    totalPages: totalCasesPages,
+    setPage: setCasesPage,
+    startIndex: casesStartIndex,
+    endIndex: casesEndIndex,
+    totalItems: totalCases,
+  } = usePagination({ items: props.cases, pageSize: 10 });
+
+  const {
+    pagedItems: pagedDataRequests,
+    page: requestsPage,
+    totalPages: totalRequestsPages,
+    setPage: setRequestsPage,
+    startIndex: requestsStartIndex,
+    endIndex: requestsEndIndex,
+    totalItems: totalDataRequests,
+  } = usePagination({ items: props.dataRequests, pageSize: 10 });
 
   const dataRequestTitle = (request: AdminDataRequest) =>
     request.type === 'export'
@@ -425,7 +448,7 @@ export function SupportTab(props: SupportTabProps) {
                 description={t('noTicketsDescription')}
               />
             ) : (
-              props.cases.map((item) => (
+              pagedCases.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-mono text-xs">{item.id}</TableCell>
                   <TableCell className="text-navy font-semibold text-sm">
@@ -465,6 +488,24 @@ export function SupportTab(props: SupportTabProps) {
             )}
           </TableBody>
         </Table>
+        {totalCases > 0 ? (
+          <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
+            <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+              {tPagination('showingRange', {
+                start: casesStartIndex,
+                end: casesEndIndex,
+                total: totalCases,
+              })}
+            </span>
+            <Pagination
+              currentPage={casesPage}
+              totalPages={totalCasesPages}
+              onPageChange={setCasesPage}
+              variant="flat"
+              size="sm"
+            />
+          </div>
+        ) : null}
       </section>
 
       {/* User Data Requests Card */}
@@ -494,7 +535,7 @@ export function SupportTab(props: SupportTabProps) {
                 description={t('noDataRequestsDescription')}
               />
             ) : (
-              props.dataRequests.map((request) => (
+              pagedDataRequests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell className="font-mono text-xs">
                     {request.id}
@@ -548,6 +589,24 @@ export function SupportTab(props: SupportTabProps) {
             )}
           </TableBody>
         </Table>
+        {totalDataRequests > 0 ? (
+          <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
+            <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+              {tPagination('showingRange', {
+                start: requestsStartIndex,
+                end: requestsEndIndex,
+                total: totalDataRequests,
+              })}
+            </span>
+            <Pagination
+              currentPage={requestsPage}
+              totalPages={totalRequestsPages}
+              onPageChange={setRequestsPage}
+              variant="flat"
+              size="sm"
+            />
+          </div>
+        ) : null}
       </section>
 
       {actionDialog}

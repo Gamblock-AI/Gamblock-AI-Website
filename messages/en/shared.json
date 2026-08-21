@@ -219,5 +219,13 @@
     "hideDetails": "Hide details",
     "optional": "optional",
     "required": "required"
+  },
+  "pagination": {
+    "paginationLabel": "Page navigation",
+    "prev": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {current} of {total}",
+    "showingRange": "Showing {start}–{end} of {total}",
+    "noItems": "No items"
   }
 }
