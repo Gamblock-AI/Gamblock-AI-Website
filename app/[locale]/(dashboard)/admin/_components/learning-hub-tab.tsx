@@ -13,10 +13,8 @@ import {
   Pencil,
   Plus,
   Save,
-  Search,
   Send,
   Trash2,
-  X,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -30,6 +28,13 @@ import {
 } from '@/components/ui/dialog';
 import { NativeSelect } from '@/components/common/native-select';
 import { CompactTabNav } from '@/components/common/compact-tab-nav';
+import {
+  FilterResetButton,
+  FilterSearchInput,
+  FilterSelect,
+  FilterToggleButton,
+} from '@/components/dashboard/filter-toolbar';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { ThumbnailCropper } from '@/components/education/thumbnail-cropper';
 import { apiClientBlob } from '@/lib/api-client';
@@ -424,8 +429,22 @@ export function LearningHubTab({
   const isEn = appLocale === 'en' || langParam === 'en';
   const locale: 'id' | 'en' = isEn ? 'en' : 'id';
   const itemParam = searchParams.get('item') || searchParams.get('id');
-  const [filter, setFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+
+  const {
+    getFilter,
+    setFilter: setQueryFilter,
+    isExpanded: showItemFilters,
+    toggleExpanded: toggleItemFilters,
+    activeFilterCount: activeItemFilterCount,
+    hasActiveFilters: hasActiveItemFilters,
+    clearFilters: clearItemFilters,
+  } = useQueryFilters({
+    filterKeys: ['status', 'q'],
+    ignoredKeys: ['section', 'item', 'id', 'lang'],
+  });
+
+  const filter = getFilter('status');
+  const searchQuery = getFilter('q');
   const [prevItemParam, setPrevItemParam] = useState(itemParam);
   const [selected, setSelected] = useState<AdminLearningHubItem | null>(() => {
     if (!itemParam) return null;
@@ -1049,58 +1068,65 @@ export function LearningHubTab({
           <div className="mb-3 flex flex-col gap-2.5 shrink-0 pb-3 border-b border-border/60">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
-                <label
-                  htmlFor="learning-hub-status-filter"
-                  className="text-navy text-xs font-bold uppercase tracking-wider"
-                >
+                <span className="text-navy text-xs font-bold uppercase tracking-wider">
                   {t('learningHubStatusFilter')}
-                </label>
+                </span>
                 <span className="bg-muted/80 text-muted-foreground text-[0.6875rem] font-bold px-1.5 py-0.5 rounded-md border border-border/60">
                   {totalItemsCount}
                 </span>
               </div>
-              <NativeSelect
-                id="learning-hub-status-filter"
-                className="h-8.5 w-auto min-w-32 text-xs font-medium"
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              >
-                <option value="">{t('learningHubAllStatuses')}</option>
-                <option value="draft">
-                  {tDynamic(dynamicLabelKey('status', 'draft'), { value: dynamicLabelFallback('draft') })}
-                </option>
-                <option value="in_review">
-                  {tDynamic(dynamicLabelKey('status', 'in_review'), { value: dynamicLabelFallback('in_review') })}
-                </option>
-                <option value="published">
-                  {tDynamic(dynamicLabelKey('status', 'published'), { value: dynamicLabelFallback('published') })}
-                </option>
-                <option value="archived">
-                  {tDynamic(dynamicLabelKey('status', 'archived'), { value: dynamicLabelFallback('archived') })}
-                </option>
-              </NativeSelect>
+              <FilterToggleButton
+                isExpanded={showItemFilters}
+                onToggle={toggleItemFilters}
+                hasActiveFilters={hasActiveItemFilters}
+                activeCount={activeItemFilterCount}
+                label={t('filterToggle') || 'Filter'}
+              />
             </div>
 
-            <div className="relative w-full">
-              <Search className="text-muted-foreground/70 pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari materi atau slug..."
-                className="border-border/80 bg-muted/30 text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-8.5 w-full rounded-xl border pl-8 pr-7 text-xs outline-none focus-visible:ring-2"
-              />
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="text-muted-foreground hover:text-navy absolute top-1/2 right-2 -translate-y-1/2 p-0.5"
-                  aria-label="Hapus pencarian"
-                >
-                  <X className="size-3.5" />
-                </button>
-              ) : null}
-            </div>
+            {showItemFilters ? (
+              <div className="flex flex-col gap-2.5 pt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                <FilterSearchInput
+                  value={searchQuery}
+                  onChangeValue={(val) => setQueryFilter('q', val)}
+                  placeholder="Cari materi atau slug..."
+                  className="w-full sm:w-full"
+                />
+
+                <div className="flex items-center justify-between gap-2">
+                  <FilterSelect
+                    id="learning-hub-status-filter"
+                    className="w-full"
+                    selectClassName="w-full"
+                    ariaLabel={t('learningHubStatusFilter')}
+                    value={filter}
+                    onChange={(event) => setQueryFilter('status', event.target.value)}
+                  >
+                    <option value="">{t('learningHubAllStatuses')}</option>
+                    <option value="draft">
+                      {tDynamic(dynamicLabelKey('status', 'draft'), { value: dynamicLabelFallback('draft') })}
+                    </option>
+                    <option value="in_review">
+                      {tDynamic(dynamicLabelKey('status', 'in_review'), { value: dynamicLabelFallback('in_review') })}
+                    </option>
+                    <option value="published">
+                      {tDynamic(dynamicLabelKey('status', 'published'), { value: dynamicLabelFallback('published') })}
+                    </option>
+                    <option value="archived">
+                      {tDynamic(dynamicLabelKey('status', 'archived'), { value: dynamicLabelFallback('archived') })}
+                    </option>
+                  </FilterSelect>
+
+                  {hasActiveItemFilters ? (
+                    <FilterResetButton
+                      onClick={() => clearItemFilters(['status', 'q'])}
+                      label={t('clearFilters') || 'Reset'}
+                      className="shrink-0"
+                    />
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
           <div
             className="mt-1 flex-1 overflow-y-auto pr-1.5 space-y-2 min-h-0 focus:outline-none flex flex-col"

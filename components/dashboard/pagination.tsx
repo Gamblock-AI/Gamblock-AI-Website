@@ -26,7 +26,7 @@ export interface PaginationProps {
 const pageButtonBase =
   'inline-flex items-center justify-center font-bold transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-navy/30 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-25 active:scale-95 motion-reduce:transform-none';
 
-function getPaginationItems(
+export function getPaginationItems(
   currentPage: number,
   totalPages: number,
   siblingCount = 1
@@ -43,13 +43,15 @@ function getPaginationItems(
   const shouldShowLeftDots = leftSiblingIndex > 2;
   const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
 
+  // Case 1: No left dots, show right dots (near start)
   if (!shouldShowLeftDots && shouldShowRightDots) {
     const leftItemCount = 3 + 2 * siblingCount;
     const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1);
     return [...leftRange, 'ellipsis-right', totalPages];
   }
 
-  if (!shouldShowLeftDots && !shouldShowRightDots) {
+  // Case 2: Show left dots, no right dots (near end)
+  if (shouldShowLeftDots && !shouldShowRightDots) {
     const rightItemCount = 3 + 2 * siblingCount;
     const rightRange = Array.from(
       { length: rightItemCount },
@@ -58,7 +60,8 @@ function getPaginationItems(
     return [1, 'ellipsis-left', ...rightRange];
   }
 
-  if (!shouldShowLeftDots && shouldShowRightDots) {
+  // Case 3: Show both left and right dots (in the middle)
+  if (shouldShowLeftDots && shouldShowRightDots) {
     const middleRange = Array.from(
       { length: rightSiblingIndex - leftSiblingIndex + 1 },
       (_, i) => leftSiblingIndex + i

@@ -111,7 +111,7 @@ export async function reauthenticate(password: string): Promise<void> {
     typeof window !== 'undefined'
       ? localStorage.getItem('gamblock_access_token')
       : null;
-  const response = await fetch(`${API_URL}/v1/auth/reauthenticate`, {
+  let response = await fetch(`${API_URL}/v1/auth/reauthenticate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -120,6 +120,36 @@ export async function reauthenticate(password: string): Promise<void> {
     credentials: 'include',
     body: JSON.stringify({ password }),
   });
+
+  // If the access token has expired (or was missing/invalid), silently refresh
+  // it and retry re-authentication with the fresh token.
+  if (response.status === 401 && typeof window !== 'undefined') {
+    const errorDetails = await apiErrorFromResponse(response.clone());
+    if (
+      errorDetails.code === 'invalid_token' ||
+      errorDetails.code === 'auth_required'
+    ) {
+      try {
+        const freshAccessToken = await refreshAccessToken();
+        response = await fetch(`${API_URL}/v1/auth/reauthenticate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${freshAccessToken}`,
+          },
+          credentials: 'include',
+          body: JSON.stringify({ password }),
+        });
+      } catch (refreshErr) {
+        clearBrowserSession();
+        redirectToLogin();
+        throw refreshErr instanceof ApiError
+          ? refreshErr
+          : new ApiError(401, 'invalid_refresh_token');
+      }
+    }
+  }
+
   const payload = await unwrapResponse<{
     access_token?: string;
     refresh_token?: string;

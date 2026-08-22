@@ -3,19 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowRight,
   BarChart3,
   CircleAlert,
-  ClipboardCheck,
   FolderKanban,
   Handshake,
-  LockKeyhole,
   MessageCircleHeart,
   ShieldAlert,
-  ShieldCheck,
   UserCheck,
   Users,
-  UsersRound,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
@@ -23,7 +18,6 @@ import {
   DashboardNotice,
   DashboardPage,
   DashboardPageHeader,
-  DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
@@ -34,7 +28,7 @@ import {
   type AnalyticsPeriod,
   type AnalyticsSummary,
 } from '@/hooks/use-analytics';
-import { Link, useRouter } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
 import { AnalyticsInsights } from './analytics/analytics-insights';
@@ -134,13 +128,6 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
   const pendingContacts = accountability.workspace.contact_requests.filter(
     (request) => request.status === 'pending'
   ).length;
-  const readyMembers = activeMembers.filter(
-    (member) => member.aggregate.protection_status === 'ready'
-  ).length;
-  const attentionMembers = activeMembers.filter(
-    (member) => member.aggregate.protection_status === 'attention'
-  ).length;
-  const unknownMembers = activeMembers.length - readyMembers - attentionMembers;
   const effectiveGroupID =
     selectedGroupID === 'all' ||
     accountability.workspace.groups.some(
@@ -200,7 +187,7 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
                 label={t('activeGroups')}
                 value={activeGroups}
                 tone="navy"
-                subtitle={t('active')}
+                subtitle={t('groupUnit')}
               />
               <SummaryMetric
                 icon={UserCheck}
@@ -209,7 +196,7 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
                 tone="sage"
                 subtitle={
                   activeMembers.length > 0
-                    ? t('studentCount', { count: activeMembers.length })
+                    ? t('studentUnit')
                     : t('noneYet')
                 }
               />
@@ -233,8 +220,8 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
                 attention={pendingContacts > 0}
                 subtitle={
                   pendingContacts > 0
-                    ? t('newCount', { count: pendingContacts })
-                    : t('noQueue')
+                    ? t('newCount')
+                    : t('noNewMessages')
                 }
               />
             </div>
@@ -308,76 +295,8 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
               />
             )}
           </section>
-
-          <div className="grid gap-5 xl:grid-cols-12 xl:items-stretch">
-            <DashboardPanel
-              icon={ClipboardCheck}
-              title={t('actionTitle')}
-              description={t('actionBody')}
-              density="compact"
-              className="xl:col-span-7"
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <ActionLink
-                  href={ROUTES.ACCOUNTABILITY}
-                  icon={ShieldCheck}
-                  title={t('approvalTitle')}
-                  body={t('approvalBody')}
-                  count={pendingApprovals + pendingExits}
-                />
-                <ActionLink
-                  href={`${ROUTES.SUPPORT}?channel=partner`}
-                  icon={MessageCircleHeart}
-                  title={t('contactTitle')}
-                  body={t('contactBody')}
-                  count={pendingContacts}
-                />
-              </div>
-            </DashboardPanel>
-
-            <DashboardPanel
-              icon={UsersRound}
-              title={t('protectionTitle')}
-              description={t('protectionBody')}
-              density="compact"
-              className="xl:col-span-5"
-            >
-              <dl className="space-y-2.5">
-                <AggregateRow
-                  label={t('ready')}
-                  value={readyMembers}
-                  tone="sage"
-                />
-                <AggregateRow
-                  label={t('needsAttention')}
-                  value={attentionMembers}
-                  tone="amber"
-                />
-                <AggregateRow
-                  label={t('notShared')}
-                  value={unknownMembers}
-                  tone="muted"
-                />
-              </dl>
-              <Link
-                href={ROUTES.PARTNERS}
-                className="bg-navy text-white hover:bg-navy-light focus-visible:ring-navy/30 mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold shadow-soft transition-all duration-200 outline-none focus-visible:ring-2 hover:shadow-md"
-              >
-                <span>{t('manageGroups')}</span>
-                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1" />
-              </Link>
-            </DashboardPanel>
-          </div>
         </>
       )}
-
-      <DashboardNotice
-        icon={LockKeyhole}
-        title={t('privacyTitle')}
-        className="border-navy/15 bg-gradient-to-r from-azure/35 via-background to-azure/20 shadow-2xs"
-      >
-        {t('privacyBody')}
-      </DashboardNotice>
 
       <PartnerTour />
     </DashboardPage>
@@ -478,116 +397,12 @@ function SummaryMetric({
             {value}
           </p>
           {subtitle ? (
-            <span
-              className={cn(
-                'text-xs font-semibold leading-none',
-                attention
-                  ? 'rounded-md bg-amber/25 px-1.5 py-0.5 text-amber-900 border border-amber/40 font-bold text-[0.6875rem]'
-                  : 'text-muted-foreground'
-              )}
-            >
+            <span className="text-muted-foreground text-xs font-semibold leading-none">
               {subtitle}
             </span>
           ) : null}
         </div>
       </div>
-    </div>
-  );
-}
-
-function ActionLink({
-  href,
-  icon: Icon,
-  title,
-  body,
-  count,
-}: {
-  href: string;
-  icon: LucideIcon;
-  title: string;
-  body: string;
-  count: number;
-}) {
-  const t = useTranslations('partnerDashboard');
-  const hasPending = count > 0;
-
-  return (
-    <Link
-      href={href}
-      className={cn(
-        'group relative flex flex-col justify-between rounded-2xl border p-4.5 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-navy/30 shadow-2xs hover:shadow-xs motion-reduce:transition-none',
-        hasPending
-          ? 'border-amber/40 bg-gradient-to-b from-amber/[0.04] to-card hover:border-amber/60 hover:bg-amber/[0.06]'
-          : 'border-border/80 bg-card hover:border-navy/30 hover:bg-muted/10'
-      )}
-    >
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <span
-              className={cn(
-                'flex size-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105',
-                hasPending
-                  ? 'bg-amber/20 text-amber-900'
-                  : 'bg-azure text-navy'
-              )}
-            >
-              <Icon className="size-5" aria-hidden="true" />
-            </span>
-            <span className="text-navy text-sm font-bold sm:text-base">
-              {title}
-            </span>
-          </div>
-          <DashboardStatus tone={hasPending ? 'amber' : 'sage'}>
-            {t('itemCount', { count })}
-          </DashboardStatus>
-        </div>
-        <p className="text-muted-foreground mt-3 text-xs leading-relaxed sm:text-[0.8125rem]">
-          {body}
-        </p>
-      </div>
-
-      <div
-        className={cn(
-          'mt-4.5 flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-bold transition-all duration-200',
-          hasPending
-            ? 'border-amber/40 bg-amber/15 text-amber-900 group-hover:bg-amber-500 group-hover:text-white group-hover:border-transparent'
-            : 'border-navy/15 bg-muted/40 text-navy group-hover:bg-navy group-hover:text-white group-hover:border-transparent'
-        )}
-      >
-        <span>Buka antrean</span>
-        <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-1" />
-      </div>
-    </Link>
-  );
-}
-
-function AggregateRow({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: 'sage' | 'amber' | 'muted';
-}) {
-  const dotClasses = {
-    sage: 'bg-sage',
-    amber: 'bg-amber animate-pulse',
-    muted: 'bg-muted-foreground',
-  };
-
-  return (
-    <div className="border-border/80 bg-card hover:border-navy/20 hover:bg-muted/15 flex items-center justify-between gap-4 rounded-xl border p-3.5 shadow-2xs transition-all duration-200">
-      <dt className="flex items-center gap-2.5 text-navy text-xs sm:text-sm font-semibold">
-        <span
-          className={cn('size-2.5 rounded-full shrink-0', dotClasses[tone])}
-        />
-        {label}
-      </dt>
-      <dd>
-        <DashboardStatus tone={tone}>{value}</DashboardStatus>
-      </dd>
     </div>
   );
 }

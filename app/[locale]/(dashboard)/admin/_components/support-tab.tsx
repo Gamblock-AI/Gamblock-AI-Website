@@ -1,8 +1,14 @@
-'use client';
-
-import { type FormEvent, useEffect, useState } from 'react';
-import { ArrowLeft, FileClock, Inbox, MessageSquare, UserCheck } from 'lucide-react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  ArrowLeft,
+  FileClock,
+  Filter,
+  Inbox,
+  MessageSquare,
+  UserCheck,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -29,13 +35,20 @@ import { SupportStatusBadge } from '@/components/dashboard/support-status-badge'
 import { Pagination } from '@/components/dashboard/pagination';
 import { usePagination } from '@/hooks/use-pagination';
 import { toastError, toastSuccess } from '@/lib/feedback';
-import { useRouter } from '@/i18n/routing';
+import { usePathname, useRouter } from '@/i18n/routing';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
+  normalizeSupportStatus,
 } from '@/lib/i18n/dynamic-labels';
 import {
+  FilterResetButton,
+  FilterSelect,
+  FilterToggleButton,
+} from '@/components/dashboard/filter-toolbar';
+import {
   AdminEmptyTable,
+  AdminPriorityBadge,
   AdminStatusBadge,
   adminFieldClassName,
 } from './admin-shared';
@@ -60,6 +73,8 @@ export function SupportTab(props: SupportTabProps) {
   const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { caseID, getSupportCase } = props;
   const [selected, setSelected] = useState<AdminSupportCase | null>(null);
   const [reply, setReply] = useState('');
@@ -73,6 +88,103 @@ export function SupportTab(props: SupportTabProps) {
   } | null>(null);
   const [modalReason, setModalReason] = useState('');
 
+  // Query param filters
+  const priorityFilter = searchParams.get('priority') || 'all';
+  const statusFilter = searchParams.get('status') || 'all';
+  const assigneeFilter = searchParams.get('assignee') || 'all';
+  const dataStatusFilter = searchParams.get('dataStatus') || 'all';
+
+  const hasActiveTicketFilters =
+    priorityFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    assigneeFilter !== 'all';
+
+  const hasActiveDataFilters = dataStatusFilter !== 'all';
+
+  const [showTicketFilters, setShowTicketFilters] = useState(
+    () => hasActiveTicketFilters
+  );
+  const [showDataFilters, setShowDataFilters] = useState(
+    () => hasActiveDataFilters
+  );
+
+  const activeTicketFilterCount =
+    (priorityFilter !== 'all' ? 1 : 0) +
+    (statusFilter !== 'all' ? 1 : 0) +
+    (assigneeFilter !== 'all' ? 1 : 0);
+
+  const activeDataFilterCount = dataStatusFilter !== 'all' ? 1 : 0;
+
+  const updateParam = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== 'all') {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const clearTicketFilters = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('priority');
+    params.delete('status');
+    params.delete('assignee');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const clearDataRequestFilters = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('dataStatus');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const filteredCases = useMemo(() => {
+    return props.cases.filter((item) => {
+      // Priority filter
+      if (
+        priorityFilter !== 'all' &&
+        item.priority.toLowerCase() !== priorityFilter.toLowerCase()
+      ) {
+        return false;
+      }
+      // Status filter
+      if (statusFilter !== 'all') {
+        const itemStatus = normalizeSupportStatus(item.status);
+        const targetStatus = normalizeSupportStatus(statusFilter);
+        if (itemStatus !== targetStatus) {
+          return false;
+        }
+      }
+      // Assignee filter: 'me' vs 'others'
+      if (assigneeFilter === 'me') {
+        if (!props.userId || item.owner !== props.userId) {
+          return false;
+        }
+      } else if (assigneeFilter === 'others') {
+        if (props.userId && item.owner === props.userId) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [props.cases, priorityFilter, statusFilter, assigneeFilter, props.userId]);
+
+  const filteredDataRequests = useMemo(() => {
+    return props.dataRequests.filter((request) => {
+      if (
+        dataStatusFilter !== 'all' &&
+        request.status.toLowerCase() !== dataStatusFilter.toLowerCase()
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [props.dataRequests, dataStatusFilter]);
+
   const {
     pagedItems: pagedCases,
     page: casesPage,
@@ -81,7 +193,7 @@ export function SupportTab(props: SupportTabProps) {
     startIndex: casesStartIndex,
     endIndex: casesEndIndex,
     totalItems: totalCases,
-  } = usePagination({ items: props.cases, pageSize: 10 });
+  } = usePagination({ items: filteredCases, pageSize: 10 });
 
   const {
     pagedItems: pagedDataRequests,
@@ -91,7 +203,7 @@ export function SupportTab(props: SupportTabProps) {
     startIndex: requestsStartIndex,
     endIndex: requestsEndIndex,
     totalItems: totalDataRequests,
-  } = usePagination({ items: props.dataRequests, pageSize: 10 });
+  } = usePagination({ items: filteredDataRequests, pageSize: 10 });
 
   const dataRequestTitle = (request: AdminDataRequest) =>
     request.type === 'export'
@@ -395,10 +507,8 @@ export function SupportTab(props: SupportTabProps) {
                 <dt className="text-muted-foreground text-xs">
                   {t('thPriority')}
                 </dt>
-                <dd className="text-navy mt-1 font-semibold">
-                  {tDynamic(dynamicLabelKey('priority', selected.priority), {
-                    value: dynamicLabelFallback(selected.priority),
-                  })}
+                <dd className="mt-1">
+                  <AdminPriorityBadge priority={selected.priority} />
                 </dd>
               </div>
               <div>
@@ -420,14 +530,84 @@ export function SupportTab(props: SupportTabProps) {
     <div className="space-y-6">
       {/* Support Tickets Queue Card */}
       <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
-        <div className="border-border border-b p-4 sm:p-5">
-          <h3 className="text-navy text-base font-bold">
-            {t('supportTitle')}
-          </h3>
-          <p className="text-muted-foreground mt-0.5 text-xs">
-            {t('supportDescription')}
-          </p>
+        <div className="border-border/80 border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-navy text-base font-bold">
+              {t('supportTitle')}
+            </h3>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              {t('supportDescription')}
+            </p>
+          </div>
+
+          {/* Filter Toggle Button */}
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            <FilterToggleButton
+              isExpanded={showTicketFilters}
+              onToggle={() => setShowTicketFilters((prev) => !prev)}
+              hasActiveFilters={hasActiveTicketFilters}
+              activeCount={activeTicketFilterCount}
+              label={t('filterToggle') || 'Filter'}
+            />
+          </div>
         </div>
+
+        {/* Expandable Ticket Filters Panel */}
+        {showTicketFilters ? (
+          <div className="border-border/60 bg-muted/20 border-b px-4 py-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-xs font-bold text-navy/70 mr-1 flex items-center gap-1.5">
+                <Filter className="size-3 text-navy/60" />
+                {t('filterLabel')}
+              </span>
+
+              {/* Priority Filter */}
+              <FilterSelect
+                value={priorityFilter}
+                onChange={(e) => updateParam('priority', e.target.value)}
+                ariaLabel={t('filterPriority')}
+              >
+                <option value="all">{t('filterAllPriorities')}</option>
+                <option value="urgent">{tDynamic('priority.urgent', { value: 'Mendesak' })}</option>
+                <option value="high">{tDynamic('priority.high', { value: 'Tinggi' })}</option>
+                <option value="normal">{tDynamic('priority.normal', { value: 'Normal' })}</option>
+                <option value="low">{tDynamic('priority.low', { value: 'Rendah' })}</option>
+              </FilterSelect>
+
+              {/* Status Filter */}
+              <FilterSelect
+                value={statusFilter}
+                onChange={(e) => updateParam('status', e.target.value)}
+                ariaLabel={t('filterStatus')}
+              >
+                <option value="all">{t('filterAllStatuses')}</option>
+                <option value="waiting_support">{tDynamic('supportStatus.waiting_support', { value: 'Menunggu Dukungan' })}</option>
+                <option value="waiting_user">{tDynamic('supportStatus.waiting_user', { value: 'Menunggu Pengguna' })}</option>
+                <option value="resolved">{tDynamic('supportStatus.resolved', { value: 'Selesai' })}</option>
+                <option value="closed">{tDynamic('supportStatus.closed', { value: 'Ditutup' })}</option>
+              </FilterSelect>
+
+              {/* Assignee Filter */}
+              <FilterSelect
+                value={assigneeFilter}
+                onChange={(e) => updateParam('assignee', e.target.value)}
+                ariaLabel={t('filterAssignee')}
+              >
+                <option value="all">{t('filterAllAssignees')}</option>
+                <option value="me">{t('assigneeMe')}</option>
+                <option value="others">{t('assigneeOthers')}</option>
+              </FilterSelect>
+            </div>
+
+            {hasActiveTicketFilters ? (
+              <FilterResetButton
+                onClick={clearTicketFilters}
+                label={t('clearFilters') || 'Reset'}
+              />
+            ) : null}
+          </div>
+        ) : null}
+
         <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
           <TableHeader>
             <TableRow className="bg-muted/40">
@@ -440,11 +620,15 @@ export function SupportTab(props: SupportTabProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {props.cases.length === 0 ? (
+            {filteredCases.length === 0 ? (
               <AdminEmptyTable
                 colSpan={6}
                 icon={Inbox}
-                text={t('noTickets')}
+                text={
+                  props.cases.length === 0
+                    ? t('noTickets')
+                    : t('noFilteredTickets')
+                }
                 description={t('noTicketsDescription')}
               />
             ) : (
@@ -454,10 +638,8 @@ export function SupportTab(props: SupportTabProps) {
                   <TableCell className="text-navy font-semibold text-sm">
                     {item.title}
                   </TableCell>
-                  <TableCell className="text-xs">
-                    {tDynamic(dynamicLabelKey('priority', item.priority), {
-                      value: dynamicLabelFallback(item.priority),
-                    })}
+                  <TableCell>
+                    <AdminPriorityBadge priority={item.priority} size="sm" />
                   </TableCell>
                   <TableCell>
                     <SupportStatusBadge status={item.status} />
@@ -510,12 +692,59 @@ export function SupportTab(props: SupportTabProps) {
 
       {/* User Data Requests Card */}
       <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
-        <div className="border-border border-b p-4 sm:p-5">
-          <h3 className="text-navy text-base font-bold">{t('dataRequestsTitle')}</h3>
-          <p className="text-muted-foreground mt-0.5 text-xs">
-            {t('dataRequestsHelp')}
-          </p>
+        <div className="border-border/80 border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-navy text-base font-bold">{t('dataRequestsTitle')}</h3>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              {t('dataRequestsHelp')}
+            </p>
+          </div>
+
+          {/* Filter Toggle Button */}
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            <FilterToggleButton
+              isExpanded={showDataFilters}
+              onToggle={() => setShowDataFilters((prev) => !prev)}
+              hasActiveFilters={hasActiveDataFilters}
+              activeCount={activeDataFilterCount}
+              label={t('filterToggle') || 'Filter'}
+            />
+          </div>
         </div>
+
+        {/* Expandable Data Request Filters Panel */}
+        {showDataFilters ? (
+          <div className="border-border/60 bg-muted/20 border-b px-4 py-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-xs font-bold text-navy/70 mr-1 flex items-center gap-1.5">
+                <Filter className="size-3 text-navy/60" />
+                {t('filterLabel')}
+              </span>
+
+              <FilterSelect
+                value={dataStatusFilter}
+                onChange={(e) => updateParam('dataStatus', e.target.value)}
+                ariaLabel={t('filterDataStatus')}
+              >
+                <option value="all">{t('filterAllDataStatuses')}</option>
+                <option value="pending">{tDynamic('status.pending', { value: 'Menunggu' })}</option>
+                <option value="processing">{tDynamic('status.processing', { value: 'Diproses' })}</option>
+                <option value="queued">{tDynamic('status.queued', { value: 'Dalam Antrean' })}</option>
+                <option value="completed">{tDynamic('status.completed', { value: 'Selesai' })}</option>
+                <option value="failed">{tDynamic('status.failed', { value: 'Gagal' })}</option>
+                <option value="rejected">{tDynamic('status.rejected', { value: 'Ditolak' })}</option>
+              </FilterSelect>
+            </div>
+
+            {hasActiveDataFilters ? (
+              <FilterResetButton
+                onClick={clearDataRequestFilters}
+                label={t('clearFilters') || 'Reset'}
+              />
+            ) : null}
+          </div>
+        ) : null}
+
         <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
           <TableHeader>
             <TableRow className="bg-muted/40">
@@ -527,11 +756,15 @@ export function SupportTab(props: SupportTabProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {props.dataRequests.length === 0 ? (
+            {filteredDataRequests.length === 0 ? (
               <AdminEmptyTable
                 colSpan={5}
                 icon={FileClock}
-                text={t('noDataRequests')}
+                text={
+                  props.dataRequests.length === 0
+                    ? t('noDataRequests')
+                    : t('noFilteredDataRequests')
+                }
                 description={t('noDataRequestsDescription')}
               />
             ) : (

@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CheckCircle2, Clock3, KeyRound, Laptop, Loader2, User } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import type { EmergencyKeyRequest } from '@/hooks/use-admin-operations';
 import { Pagination } from '@/components/dashboard/pagination';
+import {
+  FilterResetButton,
+  FilterSearchInput,
+  FilterSelect,
+  FilterToggleButton,
+} from '@/components/dashboard/filter-toolbar';
 import { usePagination } from '@/hooks/use-pagination';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { EmergencyKeyCard } from './emergency-key-card';
 import { AdminStatusBadge } from './admin-shared';
@@ -25,12 +32,41 @@ export function EmergencyTab({
   approveEmergencyKey,
 }: EmergencyTabProps) {
   const t = useTranslations('adminPage');
+  const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
   const locale = useLocale();
   const [keyCopied, setKeyCopied] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
-  const safeRequests = requests ?? [];
+  const {
+    getFilter,
+    setFilter,
+    clearFilters,
+    isExpanded: showEmergencyFilters,
+    toggleExpanded: toggleEmergencyFilters,
+    activeFilterCount: activeEmergencyFilterCount,
+    hasActiveFilters: hasActiveEmergencyFilters,
+  } = useQueryFilters({
+    filterKeys: ['status', 'q'],
+    defaultValues: { status: 'all' },
+    pageKey: 'page',
+  });
+
+  const statusFilter = getFilter('status', 'all');
+  const searchQuery = getFilter('q', '');
+
+  const filteredRequests = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return (requests ?? []).filter((r) => {
+      const matchStatus = statusFilter === 'all' || r.status === statusFilter;
+      const matchQ =
+        !q ||
+        r.id.toLowerCase().includes(q) ||
+        r.requested_by.toLowerCase().includes(q) ||
+        r.device_id.toLowerCase().includes(q);
+      return matchStatus && matchQ;
+    });
+  }, [requests, statusFilter, searchQuery]);
 
   const {
     pagedItems: pagedRequests,
@@ -40,7 +76,7 @@ export function EmergencyTab({
     startIndex: requestsStartIndex,
     endIndex: requestsEndIndex,
     totalItems: totalRequests,
-  } = usePagination({ items: safeRequests, pageSize: 5 });
+  } = usePagination({ items: filteredRequests, pageSize: 5 });
 
   const approve = async (requestId: string) => {
     setApprovingId(requestId);
@@ -78,7 +114,7 @@ export function EmergencyTab({
         />
       ) : null}
 
-      {totalRequests > 0 ? (
+      {(requests?.length ?? 0) > 0 ? (
         <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
           {/* Panel Header */}
           <div className="border-border/80 border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -98,38 +134,107 @@ export function EmergencyTab({
                 </p>
               </div>
             </div>
+
+            {/* Filter Toggle Button */}
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <FilterToggleButton
+                isExpanded={showEmergencyFilters}
+                onToggle={toggleEmergencyFilters}
+                hasActiveFilters={hasActiveEmergencyFilters}
+                activeCount={activeEmergencyFilterCount}
+                label={t('filterToggle') || 'Filter'}
+              />
+            </div>
           </div>
+
+          {/* Expandable Filter Panel */}
+          {showEmergencyFilters ? (
+            <div className="border-border/60 bg-muted/20 border-b px-4 py-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <FilterSearchInput
+                  value={searchQuery}
+                  onChangeValue={(val) => {
+                    setFilter('q', val);
+                    setRequestsPage(1);
+                  }}
+                  placeholder="Cari ID, pemohon, atau perangkat..."
+                  className="w-full sm:w-64"
+                />
+
+                <FilterSelect
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setFilter('status', e.target.value);
+                    setRequestsPage(1);
+                  }}
+                  ariaLabel={t('filterDataStatus')}
+                >
+                  <option value="all">{t('filterAllDataStatuses')}</option>
+                  <option value="pending">{tDynamic('status.pending', { value: 'Menunggu' })}</option>
+                  <option value="reviewed">{tDynamic('status.reviewed', { value: 'Ditinjau' })}</option>
+                  <option value="approved">{tDynamic('status.approved', { value: 'Disetujui' })}</option>
+                  <option value="rejected">{tDynamic('status.rejected', { value: 'Ditolak' })}</option>
+                  <option value="expired">{tDynamic('status.expired', { value: 'Kadaluarsa' })}</option>
+                </FilterSelect>
+              </div>
+
+              {hasActiveEmergencyFilters ? (
+                <FilterResetButton
+                  onClick={() => {
+                    clearFilters(['status', 'q']);
+                    setRequestsPage(1);
+                  }}
+                  label={t('clearFilters') || 'Reset'}
+                />
+              ) : null}
+            </div>
+          ) : null}
 
           {/* Request Rows */}
           <div className="divide-y divide-border/60">
-            {pagedRequests.map((request) => (
-              <EmergencyRequestRow
-                key={request.id}
-                request={request}
-                dateFormatter={dateFormatter}
-                isApproving={approvingId === request.id || keyLoading}
-                onApprove={() => void approve(request.id)}
-              />
-            ))}
+            {pagedRequests.length === 0 ? (
+              <div className="p-8 text-center flex flex-col items-center justify-center gap-2.5">
+                <p className="text-navy text-sm font-bold">{t('noFilteredEmergencyRequests')}</p>
+                <FilterResetButton
+                  onClick={() => {
+                    clearFilters(['status', 'q']);
+                    setRequestsPage(1);
+                  }}
+                  label={t('clearFilters') || 'Reset Filter'}
+                />
+              </div>
+            ) : (
+              pagedRequests.map((request) => (
+                <EmergencyRequestRow
+                  key={request.id}
+                  request={request}
+                  dateFormatter={dateFormatter}
+                  isApproving={approvingId === request.id || keyLoading}
+                  onApprove={() => void approve(request.id)}
+                />
+              ))
+            )}
           </div>
 
           {/* Compact Aligned Footer */}
-          <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
-            <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
-              {tPagination('showingRange', {
-                start: requestsStartIndex,
-                end: requestsEndIndex,
-                total: totalRequests,
-              })}
-            </span>
-            <Pagination
-              currentPage={requestsPage}
-              totalPages={totalRequestsPages}
-              onPageChange={setRequestsPage}
-              variant="flat"
-              size="sm"
-            />
-          </div>
+          {totalRequests > 0 ? (
+            <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
+              <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+                {tPagination('showingRange', {
+                  start: requestsStartIndex,
+                  end: requestsEndIndex,
+                  total: totalRequests,
+                })}
+              </span>
+              <Pagination
+                currentPage={requestsPage}
+                totalPages={totalRequestsPages}
+                onPageChange={setRequestsPage}
+                variant="flat"
+                size="sm"
+              />
+            </div>
+          ) : null}
         </section>
       ) : !emergencyKey ? (
         <div className="border-border bg-card shadow-soft flex flex-col items-center justify-center gap-3.5 rounded-2xl border py-10 sm:py-14 px-6 text-center">

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePagination } from './use-pagination';
+import { getPaginationItems } from '@/components/dashboard/pagination';
 
 describe('usePagination', () => {
   const dummyItems = Array.from({ length: 25 }, (_, i) => ({
@@ -149,5 +150,81 @@ describe('usePagination', () => {
     expect(result.current.startIndex).toBe(11);
     expect(result.current.endIndex).toBe(20);
     expect(result.current.paginatedItems).toEqual([]);
+  });
+});
+
+describe('getPaginationItems', () => {
+  it('returns all pages when totalPages <= 7 (totalNumbers threshold)', () => {
+    expect(getPaginationItems(1, 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(getPaginationItems(3, 7)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it('renders right ellipsis when active page is near the start', () => {
+    // Page 1 of 30
+    expect(getPaginationItems(1, 30)).toEqual([
+      1,
+      2,
+      3,
+      4,
+      5,
+      'ellipsis-right',
+      30,
+    ]);
+    // Page 3 of 30
+    expect(getPaginationItems(3, 30)).toEqual([
+      1,
+      2,
+      3,
+      4,
+      5,
+      'ellipsis-right',
+      30,
+    ]);
+  });
+
+  it('renders both left and right ellipsis when active page is in the middle', () => {
+    // Page 4 of 30
+    expect(getPaginationItems(4, 30)).toEqual([
+      1,
+      'ellipsis-left',
+      3,
+      4,
+      5,
+      'ellipsis-right',
+      30,
+    ]);
+    // Page 15 of 30
+    expect(getPaginationItems(15, 30)).toEqual([
+      1,
+      'ellipsis-left',
+      14,
+      15,
+      16,
+      'ellipsis-right',
+      30,
+    ]);
+  });
+
+  it('renders left ellipsis when active page is near the end', () => {
+    // Page 27 of 30
+    expect(getPaginationItems(27, 30)).toEqual([
+      1,
+      'ellipsis-left',
+      26,
+      27,
+      28,
+      29,
+      30,
+    ]);
+    // Page 30 of 30
+    expect(getPaginationItems(30, 30)).toEqual([
+      1,
+      'ellipsis-left',
+      26,
+      27,
+      28,
+      29,
+      30,
+    ]);
   });
 });

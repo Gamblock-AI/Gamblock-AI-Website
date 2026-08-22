@@ -1,12 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, ClipboardList, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
+import {
+  FilterResetButton,
+  FilterSearchInput,
+  FilterSelect,
+  FilterToolbar,
+} from '@/components/dashboard/filter-toolbar';
+import { Pagination } from '@/components/dashboard/pagination';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,10 +26,13 @@ import {
 } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { ApprovalRequest } from '@/hooks/use-accountability';
+import { usePagination } from '@/hooks/use-pagination';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
 } from '@/lib/i18n/dynamic-labels';
+import { ROUTES } from '@/routes';
 
 interface RequestsHistoryTableProps {
   requests: ApprovalRequest[];
@@ -57,13 +67,51 @@ export function RequestsHistoryTable({
 }: RequestsHistoryTableProps) {
   const t = useTranslations('accountabilityWorkspace');
   const tDynamic = useTranslations('dynamicLabels');
+  const tPagination = useTranslations('pagination');
   const locale = useLocale();
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [resolution, setResolution] = useState<{
     id: string;
     decision: 'approve' | 'deny';
   } | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const { filters, setFilter, resetFilters, activeFilterCount } =
+    useQueryFilters({
+      pathname: ROUTES.ACCOUNTABILITY,
+      defaultFilters: {
+        q: '',
+        status: 'all',
+      },
+    });
+
   const formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter((request) => {
+      const matchesQuery =
+        !filters.q.trim() ||
+        request.id.toLowerCase().includes(filters.q.toLowerCase().trim()) ||
+        (request.reason &&
+          request.reason
+            .toLowerCase()
+            .includes(filters.q.toLowerCase().trim()));
+      const matchesStatus =
+        filters.status === 'all' || request.status === filters.status;
+      return matchesQuery && matchesStatus;
+    });
+  }, [requests, filters]);
+
+  const pagination = usePagination({
+    items: filteredRequests,
+    pageSize: 5,
+    initialPage: 1,
+  });
+
+  const { setPage } = pagination;
+  useEffect(() => {
+    setPage(1);
+  }, [filters.q, filters.status, setPage]);
 
   return (
     <DashboardPanel
@@ -71,16 +119,74 @@ export function RequestsHistoryTable({
       title={t('historyTitle')}
       description={t('historyDescription')}
     >
-      {requests.length === 0 ? (
-        <EmptyState
-          icon={ClipboardList}
-          title={t('historyEmptyTitle')}
-          hint={t('historyEmptyBody')}
-          className="bg-muted/55 min-h-48"
-        />
-      ) : (
-        <div className="space-y-3">
-          {requests.map((request) => {
+      <div className="space-y-4">
+        {requests.length > 0 ? (
+          <FilterToolbar
+            isExpanded={showFilters}
+            onToggle={() => setShowFilters((prev) => !prev)}
+            activeCount={activeFilterCount}
+            hasActiveFilters={activeFilterCount > 0}
+            onReset={resetFilters}
+            headerRight={
+              <span className="text-xs font-semibold text-muted-foreground">
+                {t('requestsCount', {
+                  count: filteredRequests.length,
+                })}
+              </span>
+            }
+          >
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full">
+              <div className="w-full sm:w-64">
+                <FilterSearchInput
+                  value={filters.q}
+                  onChangeValue={(val) => setFilter('q', val)}
+                  placeholder={t('searchRequests')}
+                  ariaLabel={t('searchRequests')}
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <FilterSelect
+                  value={filters.status}
+                  onChange={(e) => setFilter('status', e.target.value)}
+                  ariaLabel={t('allStatuses')}
+                >
+                  <option value="all">{t('allStatuses')}</option>
+                  <option value="pending">{t('requestStatus.pending')}</option>
+                  <option value="approved">{t('requestStatus.approved')}</option>
+                  <option value="denied">{t('requestStatus.denied')}</option>
+                  <option value="expired">{t('requestStatus.expired')}</option>
+                  <option value="cancelled">
+                    {t('requestStatus.cancelled')}
+                  </option>
+                </FilterSelect>
+                {activeFilterCount > 0 ? (
+                  <FilterResetButton
+                    onClick={resetFilters}
+                    label={t('resetFilters')}
+                  />
+                ) : null}
+              </div>
+            </div>
+          </FilterToolbar>
+        ) : null}
+
+        {requests.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title={t('historyEmptyTitle')}
+            hint={t('historyEmptyBody')}
+            className="bg-muted/55 min-h-48"
+          />
+        ) : filteredRequests.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title={t('historyEmptyTitle')}
+            hint={t('historyEmptyBody')}
+            className="bg-muted/55 min-h-48"
+          />
+        ) : (
+          <div className="space-y-3">
+            {pagination.paginatedItems.map((request) => {
             const isPending = request.status === 'pending';
             const parsedDate = request.created_at
               ? new Date(request.created_at)
@@ -156,8 +262,30 @@ export function RequestsHistoryTable({
               </article>
             );
           })}
+
+          {filteredRequests.length > 0 ? (
+            <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
+              <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+                {tPagination('showingRange', {
+                  start: pagination.startIndex,
+                  end: pagination.endIndex,
+                  total: pagination.totalItems,
+                })}
+              </span>
+              {pagination.totalPages > 1 ? (
+                <Pagination
+                  currentPage={pagination.page}
+                  totalPages={pagination.totalPages}
+                  onPageChange={pagination.setPage}
+                  size="sm"
+                  variant="flat"
+                />
+              ) : null}
+            </div>
+          ) : null}
         </div>
       )}
+      </div>
 
       <Dialog
         open={cancelId !== null}

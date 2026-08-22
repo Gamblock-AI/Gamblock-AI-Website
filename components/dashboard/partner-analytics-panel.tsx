@@ -1,6 +1,6 @@
 'use client';
 
-import { useDeferredValue, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useDeferredValue, useMemo, useState, type ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { DashboardPanel, DashboardStatus } from './dashboard-page';
+import { Pagination } from '@/components/dashboard/pagination';
 import { StudentAvatar } from './student-avatar';
 import { ExpandableRow } from './expandable-row';
 import {
@@ -29,6 +30,7 @@ import type {
   AccountabilityGroup,
   AccountabilityMembership,
 } from '@/hooks/use-accountability';
+import { usePagination } from '@/hooks/use-pagination';
 import { cn } from '@/lib/utils';
 
 interface Translation {
@@ -81,6 +83,7 @@ export function PartnerAnalyticsPanel({
   onSearchQueryChange?: (query: string) => void;
 }) {
   const t = useTranslations('partnerDashboard.analytics');
+  const tPagination = useTranslations('pagination');
   const locale = useLocale();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const activeGroups = useMemo(
@@ -104,6 +107,17 @@ export function PartnerAnalyticsPanel({
     [deferredSearchQuery, effectiveGroupID, groups, locale, members]
   );
 
+  const pagination = usePagination({
+    items: analytics.visibleMembers,
+    pageSize: 5,
+    initialPage: 1,
+  });
+  const { setPage } = pagination;
+
+  useEffect(() => {
+    setPage(1);
+  }, [effectiveGroupID, deferredSearchQuery, setPage]);
+
   return (
     <DashboardPanel
       icon={BarChart3}
@@ -113,6 +127,41 @@ export function PartnerAnalyticsPanel({
       fullHeight={false}
       contentClassName="grid gap-4 sm:gap-4.5"
     >
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <AnalyticsMetric
+          icon={ShieldAlert}
+          tone="crimson"
+          label={t('totalDetections')}
+          value={t('detectionTimes', { count: analytics.totalDetections })}
+          body={t('sevenDayPeriod')}
+        />
+        <AnalyticsMetric
+          icon={Users}
+          tone="azure"
+          label={t('sharingCoverage')}
+          value={t('sharingCoverageValue', {
+            shared: analytics.sharedActivityMembers,
+            total: analytics.totalMembers,
+          })}
+          body={t('sharingCoverageBody')}
+        />
+        <AnalyticsMetric
+          icon={ShieldCheck}
+          tone="sage"
+          label={t('readyProtection')}
+          value={analytics.readyMembers}
+          body={t('consentedHealth')}
+        />
+        <AnalyticsMetric
+          icon={AlertTriangle}
+          tone={analytics.attentionMembers > 0 ? 'amber' : 'navy'}
+          attention={analytics.attentionMembers > 0}
+          label={t('needsAttention')}
+          value={analytics.attentionMembers}
+          body={t('consentedHealth')}
+        />
+      </div>
+
       <div
         data-tour="tour-partner-filters"
         className="grid gap-3 md:grid-cols-[minmax(180px,0.7fr)_minmax(220px,1fr)]"
@@ -156,59 +205,44 @@ export function PartnerAnalyticsPanel({
         </label>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <AnalyticsMetric
-          icon={ShieldAlert}
-          tone="crimson"
-          label={t('totalDetections')}
-          value={t('detectionTimes', { count: analytics.totalDetections })}
-          body={t('sevenDayPeriod')}
-        />
-        <AnalyticsMetric
-          icon={Users}
-          tone="azure"
-          label={t('sharingCoverage')}
-          value={t('sharingCoverageValue', {
-            shared: analytics.sharedActivityMembers,
-            total: analytics.totalMembers,
-          })}
-          body={t('sharingCoverageBody')}
-        />
-        <AnalyticsMetric
-          icon={ShieldCheck}
-          tone="sage"
-          label={t('readyProtection')}
-          value={analytics.readyMembers}
-          body={t('consentedHealth')}
-        />
-        <AnalyticsMetric
-          icon={AlertTriangle}
-          tone={analytics.attentionMembers > 0 ? 'amber' : 'navy'}
-          attention={analytics.attentionMembers > 0}
-          label={t('needsAttention')}
-          value={analytics.attentionMembers}
-          body={t('consentedHealth')}
-        />
-      </div>
-
       <div data-tour="tour-partner-table" className="space-y-3">
         {analytics.members.length === 0 ? (
           <AnalyticsEmpty message={t('noMembers')} />
         ) : analytics.visibleMembers.length === 0 ? (
           <AnalyticsEmpty message={t('noSearchResults')} />
         ) : (
-          <>
+          <div className="space-y-3">
             <MemberTable
-              members={analytics.visibleMembers}
+              members={pagination.paginatedItems}
               detectionScaleMax={analytics.detectionScaleMax}
               t={t}
             />
             <MemberCards
-              members={analytics.visibleMembers}
+              members={pagination.paginatedItems}
               detectionScaleMax={analytics.detectionScaleMax}
               t={t}
             />
-          </>
+            {analytics.visibleMembers.length > 0 ? (
+              <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
+                <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+                  {tPagination('showingRange', {
+                    start: pagination.startIndex,
+                    end: pagination.endIndex,
+                    total: pagination.totalItems,
+                  })}
+                </span>
+                {pagination.totalPages > 1 ? (
+                  <Pagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={pagination.setPage}
+                    size="sm"
+                    variant="flat"
+                  />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         )}
       </div>
 

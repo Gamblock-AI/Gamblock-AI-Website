@@ -203,3 +203,49 @@ export function AdminStatusBadge({
     </span>
   );
 }
+
+const priorityBadgeStyles: Record<string, string> = {
+  urgent:
+    'border-crimson/30 bg-crimson/15 text-crimson-dark dark:bg-crimson/25 dark:text-crimson-light dark:border-crimson/40',
+  high:
+    'border-amber/40 bg-amber/15 text-amber-900 dark:bg-amber/25 dark:text-amber-300 dark:border-amber/40',
+  normal:
+    'border-sky/40 bg-sky/15 text-navy-dark dark:bg-sky/25 dark:text-sky-light dark:border-sky/40',
+  medium:
+    'border-sky/40 bg-sky/15 text-navy-dark dark:bg-sky/25 dark:text-sky-light dark:border-sky/40',
+  low:
+    'border-border/90 bg-muted/60 text-muted-foreground dark:bg-muted/40 dark:text-muted-foreground',
+};
+
+export function AdminPriorityBadge({
+  priority,
+  className,
+  size = 'default',
+}: {
+  priority: string;
+  className?: string;
+  size?: 'sm' | 'default';
+}) {
+  const t = useTranslations('dynamicLabels');
+  const normalized = priority.toLowerCase().trim();
+  const colorClass =
+    priorityBadgeStyles[normalized] ??
+    'border-border/80 bg-muted text-muted-foreground';
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full border font-bold transition-colors select-none shadow-2xs backdrop-blur-xs whitespace-nowrap shrink-0',
+        size === 'sm'
+          ? 'px-2 py-0.5 text-[0.625rem] leading-tight'
+          : 'px-2.5 py-0.5 text-xs',
+        colorClass,
+        className
+      )}
+    >
+      {t(dynamicLabelKey('priority', priority), {
+        value: dynamicLabelFallback(priority),
+      })}
+    </span>
+  );
+}

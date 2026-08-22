@@ -5,6 +5,7 @@ import {
   type FormEvent,
   type ReactNode,
   type SetStateAction,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -14,31 +15,33 @@ import {
   Check,
   ChevronDown,
   ChevronsUpDown,
-  ClipboardCheck,
   Copy,
   FolderKanban,
   KeyRound,
   Laptop,
   Lock,
-  MessageCircleHeart,
-  PhoneCall,
   PlusCircle,
   RefreshCw,
   Search,
   ShieldAlert,
   ShieldCheck,
-  Smartphone,
   Trash2,
-  UserCheck,
   UserPlus,
   UserRoundMinus,
   Users,
-  UsersRound,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
+import {
+  FilterResetButton,
+  FilterSearchInput,
+  FilterSelect,
+  FilterToolbar,
+} from '@/components/dashboard/filter-toolbar';
+import { Pagination } from '@/components/dashboard/pagination';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { OptionalMark, RequiredMark } from '@/components/common/form-field';
@@ -49,8 +52,11 @@ import {
   useAccountability,
 } from '@/hooks/use-accountability';
 import { refreshCurrentUser, useLocalUser } from '@/hooks/use-local-user';
+import { usePagination } from '@/hooks/use-pagination';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
+import { ROUTES } from '@/routes';
 import {
   EmptyLine,
   Info,
@@ -67,6 +73,7 @@ export function PartnerGroupsWorkspace({
   user: ReturnType<typeof useLocalUser>;
   accountability: ReturnType<typeof useAccountability>;
 }) {
+  const tPagination = useTranslations('pagination');
   const [phone, setPhone] = useState(user.phone_e164 ?? '');
   const [verificationCode, setVerificationCode] = useState('');
   const [previewCode, setPreviewCode] = useState('');
@@ -78,6 +85,17 @@ export function PartnerGroupsWorkspace({
   const [revealedCodes, setRevealedCodes] = useState<Record<string, string>>(
     {}
   );
+  const [showFilters, setShowFilters] = useState(false);
+
+  const { filters, setFilter, resetFilters, activeFilterCount } =
+    useQueryFilters({
+      pathname: ROUTES.PARTNERS,
+      defaultFilters: {
+        q: '',
+        status: 'all',
+      },
+    });
+
   const verified = Boolean(user.phone_verified_at);
   const liveStatuses = new Set([
     'active',
@@ -111,6 +129,31 @@ export function PartnerGroupsWorkspace({
     (request) => request.status === 'pending'
   ).length;
 
+  const filteredGroups = useMemo(() => {
+    return accountability.workspace.groups.filter((group) => {
+      const matchesQuery =
+        !filters.q.trim() ||
+        group.name.toLowerCase().includes(filters.q.toLowerCase().trim()) ||
+        (group.description &&
+          group.description
+            .toLowerCase()
+            .includes(filters.q.toLowerCase().trim()));
+      const matchesStatus =
+        filters.status === 'all' || group.status === filters.status;
+      return matchesQuery && matchesStatus;
+    });
+  }, [accountability.workspace.groups, filters]);
+
+  const groupsPagination = usePagination({
+    items: filteredGroups,
+    pageSize: 5,
+    initialPage: 1,
+  });
+  const { setPage: setGroupsPage } = groupsPagination;
+  useEffect(() => {
+    setGroupsPage(1);
+  }, [filters.q, filters.status, setGroupsPage]);
+
   const run = async (action: Promise<unknown>, message: string) => {
     try {
       await action;
@@ -120,8 +163,7 @@ export function PartnerGroupsWorkspace({
     }
   };
 
-  const startPhone = async (event: FormEvent) => {
-    event.preventDefault();
+  const requestPhoneCode = async () => {
     try {
       const result = await accountability.startPhoneVerification(phone.trim());
       setPreviewCode(result.preview_code ?? '');
@@ -131,7 +173,7 @@ export function PartnerGroupsWorkspace({
     }
   };
 
-  const confirmPhone = async (event: FormEvent) => {
+  const verifyPhone = async (event: FormEvent) => {
     event.preventDefault();
     try {
       await accountability.confirmPhoneVerification(verificationCode.trim());
@@ -179,10 +221,10 @@ export function PartnerGroupsWorkspace({
   };
 
   return (
-    <div className="space-y-5">
-      {/* 1. Ringkasan Pendampingan Card */}
+    <div className="space-y-6">
+      {/* 1. Ringkasan Ruang Pendamping */}
       <DashboardPanel
-        icon={ClipboardCheck}
+        icon={FolderKanban}
         title={t('partnerOverviewTitle')}
         description={t('partnerOverviewBody')}
         density="compact"
@@ -198,7 +240,7 @@ export function PartnerGroupsWorkspace({
             subtitle={t('groupStatus.active')}
           />
           <StatOverviewCard
-            icon={UserCheck}
+            icon={Users}
             label={t('activeMembersLabel')}
             value={activeMembers}
             tone="sage"
@@ -224,7 +266,7 @@ export function PartnerGroupsWorkspace({
             }
           />
           <StatOverviewCard
-            icon={MessageCircleHeart}
+            icon={KeyRound}
             label={t('pendingContactsLabel')}
             value={pendingContacts}
             tone={pendingContacts > 0 ? 'azure' : 'navy'}
@@ -241,84 +283,93 @@ export function PartnerGroupsWorkspace({
         </div>
       </DashboardPanel>
 
-      {!verified ? (
-        <DashboardPanel
-          icon={PhoneCall}
+      {/* 2. WhatsApp Verification & Group Management Grids */}
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+        <VerificationCard
           title={t('verificationTitle')}
-          description={t('verificationBody')}
-          fullHeight={false}
+          verified={verified}
+          verifiedLabel={t('verified')}
+          pendingLabel={t('notVerified')}
         >
-          <div className="grid gap-4 lg:grid-cols-2">
-            <VerificationCard
-              title={t('phoneVerification')}
-              verified={Boolean(user.phone_verified_at)}
-              verifiedLabel={t('verified')}
-              pendingLabel={t('notVerified')}
-            >
-              {!user.phone_verified_at ? (
-                <div className="mt-3 space-y-3">
-                  <form
-                    onSubmit={(event) => void startPhone(event)}
-                    className="flex flex-col gap-2 sm:flex-row"
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
+              {t('verificationBody')}
+            </p>
+
+            <div className="border-border/80 bg-background/60 rounded-xl border p-4 space-y-4">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="phone"
+                  className="text-navy flex items-center text-xs font-bold"
+                >
+                  <span>{t('phoneLabel')}</span>
+                  <RequiredMark />
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder="+628123456789"
+                    className="border-input bg-background focus-visible:ring-navy/20 h-10 w-full rounded-xl border px-3 text-xs outline-none focus-visible:ring-2"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={accountability.mutating || !phone.trim()}
+                    onClick={() => void requestPhoneCode()}
+                    className="h-10 text-xs shrink-0 font-bold"
                   >
-                    <label htmlFor="phone-number" className="sr-only">
-                      {t('phoneLabel')} *
-                    </label>
-                    <input
-                      id="phone-number"
-                      type="tel"
-                      value={phone}
-                      onChange={(event) => setPhone(event.target.value)}
-                      placeholder="+6281234567890"
-                      aria-label={`${t('phoneLabel')} *`}
-                      className="border-input bg-background focus-visible:ring-navy/20 h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-                      required
-                    />
-                    <Button type="submit" variant="outline">
-                      {t('sendCode')}
-                    </Button>
-                  </form>
-                  <form
-                    onSubmit={(event) => void confirmPhone(event)}
-                    className="flex flex-col gap-2 sm:flex-row"
-                  >
-                    <label htmlFor="phone-code" className="sr-only">
-                      {t('codeVerificationLabel')} *
-                    </label>
-                    <input
-                      id="phone-code"
-                      inputMode="numeric"
-                      pattern="[0-9]{6}"
-                      value={verificationCode}
-                      onChange={(event) =>
-                        setVerificationCode(event.target.value)
-                      }
-                      aria-label={`${t('codeVerificationLabel')} *`}
-                      placeholder={
-                        previewCode || t('codeVerificationPlaceholder')
-                      }
-                      className="border-input bg-background focus-visible:ring-navy/20 h-11 min-w-0 flex-1 rounded-xl border px-3 font-mono text-sm tracking-[0.18em] outline-none focus-visible:ring-2"
-                      required
-                    />
-                    <Button type="submit">{t('verifyCode')}</Button>
-                  </form>
-                  {previewCode ? (
-                    <p className="text-muted-foreground text-xs">
-                      {t('demoCode', { code: previewCode })}
-                    </p>
-                  ) : null}
+                    {t('sendCode')}
+                  </Button>
+                </div>
+              </div>
+
+              {previewCode ? (
+                <div className="border-navy/15 bg-azure/50 rounded-xl border p-3">
+                  <p className="text-navy-light text-[0.6875rem] font-bold uppercase tracking-wider">
+                    {t('phoneVerification')}
+                  </p>
+                  <p className="text-navy mt-1 font-mono text-sm font-extrabold tracking-widest">
+                    {previewCode}
+                  </p>
                 </div>
               ) : null}
-            </VerificationCard>
-          </div>
-        </DashboardPanel>
-      ) : null}
 
-      {/* 2-Column Section: Buat Grup (Left) and Grup & Anggota (Right) */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(21rem,0.72fr)_minmax(0,1.28fr)] xl:items-stretch">
-        {/* 2. Buat Grup Card */}
+              <form onSubmit={(e) => void verifyPhone(e)} className="space-y-3">
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="verification-code"
+                    className="text-navy flex items-center text-xs font-bold"
+                  >
+                    <span>{t('codeVerificationLabel')}</span>
+                    <RequiredMark />
+                  </label>
+                  <input
+                    id="verification-code"
+                    value={verificationCode}
+                    onChange={(event) => setVerificationCode(event.target.value)}
+                    placeholder={t('codeVerificationPlaceholder')}
+                    className="border-input bg-background focus-visible:ring-navy/20 h-10 w-full rounded-xl border px-3 text-xs outline-none focus-visible:ring-2"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={accountability.mutating || !verificationCode.trim()}
+                  className="w-full gap-2 text-xs font-bold"
+                >
+                  <Check className="size-4" aria-hidden="true" />
+                  {t('verifyCode')}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </VerificationCard>
+
+        {/* Create Group Form Card */}
         <DashboardPanel
-          icon={UsersRound}
+          icon={UserPlus}
           title={t('createGroupTitle')}
           description={t('createGroupBody')}
           density="compact"
@@ -326,56 +377,41 @@ export function PartnerGroupsWorkspace({
           className="shadow-2xs"
         >
           <form
-            onSubmit={(event) => void createGroup(event)}
-            className="flex flex-1 flex-col justify-between gap-4"
+            onSubmit={(e) => void createGroup(e)}
+            className="flex flex-1 flex-col justify-between space-y-4"
           >
-            <div className="space-y-3.5">
-              <div>
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="group-name"
-                    className="text-navy flex items-center text-xs font-bold sm:text-sm"
-                  >
-                    <span>{t('groupName')}</span>
-                    <RequiredMark />
-                  </label>
-                  <span className="text-muted-foreground text-[0.6875rem]">
-                    {groupName.length}/80
-                  </span>
-                </div>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="group-name"
+                  className="text-navy flex items-center text-xs font-bold"
+                >
+                  <span>{t('groupName')}</span>
+                  <RequiredMark />
+                </label>
                 <input
                   id="group-name"
                   value={groupName}
-                  minLength={3}
-                  maxLength={80}
                   onChange={(event) => setGroupName(event.target.value)}
                   placeholder={t('groupNamePlaceholder')}
-                  className="border-input bg-background focus-visible:ring-navy/25 mt-1.5 h-11 w-full rounded-xl border px-3.5 text-sm transition-colors outline-none focus-visible:ring-2"
-                  required
+                  className="border-input bg-background/80 focus-visible:ring-navy/20 h-10 w-full rounded-xl border px-3 text-xs outline-none focus-visible:ring-2"
                 />
               </div>
 
-              <div>
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="group-description"
-                    className="text-navy flex items-center text-xs font-bold sm:text-sm"
-                  >
-                    <span>{t('groupDescription')}</span>
-                    <OptionalMark />
-                  </label>
-                  <span className="text-muted-foreground text-[0.6875rem]">
-                    {groupDescription.length}/240
-                  </span>
-                </div>
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="group-description"
+                  className="text-navy flex items-center text-xs font-bold"
+                >
+                  <span>{t('groupDescription')}</span>
+                  <OptionalMark />
+                </label>
                 <Textarea
                   id="group-description"
                   value={groupDescription}
-                  maxLength={240}
-                  rows={3}
                   onChange={(event) => setGroupDescription(event.target.value)}
                   placeholder={t('groupDescriptionPlaceholder')}
-                  className="border-input bg-background focus-visible:ring-navy/25 mt-1.5 resize-none rounded-xl text-sm transition-colors outline-none focus-visible:ring-2"
+                  className="min-h-24 text-xs"
                 />
               </div>
             </div>
@@ -384,73 +420,140 @@ export function PartnerGroupsWorkspace({
               <Button
                 type="submit"
                 disabled={!verified || accountability.mutating}
-                className="w-full gap-2 shadow-sm font-semibold"
+                className="w-full gap-2 text-xs font-bold"
               >
                 <PlusCircle className="size-4" aria-hidden="true" />
                 {t('createGroup')}
               </Button>
-              {!verified ? (
-                <div className="border-amber/30 bg-amber/[0.08] flex items-center gap-2 rounded-lg border p-2.5 text-xs text-amber-900">
-                  <ShieldAlert className="size-4 shrink-0 text-amber-700" />
-                  <span>{t('createRequiresVerification')}</span>
-                </div>
-              ) : null}
             </div>
           </form>
         </DashboardPanel>
-
-        {/* 3. Grup dan Anggota Card */}
-        <DashboardPanel
-          icon={KeyRound}
-          title={t('groupsTitle')}
-          description={t('groupsBody')}
-          density="compact"
-          fullHeight
-          className="shadow-2xs"
-        >
-          <div className="flex flex-1 flex-col">
-            {accountability.workspace.groups.length ? (
-              <div className="space-y-4">
-                {accountability.workspace.groups.map((group) => (
-                  <GroupCard
-                    key={group.id}
-                    t={t}
-                    group={group}
-                    members={membersByGroup[group.id] ?? []}
-                    code={revealedCodes[group.id] || group.join_code}
-                    removalReasons={removalReasons}
-                    setRemovalReasons={setRemovalReasons}
-                    mutating={accountability.mutating}
-                    onRotate={() => void rotate(group)}
-                    onDelete={() =>
-                      void run(
-                        accountability.deleteGroup(group.id),
-                        t('groupDeleted')
-                      )
-                    }
-                    onRemove={(membership) =>
-                      void run(
-                        accountability.removeMember(
-                          membership.id,
-                          removalReasons[membership.id] ?? ''
-                        ),
-                        t('memberRemoved')
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyLine
-                icon={FolderKanban}
-                title={t('noGroups')}
-                body={t('noGroupsBody')}
-                className="flex-1"
-              />
-            )}
-          </div>
-        </DashboardPanel>
       </div>
+
+      {/* 3. Grup dan Anggota Card */}
+      <DashboardPanel
+        icon={KeyRound}
+        title={t('groupsTitle')}
+        description={t('groupsBody')}
+        density="compact"
+        fullHeight
+        className="shadow-2xs lg:col-span-2"
+      >
+        <div className="flex flex-1 flex-col space-y-4">
+          {accountability.workspace.groups.length > 0 ? (
+            <FilterToolbar
+              isExpanded={showFilters}
+              onToggle={() => setShowFilters((prev) => !prev)}
+              activeCount={activeFilterCount}
+              hasActiveFilters={activeFilterCount > 0}
+              onReset={resetFilters}
+              headerRight={
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {t('groupsCount', {
+                    count: filteredGroups.length,
+                  })}
+                </span>
+              }
+            >
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full">
+                <div className="w-full sm:w-64">
+                  <FilterSearchInput
+                    value={filters.q}
+                    onChangeValue={(val) => setFilter('q', val)}
+                    placeholder={t('searchGroups')}
+                    ariaLabel={t('searchGroups')}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <FilterSelect
+                    value={filters.status}
+                    onChange={(e) => setFilter('status', e.target.value)}
+                    ariaLabel={t('allGroupStatuses')}
+                  >
+                    <option value="all">{t('allGroupStatuses')}</option>
+                    <option value="active">{t('groupActive')}</option>
+                    <option value="archived">{t('groupArchived')}</option>
+                  </FilterSelect>
+                  {activeFilterCount > 0 ? (
+                    <FilterResetButton
+                      onClick={resetFilters}
+                      label={t('resetFilters')}
+                    />
+                  ) : null}
+                </div>
+              </div>
+            </FilterToolbar>
+          ) : null}
+
+          {accountability.workspace.groups.length === 0 ? (
+            <EmptyLine
+              icon={FolderKanban}
+              title={t('noGroups')}
+              body={t('noGroupsBody')}
+              className="flex-1"
+            />
+          ) : filteredGroups.length === 0 ? (
+            <EmptyLine
+              icon={FolderKanban}
+              title={t('noGroups')}
+              body={t('noGroupsBody')}
+              className="flex-1"
+            />
+          ) : (
+            <div className="space-y-4">
+              {groupsPagination.paginatedItems.map((group) => (
+                <GroupCard
+                  key={group.id}
+                  t={t}
+                  group={group}
+                  members={membersByGroup[group.id] ?? []}
+                  code={revealedCodes[group.id] || group.join_code}
+                  removalReasons={removalReasons}
+                  setRemovalReasons={setRemovalReasons}
+                  mutating={accountability.mutating}
+                  onRotate={() => void rotate(group)}
+                  onDelete={() =>
+                    void run(
+                      accountability.deleteGroup(group.id),
+                      t('groupDeleted')
+                    )
+                  }
+                  onRemove={(membership) =>
+                    void run(
+                      accountability.removeMember(
+                        membership.id,
+                        removalReasons[membership.id] ?? ''
+                      ),
+                      t('memberRemoved')
+                    )
+                  }
+                />
+              ))}
+
+              {filteredGroups.length > 0 ? (
+                <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
+                  <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+                    {tPagination('showingRange', {
+                      start: groupsPagination.startIndex,
+                      end: groupsPagination.endIndex,
+                      total: groupsPagination.totalItems,
+                    })}
+                  </span>
+                  {groupsPagination.totalPages > 1 ? (
+                    <Pagination
+                      currentPage={groupsPagination.page}
+                      totalPages={groupsPagination.totalPages}
+                      onPageChange={groupsPagination.setPage}
+                      size="sm"
+                      variant="flat"
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </DashboardPanel>
     </div>
   );
 }
@@ -505,6 +608,7 @@ function GroupCard({
   onDelete: () => void;
   onRemove: (membership: AccountabilityMembership) => void;
 }) {
+  const tPagination = useTranslations('pagination');
   const [expandedMembers, setExpandedMembers] = useState<
     Record<string, boolean>
   >({});
@@ -529,6 +633,16 @@ function GroupCard({
       m.student_name.toLowerCase().includes(query)
     );
   }, [activeMembers, searchQuery]);
+
+  const memberPagination = usePagination({
+    items: filteredMembers,
+    pageSize: 5,
+    initialPage: 1,
+  });
+  const { setPage: setMemberPage } = memberPagination;
+  useEffect(() => {
+    setMemberPage(1);
+  }, [searchQuery, setMemberPage]);
 
   const allExpanded =
     activeMembers.length > 0 &&
@@ -723,7 +837,7 @@ function GroupCard({
           </p>
         ) : (
           <div className="space-y-2.5">
-            {filteredMembers.map((membership) => {
+            {memberPagination.paginatedItems.map((membership) => {
               const isExpanded = Boolean(expandedMembers[membership.id]);
               const protection = membership.aggregate.protection_status;
               const isProtectionReady = protection === 'ready';
@@ -784,36 +898,31 @@ function GroupCard({
                             isProtectionReady
                               ? 'bg-sage'
                               : isProtectionAttention
-                                ? 'bg-amber animate-pulse'
+                                ? 'bg-amber'
                                 : 'bg-muted-foreground'
                           )}
                         />
-                        <span className="text-muted-foreground text-[0.6875rem] font-medium sm:text-xs">
+                        <span className="text-navy font-semibold text-[0.6875rem]">
                           {formatProtectionStatus(t, protection)}
                         </span>
                       </div>
 
-                      {membership.aggregate.active_device_count ? (
-                        <div className="hidden sm:flex items-center gap-1 text-muted-foreground text-xs">
-                          <Smartphone className="size-3.5" />
-                          <span>
-                            {membership.aggregate.active_device_count}
-                          </span>
-                        </div>
-                      ) : null}
-
-                      <span
-                        className={cn(
-                          'text-muted-foreground flex size-7 items-center justify-center rounded-lg bg-muted/50 transition-transform duration-200',
-                          isExpanded && 'rotate-180 text-navy bg-azure/80'
-                        )}
-                      >
-                        <ChevronDown className="size-4" aria-hidden="true" />
-                      </span>
+                      <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                        <ChevronDown
+                          className={cn(
+                            'size-4 transition-transform duration-200',
+                            isExpanded && 'rotate-180 text-navy'
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">
+                          {isExpanded ? t('hideDetails') : t('viewDetails')}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Expanded Accordion Body */}
+                  {/* Expanded Details Drawer */}
                   {isExpanded ? (
                     <div className="border-border/70 bg-muted/15 border-t p-3.5 sm:p-4 rounded-b-xl space-y-3.5 animate-in fade-in-50 duration-150">
                       <div className="grid gap-2 text-xs sm:grid-cols-2">
@@ -901,6 +1010,25 @@ function GroupCard({
                 </div>
               );
             })}
+
+            {memberPagination.totalPages > 1 ? (
+              <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2 border rounded-xl p-2.5 mt-2">
+                <span className="text-muted-foreground text-[0.6875rem] font-semibold">
+                  {tPagination('showingRange', {
+                    start: memberPagination.startIndex,
+                    end: memberPagination.endIndex,
+                    total: memberPagination.totalItems,
+                  })}
+                </span>
+                <Pagination
+                  currentPage={memberPagination.page}
+                  totalPages={memberPagination.totalPages}
+                  onPageChange={memberPagination.setPage}
+                  size="sm"
+                  variant="flat"
+                />
+              </div>
+            ) : null}
           </div>
         )}
       </div>

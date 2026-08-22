@@ -17,6 +17,20 @@ vi.mock('@/hooks/use-spk-recommendation', () => ({
   useSpkRecommendation: () => mocks.useSpkRecommendation(),
 }));
 
+vi.mock('@/i18n/routing', () => ({
+  Link: ({
+    children,
+    href,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+  usePathname: () => '/id',
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
+
 vi.mock('next/image', () => ({
   default: ({
     alt = '',

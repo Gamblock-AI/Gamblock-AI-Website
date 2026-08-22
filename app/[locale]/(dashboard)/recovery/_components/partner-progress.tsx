@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertTriangle,
@@ -24,10 +24,19 @@ import {
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import {
+  FilterResetButton,
+  FilterSearchInput,
+  FilterSelect,
+  FilterToolbar,
+} from '@/components/dashboard/filter-toolbar';
+import { Pagination } from '@/components/dashboard/pagination';
+import {
   type AccountabilityMembership,
   type MemberAggregate,
   useAccountability,
 } from '@/hooks/use-accountability';
+import { usePagination } from '@/hooks/use-pagination';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
@@ -126,29 +135,84 @@ function monitorFlags(member: AccountabilityMembership): MonitorFlag[] {
 
 export function PartnerProgress() {
   const p = useTranslations('progressExperience');
+  const tPagination = useTranslations('pagination');
   const accountability = useAccountability();
   const [expandedMembers, setExpandedMembers] = useState<
     Record<string, boolean>
   >({});
+  const [showFilters, setShowFilters] = useState(false);
+
+  const { filters, setFilter, resetFilters, activeFilterCount } =
+    useQueryFilters({
+      pathname: ROUTES.RECOVERY,
+      defaultFilters: {
+        q: '',
+        groupId: 'all',
+        protection: 'all',
+      },
+    });
+
   const groupNames = new Map(
     accountability.workspace.groups.map((group) => [group.id, group.name])
   );
   const liveMembers = accountability.workspace.members.filter((member) =>
     liveMemberStatuses.has(member.status)
   );
-  const flagged = liveMembers
-    .map((member) => ({ member, flags: monitorFlags(member) }))
-    .filter((item) => item.flags.length > 0)
-    .sort((left, right) => {
-      const leftSeverity = Math.min(
-        ...left.flags.map((flag) => monitorSeverity[flag])
-      );
-      const rightSeverity = Math.min(
-        ...right.flags.map((flag) => monitorSeverity[flag])
-      );
-      if (leftSeverity !== rightSeverity) return leftSeverity - rightSeverity;
-      return left.member.student_name.localeCompare(right.member.student_name);
+
+  const flagged = useMemo(() => {
+    return liveMembers
+      .map((member) => ({ member, flags: monitorFlags(member) }))
+      .filter((item) => item.flags.length > 0)
+      .sort((left, right) => {
+        const leftSeverity = Math.min(
+          ...left.flags.map((flag) => monitorSeverity[flag])
+        );
+        const rightSeverity = Math.min(
+          ...right.flags.map((flag) => monitorSeverity[flag])
+        );
+        if (leftSeverity !== rightSeverity) return leftSeverity - rightSeverity;
+        return left.member.student_name.localeCompare(right.member.student_name);
+      });
+  }, [liveMembers]);
+
+  const filteredSharedMembers = useMemo(() => {
+    return accountability.workspace.members.filter((member) => {
+      const matchesQuery =
+        !filters.q.trim() ||
+        member.student_name
+          .toLowerCase()
+          .includes(filters.q.toLowerCase().trim());
+      const matchesGroup =
+        filters.groupId === 'all' || member.group_id === filters.groupId;
+      const matchesProtection =
+        filters.protection === 'all' ||
+        (filters.protection === 'ready' &&
+          member.aggregate.protection_status === 'ready') ||
+        (filters.protection === 'attention' &&
+          member.aggregate.protection_status === 'attention') ||
+        (filters.protection === 'unknown' &&
+          (!member.aggregate.protection_status ||
+            member.aggregate.protection_status === 'unknown'));
+      return matchesQuery && matchesGroup && matchesProtection;
     });
+  }, [accountability.workspace.members, filters]);
+
+  const sharedPagination = usePagination({
+    items: filteredSharedMembers,
+    pageSize: 5,
+    initialPage: 1,
+  });
+
+  const flaggedPagination = usePagination({
+    items: flagged,
+    pageSize: 5,
+    initialPage: 1,
+  });
+
+  const { setPage: setSharedPage } = sharedPagination;
+  useEffect(() => {
+    setSharedPage(1);
+  }, [filters.q, filters.groupId, filters.protection, setSharedPage]);
 
   return (
     <DashboardPage>
@@ -184,65 +248,86 @@ export function PartnerProgress() {
                 </p>
               </div>
             ) : (
-              flagged.map(({ member, flags }) => (
-                <div
-                  key={member.id}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-amber/35 bg-gradient-to-br from-amber/[0.05] via-card to-card p-4 shadow-2xs transition-all duration-200 hover:border-amber/55 hover:shadow-xs"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <StudentAvatar
-                          name={member.student_name}
-                          avatarUrl={member.student_avatar_url}
-                          className="size-8 ring-2 ring-amber/30"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-navy truncate text-sm font-bold">
-                            {member.student_name}
-                          </p>
-                          <p className="text-muted-foreground text-[0.6875rem]">
-                            {groupNames.get(member.group_id) ??
-                              p('groupFallback')}
-                          </p>
-                        </div>
-                      </div>
-                      <DashboardStatus tone="amber">
-                        {p('attentionBadge')}
-                      </DashboardStatus>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {flags.map((flag) => (
-                        <span
-                          key={flag}
-                          className="inline-flex items-center gap-1 rounded-lg border border-amber/40 bg-amber/15 px-2 py-0.5 text-[0.6875rem] font-bold text-amber-900"
-                        >
-                          <AlertTriangle
-                            className="size-3 shrink-0"
-                            aria-hidden="true"
-                          />
-                          {flag === 'status'
-                            ? formatMembershipStatus(p, member.status)
-                            : p(monitorFlagLabel[flag])}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`${ROUTES.SUPPORT}?channel=partner`}
-                    className="mt-3.5 flex min-h-9.5 items-center justify-center gap-2 rounded-xl border border-amber/40 bg-amber/15 text-xs font-bold text-amber-900 transition-all duration-200 hover:border-transparent hover:bg-amber-500 hover:text-white shadow-2xs group-hover:border-amber/50"
+              <>
+                {flaggedPagination.paginatedItems.map(({ member, flags }) => (
+                  <div
+                    key={member.id}
+                    className="group relative flex flex-col justify-between rounded-2xl border border-amber/35 bg-gradient-to-br from-amber/[0.05] via-card to-card p-4 shadow-2xs transition-all duration-200 hover:border-amber/55 hover:shadow-xs"
                   >
-                    <MessageCircleHeart
-                      className="size-3.5"
-                      aria-hidden="true"
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <StudentAvatar
+                            name={member.student_name}
+                            avatarUrl={member.student_avatar_url}
+                            className="size-8 ring-2 ring-amber/30"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-navy truncate text-sm font-bold">
+                              {member.student_name}
+                            </p>
+                            <p className="text-muted-foreground text-[0.6875rem]">
+                              {groupNames.get(member.group_id) ??
+                                p('groupFallback')}
+                            </p>
+                          </div>
+                        </div>
+                        <DashboardStatus tone="amber">
+                          {p('attentionBadge')}
+                        </DashboardStatus>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {flags.map((flag) => (
+                          <span
+                            key={flag}
+                            className="inline-flex items-center gap-1 rounded-lg border border-amber/40 bg-amber/15 px-2 py-0.5 text-[0.6875rem] font-bold text-amber-900"
+                          >
+                            <AlertTriangle
+                              className="size-3 shrink-0"
+                              aria-hidden="true"
+                            />
+                            {flag === 'status'
+                              ? formatMembershipStatus(p, member.status)
+                              : p(monitorFlagLabel[flag])}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`${ROUTES.SUPPORT}?channel=partner`}
+                      className="mt-3.5 flex min-h-9.5 items-center justify-center gap-2 rounded-xl border border-amber/40 bg-amber/15 text-xs font-bold text-amber-900 transition-all duration-200 hover:border-transparent hover:bg-amber-500 hover:text-white shadow-2xs group-hover:border-amber/50"
+                    >
+                      <MessageCircleHeart
+                        className="size-3.5"
+                        aria-hidden="true"
+                      />
+                      <span>{p('monitorContact')}</span>
+                      <ArrowRight className="size-3 transition-transform duration-200 group-hover:translate-x-1" />
+                    </Link>
+                  </div>
+                ))}
+
+                {flaggedPagination.totalPages > 1 ? (
+                  <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2 border rounded-xl p-2.5">
+                    <span className="text-muted-foreground text-[0.6875rem] font-semibold">
+                      {tPagination('showingRange', {
+                        start: flaggedPagination.startIndex,
+                        end: flaggedPagination.endIndex,
+                        total: flaggedPagination.totalItems,
+                      })}
+                    </span>
+                    <Pagination
+                      currentPage={flaggedPagination.page}
+                      totalPages={flaggedPagination.totalPages}
+                      onPageChange={flaggedPagination.setPage}
+                      size="sm"
+                      variant="flat"
                     />
-                    <span>{p('monitorContact')}</span>
-                    <ArrowRight className="size-3 transition-transform duration-200 group-hover:translate-x-1" />
-                  </Link>
-                </div>
-              ))
+                  </div>
+                ) : null}
+              </>
             )}
           </div>
 
@@ -270,7 +355,63 @@ export function PartnerProgress() {
           className="xl:col-span-7"
         >
           <div className="flex-1 space-y-3">
-            {accountability.workspace.members.map((member) => (
+            <FilterToolbar
+              isExpanded={showFilters}
+              onToggle={() => setShowFilters((prev) => !prev)}
+              activeCount={activeFilterCount}
+              hasActiveFilters={activeFilterCount > 0}
+              onReset={resetFilters}
+              headerRight={
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {p('membersCount', {
+                    count: filteredSharedMembers.length,
+                  })}
+                </span>
+              }
+            >
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full">
+                <div className="w-full sm:w-56">
+                  <FilterSearchInput
+                    value={filters.q}
+                    onChangeValue={(val) => setFilter('q', val)}
+                    placeholder={p('searchMembers')}
+                    ariaLabel={p('searchMembers')}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <FilterSelect
+                    value={filters.groupId}
+                    onChange={(e) => setFilter('groupId', e.target.value)}
+                    ariaLabel={p('allGroups')}
+                  >
+                    <option value="all">{p('allGroups')}</option>
+                    {accountability.workspace.groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </FilterSelect>
+                  <FilterSelect
+                    value={filters.protection}
+                    onChange={(e) => setFilter('protection', e.target.value)}
+                    ariaLabel={p('allProtection')}
+                  >
+                    <option value="all">{p('allProtection')}</option>
+                    <option value="ready">{p('protectionReady')}</option>
+                    <option value="attention">{p('protectionAttention')}</option>
+                    <option value="unknown">{p('protectionUnknown')}</option>
+                  </FilterSelect>
+                  {activeFilterCount > 0 ? (
+                    <FilterResetButton
+                      onClick={resetFilters}
+                      label={p('resetFilters')}
+                    />
+                  ) : null}
+                </div>
+              </div>
+            </FilterToolbar>
+
+            {sharedPagination.paginatedItems.map((member) => (
               <ExpandableRow
                 key={member.id}
                 open={Boolean(expandedMembers[member.id])}
@@ -339,7 +480,7 @@ export function PartnerProgress() {
               </ExpandableRow>
             ))}
 
-            {accountability.workspace.members.length === 0 ? (
+            {filteredSharedMembers.length === 0 ? (
               <div className="border-border/80 bg-muted/20 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center">
                 <span className="border-border/80 bg-card text-muted-foreground/80 flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
                   <Users className="size-5" aria-hidden="true" />
@@ -347,6 +488,27 @@ export function PartnerProgress() {
                 <p className="text-navy mt-3 text-sm font-bold">
                   {p('noMembers')}
                 </p>
+              </div>
+            ) : null}
+
+            {filteredSharedMembers.length > 0 ? (
+              <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
+                <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+                  {tPagination('showingRange', {
+                    start: sharedPagination.startIndex,
+                    end: sharedPagination.endIndex,
+                    total: sharedPagination.totalItems,
+                  })}
+                </span>
+                {sharedPagination.totalPages > 1 ? (
+                  <Pagination
+                    currentPage={sharedPagination.page}
+                    totalPages={sharedPagination.totalPages}
+                    onPageChange={sharedPagination.setPage}
+                    size="sm"
+                    variant="flat"
+                  />
+                ) : null}
               </div>
             ) : null}
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
@@ -19,6 +19,7 @@ import {
   DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
+import { Pagination } from '@/components/dashboard/pagination';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,6 +30,7 @@ import {
   usePartnerContactRequests,
 } from '@/hooks/use-accountability';
 import { useLocalUser } from '@/hooks/use-local-user';
+import { usePagination } from '@/hooks/use-pagination';
 import { Link } from '@/i18n/routing';
 import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 import { toastError, toastSuccess } from '@/lib/feedback';
@@ -261,7 +263,6 @@ export function PartnerContactWorkspace() {
             currentTime={currentTime}
             expanded={expanded}
             onToggle={toggleExpanded}
-            limit={isPartner ? 5 : 2}
             onTransition={(id, status) => void transition(id, status)}
             emptyIcon={Clock3}
             emptyTitle={
@@ -359,9 +360,24 @@ function ContactRequestList({
   onTransition: (id: string, status: string) => void;
 }) {
   const t = useTranslations('supportWorkspace');
+  const tPagination = useTranslations('pagination');
   const formatter = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
+  });
+
+  const sorted = useMemo(() => {
+    const list = [...requests].sort(
+      (left, right) =>
+        Date.parse(right.created_at) - Date.parse(left.created_at)
+    );
+    return limit ? list.slice(0, limit) : list;
+  }, [requests, limit]);
+
+  const pagination = usePagination({
+    items: sorted,
+    pageSize: 5,
+    initialPage: 1,
   });
 
   if (!requests.length) {
@@ -384,16 +400,9 @@ function ContactRequestList({
     );
   }
 
-  const visible = [...requests]
-    .sort(
-      (left, right) =>
-        Date.parse(right.created_at) - Date.parse(left.created_at)
-    )
-    .slice(0, limit);
-
   return (
     <div className="space-y-3">
-      {visible.map((request) => {
+      {pagination.paginatedItems.map((request) => {
         const createdAt = new Date(request.created_at);
         const canEscalate =
           !isPartner &&
@@ -495,6 +504,25 @@ function ContactRequestList({
           </ExpandableRow>
         );
       })}
+
+      {pagination.totalPages > 1 ? (
+        <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2 border rounded-xl p-2.5 mt-2">
+          <span className="text-muted-foreground text-[0.6875rem] font-semibold">
+            {tPagination('showingRange', {
+              start: pagination.startIndex,
+              end: pagination.endIndex,
+              total: pagination.totalItems,
+            })}
+          </span>
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.setPage}
+            size="sm"
+            variant="flat"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -38,7 +38,14 @@ import type {
   AdminSiteSocialLink,
 } from '@/hooks/use-admin-operations';
 import { Pagination } from '@/components/dashboard/pagination';
+import {
+  FilterResetButton,
+  FilterSearchInput,
+  FilterSelect,
+  FilterToggleButton,
+} from '@/components/dashboard/filter-toolbar';
 import { usePagination } from '@/hooks/use-pagination';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
 import {
@@ -155,14 +162,26 @@ function getRoleBadgeStyle(role: string) {
   return 'bg-amber/15 text-navy border-amber/40';
 }
 
-function formatAuditAction(action: string) {
+function normalizeKey(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/([a-z])([A-Z])/g, '$1_$2')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function formatAuditAction(action: string): string {
   if (!action) return '—';
-  const normalized = action.replace(/_/g, ' ').trim();
+  const normalized = action
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[._-]+/g, ' ')
+    .trim();
   return normalized
-    .split(' ')
+    .split(/\s+/)
     .map((word, index) =>
       index === 0
-        ? word.charAt(0).toUpperCase() + word.slice(1)
+        ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         : word.toLowerCase()
     )
     .join(' ');
@@ -178,22 +197,101 @@ type AdminTranslate = {
 // console errors.
 function localizeAuditAction(t: AdminTranslate, action: string): string {
   if (!action) return '—';
-  const key = `auditActions.${action}`;
-  return t.has(key) ? t(key) : formatAuditAction(action);
+  const directKey = `auditActions.${action}`;
+  if (t.has(directKey)) return t(directKey);
+
+  const normalized = normalizeKey(action);
+  const normKey = `auditActions.${normalized}`;
+  if (t.has(normKey)) return t(normKey);
+
+  return formatAuditAction(action);
 }
 
-// Localize the target type and known config targets; IDs and unknown values
-// stay as-is so the audit trail remains readable.
-function localizeAuditTarget(
+function getAuditTargetParts(
   t: AdminTranslate,
   targetType: string,
   target: string
-): string {
-  const typeKey = `auditTargetTypes.${targetType}`;
-  const resolvedType = t.has(typeKey) ? t(typeKey) : targetType;
-  const targetKey = `auditTargets.${target}`;
-  const resolvedTarget = t.has(targetKey) ? t(targetKey) : target;
-  return `${resolvedType}: ${resolvedTarget}`;
+): { typeLabel: string; targetLabel: string; isConfig: boolean } {
+  if (!targetType) {
+    return { typeLabel: '', targetLabel: target || '—', isConfig: false };
+  }
+
+  const directTypeKey = `auditTargetTypes.${targetType}`;
+  let resolvedType = t.has(directTypeKey) ? t(directTypeKey) : null;
+  if (!resolvedType) {
+    const normType = normalizeKey(targetType);
+    const normTypeKey = `auditTargetTypes.${normType}`;
+    resolvedType = t.has(normTypeKey)
+      ? t(normTypeKey)
+      : formatAuditAction(targetType);
+  }
+
+  if (!target) {
+    return { typeLabel: resolvedType, targetLabel: '', isConfig: true };
+  }
+
+  const directTargetKey = `auditTargets.${target}`;
+  let resolvedTarget = t.has(directTargetKey) ? t(directTargetKey) : null;
+  let isConfig = Boolean(resolvedTarget);
+  if (!resolvedTarget) {
+    const normTarget = normalizeKey(target);
+    const normTargetKey = `auditTargets.${normTarget}`;
+    if (t.has(normTargetKey)) {
+      resolvedTarget = t(normTargetKey);
+      isConfig = true;
+    } else {
+      resolvedTarget = target;
+    }
+  }
+
+  return { typeLabel: resolvedType, targetLabel: resolvedTarget, isConfig };
+}
+
+function AuditTargetCell({
+  t,
+  targetType,
+  target,
+}: {
+  t: AdminTranslate;
+  targetType: string;
+  target: string;
+}) {
+  const { typeLabel, targetLabel, isConfig } = getAuditTargetParts(
+    t,
+    targetType,
+    target
+  );
+
+  if (isConfig) {
+    return (
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="text-navy font-semibold text-xs">
+          {targetLabel || typeLabel}
+        </span>
+        {targetLabel && typeLabel !== targetLabel ? (
+          <span className="text-[0.6875rem] text-muted-foreground">
+            {typeLabel}
+          </span>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+      {typeLabel ? (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.6875rem] font-semibold bg-muted/60 text-navy border border-border/70 shrink-0">
+          {typeLabel}
+        </span>
+      ) : null}
+      <span
+        className="font-mono text-[0.75rem] text-muted-foreground truncate max-w-[220px]"
+        title={targetLabel}
+      >
+        {targetLabel}
+      </span>
+    </div>
+  );
 }
 
 interface PlatformTabProps {
@@ -267,6 +365,44 @@ export function PlatformTab({
     reason: string;
   } | null>(null);
 
+  // Filters for Accounts table
+  const {
+    getFilter: getAccountFilter,
+    setFilter: setAccountFilter,
+    clearFilters: clearAccountFilters,
+    isExpanded: showAccountFilters,
+    toggleExpanded: toggleAccountFilters,
+    activeFilterCount: activeAccountFilterCount,
+    hasActiveFilters: hasActiveAccountFilters,
+  } = useQueryFilters({
+    filterKeys: ['accountRole', 'accountStatus', 'accountQ'],
+    defaultValues: { accountRole: 'all', accountStatus: 'all' },
+    pageKey: 'accountPage',
+  });
+
+  const accountRoleFilter = getAccountFilter('accountRole', 'all');
+  const accountStatusFilter = getAccountFilter('accountStatus', 'all');
+  const accountSearchQuery = getAccountFilter('accountQ', '');
+
+  const filteredAccounts = useMemo(() => {
+    const q = accountSearchQuery.trim().toLowerCase();
+    return accounts.filter((acc) => {
+      const matchRole =
+        accountRoleFilter === 'all' || acc.role === accountRoleFilter;
+      const matchStatus =
+        accountStatusFilter === 'all' ||
+        (accountStatusFilter === 'disabled'
+          ? Boolean(acc.disabled_at)
+          : !acc.disabled_at);
+      const matchQ =
+        !q ||
+        acc.display_name.toLowerCase().includes(q) ||
+        acc.email.toLowerCase().includes(q) ||
+        (acc.phone_e164 && acc.phone_e164.toLowerCase().includes(q));
+      return matchRole && matchStatus && matchQ;
+    });
+  }, [accounts, accountRoleFilter, accountStatusFilter, accountSearchQuery]);
+
   const {
     pagedItems: pageAccounts,
     page: accountPage,
@@ -275,7 +411,48 @@ export function PlatformTab({
     startIndex: accountsStartIndex,
     endIndex: accountsEndIndex,
     totalItems: totalAccounts,
-  } = usePagination({ items: accounts, pageSize: 6 });
+  } = usePagination({ items: filteredAccounts, pageSize: 6 });
+
+  // Filters for Audit Events table
+  const {
+    getFilter: getAuditFilter,
+    setFilter: setAuditFilter,
+    clearFilters: clearAuditFilters,
+    isExpanded: showAuditFilters,
+    toggleExpanded: toggleAuditFilters,
+    activeFilterCount: activeAuditFilterCount,
+    hasActiveFilters: hasActiveAuditFilters,
+  } = useQueryFilters({
+    filterKeys: ['auditAction', 'auditQ'],
+    defaultValues: { auditAction: 'all' },
+    pageKey: 'auditPage',
+  });
+
+  const auditActionFilter = getAuditFilter('auditAction', 'all');
+  const auditSearchQuery = getAuditFilter('auditQ', '');
+
+  const availableAuditActions = useMemo(() => {
+    const actionSet = new Set<string>();
+    auditEvents.forEach((ev) => {
+      if (ev.action) actionSet.add(ev.action);
+    });
+    return Array.from(actionSet).sort();
+  }, [auditEvents]);
+
+  const filteredAuditEvents = useMemo(() => {
+    const q = auditSearchQuery.trim().toLowerCase();
+    return auditEvents.filter((ev) => {
+      const matchAction =
+        auditActionFilter === 'all' || ev.action === auditActionFilter;
+      const matchQ =
+        !q ||
+        ev.actor.toLowerCase().includes(q) ||
+        ev.action.toLowerCase().includes(q) ||
+        ev.target.toLowerCase().includes(q) ||
+        (ev.reason && ev.reason.toLowerCase().includes(q));
+      return matchAction && matchQ;
+    });
+  }, [auditEvents, auditActionFilter, auditSearchQuery]);
 
   const {
     pagedItems: pageAuditEvents,
@@ -285,7 +462,7 @@ export function PlatformTab({
     startIndex: auditStartIndex,
     endIndex: auditEndIndex,
     totalItems: totalAuditEvents,
-  } = usePagination({ items: auditEvents, pageSize: 10 });
+  } = usePagination({ items: filteredAuditEvents, pageSize: 10 });
 
   const localizeRole = (accountRole: string) =>
     tDynamic(dynamicLabelKey('role', accountRole), {
@@ -643,14 +820,86 @@ export function PlatformTab({
 
         {/* Accounts List Table */}
         <div className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
-          <div className="border-border border-b p-4 sm:p-5">
-            <h3 className="text-navy text-base font-bold">
-              {t('accountsTitle')}
-            </h3>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              {t('accountsDescription')}
-            </p>
+          <div className="border-border border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-navy text-base font-bold">
+                  {t('accountsTitle')}
+                </h3>
+                <span className="text-[0.6875rem] font-bold text-navy/90 bg-azure/60 px-2.5 py-0.5 rounded-full border border-navy/15 shadow-2xs">
+                  {totalAccounts} akun
+                </span>
+              </div>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                {t('accountsDescription')}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <FilterToggleButton
+                isExpanded={showAccountFilters}
+                onToggle={toggleAccountFilters}
+                hasActiveFilters={hasActiveAccountFilters}
+                activeCount={activeAccountFilterCount}
+                label={t('filterToggle') || 'Filter'}
+              />
+            </div>
           </div>
+
+          {/* Expandable Filter Panel */}
+          {showAccountFilters ? (
+            <div className="border-border/60 bg-muted/20 border-b px-4 py-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <FilterSearchInput
+                  value={accountSearchQuery}
+                  onChangeValue={(val) => {
+                    setAccountFilter('accountQ', val);
+                    setAccountPage(1);
+                  }}
+                  placeholder="Cari nama, email, telepon..."
+                  className="w-full sm:w-60"
+                />
+
+                <FilterSelect
+                  value={accountRoleFilter}
+                  onChange={(e) => {
+                    setAccountFilter('accountRole', e.target.value);
+                    setAccountPage(1);
+                  }}
+                  ariaLabel={t('filterRole')}
+                >
+                  <option value="all">{t('filterAllRoles')}</option>
+                  <option value="admin">{localizeRole('admin')}</option>
+                  <option value="partner">{localizeRole('partner')}</option>
+                  <option value="user">{localizeRole('user')}</option>
+                </FilterSelect>
+
+                <FilterSelect
+                  value={accountStatusFilter}
+                  onChange={(e) => {
+                    setAccountFilter('accountStatus', e.target.value);
+                    setAccountPage(1);
+                  }}
+                  ariaLabel={t('filterAccountStatus')}
+                >
+                  <option value="all">{t('filterAllAccountStatuses')}</option>
+                  <option value="active">{t('statusActive')}</option>
+                  <option value="disabled">{t('disabled')}</option>
+                </FilterSelect>
+              </div>
+
+              {hasActiveAccountFilters ? (
+                <FilterResetButton
+                  onClick={() => {
+                    clearAccountFilters(['accountRole', 'accountStatus', 'accountQ']);
+                    setAccountPage(1);
+                  }}
+                  label={t('clearFilters') || 'Reset'}
+                />
+              ) : null}
+            </div>
+          ) : null}
+
           <Table className="[&_td]:px-4 [&_td]:py-3 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
             <TableHeader>
               <TableRow className="bg-muted/40">
@@ -676,6 +925,23 @@ export function PlatformTab({
                   text={t('noOperators')}
                   description={t('noOperatorsDescription')}
                 />
+              ) : pageAccounts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-32 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 py-4">
+                      <p className="text-navy text-sm font-semibold">
+                        {t('noFilteredAccounts')}
+                      </p>
+                      <FilterResetButton
+                        onClick={() => {
+                          clearAccountFilters(['accountRole', 'accountStatus', 'accountQ']);
+                          setAccountPage(1);
+                        }}
+                        label={t('clearFilters') || 'Reset Filter'}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
                 pageAccounts.map((account) => (
                   <TableRow key={account.id}>
@@ -749,12 +1015,75 @@ export function PlatformTab({
 
       {/* Operational Audit Log Section */}
       <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
-        <div className="border-border border-b p-4 sm:p-5">
-          <h3 className="text-navy text-base font-bold">{t('auditTitle')}</h3>
-          <p className="text-muted-foreground mt-0.5 text-xs">
-            {t('auditDescription')}
-          </p>
+        <div className="border-border border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-navy text-base font-bold">{t('auditTitle')}</h3>
+              <span className="text-[0.6875rem] font-bold text-navy/90 bg-azure/60 px-2.5 py-0.5 rounded-full border border-navy/15 shadow-2xs">
+                {totalAuditEvents} catatan
+              </span>
+            </div>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              {t('auditDescription')}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            <FilterToggleButton
+              isExpanded={showAuditFilters}
+              onToggle={toggleAuditFilters}
+              hasActiveFilters={hasActiveAuditFilters}
+              activeCount={activeAuditFilterCount}
+              label={t('filterToggle') || 'Filter'}
+            />
+          </div>
         </div>
+
+        {/* Expandable Filter Panel */}
+        {showAuditFilters ? (
+          <div className="border-border/60 bg-muted/20 border-b px-4 py-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <FilterSearchInput
+                value={auditSearchQuery}
+                onChangeValue={(val) => {
+                  setAuditFilter('auditQ', val);
+                  setAuditPage(1);
+                }}
+                placeholder="Cari aktor, aksi, target, alasan..."
+                className="w-full sm:w-64"
+              />
+
+              {availableAuditActions.length > 0 ? (
+                <FilterSelect
+                  value={auditActionFilter}
+                  onChange={(e) => {
+                    setAuditFilter('auditAction', e.target.value);
+                    setAuditPage(1);
+                  }}
+                  ariaLabel={t('filterAuditAction')}
+                >
+                  <option value="all">{t('filterAllAuditActions')}</option>
+                  {availableAuditActions.map((action) => (
+                    <option key={action} value={action}>
+                      {localizeAuditAction(t, action)}
+                    </option>
+                  ))}
+                </FilterSelect>
+              ) : null}
+            </div>
+
+            {hasActiveAuditFilters ? (
+              <FilterResetButton
+                onClick={() => {
+                  clearAuditFilters(['auditAction', 'auditQ']);
+                  setAuditPage(1);
+                }}
+                label={t('clearFilters') || 'Reset'}
+              />
+            ) : null}
+          </div>
+        ) : null}
+
         <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
           <TableHeader>
             <TableRow className="bg-muted/40">
@@ -783,6 +1112,23 @@ export function PlatformTab({
                 text={t('noAudit')}
                 description={t('noAuditDescription')}
               />
+            ) : pageAuditEvents.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-32 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2 py-4">
+                    <p className="text-navy text-sm font-semibold">
+                      {t('noFilteredAudit')}
+                    </p>
+                    <FilterResetButton
+                      onClick={() => {
+                        clearAuditFilters(['auditAction', 'auditQ']);
+                        setAuditPage(1);
+                      }}
+                      label={t('clearFilters') || 'Reset Filter'}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
             ) : (
               pageAuditEvents.map((event) => (
                 <TableRow key={event.id}>
@@ -800,7 +1146,11 @@ export function PlatformTab({
                     </span>
                   </TableCell>
                   <TableCell className="text-foreground text-xs font-medium">
-                    {localizeAuditTarget(t, event.target_type, event.target)}
+                    <AuditTargetCell
+                      t={t}
+                      targetType={event.target_type}
+                      target={event.target}
+                    />
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
                     {event.reason || '—'}

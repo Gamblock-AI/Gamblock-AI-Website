@@ -8,6 +8,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import messages from '@/messages/en/engagement.json';
 import { TwinTraceGame } from './twin-trace-game';
 
+vi.mock('@/i18n/routing', () => ({
+  Link: ({
+    children,
+    href,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+  usePathname: () => '/en',
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
+
 vi.mock('next/image', () => ({
   default: ({ alt = '', ...props }: ImgHTMLAttributes<HTMLImageElement>) => (
     <img alt={alt} {...props} />

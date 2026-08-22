@@ -22,7 +22,13 @@ import {
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/dashboard/pagination';
+import {
+  FilterResetButton,
+  FilterSearchInput,
+  FilterToggleButton,
+} from '@/components/dashboard/filter-toolbar';
 import { usePagination } from '@/hooks/use-pagination';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import { ThumbnailPlaceholder } from '@/components/education/thumbnail-placeholder';
 import type {
   AdminEducationDocument,
@@ -673,8 +679,23 @@ export function ContentTab(props: ContentTabProps) {
   const [headerHeight, setHeaderHeight] = useState(0);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
 
-  const [catalogQuery, setCatalogQuery] = useState('');
-  const [catalogStatus, setCatalogStatus] = useState<string>('all');
+  const {
+    getFilter,
+    setFilter: setCatalogFilter,
+    clearFilters: clearCatalogFilters,
+    isExpanded: showCatalogFilters,
+    toggleExpanded: toggleCatalogFilters,
+    activeFilterCount: activeCatalogFilterCount,
+    hasActiveFilters: hasActiveCatalogFilters,
+  } = useQueryFilters({
+    filterKeys: ['status', 'q'],
+    defaultValues: { status: 'all' },
+    ignoredKeys: ['lang', 'moduleID'],
+    pageKey: 'page',
+  });
+
+  const catalogStatus = getFilter('status', 'all');
+  const catalogQuery = getFilter('q', '');
 
   const filteredModules = useMemo(() => {
     const q = catalogQuery.trim().toLowerCase();
@@ -1095,78 +1116,96 @@ export function ContentTab(props: ContentTabProps) {
   if (!isCreating && (!selected || !document))
     return (
       <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
           <div>
             <h3 className="text-navy text-base font-bold">Katalog Modul Edukasi</h3>
             <p className="text-muted-foreground mt-0.5 text-xs">
               {t('contentDescription')}
             </p>
           </div>
-          <Button size="sm" onClick={startCreate}>
-            <Plus className="size-4" />
-            {t('newModule')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <FilterToggleButton
+              isExpanded={showCatalogFilters}
+              onToggle={toggleCatalogFilters}
+              hasActiveFilters={hasActiveCatalogFilters}
+              activeCount={activeCatalogFilterCount}
+              label={t('filterToggle') || 'Filter'}
+            />
+            <Button size="sm" onClick={startCreate}>
+              <Plus className="size-4" />
+              {t('newModule')}
+            </Button>
+          </div>
         </div>
 
-        <div className="border-border/80 bg-card shadow-soft flex flex-col gap-3 rounded-2xl border p-3.5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <input
-                type="text"
+        {showCatalogFilters ? (
+          <div className="border-border/80 bg-card shadow-soft flex flex-col gap-3 rounded-2xl border p-3.5 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center">
+              <FilterSearchInput
                 value={catalogQuery}
-                onChange={(e) => {
-                  setCatalogQuery(e.target.value);
+                onChangeValue={(val) => {
+                  setCatalogFilter('q', val);
                   setCatalogPage(1);
                 }}
                 placeholder="Cari judul, slug, atau ringkasan..."
-                className="border-border/80 bg-muted/40 text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-9 w-full rounded-xl border pl-9 pr-3 text-xs outline-none focus-visible:ring-2"
+                className="flex-1 max-w-sm"
               />
-            </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0">
-              {(['all', 'draft', 'in_review', 'published', 'archived'] as const).map((status) => {
-                const isActive = catalogStatus === status;
-                const statusLabel =
-                  status === 'all'
-                    ? 'Semua'
-                    : tDynamic(dynamicLabelKey('status', status), {
-                        value: dynamicLabelFallback(status),
-                      });
-                return (
-                  <button
-                    key={status}
-                    type="button"
-                    onClick={() => {
-                      setCatalogStatus(status);
-                      setCatalogPage(1);
-                    }}
-                    className={cn(
-                      'rounded-xl px-2.5 py-1 text-xs font-bold transition-colors whitespace-nowrap',
-                      isActive
-                        ? 'bg-navy text-white shadow-2xs'
-                        : 'border border-border/70 bg-muted/30 text-muted-foreground hover:bg-muted/70 hover:text-navy'
-                    )}
-                  >
-                    {statusLabel}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="text-muted-foreground/80 flex items-center text-xs font-semibold shrink-0">
-            {catalogTotalItems > 0 ? (
-              <span>
-                {tPagination('showingRange', {
-                  start: catalogStartIndex,
-                  end: catalogEndIndex,
-                  total: catalogTotalItems,
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0">
+                {(['all', 'draft', 'in_review', 'published', 'archived'] as const).map((status) => {
+                  const isActive = catalogStatus === status;
+                  const statusLabel =
+                    status === 'all'
+                      ? 'Semua'
+                      : tDynamic(dynamicLabelKey('status', status), {
+                          value: dynamicLabelFallback(status),
+                        });
+                  return (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => {
+                        setCatalogFilter('status', status);
+                        setCatalogPage(1);
+                      }}
+                      className={cn(
+                        'rounded-xl px-2.5 py-1 text-xs font-bold transition-colors whitespace-nowrap',
+                        isActive
+                          ? 'bg-navy text-white shadow-2xs'
+                          : 'border border-border/70 bg-muted/30 text-muted-foreground hover:bg-muted/70 hover:text-navy'
+                      )}
+                    >
+                      {statusLabel}
+                    </button>
+                  );
                 })}
-              </span>
+              </div>
+            </div>
+
+            {hasActiveCatalogFilters ? (
+              <FilterResetButton
+                onClick={() => {
+                  clearCatalogFilters(['status', 'q']);
+                  setCatalogPage(1);
+                }}
+                label={t('clearFilters') || 'Reset'}
+                className="self-end sm:self-center"
+              />
             ) : null}
           </div>
-        </div>
+        ) : null}
+
+        {catalogTotalItems > 0 ? (
+          <div className="text-muted-foreground/80 flex items-center justify-between text-xs font-semibold px-1">
+            <span>
+              {tPagination('showingRange', {
+                start: catalogStartIndex,
+                end: catalogEndIndex,
+                total: catalogTotalItems,
+              })}
+            </span>
+          </div>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {pagedModules.length ? (
@@ -1237,12 +1276,11 @@ export function ContentTab(props: ContentTabProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setCatalogQuery('');
-                  setCatalogStatus('all');
+                  clearCatalogFilters(['status', 'q']);
                   setCatalogPage(1);
                 }}
               >
-                Reset Filter
+                {t('clearFilters') || 'Reset Filter'}
               </Button>
             </div>
           ) : (

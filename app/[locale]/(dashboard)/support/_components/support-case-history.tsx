@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   CircleHelp,
@@ -12,9 +13,18 @@ import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { DashboardPanel } from '@/components/dashboard/dashboard-page';
+import {
+  FilterResetButton,
+  FilterSearchInput,
+  FilterSelect,
+  FilterToolbar,
+} from '@/components/dashboard/filter-toolbar';
+import { Pagination } from '@/components/dashboard/pagination';
 import { SupportStatusBadge } from '@/components/dashboard/support-status-badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePagination } from '@/hooks/use-pagination';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import {
   useSupportRequest,
   type SupportCaseRecord,
@@ -243,7 +253,44 @@ function caseTimestamp(value: string) {
 
 export function SupportHistoryPageClient() {
   const t = useTranslations('supportWorkspace');
+  const tDynamic = useTranslations('dynamicLabels');
+  const tPagination = useTranslations('pagination');
   const support = useSupportRequest();
+  const [showFilters, setShowFilters] = useState(false);
+
+  const { filters, setFilter, resetFilters, activeFilterCount } =
+    useQueryFilters({
+      pathname: ROUTES.SUPPORT_HISTORY,
+      defaultFilters: {
+        q: '',
+        type: 'all',
+        status: 'all',
+      },
+    });
+
+  const filteredCases = useMemo(() => {
+    return (support.cases ?? []).filter((item) => {
+      const matchesQuery =
+        !filters.q.trim() ||
+        item.id.toLowerCase().includes(filters.q.toLowerCase().trim()) ||
+        item.title.toLowerCase().includes(filters.q.toLowerCase().trim());
+      const matchesType =
+        filters.type === 'all' || item.type === filters.type;
+      const matchesStatus =
+        filters.status === 'all' || item.status === filters.status;
+      return matchesQuery && matchesType && matchesStatus;
+    });
+  }, [support.cases, filters]);
+
+  const pagination = usePagination({
+    items: filteredCases,
+    pageSize: 5,
+    initialPage: 1,
+  });
+  const { setPage } = pagination;
+  useEffect(() => {
+    setPage(1);
+  }, [filters.q, filters.type, filters.status, setPage]);
 
   return (
     <DashboardPanel
@@ -263,11 +310,124 @@ export function SupportHistoryPageClient() {
         ) : undefined
       }
     >
-      <SupportCaseList
-        cases={support.cases}
-        loading={support.loading}
-        error={support.error}
-      />
+      <div className="space-y-4">
+        <FilterToolbar
+          isExpanded={showFilters}
+          onToggle={() => setShowFilters((prev) => !prev)}
+          activeCount={activeFilterCount}
+          hasActiveFilters={activeFilterCount > 0}
+          onReset={resetFilters}
+          headerRight={
+            <span className="text-xs font-semibold text-muted-foreground">
+              {t('ticketsCount', {
+                count: filteredCases.length,
+              })}
+            </span>
+          }
+        >
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full">
+            <div className="w-full sm:w-64">
+              <FilterSearchInput
+                value={filters.q}
+                onChangeValue={(val) => setFilter('q', val)}
+                placeholder={t('searchTickets')}
+                ariaLabel={t('searchTickets')}
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterSelect
+                value={filters.type}
+                onChange={(e) => setFilter('type', e.target.value)}
+                ariaLabel={t('allTypes')}
+              >
+                <option value="all">{t('allTypes')}</option>
+                <option value="technical">
+                  {tDynamic(dynamicLabelKey('supportType', 'technical'), {
+                    value: 'technical',
+                  })}
+                </option>
+                <option value="device">
+                  {tDynamic(dynamicLabelKey('supportType', 'device'), {
+                    value: 'device',
+                  })}
+                </option>
+                <option value="accountability">
+                  {tDynamic(dynamicLabelKey('supportType', 'accountability'), {
+                    value: 'accountability',
+                  })}
+                </option>
+                <option value="privacy">
+                  {tDynamic(dynamicLabelKey('supportType', 'privacy'), {
+                    value: 'privacy',
+                  })}
+                </option>
+              </FilterSelect>
+
+              <FilterSelect
+                value={filters.status}
+                onChange={(e) => setFilter('status', e.target.value)}
+                ariaLabel={t('allStatuses')}
+              >
+                <option value="all">{t('allStatuses')}</option>
+                <option value="pending">
+                  {tDynamic(dynamicLabelKey('supportStatus', 'pending'), {
+                    value: 'pending',
+                  })}
+                </option>
+                <option value="in_progress">
+                  {tDynamic(dynamicLabelKey('supportStatus', 'in_progress'), {
+                    value: 'in_progress',
+                  })}
+                </option>
+                <option value="resolved">
+                  {tDynamic(dynamicLabelKey('supportStatus', 'resolved'), {
+                    value: 'resolved',
+                  })}
+                </option>
+                <option value="closed">
+                  {tDynamic(dynamicLabelKey('supportStatus', 'closed'), {
+                    value: 'closed',
+                  })}
+                </option>
+              </FilterSelect>
+
+              {activeFilterCount > 0 ? (
+                <FilterResetButton
+                  onClick={resetFilters}
+                  label={t('resetFilters')}
+                />
+              ) : null}
+            </div>
+          </div>
+        </FilterToolbar>
+
+        <SupportCaseList
+          cases={pagination.paginatedItems}
+          loading={support.loading}
+          error={support.error}
+        />
+
+        {filteredCases.length > 0 ? (
+          <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
+            <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
+              {tPagination('showingRange', {
+                start: pagination.startIndex,
+                end: pagination.endIndex,
+                total: pagination.totalItems,
+              })}
+            </span>
+            {pagination.totalPages > 1 ? (
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={pagination.setPage}
+                size="sm"
+                variant="flat"
+              />
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </DashboardPanel>
   );
 }

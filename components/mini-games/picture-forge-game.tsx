@@ -371,6 +371,7 @@ export function PictureForgeGame() {
                         <button
                           key={puzzle.id}
                           type="button"
+                          aria-label={t(`pictureForge.imageNames.${puzzle.id}`)}
                           aria-pressed={selected}
                           title={t(`pictureForge.imageNames.${puzzle.id}`)}
                           onClick={() => setSelectedPuzzleId(puzzle.id)}

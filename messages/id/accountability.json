@@ -152,6 +152,11 @@
     "historyDescription": "Permintaan persetujuan sebelumnya dan hasilnya.",
     "historyEmptyTitle": "Belum ada permintaan",
     "historyEmptyBody": "Permintaan persetujuan yang Anda kirim akan muncul di sini.",
+    "searchRequests": "Cari ID atau alasan...",
+    "allStatuses": "Semua status",
+    "resetFilters": "Reset filter",
+    "filterButton": "Filter",
+    "requestsCount": "{count} permintaan",
     "dateUnavailable": "Tanggal tidak tersedia",
     "reasonNotProvided": "Alasan tidak diberikan",
     "requestStatus": {
@@ -454,6 +459,13 @@
     "groupsBody": "Ringkasan anggota mengikuti pilihan berbagi setiap siswa.",
     "noGroups": "Belum ada grup",
     "noGroupsBody": "Setelah verifikasi selesai, buat grup pertama Anda di panel ini.",
+    "searchGroups": "Cari nama atau deskripsi grup...",
+    "allGroupStatuses": "Semua status grup",
+    "groupActive": "Aktif",
+    "groupArchived": "Diarsipkan",
+    "resetFilters": "Reset filter",
+    "filterButton": "Filter",
+    "groupsCount": "{count} grup",
     "memberCount": "{count} anggota aktif",
     "groupStatus": {
       "active": "Aktif"

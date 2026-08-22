@@ -2,16 +2,18 @@
 
 import { useMemo, useState } from 'react';
 import { ShieldCheck, UserRoundCheck } from 'lucide-react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
+import { Pagination } from '@/components/dashboard/pagination';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { StudentAvatar } from '@/components/dashboard/student-avatar';
 import { ExpandableRow } from '@/components/dashboard/expandable-row';
 import type { useAccountability } from '@/hooks/use-accountability';
+import { usePagination } from '@/hooks/use-pagination';
 import { Link } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { ROUTES } from '@/routes';
@@ -38,6 +40,7 @@ export function PartnerAccountability({
   accountability: Accountability;
 }) {
   const locale = useLocale();
+  const tPagination = useTranslations('pagination');
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [dialog, setDialog] = useState<PartnerDialog>(null);
   const [expandedApprovals, setExpandedApprovals] = useState<
@@ -52,6 +55,18 @@ export function PartnerAccountability({
   const pendingLeaves = accountability.workspace.exit_requests.filter(
     (request) => request.status === 'pending'
   );
+
+  const approvalsPagination = usePagination({
+    items: pendingApprovals,
+    pageSize: 5,
+    initialPage: 1,
+  });
+
+  const leavesPagination = usePagination({
+    items: pendingLeaves,
+    pageSize: 5,
+    initialPage: 1,
+  });
   const membersById = useMemo(
     () =>
       new Map(
@@ -142,117 +157,138 @@ export function PartnerAccountability({
         >
           <div className="space-y-3">
             {pendingApprovals.length ? (
-              pendingApprovals.map((request) => {
-                const member = membersById.get(request.membership_id);
-                return (
-                  <ExpandableRow
-                    key={request.id}
-                    open={Boolean(expandedApprovals[request.id])}
-                    onToggle={() => toggleApproval(request.id)}
-                    header={
-                      <div className="flex w-full items-center gap-2 min-w-0">
-                        {member ? (
-                          <StudentAvatar
-                            name={member.student_name}
-                            avatarUrl={member.student_avatar_url}
-                            className="size-6"
-                          />
-                        ) : null}
-                        <div className="min-w-0 flex-1">
-                          <p className="text-navy truncate text-sm font-bold">
-                            {member?.student_name || t('studentFallback')}
-                          </p>
-                          <p className="text-navy text-xs font-semibold">
-                            {request.action === 'pause_protection'
-                              ? t('pauseRequest', {
-                                  minutes: request.requested_duration_minutes,
-                                })
-                              : t('uninstallRequest')}
-                          </p>
+              <>
+                {approvalsPagination.paginatedItems.map((request) => {
+                  const member = membersById.get(request.membership_id);
+                  return (
+                    <ExpandableRow
+                      key={request.id}
+                      open={Boolean(expandedApprovals[request.id])}
+                      onToggle={() => toggleApproval(request.id)}
+                      header={
+                        <div className="flex w-full items-center gap-2 min-w-0">
+                          {member ? (
+                            <StudentAvatar
+                              name={member.student_name}
+                              avatarUrl={member.student_avatar_url}
+                              className="size-6"
+                            />
+                          ) : null}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-navy truncate text-sm font-bold">
+                              {member?.student_name || t('studentFallback')}
+                            </p>
+                            <p className="text-navy text-xs font-semibold">
+                              {request.action === 'pause_protection'
+                                ? t('pauseRequest', {
+                                    minutes: request.requested_duration_minutes,
+                                  })
+                                : t('uninstallRequest')}
+                            </p>
+                          </div>
+                          <RequestStatus status="pending">
+                            {t('pending')}
+                          </RequestStatus>
                         </div>
-                        <RequestStatus status="pending">
-                          {t('pending')}
-                        </RequestStatus>
-                      </div>
-                    }
-                  >
-                    <p className="text-muted-foreground text-sm leading-6">
-                      {request.reason || t('noReason')}
-                    </p>
-                    <dl className="bg-background/70 mt-3 grid gap-2 rounded-lg p-3 text-xs sm:grid-cols-2">
-                      <div>
-                        <dt className="text-muted-foreground">
-                          {t('createdAt')}
-                        </dt>
-                        <dd className="text-navy mt-1 font-semibold">
-                          {formatDateTime(locale, request.created_at) ??
-                            t('dateUnavailable')}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">
-                          {t('expiresAt')}
-                        </dt>
-                        <dd className="text-navy mt-1 font-semibold">
-                          {formatDateTime(locale, request.expires_at) ??
-                            t('dateUnavailable')}
-                        </dd>
-                      </div>
-                    </dl>
-                    <label
-                      htmlFor={`response-${request.id}`}
-                      className="text-navy mt-3 flex items-center text-sm font-semibold"
-                    >
-                      <span>{t('supportiveResponse')}</span>
-                      <OptionalMark />
-                    </label>
-                    <Textarea
-                      id={`response-${request.id}`}
-                      value={responses[request.id] ?? ''}
-                      maxLength={500}
-                      onChange={(event) =>
-                        setResponses((current) => ({
-                          ...current,
-                          [request.id]: event.target.value,
-                        }))
                       }
-                      placeholder={t('supportiveResponsePlaceholder')}
-                      className="mt-2 min-h-20"
+                    >
+                      <p className="text-muted-foreground text-sm leading-6">
+                        {request.reason || t('noReason')}
+                      </p>
+                      <dl className="bg-background/70 mt-3 grid gap-2 rounded-lg p-3 text-xs sm:grid-cols-2">
+                        <div>
+                          <dt className="text-muted-foreground">
+                            {t('createdAt')}
+                          </dt>
+                          <dd className="text-navy mt-1 font-semibold">
+                            {formatDateTime(locale, request.created_at) ??
+                              t('dateUnavailable')}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">
+                            {t('expiresAt')}
+                          </dt>
+                          <dd className="text-navy mt-1 font-semibold">
+                            {formatDateTime(locale, request.expires_at) ??
+                              t('dateUnavailable')}
+                          </dd>
+                        </div>
+                      </dl>
+                      <label
+                        htmlFor={`response-${request.id}`}
+                        className="text-navy mt-3 flex items-center text-sm font-semibold"
+                      >
+                        <span>{t('supportiveResponse')}</span>
+                        <OptionalMark />
+                      </label>
+                      <Textarea
+                        id={`response-${request.id}`}
+                        value={responses[request.id] ?? ''}
+                        maxLength={500}
+                        onChange={(event) =>
+                          setResponses((current) => ({
+                            ...current,
+                            [request.id]: event.target.value,
+                          }))
+                        }
+                        placeholder={t('supportiveResponsePlaceholder')}
+                        className="mt-2 min-h-20"
+                      />
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        <Button
+                          variant="outline"
+                          disabled={accountability.isMutating(
+                            `approval:${request.id}:deny`
+                          )}
+                          onClick={() =>
+                            setDialog({
+                              type: 'approval',
+                              id: request.id,
+                              decision: 'deny',
+                            })
+                          }
+                        >
+                          {t('deny')}
+                        </Button>
+                        <Button
+                          disabled={accountability.isMutating(
+                            `approval:${request.id}:approve`
+                          )}
+                          onClick={() =>
+                            setDialog({
+                              type: 'approval',
+                              id: request.id,
+                              decision: 'approve',
+                            })
+                          }
+                        >
+                          {t('approve')}
+                        </Button>
+                      </div>
+                    </ExpandableRow>
+                  );
+                })}
+
+                {approvalsPagination.totalPages > 1 ? (
+                  <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2 border rounded-xl p-2.5">
+                    <span className="text-muted-foreground text-[0.6875rem] font-semibold">
+                      {tPagination('showingRange', {
+                        start: approvalsPagination.startIndex,
+                        end: approvalsPagination.endIndex,
+                        total: approvalsPagination.totalItems,
+                      })}
+                    </span>
+                    <Pagination
+                      currentPage={approvalsPagination.page}
+                      totalPages={approvalsPagination.totalPages}
+                      onPageChange={approvalsPagination.setPage}
+                      size="sm"
+                      variant="flat"
                     />
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      <Button
-                        variant="outline"
-                        disabled={accountability.isMutating(
-                          `approval:${request.id}:deny`
-                        )}
-                        onClick={() =>
-                          setDialog({
-                            type: 'approval',
-                            id: request.id,
-                            decision: 'deny',
-                          })
-                        }
-                      >
-                        {t('deny')}
-                      </Button>
-                      <Button
-                        disabled={accountability.isMutating(
-                          `approval:${request.id}:approve`
-                        )}
-                        onClick={() =>
-                          setDialog({
-                            type: 'approval',
-                            id: request.id,
-                            decision: 'approve',
-                          })
-                        }
-                      >
-                        {t('approve')}
-                      </Button>
-                    </div>
-                  </ExpandableRow>
-                );
-              })
+                  </div>
+                ) : null}
+              </>
             ) : (
               <EmptyLine
                 icon={ShieldCheck}
@@ -275,103 +311,124 @@ export function PartnerAccountability({
         >
           <div className="space-y-3">
             {pendingLeaves.length ? (
-              pendingLeaves.map((request) => {
-                const member = membersById.get(request.membership_id);
-                const unsafe = request.kind === 'unsafe';
-                return (
-                  <ExpandableRow
-                    key={request.id}
-                    open={Boolean(expandedLeaves[request.id])}
-                    onToggle={() => toggleLeave(request.id)}
-                    header={
-                      <div className="flex w-full items-center gap-2 min-w-0">
-                        {member ? (
-                          <StudentAvatar
-                            name={member.student_name}
-                            avatarUrl={member.student_avatar_url}
-                            className="size-6"
-                          />
-                        ) : null}
-                        <div className="min-w-0 flex-1">
-                          <p className="text-navy truncate text-sm font-bold">
-                            {member?.student_name || t('studentFallback')}
-                          </p>
-                          <p className="text-navy text-xs font-semibold">
-                            {unsafe ? t('unsafeLeave') : t('normalLeave')}
-                          </p>
+              <>
+                {leavesPagination.paginatedItems.map((request) => {
+                  const member = membersById.get(request.membership_id);
+                  const unsafe = request.kind === 'unsafe';
+                  return (
+                    <ExpandableRow
+                      key={request.id}
+                      open={Boolean(expandedLeaves[request.id])}
+                      onToggle={() => toggleLeave(request.id)}
+                      header={
+                        <div className="flex w-full items-center gap-2 min-w-0">
+                          {member ? (
+                            <StudentAvatar
+                              name={member.student_name}
+                              avatarUrl={member.student_avatar_url}
+                              className="size-6"
+                            />
+                          ) : null}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-navy truncate text-sm font-bold">
+                              {member?.student_name || t('studentFallback')}
+                            </p>
+                            <p className="text-navy text-xs font-semibold">
+                              {unsafe ? t('unsafeLeave') : t('normalLeave')}
+                            </p>
+                          </div>
+                          <RequestStatus status="pending">
+                            {t('pending')}
+                          </RequestStatus>
                         </div>
-                        <RequestStatus status="pending">
-                          {t('pending')}
-                        </RequestStatus>
-                      </div>
-                    }
-                  >
-                    <p className="text-muted-foreground text-sm leading-6">
-                      {request.reason || t('noReason')}
-                    </p>
-                    <p className="text-muted-foreground mt-2 text-xs">
-                      {formatDateTime(locale, request.created_at) ??
-                        t('dateUnavailable')}
-                    </p>
-                    {unsafe ? (
-                      <div className="border-amber/35 bg-amber/[0.08] mt-3 rounded-lg border p-3">
-                        <p className="text-navy text-xs leading-5 font-semibold">
-                          {t('unsafePartnerNotice')}
-                        </p>
-                        <Link
-                          href={`${ROUTES.SUPPORT}?channel=team`}
-                          className="text-navy mt-2 inline-flex min-h-10 items-center text-xs font-semibold underline underline-offset-4"
-                        >
-                          {t('openTeamSupport')}
-                        </Link>
-                      </div>
-                    ) : request.review_due_at ? (
-                      <p className="text-navy mt-2 text-xs font-semibold">
-                        {t('reviewDueAt', {
-                          date:
-                            formatDateTime(locale, request.review_due_at) ??
-                            t('dateUnavailable'),
-                        })}
+                      }
+                    >
+                      <p className="text-muted-foreground text-sm leading-6">
+                        {request.reason || t('noReason')}
                       </p>
-                    ) : null}
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      {!unsafe ? (
+                      <p className="text-muted-foreground mt-2 text-xs">
+                        {formatDateTime(locale, request.created_at) ??
+                          t('dateUnavailable')}
+                      </p>
+                      {unsafe ? (
+                        <div className="border-amber/35 bg-amber/[0.08] mt-3 rounded-lg border p-3">
+                          <p className="text-navy text-xs leading-5 font-semibold">
+                            {t('unsafePartnerNotice')}
+                          </p>
+                          <Link
+                            href={`${ROUTES.SUPPORT}?channel=team`}
+                            className="text-navy mt-2 inline-flex min-h-10 items-center text-xs font-semibold underline underline-offset-4"
+                          >
+                            {t('openTeamSupport')}
+                          </Link>
+                        </div>
+                      ) : request.review_due_at ? (
+                        <p className="text-navy mt-2 text-xs font-semibold">
+                          {t('reviewDueAt', {
+                            date:
+                              formatDateTime(locale, request.review_due_at) ??
+                              t('dateUnavailable'),
+                          })}
+                        </p>
+                      ) : null}
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {!unsafe ? (
+                          <Button
+                            variant="outline"
+                            disabled={accountability.isMutating(
+                              `leave:${request.id}:denied`
+                            )}
+                            onClick={() =>
+                              setDialog({
+                                type: 'leave',
+                                id: request.id,
+                                decision: 'denied',
+                              })
+                            }
+                          >
+                            {t('keepMembership')}
+                          </Button>
+                        ) : null}
                         <Button
-                          variant="outline"
+                          className={unsafe ? 'sm:col-span-2' : undefined}
+                          variant={unsafe ? 'destructive' : 'primary'}
                           disabled={accountability.isMutating(
-                            `leave:${request.id}:denied`
+                            `leave:${request.id}:approved`
                           )}
                           onClick={() =>
                             setDialog({
                               type: 'leave',
                               id: request.id,
-                              decision: 'denied',
+                              decision: 'approved',
                             })
                           }
                         >
-                          {t('keepMembership')}
+                          {t('confirmLeave')}
                         </Button>
-                      ) : null}
-                      <Button
-                        className={unsafe ? 'sm:col-span-2' : undefined}
-                        variant={unsafe ? 'destructive' : 'primary'}
-                        disabled={accountability.isMutating(
-                          `leave:${request.id}:approved`
-                        )}
-                        onClick={() =>
-                          setDialog({
-                            type: 'leave',
-                            id: request.id,
-                            decision: 'approved',
-                          })
-                        }
-                      >
-                        {t('confirmLeave')}
-                      </Button>
-                    </div>
-                  </ExpandableRow>
-                );
-              })
+                      </div>
+                    </ExpandableRow>
+                  );
+                })}
+
+                {leavesPagination.totalPages > 1 ? (
+                  <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2 border rounded-xl p-2.5">
+                    <span className="text-muted-foreground text-[0.6875rem] font-semibold">
+                      {tPagination('showingRange', {
+                        start: leavesPagination.startIndex,
+                        end: leavesPagination.endIndex,
+                        total: leavesPagination.totalItems,
+                      })}
+                    </span>
+                    <Pagination
+                      currentPage={leavesPagination.page}
+                      totalPages={leavesPagination.totalPages}
+                      onPageChange={leavesPagination.setPage}
+                      size="sm"
+                      variant="flat"
+                    />
+                  </div>
+                ) : null}
+              </>
             ) : (
               <EmptyLine
                 icon={UserRoundCheck}

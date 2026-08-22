@@ -152,6 +152,11 @@
     "historyDescription": "Previous approval requests and their outcomes.",
     "historyEmptyTitle": "No requests yet",
     "historyEmptyBody": "Approval requests you submit will appear here.",
+    "searchRequests": "Search ID or reason...",
+    "allStatuses": "All statuses",
+    "resetFilters": "Reset filters",
+    "filterButton": "Filter",
+    "requestsCount": "{count} requests",
     "dateUnavailable": "Date unavailable",
     "reasonNotProvided": "No reason provided",
     "requestStatus": {
@@ -454,6 +459,13 @@
     "groupsBody": "Member summaries follow each student's sharing choices.",
     "noGroups": "No groups yet",
     "noGroupsBody": "After verification, create your first group from this panel.",
+    "searchGroups": "Search group name or description...",
+    "allGroupStatuses": "All group statuses",
+    "groupActive": "Active",
+    "groupArchived": "Archived",
+    "resetFilters": "Reset filters",
+    "filterButton": "Filter",
+    "groupsCount": "{count} groups",
     "memberCount": "{count} active members",
     "groupStatus": {
       "active": "Active"
