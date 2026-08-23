@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { EducationModule } from '@/hooks/use-education';
 import { Link } from '@/i18n/routing';
+import { ROUTES } from '@/routes';
 
 interface LearningNextStepProps {
   module: EducationModule | null;
@@ -100,7 +101,7 @@ export function LearningNextStep({
             </div>
           </div>
           <Link
-            href={`/education/${module.slug}`}
+            href={`${ROUTES.EDUCATION}/${module.slug}`}
             className="bg-navy hover:bg-navy/90 focus-visible:ring-navy/35 mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white transition-colors outline-none focus-visible:ring-2"
           >
             {module.progress.progress_percent > 0

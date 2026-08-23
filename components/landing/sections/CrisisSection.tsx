@@ -8,6 +8,7 @@ import { Section } from '@/components/ui/section';
 import { Pill } from '@/components/ui/pill';
 import { Reveal } from '@/components/common/Reveal';
 import { StatCounter } from '@/components/ui/stat-counter';
+import { ROUTES } from '@/routes';
 
 export function CrisisSection() {
   const t = useTranslations('LandingPage');
@@ -97,7 +98,7 @@ export function CrisisSection() {
 
           <Reveal delay={0.2}>
             <Link
-              href="/dampak"
+              href={ROUTES.DAMPAK}
               className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-navy transition-colors hover:text-crimson"
             >
               <UsersRound className="size-4" />

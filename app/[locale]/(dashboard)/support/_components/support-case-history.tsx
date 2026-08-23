@@ -233,7 +233,7 @@ export function SupportCaseList({
               {date}
             </p>
             <Link
-              href={`/support/${item.id}`}
+              href={`${ROUTES.SUPPORT}/${item.id}`}
               className="text-navy focus-visible:ring-navy/30 mt-2 inline-flex min-h-10 items-center gap-1 rounded-lg text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
             >
               {t('openTicket')}

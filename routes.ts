@@ -12,6 +12,7 @@ export const ROUTES = {
   SUPPORT_HISTORY: '/support/history',
   ADMIN: '/admin',
   ADMIN_CONTENT: '/admin/content',
+  ADMIN_CONTENT_NEW: '/admin/content/new',
   ADMIN_LEARNING_HUB: '/admin/learning-hub',
   ADMIN_TICKETS: '/admin/tickets',
   ADMIN_DATA_REQUESTS: '/admin/data-requests',
@@ -20,6 +21,7 @@ export const ROUTES = {
   PARTNERS: '/partners',
   ACCOUNTABILITY: '/accountability',
   DATA_REQUESTS: '/data-requests',
+  DATA_REQUESTS_CONFIRM_DELETE: '/data-requests/confirm-delete',
   LOGIN: '/login',
   REGISTER: '/register',
   VERIFY_PHONE: '/verify-phone',
@@ -34,8 +36,13 @@ export const ROUTES = {
   CONTACT: '/contact',
   DOWNLOAD: '/download',
   TECHNOLOGY: '/technology',
+  DAMPAK: '/dampak',
   PKM: '/pkm',
   POST_INTERVENTION: '/post-intervention',
+  MINI_GAMES_COLOR_SPRINT: '/mini-games/color-sprint',
+  MINI_GAMES_PICTURE_FORGE: '/mini-games/picture-forge',
+  MINI_GAMES_TWIN_TRACE: '/mini-games/twin-trace',
+  MINI_GAMES_BRAIN_SUMMIT: '/mini-games/brain-summit',
 } as const;
 
 export const PROTECTED_ROUTES = [

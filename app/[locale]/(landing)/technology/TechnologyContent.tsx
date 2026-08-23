@@ -75,7 +75,7 @@ export function TechnologyContent() {
                 <ArrowRight className="size-4" />
               </Button>
               <Button
-                render={<Link href="/dampak" />}
+                render={<Link href={ROUTES.DAMPAK} />}
                 variant="outline"
                 size="lg"
                 className="rounded-full"

@@ -33,17 +33,17 @@ const COLUMNS = [
   {
     titleKey: 'colProduct',
     links: [
-      { labelKey: 'linkFeatures', href: '/#fitur' },
-      { labelKey: 'linkTechnology', href: '/technology' },
-      { labelKey: 'linkHowItWorks', href: '/#cara-kerja' },
-      { labelKey: 'linkImpact', href: '/dampak' },
+      { labelKey: 'linkFeatures', href: `${ROUTES.HOME}#fitur` },
+      { labelKey: 'linkTechnology', href: ROUTES.TECHNOLOGY },
+      { labelKey: 'linkHowItWorks', href: `${ROUTES.HOME}#cara-kerja` },
+      { labelKey: 'linkImpact', href: ROUTES.DAMPAK },
     ],
   },
   {
     titleKey: 'colResources',
     links: [
       { labelKey: 'linkDownload', href: ROUTES.DOWNLOAD },
-      { labelKey: 'linkFaq', href: '/#faq' },
+      { labelKey: 'linkFaq', href: `${ROUTES.HOME}#faq` },
       { labelKey: 'linkHelp', href: ROUTES.HELP },
       { labelKey: 'linkContact', href: ROUTES.CONTACT },
     ],
@@ -51,9 +51,9 @@ const COLUMNS = [
   {
     titleKey: 'colAcademic',
     links: [
-      { labelKey: 'linkTeam', href: '/#tim' },
+      { labelKey: 'linkTeam', href: `${ROUTES.HOME}#tim` },
       { labelKey: 'linkPkm', href: ROUTES.PKM },
-      { labelKey: 'linkProposal', href: '/dampak' },
+      { labelKey: 'linkProposal', href: ROUTES.DAMPAK },
       { labelKey: 'linkTerms', href: ROUTES.TERMS },
       { labelKey: 'linkPrivacy', href: ROUTES.PRIVACY },
     ],

@@ -12,11 +12,11 @@ import { ROUTES } from '@/routes';
 import { useLocalUser } from '@/hooks/use-local-user';
 
 const NAV_LINKS = [
-  { href: '/#dampak', key: 'impact' },
-  { href: '/#fitur', key: 'features' },
-  { href: '/#cara-kerja', key: 'howItWorks' },
-  { href: '/#teknologi', key: 'technology' },
-  { href: '/#tim', key: 'team' },
+  { href: `${ROUTES.HOME}#dampak`, key: 'impact' },
+  { href: `${ROUTES.HOME}#fitur`, key: 'features' },
+  { href: `${ROUTES.HOME}#cara-kerja`, key: 'howItWorks' },
+  { href: `${ROUTES.HOME}#teknologi`, key: 'technology' },
+  { href: `${ROUTES.HOME}#tim`, key: 'team' },
 ] as const;
 
 /**

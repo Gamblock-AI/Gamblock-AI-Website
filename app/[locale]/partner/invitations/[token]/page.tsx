@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/routes';
 
 interface LegacyPartnerInvitationPageProps {
   params: Promise<{ locale: string; token: string }>;
@@ -9,5 +10,5 @@ export default async function LegacyPartnerInvitationPage({
 }: LegacyPartnerInvitationPageProps) {
   const { locale } = await params;
 
-  redirect(`/${locale}/partners`);
+  redirect(`/${locale}${ROUTES.PARTNERS}`);
 }

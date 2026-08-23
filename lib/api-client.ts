@@ -2,6 +2,7 @@ import { ApiError } from './api-error';
 import { config } from './config';
 import { reportDevelopmentError } from './diagnostics';
 import { requestReauth } from './reauth';
+import { ROUTES } from '@/routes';
 
 const API_URL = config.apiUrl;
 let refreshPromise: Promise<string> | null = null;
@@ -30,7 +31,7 @@ function currentRelativePath(): string {
 }
 
 function redirectToLogin(nextPath = currentRelativePath()) {
-  window.location.href = `${getCurrentLocalePrefix()}/login?next=${encodeURIComponent(nextPath)}`;
+  window.location.href = `${getCurrentLocalePrefix()}${ROUTES.LOGIN}?next=${encodeURIComponent(nextPath)}`;
 }
 
 async function apiErrorFromResponse(response: Response): Promise<ApiError> {

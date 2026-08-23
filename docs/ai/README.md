@@ -55,7 +55,10 @@ Context version: `2026-08-16.6`
 
 ## Task-specific context
 
-- Routes/locale/auth: `app/[locale]/`, `routes.ts`, `proxy.ts`
+- Routes/locale/auth: `app/[locale]/`, `routes.ts`, `proxy.ts` — `routes.ts`
+  adalah single source of truth untuk seluruh rute aplikasi (`ROUTES.*`); selalu
+  gunakan konstanta `ROUTES.*` untuk navigasi internal, redirects, `<Link>`, dan
+  route matching; jangan pernah hardcode raw route strings; daftarkan rute/subrute baru di `routes.ts`
 - API data: `lib/api-client.ts`, `lib/config.ts`, `hooks/use-*.ts`
 - Dashboard/recovery UI: `app/[locale]/(dashboard)/`, `components/dashboard/`
 - Student mini-games: `app/[locale]/(dashboard)/mini-games/`,

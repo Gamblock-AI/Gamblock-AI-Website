@@ -34,28 +34,28 @@ interface GameCardDefinition {
 const games: readonly GameCardDefinition[] = [
   {
     key: 'colorSprint',
-    href: `${ROUTES.MINI_GAMES}/color-sprint`,
+    href: ROUTES.MINI_GAMES_COLOR_SPRINT,
     icon: Palette,
     index: '01',
     tone: 'sky',
   },
   {
     key: 'pictureForge',
-    href: `${ROUTES.MINI_GAMES}/picture-forge`,
+    href: ROUTES.MINI_GAMES_PICTURE_FORGE,
     icon: Grid3X3,
     index: '02',
     tone: 'sage',
   },
   {
     key: 'twinTrace',
-    href: `${ROUTES.MINI_GAMES}/twin-trace`,
+    href: ROUTES.MINI_GAMES_TWIN_TRACE,
     icon: BrainCircuit,
     index: '03',
     tone: 'amber',
   },
   {
     key: 'brainSummit',
-    href: `${ROUTES.MINI_GAMES}/brain-summit`,
+    href: ROUTES.MINI_GAMES_BRAIN_SUMMIT,
     icon: MountainSnow,
     index: '04',
     tone: 'navy',

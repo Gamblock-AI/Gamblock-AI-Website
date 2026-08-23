@@ -57,6 +57,14 @@ error, refetch }` shape. See `hooks/use-approval.ts` for the token-based
 
 ## Structure conventions
 
+- **Route constants and navigation**: `routes.ts` is the single source of
+  truth for all application routes (`ROUTES.*`). Always use `ROUTES.*`
+  constants (e.g. `ROUTES.DASHBOARD`, `ROUTES.LOGIN`, `ROUTES.RECOVERY`,
+  `ROUTES.ADMIN_CONTENT`, `ROUTES.DAMPAK`, etc.) for internal navigation,
+  redirects (`NextResponse.redirect`, `redirect(...)`, `router.push/replace`),
+  `<Link href={...}>`, and route matching. Never hardcode raw route strings
+  (e.g. `'/login'`, `'/admin/content'`, `'/dampak'`). When creating new routes
+  or subroutes, always register them in `ROUTES` inside `routes.ts`.
 - All user-facing routes are locale-aware under `app/[locale]/`.
 - Authenticated screens live under `app/[locale]/(dashboard)/`; auth screens
   live under `app/[locale]/(auth)/`; public marketing and legal pages live under

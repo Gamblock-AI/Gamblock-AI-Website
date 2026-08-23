@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/routes';
 import { RecoveryClient } from './_components/recovery-client';
 import type { RangeDays } from './_components/progress-utils';
 
@@ -20,7 +21,7 @@ export default async function RecoveryPage({
   ) {
     // Default to the first navigation tab (7 days) when no range query
     // parameter is present.
-    redirect(`/${locale}/recovery?range=7`);
+    redirect(`/${locale}${ROUTES.RECOVERY}?range=7`);
   }
 
   const range = Number(requestedRange) as RangeDays;

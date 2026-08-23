@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/routes';
 import { SupportWorkspaceClient } from './_components/support-workspace-client';
 
 export default async function SupportPage({
@@ -18,7 +19,7 @@ export default async function SupportPage({
   ) {
     // Default to the first navigation tab (partner channel) when no channel
     // query parameter is present.
-    redirect(`/${locale}/support?channel=partner`);
+    redirect(`/${locale}${ROUTES.SUPPORT}?channel=partner`);
   }
 
   const channel =

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/routes';
 
 interface LegacyCreateGroupPageProps {
   params: Promise<{ locale: string }>;
@@ -9,5 +10,5 @@ export default async function LegacyCreateGroupPage({
 }: LegacyCreateGroupPageProps) {
   const { locale } = await params;
 
-  redirect(`/${locale}/partners`);
+  redirect(`/${locale}${ROUTES.PARTNERS}`);
 }

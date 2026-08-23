@@ -6,6 +6,20 @@ import {
   ROUTES,
 } from './routes';
 
+describe('route definitions', () => {
+  it('defines expected route paths', () => {
+    expect(ROUTES.DAMPAK).toBe('/dampak');
+    expect(ROUTES.ADMIN_CONTENT_NEW).toBe('/admin/content/new');
+    expect(ROUTES.DATA_REQUESTS_CONFIRM_DELETE).toBe(
+      '/data-requests/confirm-delete'
+    );
+    expect(ROUTES.MINI_GAMES_COLOR_SPRINT).toBe('/mini-games/color-sprint');
+    expect(ROUTES.MINI_GAMES_PICTURE_FORGE).toBe('/mini-games/picture-forge');
+    expect(ROUTES.MINI_GAMES_TWIN_TRACE).toBe('/mini-games/twin-trace');
+    expect(ROUTES.MINI_GAMES_BRAIN_SUMMIT).toBe('/mini-games/brain-summit');
+  });
+});
+
 describe('three-role dashboard access', () => {
   it('keeps admin on dashboard and operational routes only', () => {
     expect(canAccessDashboardRoute(ROUTES.ADMIN, 'admin')).toBe(true);

@@ -62,6 +62,7 @@ import {
 } from '@/lib/i18n/dynamic-labels';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from '@/i18n/routing';
+import { ROUTES } from '@/routes';
 import {
   AdminStatusBadge,
   adminFieldClassName,
@@ -904,7 +905,7 @@ export function ContentTab(props: ContentTabProps) {
     setSlug('');
     setDocument(makeDocument('', ''));
     setFieldErrors({});
-    router.push('/admin/content/new?lang=id');
+    router.push(`${ROUTES.ADMIN_CONTENT_NEW}?lang=id`);
   };
 
   const clearFieldError = (...keys: string[]) => {
@@ -987,7 +988,7 @@ export function ContentTab(props: ContentTabProps) {
       })
       .catch(() => {
         if (active) {
-          router.replace('/admin/content');
+          router.replace(ROUTES.ADMIN_CONTENT);
         }
       });
 
@@ -1026,7 +1027,7 @@ export function ContentTab(props: ContentTabProps) {
         setDocument(normalizeEducationDocument(educationModule.draft_document));
         setSlug(educationModule.slug);
         toastSuccess(t('moduleCreated'));
-        router.replace(`/admin/content/${educationModule.id}?lang=${locale}`);
+        router.replace(`${ROUTES.ADMIN_CONTENT}/${educationModule.id}?lang=${locale}`);
       } else if (selected) {
         const educationModule = await props.saveModule(
           selected,
@@ -1121,7 +1122,7 @@ export function ContentTab(props: ContentTabProps) {
       setDocument(normalizeEducationDocument(educationModule.draft_document));
       setSlug(educationModule.slug);
       if (isCreating) {
-        router.replace(`/admin/content/${educationModule.id}?lang=${locale}`);
+        router.replace(`${ROUTES.ADMIN_CONTENT}/${educationModule.id}?lang=${locale}`);
       }
       toastSuccess(
         action === 'publish'
@@ -1199,7 +1200,7 @@ export function ContentTab(props: ContentTabProps) {
         setDocument(null);
         setSlug('');
         setIsCreating(false);
-        router.replace('/admin/content');
+        router.replace(ROUTES.ADMIN_CONTENT);
       }
     } catch (error) {
       toastError(error, t('fetchError'));
@@ -1427,7 +1428,7 @@ export function ContentTab(props: ContentTabProps) {
                 <button
                   type="button"
                   key={module.id}
-                  onClick={() => router.push(`/admin/content/${module.id}?lang=id`)}
+                  onClick={() => router.push(`${ROUTES.ADMIN_CONTENT}/${module.id}?lang=id`)}
                   className="group border-border/80 bg-card shadow-soft hover:shadow-md hover:border-navy/30 flex flex-col justify-between overflow-hidden rounded-2xl border text-left transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-navy/20"
                 >
                   <div>
@@ -1586,7 +1587,7 @@ export function ContentTab(props: ContentTabProps) {
             type="button"
             onClick={() => {
               setIsCreating(false);
-              router.push('/admin/content');
+              router.push(ROUTES.ADMIN_CONTENT);
             }}
             className="hover:bg-muted flex size-10 items-center justify-center rounded-xl"
             aria-label={t('closeEditor')}

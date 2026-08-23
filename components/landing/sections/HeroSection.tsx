@@ -49,7 +49,7 @@ export function HeroSection() {
                 <ArrowRight className="size-4" />
               </Button>
               <Button
-                render={<Link href="/technology" />}
+                render={<Link href={ROUTES.TECHNOLOGY} />}
                 variant="outline"
                 size="lg"
                 className="border-navy/15 rounded-full bg-white/70"

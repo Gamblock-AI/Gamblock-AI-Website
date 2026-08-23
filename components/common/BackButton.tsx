@@ -3,6 +3,7 @@
 import { useRouter } from '@/i18n/routing';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '@/routes';
 
 interface BackButtonProps {
   label: string;
@@ -15,7 +16,10 @@ interface BackButtonProps {
  * otherwise it navigates to a route-specific fallback. Used by standalone
  * marketing and authentication pages.
  */
-export function BackButton({ label, fallbackHref = '/' }: BackButtonProps) {
+export function BackButton({
+  label,
+  fallbackHref = ROUTES.HOME,
+}: BackButtonProps) {
   const router = useRouter();
 
   const handleBack = () => {

@@ -283,7 +283,7 @@ export function SkillsHubClient() {
                     return (
                       <Link
                         key={provider.slug}
-                        href={`/skills/${provider.slug}`}
+                        href={`${ROUTES.SKILLS}/${provider.slug}`}
                         className={cn(
                           'group relative flex items-start gap-4 rounded-2xl border p-4 sm:p-4.5 transition-all duration-200 outline-none hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-navy/30',
                           isFeatured

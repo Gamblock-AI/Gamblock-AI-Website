@@ -49,7 +49,7 @@ export function proxy(request: NextRequest) {
 
   if (isProtected && !token) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}/login`;
+    url.pathname = `/${locale}${ROUTES.LOGIN}`;
     url.search = '';
     url.searchParams.set(
       'next',
@@ -70,7 +70,7 @@ export function proxy(request: NextRequest) {
     url.pathname =
       nextPath && nextPath.startsWith('/') && !nextPath.startsWith('//')
         ? `/${locale}${nextPath}`
-        : `/${locale}/dashboard`;
+        : `/${locale}${ROUTES.DASHBOARD}`;
     url.search = '';
     return NextResponse.redirect(url);
   }

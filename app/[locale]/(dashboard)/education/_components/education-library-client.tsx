@@ -137,7 +137,7 @@ export function EducationLibraryClient() {
                 </span>
               </div>
               <Link
-                href={`/education/${continued.slug}`}
+                href={`${ROUTES.EDUCATION}/${continued.slug}`}
                 className="text-navy mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold outline-none hover:bg-azure/60 focus-visible:ring-2 focus-visible:ring-white/60"
               >
                 {t('continueAction')}
@@ -300,7 +300,7 @@ export function EducationLibraryClient() {
                       />
                     </div>
                     <Link
-                      href={`/education/${module.slug}`}
+                      href={`${ROUTES.EDUCATION}/${module.slug}`}
                       className="bg-navy hover:bg-navy/90 focus-visible:ring-navy/30 mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-bold text-white outline-none focus-visible:ring-2"
                     >
                       {progress ? t('continueAction') : t('open')}
