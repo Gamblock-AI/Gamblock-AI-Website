@@ -2,7 +2,15 @@
 
 import { useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { LockKeyhole, X } from 'lucide-react';
+import {
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+  LockKeyhole,
+  X,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { reauthenticate } from '@/lib/api-client';
@@ -12,7 +20,6 @@ import {
   resolveReauth,
   subscribeReauthDialog,
 } from '@/lib/reauth';
-import { RequiredMark } from '@/components/common/form-field';
 import { cn } from '@/lib/utils';
 
 /**
@@ -29,6 +36,7 @@ export function ReauthDialog() {
     () => false
   );
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const [invalidCredentials, setInvalidCredentials] = useState(false);
@@ -42,6 +50,7 @@ export function ReauthDialog() {
     try {
       await reauthenticate(password);
       setPassword('');
+      setShowPassword(false);
       resolveReauth(true);
     } catch (err) {
       setError(true);
@@ -55,6 +64,7 @@ export function ReauthDialog() {
 
   const cancel = () => {
     setPassword('');
+    setShowPassword(false);
     setError(false);
     resolveReauth(false);
   };
@@ -66,96 +76,127 @@ export function ReauthDialog() {
         aria-modal="true"
         aria-labelledby="reauth-title"
         aria-describedby="reauth-desc"
-        className="border-border/80 bg-card shadow-float animate-in fade-in-0 slide-in-from-top-2 motion-reduce:animate-none pointer-events-auto w-full max-w-md rounded-2xl border p-4"
+        className="border-border/80 bg-card/98 shadow-float backdrop-blur-md animate-in fade-in-0 slide-in-from-top-2 motion-reduce:animate-none pointer-events-auto w-full max-w-lg rounded-2xl border p-4 sm:p-5 ring-1 ring-black/5"
       >
-        <div className="flex items-start gap-3">
-          <span className="bg-azure/80 text-navy flex size-9 shrink-0 items-center justify-center rounded-xl">
+        <div className="flex items-start gap-3.5">
+          <span className="bg-azure text-navy ring-1 ring-navy/15 flex size-9 shrink-0 items-center justify-center rounded-xl shadow-2xs mt-0.5">
             <LockKeyhole className="size-4.5" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <h2 id="reauth-title" className="text-navy text-sm font-bold">
+              <h2 id="reauth-title" className="text-navy text-sm sm:text-base font-bold">
                 {t('reauthTitle')}
               </h2>
               <button
                 type="button"
                 onClick={cancel}
                 aria-label={t('reauthCancel')}
-                className="text-muted-foreground hover:text-navy hover:bg-muted -mr-1 -mt-1 flex size-7 shrink-0 items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-navy/30"
+                className="text-muted-foreground hover:text-navy hover:bg-muted -mr-1 -mt-1 flex size-7 shrink-0 items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-navy/30 transition-colors"
               >
                 <X className="size-4" aria-hidden="true" />
               </button>
             </div>
             <p
               id="reauth-desc"
-              className="text-muted-foreground mt-1 text-xs leading-relaxed"
+              className="text-muted-foreground mt-0.5 text-xs leading-relaxed"
             >
               {t('reauthBody')}
             </p>
 
-            <label
-              htmlFor="reauth-password"
-              className="text-navy mt-3 flex items-center text-xs font-bold"
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submit();
+              }}
+              className="mt-3.5 space-y-2.5"
             >
-              <span>{t('reauthPasswordLabel')}</span>
-              <RequiredMark />
-            </label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="relative flex-1 min-w-0">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <KeyRound className="size-4" aria-hidden="true" />
+                  </span>
+                  <input
+                    id="reauth-password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      if (error) {
+                        setError(false);
+                        setInvalidCredentials(false);
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') cancel();
+                    }}
+                    autoComplete="current-password"
+                    autoFocus
+                    placeholder={t('reauthPasswordLabel')}
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={error ? 'reauth-error' : undefined}
+                    required
+                    className={cn(
+                      'bg-background h-10 w-full rounded-xl border pl-9 pr-9 text-sm outline-none transition-all focus-visible:ring-2',
+                      error
+                        ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20'
+                        : 'border-input focus-visible:border-navy focus-visible:ring-navy/20'
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                    className="text-muted-foreground hover:text-navy absolute right-2.5 top-1/2 -translate-y-1/2 p-1 transition-colors rounded-md focus-visible:ring-2 focus-visible:ring-navy/20"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="size-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
 
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <input
-                id="reauth-password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') void submit();
-                  if (event.key === 'Escape') cancel();
-                }}
-                autoComplete="current-password"
-                autoFocus
-                placeholder={t('reauthPasswordLabel')}
-                aria-invalid={Boolean(error)}
-                aria-describedby={error ? 'reauth-error' : undefined}
-                required
-                className={cn(
-                  'bg-background h-10 min-w-0 flex-1 basis-40 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2',
-                  error
-                    ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20'
-                    : 'border-input focus-visible:border-navy focus-visible:ring-navy/20'
-                )}
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => void submit()}
-                disabled={busy || !password}
-                className="rounded-xl"
-              >
-                {busy ? t('reauthSubmitting') : t('reauthConfirm')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={cancel}
-                disabled={busy}
-                className="text-muted-foreground rounded-xl"
-              >
-                {t('reauthCancel')}
-              </Button>
-            </div>
+                <div className="flex items-center gap-1.5 shrink-0 justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={cancel}
+                    disabled={busy}
+                    className="h-10 px-3 text-muted-foreground hover:text-navy rounded-xl text-xs font-semibold"
+                  >
+                    {t('reauthCancel')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={busy || !password}
+                    className="h-10 px-4 rounded-xl font-bold bg-navy text-white hover:bg-navy-light shadow-2xs transition-all active:scale-95"
+                  >
+                    {busy ? (
+                      <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="size-3.5 mr-1.5 text-azure" />
+                    )}
+                    {busy ? t('reauthSubmitting') : t('reauthConfirm')}
+                  </Button>
+                </div>
+              </div>
 
-            {error ? (
-              <p
-                id="reauth-error"
-                className="text-destructive mt-2 text-xs font-semibold"
-                role="alert"
-              >
-                {invalidCredentials
-                  ? t('reauthFailed')
-                  : t('reauthFailedGeneric')}
-              </p>
-            ) : null}
+              {error ? (
+                <p
+                  id="reauth-error"
+                  className="text-destructive text-xs font-semibold flex items-center gap-1.5 animate-in fade-in-0 duration-150"
+                  role="alert"
+                >
+                  <span className="size-1.5 rounded-full bg-destructive shrink-0" />
+                  {invalidCredentials
+                    ? t('reauthFailed')
+                    : t('reauthFailedGeneric')}
+                </p>
+              ) : null}
+            </form>
           </div>
         </div>
       </div>

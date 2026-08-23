@@ -1,8 +1,10 @@
+'use client';
+
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
-  FileClock,
   Filter,
+  History,
   Inbox,
   MessageSquare,
   UserCheck,
@@ -10,7 +12,6 @@ import {
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -27,29 +28,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type {
-  AdminDataRequest,
-  AdminSupportCase,
-} from '@/hooks/use-admin-operations';
+import type { AdminSupportCase } from '@/hooks/use-admin-operations';
 import { SupportStatusBadge } from '@/components/dashboard/support-status-badge';
 import { Pagination } from '@/components/dashboard/pagination';
 import { usePagination } from '@/hooks/use-pagination';
 import { toastError, toastSuccess } from '@/lib/feedback';
+import { CompactTabNav } from '@/components/common/compact-tab-nav';
+import { ROUTES } from '@/routes';
 import { usePathname, useRouter } from '@/i18n/routing';
-import {
-  dynamicLabelFallback,
-  dynamicLabelKey,
-  normalizeSupportStatus,
-} from '@/lib/i18n/dynamic-labels';
+import { normalizeSupportStatus } from '@/lib/i18n/dynamic-labels';
 import {
   FilterResetButton,
   FilterSelect,
   FilterToggleButton,
 } from '@/components/dashboard/filter-toolbar';
 import {
-  AdminEmptyTable,
   AdminPriorityBadge,
-  AdminStatusBadge,
+  TableEmptyRow,
   adminFieldClassName,
 } from './admin-shared';
 import { RequiredMark } from '@/components/common/form-field';
@@ -58,15 +53,14 @@ interface SupportTabProps {
   userId?: string;
   caseID?: string;
   cases: AdminSupportCase[];
-  dataRequests: AdminDataRequest[];
   getSupportCase: (id: string) => Promise<AdminSupportCase>;
   claimSupportCase: (id: string, reason: string) => Promise<AdminSupportCase>;
   releaseSupportCase: (id: string, reason: string) => Promise<unknown>;
   replySupportCase: (id: string, content: string) => Promise<unknown>;
   transitionSupportCase: (id: string, status: string) => Promise<unknown>;
-  retryDataRequest: (id: string) => Promise<unknown>;
-  rejectDataRequest: (id: string, reason: string) => Promise<unknown>;
 }
+
+type SupportTabSection = 'active' | 'history';
 
 export function SupportTab(props: SupportTabProps) {
   const t = useTranslations('adminPage');
@@ -75,12 +69,15 @@ export function SupportTab(props: SupportTabProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const currentTab =
+    (searchParams.get('tab') as SupportTabSection) || 'active';
   const { caseID, getSupportCase } = props;
   const [selected, setSelected] = useState<AdminSupportCase | null>(null);
   const [reply, setReply] = useState('');
   const [busy, setBusy] = useState(false);
+
   const [promptModal, setPromptModal] = useState<{
-    action: 'claim_case' | 'release_case' | 'reject_data_request';
+    action: 'claim_case' | 'release_case';
     targetId: string;
     title: string;
     description: string;
@@ -92,28 +89,18 @@ export function SupportTab(props: SupportTabProps) {
   const priorityFilter = searchParams.get('priority') || 'all';
   const statusFilter = searchParams.get('status') || 'all';
   const assigneeFilter = searchParams.get('assignee') || 'all';
-  const dataStatusFilter = searchParams.get('dataStatus') || 'all';
 
-  const hasActiveTicketFilters =
+  const hasActiveFilters =
     priorityFilter !== 'all' ||
     statusFilter !== 'all' ||
     assigneeFilter !== 'all';
 
-  const hasActiveDataFilters = dataStatusFilter !== 'all';
+  const [showFilters, setShowFilters] = useState(() => hasActiveFilters);
 
-  const [showTicketFilters, setShowTicketFilters] = useState(
-    () => hasActiveTicketFilters
-  );
-  const [showDataFilters, setShowDataFilters] = useState(
-    () => hasActiveDataFilters
-  );
-
-  const activeTicketFilterCount =
+  const activeFilterCount =
     (priorityFilter !== 'all' ? 1 : 0) +
     (statusFilter !== 'all' ? 1 : 0) +
     (assigneeFilter !== 'all' ? 1 : 0);
-
-  const activeDataFilterCount = dataStatusFilter !== 'all' ? 1 : 0;
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -126,7 +113,7 @@ export function SupportTab(props: SupportTabProps) {
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
-  const clearTicketFilters = () => {
+  const clearFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete('priority');
     params.delete('status');
@@ -135,15 +122,24 @@ export function SupportTab(props: SupportTabProps) {
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
-  const clearDataRequestFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('dataStatus');
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
+  const activeCasesList = useMemo(() => {
+    return (props.cases ?? []).filter((c) => {
+      const s = normalizeSupportStatus(c.status);
+      return s !== 'resolved' && s !== 'closed';
+    });
+  }, [props.cases]);
+
+  const historyCasesList = useMemo(() => {
+    return (props.cases ?? []).filter((c) => {
+      const s = normalizeSupportStatus(c.status);
+      return s === 'resolved' || s === 'closed';
+    });
+  }, [props.cases]);
+
+  const baseList = currentTab === 'active' ? activeCasesList : historyCasesList;
 
   const filteredCases = useMemo(() => {
-    return props.cases.filter((item) => {
+    return baseList.filter((item) => {
       // Priority filter
       if (
         priorityFilter !== 'all' &&
@@ -171,19 +167,7 @@ export function SupportTab(props: SupportTabProps) {
       }
       return true;
     });
-  }, [props.cases, priorityFilter, statusFilter, assigneeFilter, props.userId]);
-
-  const filteredDataRequests = useMemo(() => {
-    return props.dataRequests.filter((request) => {
-      if (
-        dataStatusFilter !== 'all' &&
-        request.status.toLowerCase() !== dataStatusFilter.toLowerCase()
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [props.dataRequests, dataStatusFilter]);
+  }, [baseList, priorityFilter, statusFilter, assigneeFilter, props.userId]);
 
   const {
     pagedItems: pagedCases,
@@ -193,24 +177,7 @@ export function SupportTab(props: SupportTabProps) {
     startIndex: casesStartIndex,
     endIndex: casesEndIndex,
     totalItems: totalCases,
-  } = usePagination({ items: filteredCases, pageSize: 10 });
-
-  const {
-    pagedItems: pagedDataRequests,
-    page: requestsPage,
-    totalPages: totalRequestsPages,
-    setPage: setRequestsPage,
-    startIndex: requestsStartIndex,
-    endIndex: requestsEndIndex,
-    totalItems: totalDataRequests,
-  } = usePagination({ items: filteredDataRequests, pageSize: 10 });
-
-  const dataRequestTitle = (request: AdminDataRequest) =>
-    request.type === 'export'
-      ? t('dataRequestTypeExport')
-      : request.type === 'delete'
-        ? t('dataRequestTypeDelete')
-        : request.title || request.id;
+  } = usePagination<AdminSupportCase>({ items: filteredCases, pageSize: 10 });
 
   useEffect(() => {
     if (!caseID || selected?.id === caseID) return;
@@ -229,32 +196,87 @@ export function SupportTab(props: SupportTabProps) {
     };
   }, [caseID, getSupportCase, selected?.id, t]);
 
-  const confirmPromptModal = async () => {
-    if (!promptModal || !modalReason.trim()) return;
-    const { action, targetId } = promptModal;
+  const openCase = async (item: AdminSupportCase) => {
+    if (!item.owner) {
+      setPromptModal({
+        action: 'claim_case',
+        targetId: item.id,
+        title: t('claimCase'),
+        description: t('claimPromptHelp'),
+        itemSummary: `${item.id} • ${item.title}`,
+      });
+      return;
+    }
     setBusy(true);
     try {
-      if (action === 'claim_case') {
-        await props.claimSupportCase(targetId, modalReason.trim());
-        router.push(`/admin/tickets/${targetId}`);
-        toastSuccess(t('caseClaimed'));
-      } else if (action === 'release_case') {
-        await props.releaseSupportCase(targetId, modalReason.trim());
-        router.push('/admin/tickets');
-        toastSuccess(t('caseReleased'));
-      } else if (action === 'reject_data_request') {
-        await props.rejectDataRequest(targetId, modalReason.trim());
-        toastSuccess(t('requestRejected'));
+      const fullCase = await props.getSupportCase(item.id);
+      setSelected(fullCase);
+      router.push(`${ROUTES.ADMIN_TICKETS}/${item.id}`);
+    } catch (error) {
+      toastError(error, t('caseActionError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleModalSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!promptModal || !modalReason.trim()) return;
+    setBusy(true);
+    try {
+      if (promptModal.action === 'claim_case') {
+        const fullCase = await props.claimSupportCase(
+          promptModal.targetId,
+          modalReason.trim()
+        );
+        setSelected(fullCase);
+        router.push(`${ROUTES.ADMIN_TICKETS}/${fullCase.id}`);
+        toastSuccess(t('claimCaseSuccess'));
+      } else if (promptModal.action === 'release_case') {
+        await props.releaseSupportCase(
+          promptModal.targetId,
+          modalReason.trim()
+        );
+        setSelected(null);
+        router.push(ROUTES.ADMIN_TICKETS);
+        toastSuccess(t('releaseCaseSuccess'));
       }
       setPromptModal(null);
       setModalReason('');
     } catch (error) {
-      toastError(
-        error,
-        action === 'reject_data_request'
-          ? t('dataRequestActionError')
-          : t('caseActionError')
-      );
+      toastError(error, t('caseActionError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitReply = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selected || !reply.trim()) return;
+    setBusy(true);
+    try {
+      await props.replySupportCase(selected.id, reply.trim());
+      const refreshed = await props.getSupportCase(selected.id);
+      setSelected(refreshed);
+      setReply('');
+      toastSuccess(t('replySentSuccess'));
+    } catch (error) {
+      toastError(error, t('caseActionError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const changeStatus = async (status: string) => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      await props.transitionSupportCase(selected.id, status);
+      const refreshed = await props.getSupportCase(selected.id);
+      setSelected(refreshed);
+      toastSuccess(t('statusUpdatedSuccess'));
+    } catch (error) {
+      toastError(error, t('caseActionError'));
     } finally {
       setBusy(false);
     }
@@ -264,69 +286,69 @@ export function SupportTab(props: SupportTabProps) {
     <Dialog
       open={Boolean(promptModal)}
       onOpenChange={(open) => {
-        if (!open && !busy) {
+        if (!open) {
           setPromptModal(null);
           setModalReason('');
         }
       }}
     >
-      <DialogContent className="max-w-md gap-5 rounded-2xl p-6 shadow-2xl">
-        <DialogHeader className="pr-6">
-          <DialogTitle className="text-navy text-lg font-bold">
-            {promptModal?.title}
-          </DialogTitle>
-          <DialogDescription className="text-muted-foreground text-xs leading-relaxed">
-            {promptModal?.description}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md">
+        <form onSubmit={handleModalSubmit} className="space-y-4">
+          <DialogHeader>
+            <DialogTitle className="text-navy text-base font-bold">
+              {promptModal?.title}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground mt-0.5 text-xs">
+              {promptModal?.description}
+            </DialogDescription>
+          </DialogHeader>
 
-        {promptModal?.itemSummary ? (
-          <div className="border-border/80 bg-muted/40 rounded-xl border p-3.5">
-            <span className="text-muted-foreground block text-[0.7rem] font-bold tracking-wider uppercase">
-              {t('detailTarget')}
-            </span>
-            <p className="text-navy mt-0.5 text-sm font-semibold">
-              {promptModal.itemSummary}
-            </p>
-          </div>
-        ) : null}
+          {promptModal?.itemSummary ? (
+            <div className="rounded-xl border border-border/80 bg-muted/30 p-3 text-xs">
+              <span className="font-semibold text-navy">
+                {promptModal.itemSummary}
+              </span>
+            </div>
+          ) : null}
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void confirmPromptModal();
-          }}
-          className="space-y-4"
-        >
-          <div className="space-y-2">
-            <label className="text-navy flex items-center text-xs font-bold">
-              <span>{t('reasonPrompt')}</span>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="modal-reason"
+              className="text-navy flex items-center text-xs font-bold"
+            >
+              <span>{t('reasonLabel')}</span>
               <RequiredMark />
             </label>
             <textarea
+              id="modal-reason"
               value={modalReason}
-              onChange={(event) => setModalReason(event.target.value)}
+              onChange={(e) => setModalReason(e.target.value)}
               placeholder={t('reasonPlaceholder')}
-              className="border-input bg-card focus-visible:border-navy/40 focus-visible:ring-navy/30 min-h-[90px] w-full resize-none rounded-xl border p-3 text-sm outline-none transition-all focus-visible:ring-2"
               required
-              autoFocus
+              rows={3}
+              className={adminFieldClassName}
             />
           </div>
 
-          <DialogFooter className="-mx-6 -mb-6 mt-6 border-border/80 bg-muted/40 rounded-b-2xl border-t px-6 py-4 sm:justify-end">
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
-              variant="outline"
-              disabled={busy}
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setPromptModal(null);
                 setModalReason('');
               }}
+              disabled={busy}
             >
               {t('cancel')}
             </Button>
-            <Button type="submit" disabled={busy || !modalReason.trim()}>
-              {busy ? t('saving') : t('confirm')}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={busy || !modalReason.trim()}
+            >
+              {busy ? t('submitting') : t('confirm')}
             </Button>
           </DialogFooter>
         </form>
@@ -334,226 +356,261 @@ export function SupportTab(props: SupportTabProps) {
     </Dialog>
   );
 
-  const openCase = async (item: AdminSupportCase) => {
-    if (!item.owner) {
-      setPromptModal({
-        action: 'claim_case',
-        targetId: item.id,
-        title: t('claimCaseTitle'),
-        description: t('claimReasonPrompt'),
-        itemSummary: `${item.title} (${item.id})`,
-      });
-      setModalReason('');
-      return;
-    }
-    if (item.owner !== props.userId) {
-      toastError(new Error('assigned'), t('caseOwnedByOther'));
-      return;
-    }
-    router.push(`/admin/tickets/${item.id}`);
-  };
-
-  const reloadSelected = async () => {
-    if (selected) setSelected(await props.getSupportCase(selected.id));
-  };
-
-  const sendReply = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!selected || !reply.trim()) return;
-    setBusy(true);
-    try {
-      await props.replySupportCase(selected.id, reply);
-      setReply('');
-      await reloadSelected();
-      toastSuccess(t('replySent'));
-    } catch (error) {
-      toastError(error, t('caseActionError'));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  if (caseID && selected?.id !== caseID) {
-    return (
-      <div className="border-border bg-card flex min-h-72 items-center justify-center rounded-2xl border">
-        <p className="text-muted-foreground text-sm">{t('loading')}</p>
-      </div>
-    );
-  }
-
   if (selected) {
     return (
-      <>
       <div className="space-y-4">
-        <div className="border-border bg-card flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <Button
-              size="icon"
-              variant="ghost"
-              aria-label={t('backToQueue')}
-              onClick={() => router.push('/admin/tickets')}
-            >
-              <ArrowLeft className="size-4" />
-            </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setSelected(null);
+            router.push(ROUTES.ADMIN_TICKETS);
+          }}
+          className="rounded-xl"
+        >
+          <ArrowLeft className="size-4 mr-1.5" />
+          {t('backToSupport')}
+        </Button>
+
+        <section className="border-border bg-card shadow-soft space-y-4 rounded-2xl border p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/80 pb-4">
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-navy font-extrabold">{selected.title}</h2>
+              <div className="flex items-center gap-2">
+                <h3 className="text-navy text-lg font-bold">
+                  {selected.title}
+                </h3>
                 <SupportStatusBadge status={selected.status} />
+                <AdminPriorityBadge priority={selected.priority} />
               </div>
-              <p className="text-muted-foreground mt-1 font-mono text-xs">
-                {selected.id}
+              <p className="text-muted-foreground mt-1 text-xs">
+                {t('ticketIdLabel', { id: selected.id })}
+                {selected.owner
+                  ? ` • ${t('assignedToLabel', {
+                      owner:
+                        selected.owner === props.userId
+                          ? t('assigneeMe')
+                          : selected.owner,
+                    })}`
+                  : ` • ${t('unassignedLabel')}`}
               </p>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {selected.status !== 'resolved' && selected.status !== 'closed' ? (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={async () => {
-                  setBusy(true);
-                  try {
-                    await props.transitionSupportCase(selected.id, 'resolved');
-                    await reloadSelected();
-                    toastSuccess(t('caseResolved'));
-                  } catch (error) {
-                    toastError(error, t('caseActionError'));
-                  } finally {
-                    setBusy(false);
+
+            <div className="flex flex-wrap gap-2">
+              {!selected.owner ? (
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    setPromptModal({
+                      action: 'claim_case',
+                      targetId: selected.id,
+                      title: t('claimCase'),
+                      description: t('claimPromptHelp'),
+                      itemSummary: `${selected.id} • ${selected.title}`,
+                    })
                   }
-                }}
-              >
-                {t('markResolved')}
-              </Button>
-            ) : null}
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={busy}
-              onClick={() => {
-              setPromptModal({
-                action: 'release_case',
-                targetId: selected.id,
-                title: t('releaseCaseTitle'),
-                description: t('releaseReasonPrompt'),
-                itemSummary: `${selected.title} (${selected.id})`,
-              });
-                setModalReason('');
-              }}
-            >
-              {t('releaseCase')}
-            </Button>
-          </div>
-        </div>
-        <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
-          <Card className="p-5">
-            <div className="space-y-3">
-              {(selected.messages ?? []).map((message) => (
-                <div
-                  key={message.id}
-                  className={`max-w-[85%] rounded-2xl p-4 ${message.author_role === 'admin' ? 'bg-navy ml-auto text-white' : 'bg-muted text-navy'}`}
+                  disabled={busy}
                 >
-                  <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">
-                    {message.author_role === 'admin'
-                      ? t('supportTeam')
-                      : t('requester')}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 whitespace-pre-wrap">
-                    {message.content}
-                  </p>
-                  <p className="mt-2 text-[10px] opacity-60">
-                    {new Date(message.created_at).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+                  <UserCheck className="size-3.5 mr-1.5" />
+                  {t('claimCase')}
+                </Button>
+              ) : selected.owner === props.userId ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setPromptModal({
+                        action: 'release_case',
+                        targetId: selected.id,
+                        title: t('releaseCase'),
+                        description: t('releasePromptHelp'),
+                        itemSummary: `${selected.id} • ${selected.title}`,
+                      })
+                    }
+                    disabled={busy}
+                  >
+                    {t('releaseCase')}
+                  </Button>
+                  {normalizeSupportStatus(selected.status) !== 'resolved' &&
+                  normalizeSupportStatus(selected.status) !== 'closed' ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void changeStatus('resolved')}
+                      disabled={busy}
+                    >
+                      {t('markResolved')}
+                    </Button>
+                  ) : null}
+                </>
+              ) : null}
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="text-navy text-sm font-bold">
+              {t('conversationHistory')}
+            </h4>
+            <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
+              {(selected.messages ?? []).map((msg, index) => {
+                const isAgent = msg.author_role === 'admin';
+                return (
+                  <div
+                    key={index}
+                    className={`rounded-xl border p-3 text-xs leading-relaxed ${
+                      isAgent
+                        ? 'border-navy/20 bg-navy/5 text-navy ml-4'
+                        : 'border-border bg-card text-foreground mr-4'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-1.5 mb-1.5 font-bold">
+                      <span>
+                        {isAgent ? t('supportTeamLabel') : t('userLabel')}
+                      </span>
+                      {msg.created_at ? (
+                        <span className="text-muted-foreground text-[10px] font-normal">
+                          {new Date(msg.created_at).toLocaleString()}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {selected.owner === props.userId ? (
             <form
-              onSubmit={(event) => void sendReply(event)}
-              className="border-border mt-5 flex flex-col gap-3 border-t pt-4"
+              onSubmit={submitReply}
+              className="border-t border-border/80 pt-4 space-y-2"
             >
-              <label className="space-y-1.5">
-                <span className="text-navy flex items-center text-xs font-bold">
-                  <span>{t('reply')}</span>
-                  <RequiredMark />
-                </span>
-                <textarea
-                  className={`${adminFieldClassName} min-h-28 py-3`}
-                  value={reply}
-                  onChange={(event) => setReply(event.target.value)}
-                  placeholder={t('replyPlaceholder')}
-                  maxLength={4000}
-                  required
-                />
+              <label
+                htmlFor="reply-content"
+                className="text-navy text-xs font-bold"
+              >
+                {t('replyPlaceholder')}
               </label>
-              <Button type="submit" className="self-end" disabled={busy}>
-                <MessageSquare className="size-4" />
-                {t('sendReply')}
-              </Button>
+              <textarea
+                id="reply-content"
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                placeholder={t('replyPlaceholder')}
+                rows={3}
+                required
+                className={adminFieldClassName}
+              />
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={busy || !reply.trim()}
+                >
+                  <MessageSquare className="size-3.5 mr-1.5" />
+                  {busy ? t('sendingReply') : t('sendReply')}
+                </Button>
+              </div>
             </form>
-          </Card>
-          <Card className="h-fit p-5">
-            <h3 className="text-navy font-bold">{t('caseContext')}</h3>
-            <dl className="mt-4 space-y-3 text-sm">
-              <div>
-                <dt className="text-muted-foreground text-xs">{t('thType')}</dt>
-                <dd className="text-navy mt-1 font-semibold">
-                  {tDynamic(dynamicLabelKey('supportType', selected.type), {
-                    value: dynamicLabelFallback(selected.type),
-                  })}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground text-xs">
-                  {t('thPriority')}
-                </dt>
-                <dd className="mt-1">
-                  <AdminPriorityBadge priority={selected.priority} />
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground text-xs">Impact</dt>
-                <dd className="text-navy mt-1 font-semibold">
-                  {selected.impact || '—'}
-                </dd>
-              </div>
-            </dl>
-          </Card>
-        </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 p-3 text-center text-xs text-muted-foreground">
+              {selected.owner
+                ? t('onlyOwnerCanReply')
+                : t('claimToReplyPrompt')}
+            </div>
+          )}
+        </section>
+
         {actionDialog}
       </div>
-      </>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Top Compact Tab Navigation */}
+      <CompactTabNav<SupportTabSection>
+        ariaLabel={t('supportTabNavigation')}
+        value={currentTab}
+        onValueChange={(val) => {
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('tab', val);
+          params.delete('status');
+          params.delete('priority');
+          params.delete('assignee');
+          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        }}
+        items={[
+          {
+            value: 'active',
+            label: t('ticketTabActive'),
+            icon: <Inbox className="size-3.5" />,
+            href: `${ROUTES.ADMIN_TICKETS}?tab=active`,
+            activeAdornment:
+              activeCasesList.length > 0 ? (
+                <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
+                  {activeCasesList.length}
+                </span>
+              ) : null,
+          },
+          {
+            value: 'history',
+            label: t('ticketTabHistory'),
+            icon: <History className="size-3.5" />,
+            href: `${ROUTES.ADMIN_TICKETS}?tab=history`,
+            activeAdornment:
+              historyCasesList.length > 0 ? (
+                <span className="ml-1 rounded-full bg-muted-foreground/15 px-2 py-0.2 text-[10px] font-bold text-muted-foreground">
+                  {historyCasesList.length}
+                </span>
+              ) : null,
+          },
+        ]}
+      />
+
       {/* Support Tickets Queue Card */}
       <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
         <div className="border-border/80 border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h3 className="text-navy text-base font-bold">
-              {t('supportTitle')}
-            </h3>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              {t('supportDescription')}
-            </p>
+          <div className="flex items-center gap-3">
+            <span className="bg-azure/80 text-navy flex size-9 shrink-0 items-center justify-center rounded-xl">
+              {currentTab === 'active' ? (
+                <Inbox className="size-4.5" aria-hidden="true" />
+              ) : (
+                <History className="size-4.5" aria-hidden="true" />
+              )}
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-navy text-base font-bold">
+                  {currentTab === 'active'
+                    ? t('supportTitle')
+                    : t('ticketHistoryTitle')}
+                </h3>
+                <span className="text-[0.6875rem] font-bold text-navy/90 bg-azure/60 px-2.5 py-0.5 rounded-full border border-navy/15 shadow-2xs">
+                  {totalCases} {t('ticketsCount', { count: totalCases }) || 'tiket'}
+                </span>
+              </div>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                {currentTab === 'active'
+                  ? t('supportDescription')
+                  : t('ticketHistoryDescription')}
+              </p>
+            </div>
           </div>
 
           {/* Filter Toggle Button */}
           <div className="flex items-center gap-2 self-start sm:self-center">
             <FilterToggleButton
-              isExpanded={showTicketFilters}
-              onToggle={() => setShowTicketFilters((prev) => !prev)}
-              hasActiveFilters={hasActiveTicketFilters}
-              activeCount={activeTicketFilterCount}
+              isExpanded={showFilters}
+              onToggle={() => setShowFilters((prev) => !prev)}
+              hasActiveFilters={hasActiveFilters}
+              activeCount={activeFilterCount}
               label={t('filterToggle') || 'Filter'}
             />
           </div>
         </div>
 
         {/* Expandable Ticket Filters Panel */}
-        {showTicketFilters ? (
+        {showFilters ? (
           <div className="border-border/60 bg-muted/20 border-b px-4 py-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="text-xs font-bold text-navy/70 mr-1 flex items-center gap-1.5">
@@ -568,10 +625,18 @@ export function SupportTab(props: SupportTabProps) {
                 ariaLabel={t('filterPriority')}
               >
                 <option value="all">{t('filterAllPriorities')}</option>
-                <option value="urgent">{tDynamic('priority.urgent', { value: 'Mendesak' })}</option>
-                <option value="high">{tDynamic('priority.high', { value: 'Tinggi' })}</option>
-                <option value="normal">{tDynamic('priority.normal', { value: 'Normal' })}</option>
-                <option value="low">{tDynamic('priority.low', { value: 'Rendah' })}</option>
+                <option value="urgent">
+                  {tDynamic('priority.urgent', { value: 'Mendesak' })}
+                </option>
+                <option value="high">
+                  {tDynamic('priority.high', { value: 'Tinggi' })}
+                </option>
+                <option value="normal">
+                  {tDynamic('priority.normal', { value: 'Normal' })}
+                </option>
+                <option value="low">
+                  {tDynamic('priority.low', { value: 'Rendah' })}
+                </option>
               </FilterSelect>
 
               {/* Status Filter */}
@@ -581,10 +646,34 @@ export function SupportTab(props: SupportTabProps) {
                 ariaLabel={t('filterStatus')}
               >
                 <option value="all">{t('filterAllStatuses')}</option>
-                <option value="waiting_support">{tDynamic('supportStatus.waiting_support', { value: 'Menunggu Dukungan' })}</option>
-                <option value="waiting_user">{tDynamic('supportStatus.waiting_user', { value: 'Menunggu Pengguna' })}</option>
-                <option value="resolved">{tDynamic('supportStatus.resolved', { value: 'Selesai' })}</option>
-                <option value="closed">{tDynamic('supportStatus.closed', { value: 'Ditutup' })}</option>
+                {currentTab === 'active' ? (
+                  <>
+                    <option value="waiting_support">
+                      {tDynamic('supportStatus.waiting_support', {
+                        value: 'Menunggu Dukungan',
+                      })}
+                    </option>
+                    <option value="waiting_user">
+                      {tDynamic('supportStatus.waiting_user', {
+                        value: 'Menunggu Pengguna',
+                      })}
+                    </option>
+                    <option value="in_progress">
+                      {tDynamic('supportStatus.in_progress', {
+                        value: 'Sedang Diproses',
+                      })}
+                    </option>
+                  </>
+                ) : (
+                  <>
+                    <option value="resolved">
+                      {tDynamic('supportStatus.resolved', { value: 'Selesai' })}
+                    </option>
+                    <option value="closed">
+                      {tDynamic('supportStatus.closed', { value: 'Ditutup' })}
+                    </option>
+                  </>
+                )}
               </FilterSelect>
 
               {/* Assignee Filter */}
@@ -599,9 +688,9 @@ export function SupportTab(props: SupportTabProps) {
               </FilterSelect>
             </div>
 
-            {hasActiveTicketFilters ? (
+            {hasActiveFilters ? (
               <FilterResetButton
-                onClick={clearTicketFilters}
+                onClick={clearFilters}
                 label={t('clearFilters') || 'Reset'}
               />
             ) : null}
@@ -615,41 +704,67 @@ export function SupportTab(props: SupportTabProps) {
               <TableHead className="font-bold text-xs">{t('thSubject')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thPriority')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thStatus')}</TableHead>
-              <TableHead className="font-bold text-xs">{t('owner')}</TableHead>
+              <TableHead className="font-bold text-xs">{t('assignee')}</TableHead>
               <TableHead className="text-right font-bold text-xs">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredCases.length === 0 ? (
-              <AdminEmptyTable
+              <TableEmptyRow
                 colSpan={6}
                 icon={Inbox}
                 text={
-                  props.cases.length === 0
-                    ? t('noTickets')
-                    : t('noFilteredTickets')
+                  hasActiveFilters
+                    ? t('noFilteredTickets')
+                    : currentTab === 'active'
+                      ? t('noTickets')
+                      : t('noTicketHistory')
                 }
-                description={t('noTicketsDescription')}
+                description={
+                  hasActiveFilters ? (
+                    <FilterResetButton
+                      onClick={clearFilters}
+                      label={t('clearFilters') || 'Reset Filter'}
+                      className="mt-2"
+                    />
+                  ) : currentTab === 'active' ? (
+                    t('noTicketsDescription')
+                  ) : (
+                    t('noTicketHistoryDescription')
+                  )
+                }
               />
             ) : (
               pagedCases.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-mono text-xs">{item.id}</TableCell>
-                  <TableCell className="text-navy font-semibold text-sm">
+                <TableRow
+                  key={item.id}
+                  className="hover:bg-muted/30 transition-colors"
+                >
+                  <TableCell className="font-mono text-xs font-semibold text-navy">
+                    {item.id}
+                  </TableCell>
+                  <TableCell className="font-medium text-sm text-foreground max-w-[200px] truncate">
                     {item.title}
                   </TableCell>
                   <TableCell>
-                    <AdminPriorityBadge priority={item.priority} size="sm" />
+                    <AdminPriorityBadge priority={item.priority} />
                   </TableCell>
                   <TableCell>
                     <SupportStatusBadge status={item.status} />
                   </TableCell>
-                  <TableCell className="text-xs">
-                    {item.owner
-                      ? item.owner === props.userId
-                        ? t('ownedByYou')
-                        : t('ownedByOther')
-                      : t('unassigned')}
+                  <TableCell className="text-muted-foreground text-xs font-mono">
+                    {item.owner ? (
+                      item.owner === props.userId ? (
+                        <span className="inline-flex items-center gap-1 font-semibold text-navy">
+                          <UserCheck className="size-3 text-navy/70" />
+                          {t('assigneeMe')}
+                        </span>
+                      ) : (
+                        item.owner
+                      )
+                    ) : (
+                      <span className="text-muted-foreground/60 italic">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
@@ -660,8 +775,9 @@ export function SupportTab(props: SupportTabProps) {
                         Boolean(item.owner && item.owner !== props.userId)
                       }
                       onClick={() => void openCase(item)}
+                      className="h-8 text-xs font-semibold"
                     >
-                      <UserCheck className="size-4" />
+                      <UserCheck className="size-3.5 mr-1" />
                       {item.owner ? t('openCase') : t('claimCase')}
                     </Button>
                   </TableCell>
@@ -683,158 +799,6 @@ export function SupportTab(props: SupportTabProps) {
               currentPage={casesPage}
               totalPages={totalCasesPages}
               onPageChange={setCasesPage}
-              variant="flat"
-              size="sm"
-            />
-          </div>
-        ) : null}
-      </section>
-
-      {/* User Data Requests Card */}
-      <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
-        <div className="border-border/80 border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h3 className="text-navy text-base font-bold">{t('dataRequestsTitle')}</h3>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              {t('dataRequestsHelp')}
-            </p>
-          </div>
-
-          {/* Filter Toggle Button */}
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            <FilterToggleButton
-              isExpanded={showDataFilters}
-              onToggle={() => setShowDataFilters((prev) => !prev)}
-              hasActiveFilters={hasActiveDataFilters}
-              activeCount={activeDataFilterCount}
-              label={t('filterToggle') || 'Filter'}
-            />
-          </div>
-        </div>
-
-        {/* Expandable Data Request Filters Panel */}
-        {showDataFilters ? (
-          <div className="border-border/60 bg-muted/20 border-b px-4 py-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-xs font-bold text-navy/70 mr-1 flex items-center gap-1.5">
-                <Filter className="size-3 text-navy/60" />
-                {t('filterLabel')}
-              </span>
-
-              <FilterSelect
-                value={dataStatusFilter}
-                onChange={(e) => updateParam('dataStatus', e.target.value)}
-                ariaLabel={t('filterDataStatus')}
-              >
-                <option value="all">{t('filterAllDataStatuses')}</option>
-                <option value="pending">{tDynamic('status.pending', { value: 'Menunggu' })}</option>
-                <option value="processing">{tDynamic('status.processing', { value: 'Diproses' })}</option>
-                <option value="queued">{tDynamic('status.queued', { value: 'Dalam Antrean' })}</option>
-                <option value="completed">{tDynamic('status.completed', { value: 'Selesai' })}</option>
-                <option value="failed">{tDynamic('status.failed', { value: 'Gagal' })}</option>
-                <option value="rejected">{tDynamic('status.rejected', { value: 'Ditolak' })}</option>
-              </FilterSelect>
-            </div>
-
-            {hasActiveDataFilters ? (
-              <FilterResetButton
-                onClick={clearDataRequestFilters}
-                label={t('clearFilters') || 'Reset'}
-              />
-            ) : null}
-          </div>
-        ) : null}
-
-        <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
-          <TableHeader>
-            <TableRow className="bg-muted/40">
-              <TableHead className="font-bold text-xs">{t('thId')}</TableHead>
-              <TableHead className="font-bold text-xs">{t('thType')}</TableHead>
-              <TableHead className="font-bold text-xs">{t('thStatus')}</TableHead>
-              <TableHead className="font-bold text-xs">{t('retryCount')}</TableHead>
-              <TableHead className="text-right font-bold text-xs">{t('actions')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredDataRequests.length === 0 ? (
-              <AdminEmptyTable
-                colSpan={5}
-                icon={FileClock}
-                text={
-                  props.dataRequests.length === 0
-                    ? t('noDataRequests')
-                    : t('noFilteredDataRequests')
-                }
-                description={t('noDataRequestsDescription')}
-              />
-            ) : (
-              pagedDataRequests.map((request) => (
-                <TableRow key={request.id}>
-                  <TableCell className="font-mono text-xs">
-                    {request.id}
-                  </TableCell>
-                  <TableCell className="text-navy text-sm font-semibold">{dataRequestTitle(request)}</TableCell>
-                  <TableCell>
-                    <AdminStatusBadge status={request.status} />
-                  </TableCell>
-                  <TableCell className="text-xs font-mono">{request.retry_count}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      {request.status === 'failed' &&
-                      request.retry_count < 3 ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            void props
-                              .retryDataRequest(request.id)
-                              .then(() => toastSuccess(t('requestRetried')))
-                              .catch((error) =>
-                                toastError(error, t('dataRequestActionError'))
-                              )
-                          }
-                        >
-                          {t('retry')}
-                        </Button>
-                      ) : null}
-                      {['failed', 'queued'].includes(request.status) ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setPromptModal({
-                              action: 'reject_data_request',
-                              targetId: request.id,
-                              title: t('rejectDataRequestTitle'),
-                              description: t('reasonPrompt'),
-                              itemSummary: `${dataRequestTitle(request)} (${request.id})`,
-                            });
-                            setModalReason('');
-                          }}
-                        >
-                          {t('reject')}
-                        </Button>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        {totalDataRequests > 0 ? (
-          <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
-            <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
-              {tPagination('showingRange', {
-                start: requestsStartIndex,
-                end: requestsEndIndex,
-                total: totalDataRequests,
-              })}
-            </span>
-            <Pagination
-              currentPage={requestsPage}
-              totalPages={totalRequestsPages}
-              onPageChange={setRequestsPage}
               variant="flat"
               size="sm"
             />

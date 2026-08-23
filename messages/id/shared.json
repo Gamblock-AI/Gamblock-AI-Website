@@ -66,6 +66,7 @@
     "adminContent": "Konten",
     "adminLearningHub": "Learning Hub",
     "adminTickets": "Tiket",
+    "adminDataRequests": "Permintaan data",
     "adminEmergency": "Akses darurat",
     "adminPlatform": "Platform",
     "more": "Lainnya",
@@ -118,8 +119,10 @@
     "priority": {
       "low": "Rendah",
       "normal": "Normal",
+      "medium": "Sedang",
       "high": "Tinggi",
       "urgent": "Mendesak",
+      "critical": "Kritis",
       "unknown": "Prioritas lainnya ({value})"
     },
     "role": {
@@ -151,6 +154,7 @@
       "expired": "Kedaluwarsa",
       "queued": "Dalam antrean",
       "processing": "Sedang diproses",
+      "in_progress": "Sedang diproses",
       "pending_confirmation": "Menunggu konfirmasi",
       "rejected": "Ditolak",
       "cancelled": "Dibatalkan",

@@ -249,6 +249,7 @@ export type AdminArea =
   | 'content'
   | 'learningHub'
   | 'tickets'
+  | 'dataRequests'
   | 'emergency'
   | 'platform'
   | 'all';
@@ -365,7 +366,7 @@ async function fetchAdminOperations(
     capabilities.support && (area === 'tickets' || area === 'all')
       ? apiClient<AdminSupportCase[] | PaginatedData<AdminSupportCase>>('/admin/support-cases')
       : Promise.resolve([]),
-    capabilities.support && (area === 'tickets' || area === 'all')
+    capabilities.support && (area === 'dataRequests' || area === 'all')
       ? apiClient<AdminDataRequest[] | PaginatedData<AdminDataRequest>>('/admin/data-requests')
       : Promise.resolve([]),
     capabilities.emergency && (area === 'emergency' || area === 'all')
@@ -415,22 +416,27 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
   const [keyLoading, setKeyLoading] = useState(false);
   const [emergencyKey, setEmergencyKey] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    if (!role || !Object.values(capabilities).some(Boolean)) {
-      setData(EMPTY_STATE);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      setData(await fetchAdminOperations(capabilities, area));
-    } catch (requestError) {
-      setError(requestError);
-    } finally {
-      setLoading(false);
-    }
-  }, [area, capabilities, role]);
+  const load = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!role || !Object.values(capabilities).some(Boolean)) {
+        setData(EMPTY_STATE);
+        setLoading(false);
+        return;
+      }
+      if (!options?.silent) {
+        setLoading(true);
+      }
+      setError(null);
+      try {
+        setData(await fetchAdminOperations(capabilities, area));
+      } catch (requestError) {
+        setError(requestError);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [area, capabilities, role]
+  );
 
   useEffect(() => {
     if (!role || !Object.values(capabilities).some(Boolean)) return;
@@ -455,7 +461,7 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
   const mutateAndReload = useCallback(
     async <T>(path: string, options: RequestInit) => {
       const result = await apiClient<T>(path, options);
-      await load();
+      await load({ silent: true });
       return result;
     },
     [load]
@@ -531,7 +537,7 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
     [mutateAndReload]
   );
   const transitionModule = useCallback(
-    (id: string, action: 'submit-review' | 'publish' | 'archive') =>
+    (id: string, action: 'submit-review' | 'publish') =>
       mutateAndReload<AdminEducationModule>(
         `/admin/content/modules/${id}/${action}`,
         { method: 'POST' }
@@ -554,6 +560,11 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
           body: JSON.stringify({ reason }),
         }
       ),
+    [mutateAndReload]
+  );
+  const deleteModule = useCallback(
+    (id: string) =>
+      mutateAndReload(`/admin/content/modules/${id}`, { method: 'DELETE' }),
     [mutateAndReload]
   );
 
@@ -582,8 +593,16 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
       ),
     [mutateAndReload]
   );
+  const deleteLearningHubItem = useCallback(
+    (id: string) =>
+      mutateAndReload(`/admin/content/learning-hub/items/${id}`, {
+        method: 'DELETE',
+      }),
+    [mutateAndReload]
+  );
+
   const transitionLearningHubItem = useCallback(
-    (id: string, action: 'submit-review' | 'publish' | 'archive') =>
+    (id: string, action: 'submit-review' | 'publish') =>
       mutateAndReload<AdminLearningHubItem>(
         `/admin/content/learning-hub/items/${id}/${action}`,
         { method: 'POST' }
@@ -770,11 +789,13 @@ export function useAdminOperations(role?: string, area: AdminArea = 'all') {
     getModule,
     saveModule,
     transitionModule,
+    deleteModule,
     getModuleRevisions,
     rollbackModule,
     createLearningHubItem,
     saveLearningHubItem,
     transitionLearningHubItem,
+    deleteLearningHubItem,
     getLearningHubRevisions,
     rollbackLearningHubItem,
     createLearningHubCluster,

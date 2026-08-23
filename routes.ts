@@ -14,6 +14,7 @@ export const ROUTES = {
   ADMIN_CONTENT: '/admin/content',
   ADMIN_LEARNING_HUB: '/admin/learning-hub',
   ADMIN_TICKETS: '/admin/tickets',
+  ADMIN_DATA_REQUESTS: '/admin/data-requests',
   ADMIN_EMERGENCY: '/admin/emergency',
   ADMIN_PLATFORM: '/admin/platform',
   PARTNERS: '/partners',

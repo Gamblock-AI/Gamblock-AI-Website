@@ -19,7 +19,7 @@ const DYNAMIC_LABEL_VALUES = {
     'accountability_guidance',
     'privacy_request',
   ],
-  priority: ['low', 'normal', 'high', 'urgent'],
+  priority: ['low', 'normal', 'medium', 'high', 'urgent', 'critical'],
   role: ['user', 'partner', 'admin'],
   status: [
     'draft',

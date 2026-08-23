@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
   CircleHelp,
+  FileClock,
   FileText,
   Gamepad2,
   GraduationCap,
@@ -34,6 +35,7 @@ export type DashboardNavKey =
   | 'adminContent'
   | 'adminLearningHub'
   | 'adminTickets'
+  | 'adminDataRequests'
   | 'adminEmergency'
   | 'adminPlatform';
 
@@ -137,6 +139,12 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         href: ROUTES.ADMIN_TICKETS,
         labelKey: 'adminTickets',
         icon: Tickets,
+        roles: ['admin'],
+      },
+      {
+        href: ROUTES.ADMIN_DATA_REQUESTS,
+        labelKey: 'adminDataRequests',
+        icon: FileClock,
         roles: ['admin'],
       },
       {

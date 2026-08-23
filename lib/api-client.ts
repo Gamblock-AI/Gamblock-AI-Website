@@ -198,12 +198,11 @@ async function performApiRequest<T>(
       // re-authenticates, retry the request once with the new token.
       if (await requestReauth()) {
         const freshToken = localStorage.getItem('gamblock_access_token');
+        const retriedHeaders = new Headers(headers);
+        retriedHeaders.set('Authorization', `Bearer ${freshToken ?? ''}`);
         const retriedResponse = await fetch(`${API_URL}${cleanPath}`, {
           ...options,
-          headers: new Headers([
-            ...headers.entries(),
-            ['Authorization', `Bearer ${freshToken ?? ''}`],
-          ]),
+          headers: retriedHeaders,
           credentials: 'include',
         });
         return await unwrap(retriedResponse);
@@ -221,12 +220,11 @@ async function performApiRequest<T>(
 
   try {
     const newToken = await refreshAccessToken();
+    const retriedHeaders = new Headers(headers);
+    retriedHeaders.set('Authorization', `Bearer ${newToken}`);
     const retriedResponse = await fetch(`${API_URL}${cleanPath}`, {
       ...options,
-      headers: new Headers([
-        ...headers.entries(),
-        ['Authorization', `Bearer ${newToken}`],
-      ]),
+      headers: retriedHeaders,
       credentials: 'include',
     });
     if (retriedResponse.status === 401) {

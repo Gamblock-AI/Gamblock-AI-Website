@@ -9,6 +9,7 @@ import {
 import { useLocalUser } from '@/hooks/use-local-user';
 import { useTranslations } from 'next-intl';
 import {
+  FileClock,
   FileText,
   GraduationCap,
   KeyRound,
@@ -22,6 +23,7 @@ import { LearningHubTab } from './learning-hub-tab';
 import { EmergencyTab } from './emergency-tab';
 import { PlatformTab } from './platform-tab';
 import { SupportTab } from './support-tab';
+import { DataRequestsTab } from './data-requests-tab';
 
 type AdminPageArea = Exclude<AdminArea, 'overview' | 'all'>;
 
@@ -57,17 +59,23 @@ export function AdminAreaClient({
               description: t('supportDescription'),
               icon: Tickets,
             }
-          : area === 'emergency'
+          : area === 'dataRequests'
             ? {
-                title: t('tabEmergency'),
-                description: t('emergencyDescription'),
-                icon: KeyRound,
+                title: t('tabDataRequests'),
+                description: t('dataRequestsHelp'),
+                icon: FileClock,
               }
-            : {
-                title: t('tabPlatform'),
-                description: t('platformDescription'),
-                icon: Settings2,
-              };
+            : area === 'emergency'
+              ? {
+                  title: t('tabEmergency'),
+                  description: t('emergencyDescription'),
+                  icon: KeyRound,
+                }
+              : {
+                  title: t('tabPlatform'),
+                  description: t('platformDescription'),
+                  icon: Settings2,
+                };
 
   return (
     <DashboardPage density="compact" className="max-w-none">
@@ -94,6 +102,7 @@ export function AdminAreaClient({
           getModule={operations.getModule}
           saveModule={operations.saveModule}
           transitionModule={operations.transitionModule}
+          deleteModule={operations.deleteModule}
           uploadEducationMedia={operations.uploadEducationMedia}
           registerExternalEducationMedia={
             operations.registerExternalEducationMedia
@@ -109,6 +118,7 @@ export function AdminAreaClient({
           createItem={operations.createLearningHubItem}
           saveItem={operations.saveLearningHubItem}
           transitionItem={operations.transitionLearningHubItem}
+          deleteItem={operations.deleteLearningHubItem}
           getRevisions={operations.getLearningHubRevisions}
           rollbackItem={operations.rollbackLearningHubItem}
           createCluster={operations.createLearningHubCluster}
@@ -123,15 +133,18 @@ export function AdminAreaClient({
         <SupportTab
           userId={user.id}
           cases={operations.cases}
-          dataRequests={operations.dataRequests}
           getSupportCase={operations.getSupportCase}
           claimSupportCase={operations.claimSupportCase}
           releaseSupportCase={operations.releaseSupportCase}
           replySupportCase={operations.replySupportCase}
           transitionSupportCase={operations.transitionSupportCase}
+          caseID={caseID}
+        />
+      ) : area === 'dataRequests' ? (
+        <DataRequestsTab
+          dataRequests={operations.dataRequests}
           retryDataRequest={operations.retryDataRequest}
           rejectDataRequest={operations.rejectDataRequest}
-          caseID={caseID}
         />
       ) : area === 'emergency' ? (
         <EmergencyTab

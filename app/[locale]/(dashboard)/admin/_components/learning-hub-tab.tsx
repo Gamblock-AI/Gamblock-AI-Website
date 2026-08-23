@@ -1,20 +1,23 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
-  Archive,
+  ArrowLeft,
   BookOpen,
   Check,
+  Clock,
   GraduationCap,
   History,
   ImageIcon,
   Layers,
   Pencil,
   Plus,
+  RotateCcw,
   Save,
   Send,
   Trash2,
+  X,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -373,6 +376,7 @@ export function LearningHubTab({
   createItem,
   saveItem,
   transitionItem,
+  deleteItem,
   getRevisions,
   rollbackItem,
   createCluster,
@@ -392,8 +396,9 @@ export function LearningHubTab({
   ) => Promise<AdminLearningHubItem>;
   transitionItem: (
     id: string,
-    action: 'submit-review' | 'publish' | 'archive'
+    action: 'submit-review' | 'publish'
   ) => Promise<AdminLearningHubItem>;
+  deleteItem: (id: string) => Promise<unknown>;
   getRevisions: (id: string) => Promise<AdminLearningRevision[]>;
   rollbackItem: (
     id: string,
@@ -461,10 +466,12 @@ export function LearningHubTab({
   const [busy, setBusy] = useState(false);
   const [revisions, setRevisions] = useState<AdminLearningRevision[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [rollbackOpen, setRollbackOpen] = useState(false);
   const [rollbackRevision, setRollbackRevision] =
     useState<AdminLearningRevision | null>(null);
   const [rollbackReason, setRollbackReason] = useState('');
+  const [isStuck, setIsStuck] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
   const [newCluster, setNewCluster] = useState({
     slug: '',
     title_id: '',
@@ -488,7 +495,7 @@ export function LearningHubTab({
   const [programModalOpen, setProgramModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
-    type: 'cluster' | 'program';
+    type: 'cluster' | 'program' | 'item';
     id: string;
     label: string;
     relatedCount?: number;
@@ -553,6 +560,30 @@ export function LearningHubTab({
     setDraft(found ? itemDraft(found) : null);
     setFieldErrors({});
   }
+
+  useEffect(() => {
+    if (!draft && !isCreating) return;
+
+    const updateHeight = () => {
+      if (stickyHeaderRef.current) {
+        setHeaderHeight(stickyHeaderRef.current.offsetHeight);
+      }
+    };
+    updateHeight();
+
+    const handleScroll = () => {
+      setIsStuck(window.scrollY > 95);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', updateHeight, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [draft, isCreating]);
 
   const setLocale = (newLocale: 'id' | 'en') => {
     const params = new URLSearchParams(searchParams.toString());
@@ -803,7 +834,7 @@ export function LearningHubTab({
   };
 
   const transition = async (
-    action: 'submit-review' | 'publish' | 'archive'
+    action: 'submit-review' | 'publish'
   ) => {
     if (!selected || !draft) return;
     if (action === 'publish' || action === 'submit-review') {
@@ -823,9 +854,7 @@ export function LearningHubTab({
         t(
           action === 'publish'
             ? 'learningHubPublished'
-            : action === 'archive'
-              ? 'learningHubArchived'
-              : 'learningHubSubmitted'
+            : 'learningHubSubmitted'
         )
       );
     } catch (error) {
@@ -862,7 +891,6 @@ export function LearningHubTab({
       const params = new URLSearchParams(searchParams.toString());
       params.set('item', updated.id);
       router.replace(`${pathname}?${params.toString()}`);
-      setRollbackOpen(false);
       setRollbackRevision(null);
       setRollbackReason('');
       toastSuccess(t('learningHubRolledBack'));
@@ -998,20 +1026,48 @@ export function LearningHubTab({
     setDeleteConfirmOpen(true);
   };
 
+  const handleDeleteItem = (targetItem?: AdminLearningHubItem) => {
+    const item = targetItem || selected;
+    if (!item) return;
+    setDeleteTarget({
+      type: 'item',
+      id: item.id,
+      label: item.title_id || item.title_en || item.slug,
+    });
+    setDeleteConfirmOpen(true);
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
     setBusy(true);
     try {
       if (deleteTarget.type === 'cluster') {
         await deleteCluster(deleteTarget.id);
-      } else {
+        toastSuccess(t('learningHubTaxonomySaved'));
+      } else if (deleteTarget.type === 'program') {
         await deleteProgram(deleteTarget.id);
+        toastSuccess(t('learningHubTaxonomySaved'));
+      } else if (deleteTarget.type === 'item') {
+        await deleteItem(deleteTarget.id);
+        toastSuccess(t('learningHubItemDeleted'));
+        if (selected?.id === deleteTarget.id) {
+          setSelected(null);
+          setDraft(null);
+          setIsCreating(false);
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('item');
+          params.delete('id');
+          router.replace(`${pathname}?${params.toString()}`);
+        }
       }
-      toastSuccess(t('learningHubTaxonomySaved'));
       setDeleteConfirmOpen(false);
       setDeleteTarget(null);
     } catch (error) {
-      toastError(error, t('learningHubTaxonomyError'));
+      if (deleteTarget.type === 'item') {
+        toastError(error, t('fetchError'));
+      } else {
+        toastError(error, t('learningHubTaxonomyError'));
+      }
     } finally {
       setBusy(false);
     }
@@ -1111,9 +1167,6 @@ export function LearningHubTab({
                     </option>
                     <option value="published">
                       {tDynamic(dynamicLabelKey('status', 'published'), { value: dynamicLabelFallback('published') })}
-                    </option>
-                    <option value="archived">
-                      {tDynamic(dynamicLabelKey('status', 'archived'), { value: dynamicLabelFallback('archived') })}
                     </option>
                   </FilterSelect>
 
@@ -1249,31 +1302,95 @@ export function LearningHubTab({
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
-                <div>
-                  {!isCreating && selected ? (
+              {isStuck ? (
+                <div style={{ height: headerHeight || 64 }} aria-hidden="true" />
+              ) : null}
+              <div
+                ref={stickyHeaderRef}
+                className={cn(
+                  'flex flex-col gap-3 backdrop-blur-md transition-all duration-300 ease-in-out sm:flex-row sm:items-center sm:justify-between',
+                  isStuck
+                    ? 'fixed top-[4.5rem] left-0 right-0 z-30 border-b border-border/80 bg-card/95 px-4 py-3.5 shadow-md shadow-navy/5 lg:left-[252px] sm:px-6 lg:px-8 xl:px-10'
+                    : 'relative z-20 rounded-2xl border border-border bg-card/95 p-4 shadow-sm'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={cancelCreate}
+                    className="hover:bg-muted flex size-10 items-center justify-center rounded-xl text-muted-foreground hover:text-navy"
+                    aria-label={t('close')}
+                  >
+                    <X className="size-5" />
+                  </button>
+                  <div>
                     <div className="flex items-center gap-2">
-                      <span className="border-border/60 bg-muted/70 text-muted-foreground rounded-md border px-2 py-0.5 font-mono text-[0.6875rem] font-semibold">
-                        {selected.slug}
-                      </span>
-                      <span className="text-muted-foreground font-mono text-[0.6875rem]">
-                        rev {selected.draft_revision}
-                      </span>
+                      <h2 className="text-navy font-extrabold text-base">
+                        {draft.title_id ||
+                          draft.slug ||
+                          (isCreating ? t('learningHubNewItem') : t('learningHubEditorTitle'))}
+                      </h2>
+                      {isCreating ? (
+                        <span className="border-navy/20 bg-azure/85 text-navy inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-2xs">
+                          Draf Baru
+                        </span>
+                      ) : selected ? (
+                        <AdminStatusBadge status={selected.status} />
+                      ) : null}
                     </div>
-                  ) : null}
-                  <h2 className="text-navy mt-1 text-lg font-bold">
-                    {draft.title_id ||
-                      draft.slug ||
-                      (isCreating ? t('learningHubNewItem') : t('learningHubEditorTitle'))}
-                  </h2>
+                    <p className="text-muted-foreground text-xs">
+                      {!isCreating && selected ? (
+                        <span>
+                          rev {selected.draft_revision} •{' '}
+                          <span className="font-mono text-[0.6875rem]">
+                            {selected.slug}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="font-mono text-[0.6875rem] text-muted-foreground">
+                          (belum disimpan)
+                        </span>
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {isCreating ? (
-                    <span className="bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">
-                      Draf Baru
-                    </span>
-                  ) : selected ? (
-                    <AdminStatusBadge status={selected.status} />
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {!isCreating && selected ? (
+                    <Button
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => void openHistory()}
+                    >
+                      <History className="size-4" />
+                      {t('learningHubHistory')}
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => void (isCreating ? handleCreate(false) : save())}
+                  >
+                    <Save className="size-4" />
+                    {isCreating ? t('learningHubCreateDraft') : t('learningHubSave')}
+                  </Button>
+                  <Button
+                    disabled={busy}
+                    onClick={() => void (isCreating ? handleCreate(true) : transition('publish'))}
+                  >
+                    <Send className="size-4" />
+                    {t('learningHubPublish')}
+                  </Button>
+                  {!isCreating && selected ? (
+                    <Button
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => handleDeleteItem()}
+                      className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="size-4" />
+                      {t('learningHubDeleteItem')}
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -1887,81 +2004,6 @@ export function LearningHubTab({
                     <FieldError message={fieldErrors.reviewed_at} />
                   </label>
                 </div>
-              </div>
-
-              {/* Action Bar */}
-              <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-                {isCreating ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={cancelCreate}
-                      disabled={busy}
-                      className="rounded-xl font-medium"
-                    >
-                      {t('cancel')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => void handleCreate(false)}
-                      disabled={busy}
-                      className="rounded-xl font-medium"
-                    >
-                      <Plus className="size-4" />
-                      {t('learningHubCreateDraft')}
-                    </Button>
-                    <Button
-                      onClick={() => void handleCreate(true)}
-                      disabled={busy}
-                      className="shadow-soft rounded-xl font-bold"
-                    >
-                      <Send className="size-4" />
-                      {t('learningHubPublish')}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => void save()}
-                      disabled={busy}
-                      className="rounded-xl font-medium"
-                    >
-                      <Save className="size-4" />
-                      {t('learningHubSave')}
-                    </Button>
-                    <Button
-                      onClick={() => void transition('publish')}
-                      disabled={busy}
-                      className="shadow-soft rounded-xl font-bold"
-                    >
-                      <Send className="size-4" />
-                      {t('learningHubPublish')}
-                    </Button>
-                    {selected?.status === 'published' ? (
-                      <Button
-                        variant="outline"
-                        onClick={() => void transition('archive')}
-                        disabled={busy}
-                        className="rounded-xl font-medium"
-                      >
-                        <Archive className="size-4" />
-                        {t('learningHubArchive')}
-                      </Button>
-                    ) : null}
-                  </div>
-                )}
-                {!isCreating && selected ? (
-                  <Button
-                    variant="ghost"
-                    onClick={() => void openHistory()}
-                    disabled={busy}
-                    className="text-muted-foreground hover:text-navy rounded-xl font-medium"
-                  >
-                    <History className="size-4" />
-                    {t('learningHubHistory')}
-                  </Button>
-                ) : null}
               </div>
             </div>
           )}
@@ -2577,13 +2619,17 @@ export function LearningHubTab({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="size-4 shrink-0" />
-              {deleteTarget?.type === 'cluster'
+              {deleteTarget?.type === 'item'
+                ? t('learningHubDeleteItemTitle')
+                : deleteTarget?.type === 'cluster'
                 ? 'Hapus Fakultas?'
                 : 'Hapus Program Studi?'}
             </DialogTitle>
             <DialogDescription>
               {deleteTarget?.type === 'cluster' && (deleteTarget.relatedCount ?? 0) > 0
                 ? 'Fakultas ini masih memiliki program studi aktif dan tidak dapat dihapus.'
+                : deleteTarget?.type === 'item'
+                ? t('learningHubDeleteItemDescription')
                 : `Anda akan menghapus ${deleteTarget?.type === 'cluster' ? 'fakultas' : 'program studi'} ini secara permanen. Tindakan ini tidak dapat dibatalkan.`}
             </DialogDescription>
           </DialogHeader>
@@ -2610,7 +2656,7 @@ export function LearningHubTab({
               }}
               className="rounded-xl font-medium"
             >
-              Batal
+              {t('cancel')}
             </Button>
             {!(deleteTarget?.type === 'cluster' && (deleteTarget.relatedCount ?? 0) > 0) && (
               <Button
@@ -2620,84 +2666,246 @@ export function LearningHubTab({
                 className="rounded-xl font-bold"
               >
                 <Trash2 className="size-4 mr-1.5" />
-                Hapus Permanen
+                {deleteTarget?.type === 'item'
+                  ? t('learningHubDeleteItem')
+                  : 'Hapus Permanen'}
               </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>{t('learningHubHistory')}</DialogTitle>
-            <DialogDescription>
-              {t('learningHubHistoryDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            {revisions.map((revision) => (
-              <div
-                key={revision.id}
-                className="border-border/80 flex items-center justify-between rounded-xl border p-3"
-              >
-                <div>
-                  <p className="text-xs font-bold">
-                    v{revision.revision} •{' '}
-                    {new Date(revision.created_at).toLocaleString()}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {revision.kind}
-                  </p>
+      <Dialog
+        open={historyOpen}
+        onOpenChange={(open) => {
+          setHistoryOpen(open);
+          if (!open) {
+            setRollbackRevision(null);
+            setRollbackReason('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg p-5 gap-3">
+          {rollbackRevision ? (
+            <div className="space-y-3">
+              <DialogHeader className="gap-1 pb-1">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => {
+                      setRollbackRevision(null);
+                      setRollbackReason('');
+                    }}
+                    className="size-7 rounded-lg text-muted-foreground hover:text-navy hover:bg-azure/50"
+                    title={t('cancel')}
+                  >
+                    <ArrowLeft className="size-4" />
+                  </Button>
+                  <DialogTitle className="text-navy text-base font-bold">
+                    {t('learningHubRollback')}
+                  </DialogTitle>
                 </div>
+                <DialogDescription className="text-xs text-muted-foreground leading-relaxed pl-9">
+                  {t('learningHubRollbackDescription')}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="rounded-xl border border-navy/20 bg-azure/25 p-3.5 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-navy text-sm font-extrabold">
+                    Versi #{rollbackRevision.revision}
+                  </span>
+                  <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {rollbackRevision.kind === 'published'
+                      ? 'Terbit'
+                      : rollbackRevision.kind === 'draft'
+                        ? 'Draf'
+                        : 'Pemulihan'}
+                  </span>
+                </div>
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                  <Clock className="size-3.5 text-muted-foreground/70" />
+                  <span>
+                    {new Date(rollbackRevision.created_at).toLocaleString(
+                      locale === 'id' ? 'id-ID' : 'en-US',
+                      { dateStyle: 'medium', timeStyle: 'short' }
+                    )}
+                  </span>
+                  {rollbackRevision.created_by && (
+                    <>
+                      <span>•</span>
+                      <span className="truncate max-w-[160px]">
+                        oleh{' '}
+                        <strong className="font-semibold text-foreground">
+                          {rollbackRevision.created_by}
+                        </strong>
+                      </span>
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-navy flex items-center text-xs font-bold gap-1">
+                  <span>{t('reasonPrompt')}</span>
+                  <span className="text-destructive">*</span>
+                </label>
+                <textarea
+                  className={`${adminFieldClassName} min-h-20 py-2 text-xs leading-relaxed`}
+                  rows={3}
+                  placeholder="Contoh: Pemulihan draf untuk memperbarui referensi kurikulum terbaru…"
+                  value={rollbackReason}
+                  onChange={(e) => setRollbackReason(e.target.value)}
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <DialogFooter className="pt-2 sm:justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setRollbackRevision(null);
+                    setRollbackReason('');
+                  }}
+                  disabled={busy}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="primary"
+                  disabled={busy || !rollbackReason.trim()}
+                  onClick={() => void rollback()}
+                  className="font-bold gap-1.5 bg-navy text-white hover:bg-navy-light"
+                >
+                  <RotateCcw className="size-3.5" />
+                  {t('learningHubRollback')}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <DialogHeader className="gap-1 pb-1">
+                <DialogTitle className="text-navy flex items-center gap-2 text-base font-bold">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-azure text-navy">
+                    <History className="size-4" />
+                  </span>
+                  {t('learningHubHistory')}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                  {t('learningHubHistoryDescription')}
+                </DialogDescription>
+              </DialogHeader>
+
+              {/* Revision List */}
+              <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-0.5">
+                {revisions.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
+                    Belum ada riwayat revisi yang tersimpan.
+                  </div>
+                ) : (
+                  revisions.map((revision) => {
+                    const isCurrentDraft =
+                      revision.revision === selected?.draft_revision;
+                    const isPublished =
+                      revision.revision === selected?.published_revision;
+
+                    return (
+                      <div
+                        key={revision.id}
+                        className={cn(
+                          'flex items-center justify-between gap-3 rounded-xl border p-3 transition-all',
+                          isCurrentDraft
+                            ? 'border-navy/30 bg-azure/20 shadow-2xs'
+                            : 'border-border bg-card hover:border-navy/20 hover:bg-muted/30'
+                        )}
+                      >
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-navy text-sm font-extrabold">
+                              Versi #{revision.revision}
+                            </span>
+                            {isCurrentDraft && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-navy px-2 py-0.5 text-[11px] font-bold text-white">
+                                <Check className="size-3" />
+                                Draf Aktif
+                              </span>
+                            )}
+                            {isPublished && (
+                              <span className="inline-flex items-center rounded-md bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                                Terbit
+                              </span>
+                            )}
+                            {!isCurrentDraft &&
+                              !isPublished &&
+                              revision.kind === 'rollback' && (
+                                <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                  Pemulihan
+                                </span>
+                              )}
+                          </div>
+                          <p className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
+                            <Clock className="size-3.5 text-muted-foreground/70 shrink-0" />
+                            <span>
+                              {new Date(revision.created_at).toLocaleString(
+                                locale === 'id' ? 'id-ID' : 'en-US',
+                                { dateStyle: 'medium', timeStyle: 'short' }
+                              )}
+                            </span>
+                            {revision.created_by && (
+                              <>
+                                <span>•</span>
+                                <span className="truncate max-w-[160px]">
+                                  oleh{' '}
+                                  <strong className="font-semibold text-foreground">
+                                    {revision.created_by}
+                                  </strong>
+                                </span>
+                              </>
+                            )}
+                          </p>
+                        </div>
+
+                        {!isCurrentDraft && (
+                          <div className="shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={busy}
+                              onClick={() => {
+                                setRollbackRevision(revision);
+                                setRollbackReason('');
+                              }}
+                              className="h-8 gap-1.5 text-xs font-bold text-navy hover:bg-navy hover:text-white"
+                            >
+                              <RotateCcw className="size-3.5" />
+                              {t('learningHubRollback')}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <DialogFooter className="pt-1 sm:justify-end">
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    setRollbackRevision(revision);
-                    setRollbackOpen(true);
-                  }}
+                  onClick={() => setHistoryOpen(false)}
                 >
-                  {t('learningHubRollback')}
+                  {t('close')}
                 </Button>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={rollbackOpen} onOpenChange={setRollbackOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('learningHubRollback')}</DialogTitle>
-            <DialogDescription>
-              {t('learningHubRollbackDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <label className="space-y-1.5">
-            <span className="text-navy flex items-center text-xs font-bold">
-              <span>{t('reasonPrompt')}</span>
-              <RequiredMark />
-            </span>
-            <textarea
-              className={`${adminFieldClassName} py-2`}
-              rows={4}
-              value={rollbackReason}
-              onChange={(event) => setRollbackReason(event.target.value)}
-              placeholder="Contoh: Pemulihan draf untuk memperbarui referensi kurikulum terbaru..."
-              required
-            />
-          </label>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRollbackOpen(false)}>
-              {t('cancel')}
-            </Button>
-            <Button
-              onClick={() => void rollback()}
-              disabled={busy || !rollbackReason.trim()}
-            >
-              {t('learningHubRollback')}
-            </Button>
-          </DialogFooter>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

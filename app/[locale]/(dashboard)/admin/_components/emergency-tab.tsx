@@ -1,9 +1,21 @@
+'use client';
+
 import { useMemo, useState } from 'react';
-import { CheckCircle2, Clock3, KeyRound, Laptop, Loader2, User } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import {
+  CheckCircle2,
+  Clock3,
+  History,
+  KeyRound,
+  Laptop,
+  Loader2,
+  User,
+} from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import type { EmergencyKeyRequest } from '@/hooks/use-admin-operations';
 import { Pagination } from '@/components/dashboard/pagination';
+import { CompactTabNav } from '@/components/common/compact-tab-nav';
 import {
   FilterResetButton,
   FilterSearchInput,
@@ -13,8 +25,11 @@ import {
 import { usePagination } from '@/hooks/use-pagination';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
+import { ROUTES } from '@/routes';
 import { EmergencyKeyCard } from './emergency-key-card';
 import { AdminStatusBadge } from './admin-shared';
+
+type EmergencyTabSection = 'active' | 'history';
 
 interface EmergencyTabProps {
   requests: EmergencyKeyRequest[];
@@ -35,8 +50,28 @@ export function EmergencyTab({
   const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
   const locale = useLocale();
+  const searchParams = useSearchParams();
+  const currentTab = (searchParams.get('tab') as EmergencyTabSection) || 'active';
   const [keyCopied, setKeyCopied] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const activeRequestsList = useMemo(() => {
+    return (requests ?? []).filter(
+      (r) => r.status === 'pending' || r.status === 'reviewed'
+    );
+  }, [requests]);
+
+  const historyRequestsList = useMemo(() => {
+    return (requests ?? []).filter(
+      (r) =>
+        r.status === 'approved' ||
+        r.status === 'rejected' ||
+        r.status === 'expired'
+    );
+  }, [requests]);
+
+  const currentRequestsList =
+    currentTab === 'history' ? historyRequestsList : activeRequestsList;
 
   const {
     getFilter,
@@ -49,6 +84,7 @@ export function EmergencyTab({
   } = useQueryFilters({
     filterKeys: ['status', 'q'],
     defaultValues: { status: 'all' },
+    ignoredKeys: ['tab'],
     pageKey: 'page',
   });
 
@@ -57,7 +93,7 @@ export function EmergencyTab({
 
   const filteredRequests = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return (requests ?? []).filter((r) => {
+    return currentRequestsList.filter((r) => {
       const matchStatus = statusFilter === 'all' || r.status === statusFilter;
       const matchQ =
         !q ||
@@ -66,7 +102,7 @@ export function EmergencyTab({
         r.device_id.toLowerCase().includes(q);
       return matchStatus && matchQ;
     });
-  }, [requests, statusFilter, searchQuery]);
+  }, [currentRequestsList, statusFilter, searchQuery]);
 
   const {
     pagedItems: pagedRequests,
@@ -104,7 +140,7 @@ export function EmergencyTab({
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {emergencyKey ? (
         <EmergencyKeyCard
           emergencyKey={emergencyKey}
@@ -114,23 +150,81 @@ export function EmergencyTab({
         />
       ) : null}
 
-      {(requests?.length ?? 0) > 0 ? (
+      {/* Page Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-1">
+        <div>
+          <h3 className="text-navy text-base font-bold">
+            {currentTab === 'active'
+              ? t('emergencyTitle')
+              : t('emergencyHistoryTitle')}
+          </h3>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            {currentTab === 'active'
+              ? t('emergencyDescription')
+              : t('emergencyHistoryDescription')}
+          </p>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <CompactTabNav<EmergencyTabSection>
+        ariaLabel={t('emergencyTabNavigation')}
+        value={currentTab}
+        items={[
+          {
+            value: 'active',
+            label: t('emergencyTabActive'),
+            icon: <KeyRound className="size-3.5" />,
+            href: `${ROUTES.ADMIN_EMERGENCY}?tab=active`,
+            activeAdornment:
+              activeRequestsList.length > 0 ? (
+                <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
+                  {activeRequestsList.length}
+                </span>
+              ) : null,
+          },
+          {
+            value: 'history',
+            label: t('emergencyTabHistory'),
+            icon: <History className="size-3.5" />,
+            href: `${ROUTES.ADMIN_EMERGENCY}?tab=history`,
+            activeAdornment:
+              historyRequestsList.length > 0 ? (
+                <span className="ml-1 rounded-full bg-muted-foreground/15 px-2 py-0.2 text-[10px] font-bold text-muted-foreground">
+                  {historyRequestsList.length}
+                </span>
+              ) : null,
+          },
+        ]}
+      />
+
+      {currentRequestsList.length > 0 ? (
         <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
           {/* Panel Header */}
           <div className="border-border/80 border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="bg-azure/80 text-navy ring-1 ring-navy/10 flex size-9 shrink-0 items-center justify-center rounded-xl shadow-2xs">
-                <KeyRound className="size-4.5" aria-hidden="true" />
+                {currentTab === 'active' ? (
+                  <KeyRound className="size-4.5" aria-hidden="true" />
+                ) : (
+                  <History className="size-4.5" aria-hidden="true" />
+                )}
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-navy text-base font-bold">{t('emergencyTitle')}</h3>
+                  <h3 className="text-navy text-base font-bold">
+                    {currentTab === 'active'
+                      ? t('emergencyTabActive')
+                      : t('emergencyTabHistory')}
+                  </h3>
                   <span className="text-[0.6875rem] font-bold text-navy/90 bg-azure/60 px-2.5 py-0.5 rounded-full border border-navy/15 shadow-2xs">
-                    {totalRequests} permintaan
+                    {totalRequests} {t('requestsCount', { count: totalRequests }) || 'permintaan'}
                   </span>
                 </div>
                 <p className="text-muted-foreground text-xs mt-0.5">
-                  {t('emergencyDescription')}
+                  {currentTab === 'active'
+                    ? t('emergencyDescription')
+                    : t('emergencyHistoryDescription')}
                 </p>
               </div>
             </div>
@@ -170,11 +264,28 @@ export function EmergencyTab({
                   ariaLabel={t('filterDataStatus')}
                 >
                   <option value="all">{t('filterAllDataStatuses')}</option>
-                  <option value="pending">{tDynamic('status.pending', { value: 'Menunggu' })}</option>
-                  <option value="reviewed">{tDynamic('status.reviewed', { value: 'Ditinjau' })}</option>
-                  <option value="approved">{tDynamic('status.approved', { value: 'Disetujui' })}</option>
-                  <option value="rejected">{tDynamic('status.rejected', { value: 'Ditolak' })}</option>
-                  <option value="expired">{tDynamic('status.expired', { value: 'Kadaluarsa' })}</option>
+                  {currentTab === 'active' ? (
+                    <>
+                      <option value="pending">
+                        {tDynamic('status.pending', { value: 'Menunggu' })}
+                      </option>
+                      <option value="reviewed">
+                        {tDynamic('status.reviewed', { value: 'Ditinjau' })}
+                      </option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="approved">
+                        {tDynamic('status.approved', { value: 'Disetujui' })}
+                      </option>
+                      <option value="rejected">
+                        {tDynamic('status.rejected', { value: 'Ditolak' })}
+                      </option>
+                      <option value="expired">
+                        {tDynamic('status.expired', { value: 'Kadaluarsa' })}
+                      </option>
+                    </>
+                  )}
                 </FilterSelect>
               </div>
 
@@ -194,7 +305,11 @@ export function EmergencyTab({
           <div className="divide-y divide-border/60">
             {pagedRequests.length === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center gap-2.5">
-                <p className="text-navy text-sm font-bold">{t('noFilteredEmergencyRequests')}</p>
+                <p className="text-navy text-sm font-bold">
+                  {currentTab === 'active'
+                    ? t('noFilteredEmergencyRequests')
+                    : t('noFilteredEmergencyHistory')}
+                </p>
                 <FilterResetButton
                   onClick={() => {
                     clearFilters(['status', 'q']);
@@ -236,21 +351,29 @@ export function EmergencyTab({
             </div>
           ) : null}
         </section>
-      ) : !emergencyKey ? (
+      ) : (
         <div className="border-border bg-card shadow-soft flex flex-col items-center justify-center gap-3.5 rounded-2xl border py-10 sm:py-14 px-6 text-center">
           <span className="bg-navy/5 text-navy flex size-12 items-center justify-center rounded-2xl ring-1 ring-navy/10">
-            <KeyRound className="size-6" aria-hidden="true" />
+            {currentTab === 'active' ? (
+              <KeyRound className="size-6" aria-hidden="true" />
+            ) : (
+              <History className="size-6" aria-hidden="true" />
+            )}
           </span>
           <div className="space-y-1.5 max-w-md mx-auto text-center">
             <p className="text-navy text-sm font-bold text-center">
-              {t('noEmergencyRequests')}
+              {currentTab === 'active'
+                ? t('noEmergencyRequests')
+                : t('noEmergencyHistory')}
             </p>
             <p className="text-muted-foreground text-xs leading-relaxed text-center">
-              {t('noEmergencyRequestsBody')}
+              {currentTab === 'active'
+                ? t('noEmergencyRequestsBody')
+                : t('noEmergencyHistoryBody')}
             </p>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -303,6 +426,22 @@ function EmergencyRequestRow({
             <span className="font-semibold">Batas:</span>
             <span>{dateFormatter.format(new Date(request.request_expires_at))}</span>
           </div>
+
+          {request.approved_by ? (
+            <div className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-md text-[0.6875rem]">
+              <CheckCircle2 className="size-3 text-emerald-600 shrink-0" />
+              <span className="font-semibold">Disetujui oleh:</span>
+              <span>{request.approved_by}</span>
+            </div>
+          ) : null}
+
+          {request.reviewed_by ? (
+            <div className="inline-flex items-center gap-1.5 bg-muted/40 border border-border/50 px-2 py-0.5 rounded-md text-[0.6875rem]">
+              <User className="size-3 text-navy/60 shrink-0" />
+              <span className="font-semibold text-navy/80">Ditinjau oleh:</span>
+              <span>{request.reviewed_by}</span>
+            </div>
+          ) : null}
         </div>
       </div>
 

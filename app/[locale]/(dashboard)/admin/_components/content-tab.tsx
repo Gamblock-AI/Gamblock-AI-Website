@@ -3,15 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
-  Archive,
   ArrowDown,
+  ArrowLeft,
   ArrowRight,
   ArrowUp,
   BookOpen,
+  Check,
+  Clock,
   ExternalLink,
   History,
   ImageIcon,
   Plus,
+  RotateCcw,
   Save,
   Search,
   Trash2,
@@ -21,6 +24,14 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Pagination } from '@/components/dashboard/pagination';
 import {
   FilterResetButton,
@@ -325,32 +336,170 @@ export const makeDocument = (idTitle = '', enTitle = ''): AdminEducationDocument
   ],
 });
 
-function normalizeEducationDocument(document: AdminEducationDocument) {
-  const normalized = structuredClone(document);
-  normalized.audience ||= 'all';
-  normalized.experience_type ||= 'article';
-  normalized.reviewer_name ||= document.reviewer_name || '';
-  normalized.reviewed_at ||= document.reviewed_at || '';
-  for (const locale of ['id', 'en'] as const) {
-    normalized.translations[locale].reviewer_role ||= document.reviewer_role || '';
+function normalizeEducationDocument(
+  document?: AdminEducationDocument | null
+): AdminEducationDocument {
+  const defaultDoc = makeDocument();
+  if (!document || typeof document !== 'object') {
+    return defaultDoc;
   }
-  for (const section of normalized.sections) {
-    const idCheck = section.translations?.id?.knowledge_check;
-    const enCheck = section.translations?.en?.knowledge_check;
-    if (idCheck && enCheck) {
-      if (!enCheck.id || enCheck.id !== idCheck.id) {
-        enCheck.id = idCheck.id || `check-${crypto.randomUUID().slice(0, 8)}`;
-        idCheck.id = enCheck.id;
-      }
-      if (idCheck.correct_choice_id && !enCheck.choices.some((c) => c.id === enCheck.correct_choice_id)) {
-        enCheck.correct_choice_id = idCheck.correct_choice_id;
-      }
-      if (enCheck.correct_choice_id && !idCheck.choices.some((c) => c.id === idCheck.correct_choice_id)) {
-        idCheck.correct_choice_id = enCheck.correct_choice_id;
-      }
-    }
-  }
-  return normalized;
+  const raw = structuredClone(document);
+
+  const audience = raw.audience || defaultDoc.audience;
+  const experience_type = raw.experience_type || defaultDoc.experience_type;
+  const category = raw.category || defaultDoc.category;
+  const estimated_minutes =
+    typeof raw.estimated_minutes === 'number' && raw.estimated_minutes > 0
+      ? raw.estimated_minutes
+      : defaultDoc.estimated_minutes;
+  const reviewer_name = raw.reviewer_name || '';
+  const reviewer_role = raw.reviewer_role || '';
+  const reviewed_at = raw.reviewed_at || defaultDoc.reviewed_at;
+
+  const rawTranslations = raw.translations || {};
+  const translations: AdminEducationDocument['translations'] = {
+    id: {
+      title: rawTranslations.id?.title || '',
+      summary: rawTranslations.id?.summary || '',
+      learning_objective: rawTranslations.id?.learning_objective || '',
+      disclaimer: rawTranslations.id?.disclaimer || '',
+      reviewer_role:
+        rawTranslations.id?.reviewer_role || raw.reviewer_role || '',
+    },
+    en: {
+      title: rawTranslations.en?.title || '',
+      summary: rawTranslations.en?.summary || '',
+      learning_objective: rawTranslations.en?.learning_objective || '',
+      disclaimer: rawTranslations.en?.disclaimer || '',
+      reviewer_role:
+        rawTranslations.en?.reviewer_role || raw.reviewer_role || '',
+    },
+  };
+
+  const thumbnails = Array.isArray(raw.thumbnails)
+    ? raw.thumbnails.filter(Boolean)
+    : [];
+  const videos = Array.isArray(raw.videos) ? raw.videos.filter(Boolean) : [];
+  const sources =
+    Array.isArray(raw.sources) && raw.sources.length > 0
+      ? raw.sources.filter(Boolean).map((s) => ({
+          title: s?.title || '',
+          publisher: s?.publisher || '',
+          url: s?.url || 'https://',
+          accessed_at: s?.accessed_at || new Date().toISOString(),
+        }))
+      : defaultDoc.sources;
+
+  const rawSections = Array.isArray(raw.sections)
+    ? raw.sections.filter(Boolean)
+    : [];
+  const sections: AdminEducationDocument['sections'] =
+    rawSections.length > 0
+      ? rawSections.map((sec, index) => {
+          const sectionID = sec?.id || `section-${index + 1}`;
+          const sort_order =
+            typeof sec?.sort_order === 'number' ? sec.sort_order : index;
+          const required = sec?.required ?? true;
+
+          const secTrans = sec?.translations || {};
+          const idSecTrans = secTrans.id || {};
+          const enSecTrans = secTrans.en || {};
+
+          const normalizeCheck = (
+            rawCheck: unknown,
+            fallbackCheckID: string
+          ) => {
+            if (!rawCheck || typeof rawCheck !== 'object') {
+              return makeCheck(fallbackCheckID);
+            }
+            const checkObj = rawCheck as Record<string, unknown>;
+            const rawChoices = Array.isArray(checkObj.choices)
+              ? checkObj.choices.filter(
+                  (c: unknown): c is Record<string, unknown> =>
+                    Boolean(c) && typeof c === 'object'
+                )
+              : [];
+            const choices =
+              rawChoices.length > 0
+                ? rawChoices.map((c, cIdx) => ({
+                    id:
+                      typeof c.id === 'string' && c.id
+                        ? c.id
+                        : String.fromCharCode(97 + cIdx),
+                    text: typeof c.text === 'string' ? c.text : '',
+                  }))
+                : [
+                    { id: 'a', text: '' },
+                    { id: 'b', text: '' },
+                  ];
+            return {
+              id: (typeof checkObj.id === 'string' && checkObj.id) || fallbackCheckID,
+              question:
+                typeof checkObj.question === 'string' ? checkObj.question : '',
+              choices,
+              correct_choice_id:
+                (typeof checkObj.correct_choice_id === 'string' &&
+                  checkObj.correct_choice_id) ||
+                choices[0]?.id ||
+                'a',
+              explanation:
+                typeof checkObj.explanation === 'string'
+                  ? checkObj.explanation
+                  : '',
+              required: typeof checkObj.required === 'boolean' ? checkObj.required : true,
+            };
+          };
+
+          const checkID = `check-${sectionID}`;
+          const idCheck = normalizeCheck(idSecTrans.knowledge_check, checkID);
+          const enCheck = normalizeCheck(
+            enSecTrans.knowledge_check,
+            idCheck.id
+          );
+
+          // Keep check IDs and correct choices aligned
+          enCheck.id = idCheck.id;
+          if (
+            idCheck.correct_choice_id &&
+            !enCheck.choices.some((c) => c?.id === idCheck.correct_choice_id)
+          ) {
+            enCheck.correct_choice_id = idCheck.correct_choice_id;
+          }
+
+          return {
+            id: sectionID,
+            sort_order,
+            required,
+            translations: {
+              id: {
+                title: idSecTrans.title || '',
+                content: idSecTrans.content || emptyRichText(),
+                knowledge_check: idCheck,
+              },
+              en: {
+                title: enSecTrans.title || '',
+                content: enSecTrans.content || emptyRichText(),
+                knowledge_check: enCheck,
+              },
+            },
+          };
+        })
+      : [makeSection(0)];
+
+  return {
+    audience,
+    experience_type,
+    category,
+    estimated_minutes,
+    reviewer_name,
+    reviewer_role,
+    reviewed_at,
+    translations,
+    thumbnails,
+    videos,
+    sources,
+    sections,
+  };
 }
 
 interface DraftValidationError {
@@ -623,8 +772,9 @@ interface ContentTabProps {
   ) => Promise<AdminEducationModule>;
   transitionModule: (
     id: string,
-    action: 'submit-review' | 'publish' | 'archive'
+    action: 'submit-review' | 'publish'
   ) => Promise<AdminEducationModule>;
+  deleteModule: (id: string) => Promise<unknown>;
   uploadEducationMedia: (
     file: File,
     purpose: 'thumbnail' | 'content'
@@ -675,9 +825,16 @@ export function ContentTab(props: ContentTabProps) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [revisions, setRevisions] = useState<AdminEducationRevision[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [rollbackTarget, setRollbackTarget] =
+    useState<AdminEducationRevision | null>(null);
+  const [rollbackReason, setRollbackReason] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [moduleToDelete, setModuleToDelete] =
+    useState<AdminEducationModule | null>(null);
   const [isStuck, setIsStuck] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
+  const deletedModuleIdRef = useRef<string | null>(null);
 
   const {
     getFilter,
@@ -803,11 +960,19 @@ export function ContentTab(props: ContentTabProps) {
   }, [selected, isCreating]);
 
   useEffect(() => {
-    if (!moduleID || moduleID === 'new' || selected?.id === moduleID) return;
+    if (
+      !moduleID ||
+      moduleID === 'new' ||
+      selected?.id === moduleID ||
+      selected?.slug === moduleID ||
+      deletedModuleIdRef.current === moduleID
+    ) {
+      return;
+    }
     let active = true;
 
-    const matchedModule = props.modules.find(
-      (m) => m.id === moduleID || m.slug === moduleID
+    const matchedModule = (props.modules || []).find(
+      (m) => Boolean(m) && (m.id === moduleID || m.slug === moduleID)
     );
     const targetID = matchedModule?.id || moduleID;
 
@@ -820,14 +985,16 @@ export function ContentTab(props: ContentTabProps) {
         setFieldErrors({});
         setDocument(normalizeEducationDocument(educationModule.draft_document));
       })
-      .catch((error) => {
-        if (active) toastError(error, t('fetchError'));
+      .catch(() => {
+        if (active) {
+          router.replace('/admin/content');
+        }
       });
 
     return () => {
       active = false;
     };
-  }, [getModule, moduleID, props.modules, selected?.id, t]);
+  }, [getModule, moduleID, props.modules, router, selected?.id, selected?.slug]);
 
   const mutate = (callback: (draft: AdminEducationDocument) => void) =>
     setDocument((current) => {
@@ -879,7 +1046,7 @@ export function ContentTab(props: ContentTabProps) {
   };
 
   const transition = async (
-    action: 'submit-review' | 'publish' | 'archive'
+    action: 'submit-review' | 'publish'
   ) => {
     if (action === 'publish' && document) {
       const errors = validateAllEducationDraft(slug, document);
@@ -959,9 +1126,7 @@ export function ContentTab(props: ContentTabProps) {
       toastSuccess(
         action === 'publish'
           ? t('modulePublished')
-          : action === 'archive'
-            ? t('moduleArchived')
-            : t('moduleSubmitted')
+          : t('moduleSubmitted')
       );
     } catch (error) {
       toastError(error, t('moduleTransitionError'));
@@ -974,6 +1139,8 @@ export function ContentTab(props: ContentTabProps) {
     setBusy(true);
     try {
       setRevisions(await props.getModuleRevisions(selected.id));
+      setRollbackTarget(null);
+      setRollbackReason('');
       setHistoryOpen(true);
     } catch (error) {
       toastError(error, t('fetchError'));
@@ -981,24 +1148,61 @@ export function ContentTab(props: ContentTabProps) {
       setBusy(false);
     }
   };
-  const rollback = async (revisionID: string) => {
-    if (!selected) return;
-    const reason = window.prompt(t('rollbackReasonPrompt'));
+  const handleConfirmRollback = async () => {
+    if (!selected || !rollbackTarget) return;
+    const reason = rollbackReason.trim();
     if (!reason) return;
     setBusy(true);
     try {
       const updated = await props.rollbackModule(
         selected.id,
-        revisionID,
+        rollbackTarget.id,
         reason
       );
       setSelected(updated);
       setSlug(updated.slug);
       setDocument(normalizeEducationDocument(updated.draft_document));
       setHistoryOpen(false);
+      setRollbackTarget(null);
+      setRollbackReason('');
       toastSuccess(t('rollbackSuccess'));
     } catch (error) {
       toastError(error, t('rollbackError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDeleteClick = (targetModule?: AdminEducationModule) => {
+    const target = targetModule || selected;
+    if (!target) return;
+    setModuleToDelete(target);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!moduleToDelete) return;
+    const deletedId = moduleToDelete.id;
+    deletedModuleIdRef.current = deletedId;
+    setBusy(true);
+    try {
+      await props.deleteModule(deletedId);
+      toastSuccess(t('moduleDeleted'));
+      setDeleteConfirmOpen(false);
+      setModuleToDelete(null);
+      if (
+        selected?.id === deletedId ||
+        selected?.slug === moduleID ||
+        moduleID === deletedId
+      ) {
+        setSelected(null);
+        setDocument(null);
+        setSlug('');
+        setIsCreating(false);
+        router.replace('/admin/content');
+      }
+    } catch (error) {
+      toastError(error, t('fetchError'));
     } finally {
       setBusy(false);
     }
@@ -1106,7 +1310,12 @@ export function ContentTab(props: ContentTabProps) {
       }
     };
 
-  if (moduleID && moduleID !== 'new' && selected?.id !== moduleID)
+  if (
+    moduleID &&
+    moduleID !== 'new' &&
+    selected?.id !== moduleID &&
+    selected?.slug !== moduleID
+  )
     return (
       <div className="border-border bg-card flex min-h-72 items-center justify-center rounded-2xl border">
         <p className="text-muted-foreground text-sm">{t('loading')}</p>
@@ -1152,7 +1361,7 @@ export function ContentTab(props: ContentTabProps) {
               />
 
               <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0">
-                {(['all', 'draft', 'in_review', 'published', 'archived'] as const).map((status) => {
+                {(['all', 'draft', 'in_review', 'published'] as const).map((status) => {
                   const isActive = catalogStatus === status;
                   const statusLabel =
                     status === 'all'
@@ -1316,6 +1525,43 @@ export function ContentTab(props: ContentTabProps) {
             />
           </div>
         ) : null}
+
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-navy flex items-center gap-2">
+                <Trash2 className="size-5 text-destructive" />
+                {t('deleteModuleTitle')}
+              </DialogTitle>
+              <DialogDescription className="pt-2 text-xs leading-relaxed text-muted-foreground">
+                {t('deleteModuleConfirm', {
+                  title: moduleToDelete?.title || moduleToDelete?.slug || '',
+                })}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setModuleToDelete(null);
+                }}
+                disabled={busy}
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => void handleConfirmDelete()}
+                disabled={busy}
+              >
+                {t('deleteModule')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
 
@@ -1397,71 +1643,19 @@ export function ContentTab(props: ContentTabProps) {
             <Upload className="size-4" />
             {t('publish')}
           </Button>
-          {!isCreating && selected?.status === 'published' ? (
+          {!isCreating && selected ? (
             <Button
               variant="outline"
               disabled={busy}
-              onClick={() => void transition('archive')}
+              onClick={() => handleDeleteClick()}
+              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
-              <Archive className="size-4" />
-              {t('archive')}
+              <Trash2 className="size-4" />
+              {t('deleteModule')}
             </Button>
           ) : null}
         </div>
       </div>
-
-
-      {historyOpen ? (
-        <section className="border-border bg-card rounded-2xl border p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-navy font-extrabold">
-                {t('revisionHistory')}
-              </h3>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {t('revisionHistoryHelp')}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setHistoryOpen(false)}
-            >
-              <X className="size-4" />
-              {t('close')}
-            </Button>
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {revisions.map((revision) => (
-              <div
-                key={revision.id}
-                className="border-border rounded-xl border p-4"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-navy font-bold">#{revision.revision}</p>
-                  <span className="bg-muted rounded-full px-2 py-1 text-[10px] font-bold uppercase">
-                    {revision.kind}
-                  </span>
-                </div>
-                <p className="text-muted-foreground mt-2 text-xs">
-                  {new Date(revision.created_at).toLocaleString()}
-                </p>
-                <Button
-                  className="mt-3"
-                  size="sm"
-                  variant="outline"
-                  disabled={
-                    busy || revision.revision === selected?.draft_revision
-                  }
-                  onClick={() => void rollback(revision.id)}
-                >
-                  {t('restoreRevision')}
-                </Button>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="border-border bg-muted flex w-fit rounded-xl border p-1">
@@ -2575,6 +2769,281 @@ export function ContentTab(props: ContentTabProps) {
           ))}
         </div>
       </section>
+
+      <Dialog
+        open={historyOpen}
+        onOpenChange={(open) => {
+          setHistoryOpen(open);
+          if (!open) {
+            setRollbackTarget(null);
+            setRollbackReason('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg p-5 gap-3">
+          {rollbackTarget ? (
+            <div className="space-y-3">
+              <DialogHeader className="gap-1 pb-1">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => {
+                      setRollbackTarget(null);
+                      setRollbackReason('');
+                    }}
+                    className="size-7 rounded-lg text-muted-foreground hover:text-navy hover:bg-azure/50"
+                    title={t('backToHistory')}
+                  >
+                    <ArrowLeft className="size-4" />
+                  </Button>
+                  <DialogTitle className="text-navy text-base font-bold">
+                    {t('rollbackConfirmTitle')}
+                  </DialogTitle>
+                </div>
+                <DialogDescription className="text-xs text-muted-foreground leading-relaxed pl-9">
+                  {t('rollbackConfirmHelp')}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="rounded-xl border border-navy/20 bg-azure/25 p-3.5 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-navy text-sm font-extrabold">
+                    {t('versionItemLabel', {
+                      version: rollbackTarget.revision,
+                    })}
+                  </span>
+                  <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {rollbackTarget.kind === 'published'
+                      ? 'Terbit'
+                      : rollbackTarget.kind === 'draft'
+                        ? 'Draf'
+                        : 'Pemulihan'}
+                  </span>
+                </div>
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                  <Clock className="size-3.5 text-muted-foreground/70" />
+                  <span>
+                    {new Date(rollbackTarget.created_at).toLocaleString(
+                      locale === 'id' ? 'id-ID' : 'en-US',
+                      { dateStyle: 'medium', timeStyle: 'short' }
+                    )}
+                  </span>
+                  {rollbackTarget.created_by && (
+                    <>
+                      <span>•</span>
+                      <span className="truncate max-w-[160px]">
+                        oleh{' '}
+                        <strong className="font-semibold text-foreground">
+                          {rollbackTarget.created_by}
+                        </strong>
+                      </span>
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-navy flex items-center text-xs font-bold gap-1">
+                  <span>{t('rollbackReasonLabel')}</span>
+                  <span className="text-destructive">*</span>
+                </label>
+                <textarea
+                  className={`${adminFieldClassName} min-h-20 py-2 text-xs leading-relaxed`}
+                  rows={3}
+                  placeholder={t('rollbackReasonPlaceholder')}
+                  value={rollbackReason}
+                  onChange={(e) => setRollbackReason(e.target.value)}
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <DialogFooter className="pt-2 sm:justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setRollbackTarget(null);
+                    setRollbackReason('');
+                  }}
+                  disabled={busy}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="primary"
+                  disabled={busy || !rollbackReason.trim()}
+                  onClick={() => void handleConfirmRollback()}
+                  className="font-bold gap-1.5 bg-navy text-white hover:bg-navy-light"
+                >
+                  <RotateCcw className="size-3.5" />
+                  {t('confirmRollback')}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <DialogHeader className="gap-1 pb-1">
+                <DialogTitle className="text-navy flex items-center gap-2 text-base font-bold">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-azure text-navy">
+                    <History className="size-4" />
+                  </span>
+                  {t('revisionHistory')}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                  {t('revisionHistoryHelp')}
+                </DialogDescription>
+              </DialogHeader>
+
+              {/* Revision List (Clean & Non-redundant) */}
+              <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-0.5">
+                {revisions.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
+                    {t('noRevisions')}
+                  </div>
+                ) : (
+                  revisions.map((revision) => {
+                    const isCurrentDraft =
+                      revision.revision === selected?.draft_revision;
+                    const isPublished =
+                      revision.revision === selected?.published_revision;
+
+                    return (
+                      <div
+                        key={revision.id}
+                        className={cn(
+                          'flex items-center justify-between gap-3 rounded-xl border p-3 transition-all',
+                          isCurrentDraft
+                            ? 'border-navy/30 bg-azure/20 shadow-2xs'
+                            : 'border-border bg-card hover:border-navy/20 hover:bg-muted/30'
+                        )}
+                      >
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-navy text-sm font-extrabold">
+                              {t('versionItemLabel', {
+                                version: revision.revision,
+                              })}
+                            </span>
+                            {isCurrentDraft && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-navy px-2 py-0.5 text-[11px] font-bold text-white">
+                                <Check className="size-3" />
+                                {t('activeDraftBadge')}
+                              </span>
+                            )}
+                            {isPublished && (
+                              <span className="inline-flex items-center rounded-md bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                                {t('publishedBadge')}
+                              </span>
+                            )}
+                            {!isCurrentDraft &&
+                              !isPublished &&
+                              revision.kind === 'rollback' && (
+                                <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                  Pemulihan
+                                </span>
+                              )}
+                          </div>
+                          <p className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
+                            <Clock className="size-3.5 text-muted-foreground/70 shrink-0" />
+                            <span>
+                              {new Date(revision.created_at).toLocaleString(
+                                locale === 'id' ? 'id-ID' : 'en-US',
+                                { dateStyle: 'medium', timeStyle: 'short' }
+                              )}
+                            </span>
+                            {revision.created_by && (
+                              <>
+                                <span>•</span>
+                                <span className="truncate max-w-[160px]">
+                                  oleh{' '}
+                                  <strong className="font-semibold text-foreground">
+                                    {revision.created_by}
+                                  </strong>
+                                </span>
+                              </>
+                            )}
+                          </p>
+                        </div>
+
+                        {!isCurrentDraft && (
+                          <div className="shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={busy}
+                              onClick={() => {
+                                setRollbackTarget(revision);
+                                setRollbackReason('');
+                              }}
+                              className="h-8 gap-1.5 text-xs font-bold text-navy hover:bg-navy hover:text-white"
+                            >
+                              <RotateCcw className="size-3.5" />
+                              {t('restoreRevision')}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <DialogFooter className="pt-1 sm:justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setHistoryOpen(false)}
+                >
+                  {t('close')}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-navy flex items-center gap-2">
+              <Trash2 className="size-5 text-destructive" />
+              {t('deleteModuleTitle')}
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-xs leading-relaxed text-muted-foreground">
+              {t('deleteModuleConfirm', {
+                title: moduleToDelete?.title || moduleToDelete?.slug || '',
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDeleteConfirmOpen(false);
+                setModuleToDelete(null);
+              }}
+              disabled={busy}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => void handleConfirmDelete()}
+              disabled={busy}
+            >
+              {t('deleteModule')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

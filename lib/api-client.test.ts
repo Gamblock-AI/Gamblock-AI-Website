@@ -180,5 +180,13 @@ describe('api-client reauthenticate and recent-auth', () => {
     expect(requestReauthSpy).toHaveBeenCalledTimes(1);
     expect(attempt).toBe(2);
     expect(result).toEqual({ status: 'account_disabled' });
+
+    // Ensure the second call received the replaced single Authorization header without duplicates
+    const secondCallHeaders = mockFetch.mock.calls[1][1]?.headers;
+    const authHeader =
+      secondCallHeaders instanceof Headers
+        ? secondCallHeaders.get('Authorization')
+        : (secondCallHeaders as Record<string, string>)?.Authorization;
+    expect(authHeader).toBe('Bearer fresh-recent-token');
   });
 });

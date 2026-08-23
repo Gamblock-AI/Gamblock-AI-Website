@@ -85,7 +85,7 @@ export function AdminEmptyTable({
 }: {
   colSpan: number;
   text: string;
-  description?: string;
+  description?: React.ReactNode;
   icon?: LucideIcon;
   className?: string;
 }) {
@@ -114,6 +114,8 @@ export function AdminEmptyTable({
     </TableRow>
   );
 }
+
+export const TableEmptyRow = AdminEmptyTable;
 
 const statusBadgeStyles: Record<string, string> = {
   // Published / Active / Success / Resolved (Sage / Emerald Green)
