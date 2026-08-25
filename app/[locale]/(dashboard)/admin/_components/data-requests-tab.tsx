@@ -6,10 +6,11 @@ import {
   Filter,
   History,
   Inbox,
+  Loader2,
   RotateCcw,
   ShieldAlert,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -59,11 +60,21 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
   const t = useTranslations('adminPage');
   const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
+  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab =
     (searchParams.get('tab') as DataRequestTabSection) || 'active';
+
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+    [locale]
+  );
 
   const [promptModal, setPromptModal] = useState<{
     targetId: string;
@@ -73,6 +84,7 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
   } | null>(null);
   const [modalReason, setModalReason] = useState('');
   const [modalBusy, setModalBusy] = useState(false);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const dataStatusFilter = searchParams.get('dataStatus') || 'all';
@@ -151,6 +163,18 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
     return t('dataRequestTypeExport');
   };
 
+  const handleRetry = async (requestId: string) => {
+    setRetryingId(requestId);
+    try {
+      await props.retryDataRequest(requestId);
+      toastSuccess(t('requestRetried'));
+    } catch (err) {
+      toastError(err, t('dataRequestActionError'));
+    } finally {
+      setRetryingId(null);
+    }
+  };
+
   const handleModalSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!promptModal || !modalReason.trim()) return;
@@ -199,7 +223,7 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
             href: `${ROUTES.ADMIN_DATA_REQUESTS}?tab=history`,
             activeAdornment:
               historyRequestsList.length > 0 ? (
-                <span className="ml-1 rounded-full bg-muted-foreground/15 px-2 py-0.2 text-[10px] font-bold text-muted-foreground">
+                <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
                   {historyRequestsList.length}
                 </span>
               ) : null,
@@ -218,16 +242,11 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
               )}
             </span>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-navy text-base font-bold">
-                  {currentTab === 'active'
-                    ? t('dataRequestsTitle')
-                    : t('dataRequestHistoryTitle')}
-                </h3>
-                <span className="text-[0.6875rem] font-bold text-navy/90 bg-azure/60 px-2.5 py-0.5 rounded-full border border-navy/15 shadow-2xs">
-                  {totalDataRequests} {t('requestsCount', { count: totalDataRequests }) || 'permintaan'}
-                </span>
-              </div>
+              <h3 className="text-navy text-base font-bold">
+                {currentTab === 'active'
+                  ? t('dataRequestsTitle')
+                  : t('dataRequestHistoryTitle')}
+              </h3>
               <p className="text-muted-foreground mt-0.5 text-xs">
                 {currentTab === 'active'
                   ? t('dataRequestsHelp')
@@ -309,14 +328,17 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
               <TableHead className="font-bold text-xs">{t('thId')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thType')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thStatus')}</TableHead>
+              <TableHead className="font-bold text-xs">{t('thTime')}</TableHead>
               <TableHead className="font-bold text-xs">{t('retryCount')}</TableHead>
-              <TableHead className="text-right font-bold text-xs">{t('actions')}</TableHead>
+              {currentTab === 'active' ? (
+                <TableHead className="text-right font-bold text-xs">{t('actions')}</TableHead>
+              ) : null}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredRequests.length === 0 ? (
               <TableEmptyRow
-                colSpan={5}
+                colSpan={currentTab === 'active' ? 6 : 5}
                 icon={FileClock}
                 text={
                   hasActiveFilters
@@ -354,42 +376,57 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
                   <TableCell>
                     <AdminStatusBadge status={request.status} />
                   </TableCell>
+                  <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                    {request.created_at
+                      ? formatDateTime(dateFormatter, request.created_at)
+                      : '—'}
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
-                    {request.retry_count}
+                    {t('timesSuffix', { count: request.retry_count })}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      {request.status === 'failed' ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void props.retryDataRequest(request.id)}
-                          className="h-8 text-xs font-semibold"
-                        >
-                          <RotateCcw className="size-3.5 mr-1" />
-                          {t('retry')}
-                        </Button>
-                      ) : null}
-                      {request.status === 'pending' ||
-                      request.status === 'queued' ? (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            setPromptModal({
-                              targetId: request.id,
-                              title: t('rejectDataRequestTitle'),
-                              description: t('rejectDataRequestHelp'),
-                              itemSummary: `${t('requestLabel', { id: request.id })} • ${dataRequestTitle(request)}`,
-                            })
-                          }
-                          className="h-8 text-xs font-semibold"
-                        >
-                          {t('reject')}
-                        </Button>
-                      ) : null}
-                    </div>
-                  </TableCell>
+                  {currentTab === 'active' ? (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {request.status === 'failed' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={retryingId === request.id}
+                            onClick={() => void handleRetry(request.id)}
+                            className="h-8 text-xs font-semibold"
+                          >
+                            {retryingId === request.id ? (
+                              <Loader2 className="size-3.5 mr-1 animate-spin" />
+                            ) : (
+                              <RotateCcw className="size-3.5 mr-1" />
+                            )}
+                            {retryingId === request.id ? t('retrying') : t('retry')}
+                          </Button>
+                        ) : request.status === 'pending' ||
+                          request.status === 'queued' ? (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              setPromptModal({
+                                targetId: request.id,
+                                title: t('rejectDataRequestTitle'),
+                                description: t('rejectDataRequestHelp'),
+                                itemSummary: `${t('requestLabel', { id: request.id })} • ${dataRequestTitle(request)}`,
+                              })
+                            }
+                            className="h-8 text-xs font-semibold"
+                          >
+                            {t('reject')}
+                          </Button>
+                        ) : (
+                          <span className="inline-flex items-center rounded-md border border-border/80 bg-muted/40 px-2 py-0.5 text-[0.6875rem] font-medium text-muted-foreground">
+                            {t('noActionNeeded')}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               ))
             )}
@@ -492,10 +529,16 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
               >
                 {modalBusy ? t('submitting') : t('confirmReject')}
               </Button>
-            </DialogFooter>
+              </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
     </div>
   );
+}
+
+function formatDateTime(formatter: Intl.DateTimeFormat, value?: string) {
+  if (!value) return '-';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? '-' : formatter.format(parsed);
 }

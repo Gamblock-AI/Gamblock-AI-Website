@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEducationModule } from '@/hooks/use-education';
-import { Link } from '@/i18n/routing';
+import { useBackNavigation } from '@/hooks/use-back-navigation';
 import { ROUTES } from '@/routes';
 import { ThumbnailCarousel } from '@/components/education/thumbnail-carousel';
 import { VideoGallery } from '@/components/education/video-gallery';
@@ -38,6 +38,7 @@ export default function EducationDetailPage({
   const { id } = use(params);
   const { module, loading, error, refetch, updateProgress, answerCheck } =
     useEducationModule(id, locale);
+  const { goBack } = useBackNavigation();
 
   const markMediaOpened = useCallback(
     (mediaID: string) => {
@@ -67,13 +68,14 @@ export default function EducationDetailPage({
   if (error || !module)
     return (
       <div className="mx-auto w-full max-w-3xl space-y-5">
-        <Link
-          href={ROUTES.EDUCATION}
+        <button
+          type="button"
+          onClick={() => goBack(ROUTES.EDUCATION)}
           className="text-navy inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold"
         >
           <ArrowLeft className="size-4" />
           {t('back')}
-        </Link>
+        </button>
         <Card className="p-10 text-center" role="alert">
           <BookOpen className="text-muted-foreground mx-auto size-10" />
           <h1 className="text-navy mt-5 text-2xl font-bold">
@@ -104,13 +106,14 @@ export default function EducationDetailPage({
   return (
     <article className="mx-auto w-full max-w-5xl space-y-5 pb-12">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link
-          href={ROUTES.EDUCATION}
+        <button
+          type="button"
+          onClick={() => goBack(ROUTES.EDUCATION)}
           className="text-navy hover:bg-navy/[0.04] focus-visible:ring-navy/30 inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold outline-none focus-visible:ring-2"
         >
           <ArrowLeft className="size-4" />
           {t('back')}
-        </Link>
+        </button>
         <div className="flex min-w-64 items-center gap-3">
           <div
             role="progressbar"

@@ -68,12 +68,17 @@ export interface AdminEducationMedia {
 export interface AdminSupportMessage {
   id: string;
   author_role: 'requester' | 'admin';
+  author_name?: string;
+  author_avatar_url?: string;
   content: string;
   created_at: string;
 }
 
 export interface AdminSupportCase {
   id: string;
+  user_id?: string;
+  user_name?: string;
+  user_avatar_url?: string;
   title: string;
   type: string;
   status: string;

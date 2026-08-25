@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { FadeSwap } from '@/components/common/fade-swap';
 import { FixedBackground } from '@/components/landing/FixedBackground';
 import { SkipLink } from '@/components/landing/SkipLink';
+import { useBackNavigation } from '@/hooks/use-back-navigation';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
 
@@ -34,6 +35,7 @@ const phases = [
 export default function PostInterventionPage() {
   const t = useTranslations('postIntervention');
   const reduce = useReducedMotion();
+  const { goBack } = useBackNavigation();
   const [running, setRunning] = useState(false);
   const [started, setStarted] = useState(false);
   const [complete, setComplete] = useState(false);
@@ -107,13 +109,14 @@ export default function PostInterventionPage() {
             className="flex items-center justify-between gap-4"
             aria-label={t('leave')}
           >
-            <Link
-              href={ROUTES.HOME}
+            <button
+              type="button"
+              onClick={() => goBack(ROUTES.HOME)}
               className="text-navy focus-visible:ring-navy/30 inline-flex min-h-10 sm:min-h-11 items-center gap-2 rounded-xl text-xs sm:text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
               {t('leave')}
-            </Link>
+            </button>
             <span className="border-sage/25 bg-sage/[0.06] text-sage inline-flex min-h-10 sm:min-h-11 items-center gap-2 rounded-xl border px-3 text-xs font-semibold">
               <ShieldCheck className="size-4" aria-hidden="true" />
               Gamblock-AI

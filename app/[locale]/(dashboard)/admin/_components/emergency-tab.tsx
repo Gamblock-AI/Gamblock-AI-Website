@@ -190,7 +190,7 @@ export function EmergencyTab({
             href: `${ROUTES.ADMIN_EMERGENCY}?tab=history`,
             activeAdornment:
               historyRequestsList.length > 0 ? (
-                <span className="ml-1 rounded-full bg-muted-foreground/15 px-2 py-0.2 text-[10px] font-bold text-muted-foreground">
+                <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
                   {historyRequestsList.length}
                 </span>
               ) : null,
@@ -211,16 +211,11 @@ export function EmergencyTab({
                 )}
               </span>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-navy text-base font-bold">
-                    {currentTab === 'active'
-                      ? t('emergencyTabActive')
-                      : t('emergencyTabHistory')}
-                  </h3>
-                  <span className="text-[0.6875rem] font-bold text-navy/90 bg-azure/60 px-2.5 py-0.5 rounded-full border border-navy/15 shadow-2xs">
-                    {totalRequests} {t('requestsCount', { count: totalRequests }) || 'permintaan'}
-                  </span>
-                </div>
+                <h3 className="text-navy text-base font-bold">
+                  {currentTab === 'active'
+                    ? t('emergencyTabActive')
+                    : t('emergencyTabHistory')}
+                </h3>
                 <p className="text-muted-foreground text-xs mt-0.5">
                   {currentTab === 'active'
                     ? t('emergencyDescription')
@@ -411,26 +406,26 @@ function EmergencyRequestRow({
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <div className="inline-flex items-center gap-1.5 bg-muted/40 border border-border/50 px-2 py-0.5 rounded-md">
             <User className="size-3 text-navy/60 shrink-0" />
-            <span className="font-semibold text-navy/80">Pemohon:</span>
+            <span className="font-semibold text-navy/80">{t('requester')}:</span>
             <span className="text-foreground font-medium">{request.requested_by}</span>
           </div>
 
           <div className="inline-flex items-center gap-1.5 bg-muted/40 border border-border/50 px-2 py-0.5 rounded-md font-mono text-[0.6875rem]">
             <Laptop className="size-3 text-navy/60 shrink-0" />
-            <span className="font-sans font-semibold text-navy/80">Perangkat:</span>
+            <span className="font-sans font-semibold text-navy/80">{t('device')}:</span>
             <span className="text-foreground">{request.device_id}</span>
           </div>
 
           <div className="inline-flex items-center gap-1.5 bg-amber/10 border border-amber/20 text-amber-900 dark:text-amber-300 px-2 py-0.5 rounded-md text-[0.6875rem]">
             <Clock3 className="size-3 text-amber-600 shrink-0" />
-            <span className="font-semibold">Batas:</span>
+            <span className="font-semibold">{t('expiry')}:</span>
             <span>{dateFormatter.format(new Date(request.request_expires_at))}</span>
           </div>
 
           {request.approved_by ? (
             <div className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-md text-[0.6875rem]">
               <CheckCircle2 className="size-3 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Disetujui oleh:</span>
+              <span className="font-semibold">{t('approvedBy')}:</span>
               <span>{request.approved_by}</span>
             </div>
           ) : null}
@@ -438,7 +433,7 @@ function EmergencyRequestRow({
           {request.reviewed_by ? (
             <div className="inline-flex items-center gap-1.5 bg-muted/40 border border-border/50 px-2 py-0.5 rounded-md text-[0.6875rem]">
               <User className="size-3 text-navy/60 shrink-0" />
-              <span className="font-semibold text-navy/80">Ditinjau oleh:</span>
+              <span className="font-semibold text-navy/80">{t('reviewedBy')}:</span>
               <span>{request.reviewed_by}</span>
             </div>
           ) : null}

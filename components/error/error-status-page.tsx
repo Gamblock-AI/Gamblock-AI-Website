@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, House, RefreshCw } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useBackNavigation } from '@/hooks/use-back-navigation';
 
 interface ErrorStatusPageProps {
   code: string;
@@ -30,15 +30,7 @@ export function ErrorStatusPage({
   retryLabel,
   onRetry,
 }: ErrorStatusPageProps) {
-  const router = useRouter();
-
-  const goBack = () => {
-    if (window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push(homeHref);
-  };
+  const { goBack } = useBackNavigation({ fallbackHref: homeHref });
 
   return (
     <main className="text-navy relative isolate min-h-[100dvh] overflow-hidden bg-background dark:bg-navy-dark dark:text-white">

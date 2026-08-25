@@ -1,10 +1,12 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { ArrowLeft, CircleGauge, Lightbulb } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { DashboardPage } from '@/components/dashboard/dashboard-page';
-import { Link } from '@/i18n/routing';
+import { useBackNavigation } from '@/hooks/use-back-navigation';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
 
@@ -66,18 +68,20 @@ export function GamePageShell({
   playAreaLabel,
 }: GamePageShellProps) {
   const t = useTranslations('miniGames');
+  const { goBack } = useBackNavigation();
   const tone = accentClasses[accent];
   const hasAside = Boolean(instructions || status || actions);
 
   return (
     <DashboardPage className="max-w-[1240px]">
-      <Link
-        href={ROUTES.MINI_GAMES}
+      <button
+        type="button"
+        onClick={() => goBack(ROUTES.MINI_GAMES)}
         className="text-muted-foreground hover:text-navy focus-visible:ring-navy/35 inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         {t('shell.backToHub')}
-      </Link>
+      </button>
 
       <header
         className={cn(

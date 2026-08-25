@@ -11,7 +11,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { DashboardPage } from '@/components/dashboard/dashboard-page';
 import { Pagination } from '@/components/dashboard/pagination';
 import { usePagination } from '@/hooks/use-pagination';
-import { Link } from '@/i18n/routing';
+import { useBackNavigation } from '@/hooks/use-back-navigation';
 import { ROUTES } from '@/routes';
 import { slugifyProvider } from '@/lib/skills/external-platforms';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
@@ -107,6 +107,7 @@ export default function ProviderDetailPage({
   const locale = useLocale();
   const { providerSlug } = use(params);
   const hub = useLearningHub(locale);
+  const { goBack } = useBackNavigation();
 
   const providerItems = useMemo(
     () =>
@@ -130,13 +131,14 @@ export default function ProviderDetailPage({
 
   return (
     <DashboardPage>
-      <Link
-        href={ROUTES.SKILLS}
+      <button
+        type="button"
+        onClick={() => goBack(ROUTES.SKILLS)}
         className="text-navy hover:text-navy/70 focus-visible:ring-navy/30 inline-flex min-h-9 items-center gap-1.5 rounded-lg text-sm font-semibold outline-none focus-visible:ring-2"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         {t('backToDirections')}
-      </Link>
+      </button>
 
       <div className="border-border/80 bg-gradient-to-r from-card via-azure/15 to-card shadow-2xs mt-3 flex items-center gap-4 rounded-2xl border p-4 sm:p-5">
         {provider?.provider_logo_url ? (

@@ -68,16 +68,16 @@ export function FilterToggleButton({
 }: FilterToggleButtonProps) {
   return (
     <Button
-      variant={isExpanded || hasActiveFilters ? 'outline' : 'ghost'}
+      variant="outline"
       size="sm"
       onClick={onToggle}
       className={cn(
-        'h-8.5 px-3 text-xs font-bold transition-all rounded-xl shadow-2xs',
+        'h-8.5 px-3 text-xs font-bold transition-all rounded-xl shadow-2xs border-border/80',
         hasActiveFilters
           ? 'border-navy/40 bg-navy/5 text-navy hover:bg-navy/10'
           : isExpanded
-            ? 'bg-muted/60 text-navy'
-            : 'text-muted-foreground hover:text-navy',
+            ? 'bg-muted/60 text-navy border-navy/30'
+            : 'bg-card text-muted-foreground hover:text-navy hover:bg-muted/30 hover:border-border',
         className
       )}
     >

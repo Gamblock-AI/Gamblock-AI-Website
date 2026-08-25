@@ -3,15 +3,18 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
+  Eye,
   Filter,
   History,
   Inbox,
-  MessageSquare,
+  Send,
+  ShieldCheck,
   UserCheck,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { AvatarImage } from '@/components/account/avatar-image';
 import {
   Dialog,
   DialogContent,
@@ -36,7 +39,10 @@ import { toastError, toastSuccess } from '@/lib/feedback';
 import { CompactTabNav } from '@/components/common/compact-tab-nav';
 import { ROUTES } from '@/routes';
 import { usePathname, useRouter } from '@/i18n/routing';
-import { normalizeSupportStatus } from '@/lib/i18n/dynamic-labels';
+import {
+  dynamicLabelKey,
+  normalizeSupportStatus,
+} from '@/lib/i18n/dynamic-labels';
 import {
   FilterResetButton,
   FilterSelect,
@@ -66,6 +72,7 @@ export function SupportTab(props: SupportTabProps) {
   const t = useTranslations('adminPage');
   const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
+  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -75,6 +82,15 @@ export function SupportTab(props: SupportTabProps) {
   const [selected, setSelected] = useState<AdminSupportCase | null>(null);
   const [reply, setReply] = useState('');
   const [busy, setBusy] = useState(false);
+
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+    [locale]
+  );
 
   const [promptModal, setPromptModal] = useState<{
     action: 'claim_case' | 'release_case';
@@ -197,11 +213,15 @@ export function SupportTab(props: SupportTabProps) {
   }, [caseID, getSupportCase, selected?.id, t]);
 
   const openCase = async (item: AdminSupportCase) => {
-    if (!item.owner) {
+    const isCompleted =
+      normalizeSupportStatus(item.status) === 'resolved' ||
+      normalizeSupportStatus(item.status) === 'closed';
+
+    if (!item.owner && !isCompleted) {
       setPromptModal({
         action: 'claim_case',
         targetId: item.id,
-        title: t('claimCase'),
+        title: t('claimCaseTitle'),
         description: t('claimPromptHelp'),
         itemSummary: `${item.id} • ${item.title}`,
       });
@@ -233,12 +253,12 @@ export function SupportTab(props: SupportTabProps) {
         router.push(`${ROUTES.ADMIN_TICKETS}/${fullCase.id}`);
         toastSuccess(t('claimCaseSuccess'));
       } else if (promptModal.action === 'release_case') {
+        setSelected(null);
+        router.push(ROUTES.ADMIN_TICKETS);
         await props.releaseSupportCase(
           promptModal.targetId,
           modalReason.trim()
         );
-        setSelected(null);
-        router.push(ROUTES.ADMIN_TICKETS);
         toastSuccess(t('releaseCaseSuccess'));
       }
       setPromptModal(null);
@@ -372,152 +392,261 @@ export function SupportTab(props: SupportTabProps) {
           {t('backToSupport')}
         </Button>
 
-        <section className="border-border bg-card shadow-soft space-y-4 rounded-2xl border p-4 sm:p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/80 pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-navy text-lg font-bold">
-                  {selected.title}
-                </h3>
-                <SupportStatusBadge status={selected.status} />
-                <AdminPriorityBadge priority={selected.priority} />
-              </div>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {t('ticketIdLabel', { id: selected.id })}
-                {selected.owner
-                  ? ` • ${t('assignedToLabel', {
-                      owner:
-                        selected.owner === props.userId
+        <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
+          {/* Header */}
+          <div className="border-b border-border/80 p-5 sm:p-6 bg-muted/10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h3 className="text-navy text-lg sm:text-xl font-bold tracking-tight">
+                    {selected.title}
+                  </h3>
+                  <SupportStatusBadge status={selected.status} />
+                  <AdminPriorityBadge priority={selected.priority} />
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-mono font-medium text-navy/80 bg-muted/60 px-2 py-0.5 rounded-md border border-border/60">
+                    {selected.id}
+                  </span>
+                  {selected.user_name ? (
+                    <>
+                      <span>•</span>
+                      <div className="inline-flex items-center gap-1.5 font-medium text-navy">
+                        <AvatarImage
+                          avatarUrl={selected.user_avatar_url}
+                          alt={selected.user_name}
+                          fallback={
+                            <span className="size-5 rounded-full bg-navy/10 text-navy flex items-center justify-center text-[10px] font-bold shrink-0">
+                              {selected.user_name.charAt(0).toUpperCase()}
+                            </span>
+                          }
+                          className="size-5 rounded-full object-cover border border-border/80 shrink-0"
+                        />
+                        <span>{selected.user_name}</span>
+                      </div>
+                    </>
+                  ) : null}
+                  <span>•</span>
+                  <span>
+                    {selected.owner ? (
+                      <span className="inline-flex items-center gap-1 font-medium text-navy">
+                        <UserCheck className="size-3.5 text-navy/70" />
+                        {selected.owner === props.userId
                           ? t('assigneeMe')
-                          : selected.owner,
-                    })}`
-                  : ` • ${t('unassignedLabel')}`}
-              </p>
-            </div>
+                          : selected.owner}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-md border border-amber/30 bg-amber/15 px-2 py-0.5 text-[0.6875rem] font-semibold text-amber-900 dark:text-amber-300">
+                        {t('unassignedLabel')}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
 
-            <div className="flex flex-wrap gap-2">
-              {!selected.owner ? (
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    setPromptModal({
-                      action: 'claim_case',
-                      targetId: selected.id,
-                      title: t('claimCase'),
-                      description: t('claimPromptHelp'),
-                      itemSummary: `${selected.id} • ${selected.title}`,
-                    })
-                  }
-                  disabled={busy}
-                >
-                  <UserCheck className="size-3.5 mr-1.5" />
-                  {t('claimCase')}
-                </Button>
-              ) : selected.owner === props.userId ? (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      setPromptModal({
-                        action: 'release_case',
-                        targetId: selected.id,
-                        title: t('releaseCase'),
-                        description: t('releasePromptHelp'),
-                        itemSummary: `${selected.id} • ${selected.title}`,
-                      })
-                    }
-                    disabled={busy}
-                  >
-                    {t('releaseCase')}
-                  </Button>
-                  {normalizeSupportStatus(selected.status) !== 'resolved' &&
-                  normalizeSupportStatus(selected.status) !== 'closed' ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {normalizeSupportStatus(selected.status) !== 'resolved' &&
+                normalizeSupportStatus(selected.status) !== 'closed' ? (
+                  !selected.owner ? (
                     <Button
                       size="sm"
-                      variant="outline"
-                      onClick={() => void changeStatus('resolved')}
+                      onClick={() =>
+                        setPromptModal({
+                          action: 'claim_case',
+                          targetId: selected.id,
+                          title: t('claimCaseTitle'),
+                          description: t('claimPromptHelp'),
+                          itemSummary: `${selected.id} • ${selected.title}`,
+                        })
+                      }
                       disabled={busy}
+                      className="rounded-xl shadow-2xs"
                     >
-                      {t('markResolved')}
+                      <UserCheck className="size-3.5 mr-1.5" />
+                      {t('claimCase')}
                     </Button>
-                  ) : null}
-                </>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h4 className="text-navy text-sm font-bold">
-              {t('conversationHistory')}
-            </h4>
-            <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
-              {(selected.messages ?? []).map((msg, index) => {
-                const isAgent = msg.author_role === 'admin';
-                return (
-                  <div
-                    key={index}
-                    className={`rounded-xl border p-3 text-xs leading-relaxed ${
-                      isAgent
-                        ? 'border-navy/20 bg-navy/5 text-navy ml-4'
-                        : 'border-border bg-card text-foreground mr-4'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-1.5 mb-1.5 font-bold">
-                      <span>
-                        {isAgent ? t('supportTeamLabel') : t('userLabel')}
-                      </span>
-                      {msg.created_at ? (
-                        <span className="text-muted-foreground text-[10px] font-normal">
-                          {new Date(msg.created_at).toLocaleString()}
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {selected.owner === props.userId ? (
-            <form
-              onSubmit={submitReply}
-              className="border-t border-border/80 pt-4 space-y-2"
-            >
-              <label
-                htmlFor="reply-content"
-                className="text-navy text-xs font-bold"
-              >
-                {t('replyPlaceholder')}
-              </label>
-              <textarea
-                id="reply-content"
-                value={reply}
-                onChange={(e) => setReply(e.target.value)}
-                placeholder={t('replyPlaceholder')}
-                rows={3}
-                required
-                className={adminFieldClassName}
-              />
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={busy || !reply.trim()}
-                >
-                  <MessageSquare className="size-3.5 mr-1.5" />
-                  {busy ? t('sendingReply') : t('sendReply')}
-                </Button>
+                  ) : selected.owner === props.userId ? (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setPromptModal({
+                            action: 'release_case',
+                            targetId: selected.id,
+                            title: t('releaseCaseTitle'),
+                            description: t('releasePromptHelp'),
+                            itemSummary: `${selected.id} • ${selected.title}`,
+                          })
+                        }
+                        disabled={busy}
+                        className="rounded-xl"
+                      >
+                        {t('releaseCase')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="wellness"
+                        onClick={() => void changeStatus('resolved')}
+                        disabled={busy}
+                        className="rounded-xl shadow-2xs"
+                      >
+                        <ShieldCheck className="size-3.5 mr-1.5" />
+                        {t('markResolved')}
+                      </Button>
+                    </>
+                  ) : null
+                ) : null}
               </div>
-            </form>
-          ) : (
-            <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 p-3 text-center text-xs text-muted-foreground">
-              {selected.owner
-                ? t('onlyOwnerCanReply')
-                : t('claimToReplyPrompt')}
             </div>
-          )}
+          </div>
+
+          {/* Conversation Area */}
+          <div className="p-5 sm:p-6 space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-navy text-xs font-bold uppercase tracking-wider text-navy/70">
+                  {t('conversationHistory')}
+                </h4>
+                <span className="text-[11px] text-muted-foreground font-medium">
+                  {t('messagesCount', {
+                    count: selected.messages?.length ?? 0,
+                  })}
+                </span>
+              </div>
+
+              <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1">
+                {(selected.messages ?? []).length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border/80 bg-muted/15 p-6 text-center text-xs text-muted-foreground">
+                    {t('noMessages')}
+                  </div>
+                ) : (
+                  (selected.messages ?? []).map((msg, index) => {
+                    const isAgent = msg.author_role === 'admin';
+                    const authorName =
+                      msg.author_name ||
+                      (isAgent
+                        ? t('supportTeamLabel')
+                        : selected.user_name || t('userLabel'));
+                    const authorAvatar =
+                      msg.author_avatar_url ||
+                      (!isAgent ? selected.user_avatar_url : undefined);
+
+                    return (
+                      <div
+                        key={index}
+                        className={`flex gap-3 max-w-[88%] ${
+                          isAgent ? 'ml-auto flex-row-reverse' : 'mr-auto'
+                        }`}
+                      >
+                        <div
+                          className={`size-8 rounded-full flex items-center justify-center shrink-0 shadow-2xs border overflow-hidden ${
+                            isAgent
+                              ? 'bg-navy text-white border-navy/20'
+                              : 'bg-azure text-navy border-navy/15'
+                          }`}
+                        >
+                          {authorAvatar ? (
+                            <AvatarImage
+                              avatarUrl={authorAvatar}
+                              alt={authorName}
+                              fallback={
+                                isAgent ? (
+                                  <ShieldCheck className="size-4" />
+                                ) : (
+                                  <span className="text-[11px] font-bold">
+                                    {authorName.charAt(0).toUpperCase()}
+                                  </span>
+                                )
+                              }
+                              className="size-full object-cover"
+                            />
+                          ) : isAgent ? (
+                            <ShieldCheck className="size-4" />
+                          ) : (
+                            <span className="text-[11px] font-bold">
+                              {authorName.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className={`rounded-2xl border p-4 text-xs leading-relaxed space-y-1.5 shadow-2xs ${
+                            isAgent
+                              ? 'border-navy/25 bg-navy/5 text-navy rounded-tr-xs'
+                              : 'border-border bg-card text-foreground rounded-tl-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3 border-b border-border/40 pb-1.5 font-bold">
+                            <span className="text-xs">{authorName}</span>
+                            {msg.created_at ? (
+                              <time
+                                dateTime={msg.created_at}
+                                className="text-muted-foreground text-[11px] font-normal"
+                              >
+                                {formatDateTime(dateFormatter, msg.created_at)}
+                              </time>
+                            ) : null}
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm leading-6">
+                            {msg.content}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Reply Field */}
+            {normalizeSupportStatus(selected.status) === 'resolved' ||
+            normalizeSupportStatus(selected.status) === 'closed' ? (
+              <div className="rounded-2xl border border-border/70 bg-muted/25 p-4 text-center text-xs text-muted-foreground font-medium">
+                Tiket ini sudah diselesaikan dan dalam mode riwayat (read-only).
+              </div>
+            ) : selected.owner === props.userId ? (
+              <form
+                onSubmit={submitReply}
+                className="border-t border-border/80 pt-5 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="reply-content"
+                    className="text-navy text-xs font-bold uppercase tracking-wider text-navy/70 flex items-center gap-1"
+                  >
+                    <span>{t('replyLabel')}</span>
+                    <RequiredMark />
+                  </label>
+                </div>
+                <textarea
+                  id="reply-content"
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  placeholder={t('replyPlaceholder')}
+                  rows={4}
+                  required
+                  className={`${adminFieldClassName} p-3.5 text-sm leading-relaxed`}
+                />
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={busy || !reply.trim()}
+                    className="rounded-xl px-5 h-9 font-medium"
+                  >
+                    <Send className="size-3.5 mr-1.5" />
+                    {busy ? t('sendingReply') : t('sendReply')}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 p-5 text-center text-xs text-muted-foreground">
+                {selected.owner
+                  ? t('onlyOwnerCanReply')
+                  : t('claimToReplyPrompt')}
+              </div>
+            )}
+          </div>
         </section>
 
         {actionDialog}
@@ -559,7 +688,7 @@ export function SupportTab(props: SupportTabProps) {
             href: `${ROUTES.ADMIN_TICKETS}?tab=history`,
             activeAdornment:
               historyCasesList.length > 0 ? (
-                <span className="ml-1 rounded-full bg-muted-foreground/15 px-2 py-0.2 text-[10px] font-bold text-muted-foreground">
+                <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
                   {historyCasesList.length}
                 </span>
               ) : null,
@@ -579,16 +708,11 @@ export function SupportTab(props: SupportTabProps) {
               )}
             </span>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-navy text-base font-bold">
-                  {currentTab === 'active'
-                    ? t('supportTitle')
-                    : t('ticketHistoryTitle')}
-                </h3>
-                <span className="text-[0.6875rem] font-bold text-navy/90 bg-azure/60 px-2.5 py-0.5 rounded-full border border-navy/15 shadow-2xs">
-                  {totalCases} {t('ticketsCount', { count: totalCases }) || 'tiket'}
-                </span>
-              </div>
+              <h3 className="text-navy text-base font-bold">
+                {currentTab === 'active'
+                  ? t('supportTitle')
+                  : t('ticketHistoryTitle')}
+              </h3>
               <p className="text-muted-foreground mt-0.5 text-xs">
                 {currentTab === 'active'
                   ? t('supportDescription')
@@ -604,7 +728,7 @@ export function SupportTab(props: SupportTabProps) {
               onToggle={() => setShowFilters((prev) => !prev)}
               hasActiveFilters={hasActiveFilters}
               activeCount={activeFilterCount}
-              label={t('filterToggle') || 'Filter'}
+              label={t('filterToggle')}
             />
           </div>
         </div>
@@ -626,16 +750,16 @@ export function SupportTab(props: SupportTabProps) {
               >
                 <option value="all">{t('filterAllPriorities')}</option>
                 <option value="urgent">
-                  {tDynamic('priority.urgent', { value: 'Mendesak' })}
+                  {tDynamic(dynamicLabelKey('priority', 'urgent'))}
                 </option>
                 <option value="high">
-                  {tDynamic('priority.high', { value: 'Tinggi' })}
+                  {tDynamic(dynamicLabelKey('priority', 'high'))}
                 </option>
                 <option value="normal">
-                  {tDynamic('priority.normal', { value: 'Normal' })}
+                  {tDynamic(dynamicLabelKey('priority', 'normal'))}
                 </option>
                 <option value="low">
-                  {tDynamic('priority.low', { value: 'Rendah' })}
+                  {tDynamic(dynamicLabelKey('priority', 'low'))}
                 </option>
               </FilterSelect>
 
@@ -649,28 +773,27 @@ export function SupportTab(props: SupportTabProps) {
                 {currentTab === 'active' ? (
                   <>
                     <option value="waiting_support">
-                      {tDynamic('supportStatus.waiting_support', {
-                        value: 'Menunggu Dukungan',
-                      })}
+                      {tDynamic(
+                        dynamicLabelKey('supportStatus', 'waiting_support')
+                      )}
                     </option>
                     <option value="waiting_user">
-                      {tDynamic('supportStatus.waiting_user', {
-                        value: 'Menunggu Pengguna',
-                      })}
-                    </option>
-                    <option value="in_progress">
-                      {tDynamic('supportStatus.in_progress', {
-                        value: 'Sedang Diproses',
-                      })}
+                      {tDynamic(
+                        dynamicLabelKey('supportStatus', 'waiting_user')
+                      )}
                     </option>
                   </>
                 ) : (
                   <>
                     <option value="resolved">
-                      {tDynamic('supportStatus.resolved', { value: 'Selesai' })}
+                      {tDynamic(
+                        dynamicLabelKey('supportStatus', 'resolved')
+                      )}
                     </option>
                     <option value="closed">
-                      {tDynamic('supportStatus.closed', { value: 'Ditutup' })}
+                      {tDynamic(
+                        dynamicLabelKey('supportStatus', 'closed')
+                      )}
                     </option>
                   </>
                 )}
@@ -691,7 +814,7 @@ export function SupportTab(props: SupportTabProps) {
             {hasActiveFilters ? (
               <FilterResetButton
                 onClick={clearFilters}
-                label={t('clearFilters') || 'Reset'}
+                label={t('clearFilters')}
               />
             ) : null}
           </div>
@@ -700,10 +823,10 @@ export function SupportTab(props: SupportTabProps) {
         <Table className="[&_td]:px-4 [&_td]:py-3.5 sm:[&_td]:px-5 [&_th]:h-11 [&_th]:px-4 sm:[&_th]:px-5">
           <TableHeader>
             <TableRow className="bg-muted/40">
-              <TableHead className="font-bold text-xs">{t('thId')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thSubject')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thPriority')}</TableHead>
               <TableHead className="font-bold text-xs">{t('thStatus')}</TableHead>
+              <TableHead className="font-bold text-xs">{t('thTime')}</TableHead>
               <TableHead className="font-bold text-xs">{t('assignee')}</TableHead>
               <TableHead className="text-right font-bold text-xs">{t('actions')}</TableHead>
             </TableRow>
@@ -724,7 +847,7 @@ export function SupportTab(props: SupportTabProps) {
                   hasActiveFilters ? (
                     <FilterResetButton
                       onClick={clearFilters}
-                      label={t('clearFilters') || 'Reset Filter'}
+                      label={t('clearFilters')}
                       className="mt-2"
                     />
                   ) : currentTab === 'active' ? (
@@ -740,10 +863,7 @@ export function SupportTab(props: SupportTabProps) {
                   key={item.id}
                   className="hover:bg-muted/30 transition-colors"
                 >
-                  <TableCell className="font-mono text-xs font-semibold text-navy">
-                    {item.id}
-                  </TableCell>
-                  <TableCell className="font-medium text-sm text-foreground max-w-[200px] truncate">
+                  <TableCell className="font-medium text-sm text-foreground max-w-[240px] truncate">
                     {item.title}
                   </TableCell>
                   <TableCell>
@@ -752,34 +872,54 @@ export function SupportTab(props: SupportTabProps) {
                   <TableCell>
                     <SupportStatusBadge status={item.status} />
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-xs font-mono">
+                  <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                    {formatDateTime(dateFormatter, item.created_at)}
+                  </TableCell>
+                  <TableCell>
                     {item.owner ? (
                       item.owner === props.userId ? (
-                        <span className="inline-flex items-center gap-1 font-semibold text-navy">
+                        <span className="inline-flex items-center gap-1 font-semibold text-xs font-mono text-navy">
                           <UserCheck className="size-3 text-navy/70" />
                           {t('assigneeMe')}
                         </span>
                       ) : (
-                        item.owner
+                        <span className="text-muted-foreground text-xs font-mono">
+                          {item.owner}
+                        </span>
                       )
                     ) : (
-                      <span className="text-muted-foreground/60 italic">—</span>
+                      <span className="inline-flex items-center rounded-md border border-amber/30 bg-amber/15 px-2 py-0.5 text-[0.6875rem] font-semibold text-amber-900 dark:text-amber-300">
+                        {t('unassignedLabel')}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant={item.owner ? 'outline' : 'primary'}
-                      disabled={
-                        busy ||
-                        Boolean(item.owner && item.owner !== props.userId)
-                      }
-                      onClick={() => void openCase(item)}
-                      className="h-8 text-xs font-semibold"
-                    >
-                      <UserCheck className="size-3.5 mr-1" />
-                      {item.owner ? t('openCase') : t('claimCase')}
-                    </Button>
+                    {currentTab === 'history' ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => void openCase(item)}
+                        className="h-8 text-xs font-semibold"
+                      >
+                        <Eye className="size-3.5 mr-1" />
+                        {t('openCase')}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant={item.owner ? 'outline' : 'primary'}
+                        disabled={
+                          busy ||
+                          Boolean(item.owner && item.owner !== props.userId)
+                        }
+                        onClick={() => void openCase(item)}
+                        className="h-8 text-xs font-semibold"
+                      >
+                        <UserCheck className="size-3.5 mr-1" />
+                        {item.owner ? t('openCase') : t('claimCase')}
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -809,4 +949,10 @@ export function SupportTab(props: SupportTabProps) {
       {actionDialog}
     </div>
   );
+}
+
+function formatDateTime(formatter: Intl.DateTimeFormat, value?: string) {
+  if (!value) return '-';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? '-' : formatter.format(parsed);
 }

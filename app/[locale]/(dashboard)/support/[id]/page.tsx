@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { RequiredMark } from '@/components/common/form-field';
 import { Textarea } from '@/components/ui/textarea';
 import { useSupportCase } from '@/hooks/use-support-request';
-import { Link } from '@/i18n/routing';
+import { useBackNavigation } from '@/hooks/use-back-navigation';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { ROUTES } from '@/routes';
 
@@ -30,6 +30,7 @@ export default function SupportCaseDetailPage() {
   const t = useTranslations('supportWorkspace');
   const locale = useLocale();
   const support = useSupportCase(id);
+  const { goBack } = useBackNavigation();
   const [reply, setReply] = useState('');
   const item = support.data;
   const date = new Intl.DateTimeFormat(locale, {
@@ -62,13 +63,14 @@ export default function SupportCaseDetailPage() {
 
   return (
     <DashboardPage>
-      <Link
-        href={ROUTES.SUPPORT_HISTORY}
+      <button
+        type="button"
+        onClick={() => goBack(ROUTES.SUPPORT_HISTORY)}
         className="text-navy focus-visible:ring-navy/30 inline-flex min-h-10 items-center gap-2 self-start rounded-lg text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         {t('backToTickets')}
-      </Link>
+      </button>
       <DashboardPageHeader
         icon={LifeBuoy}
         eyebrow={t('ticketDetailEyebrow')}

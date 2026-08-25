@@ -1,8 +1,8 @@
 'use client';
 
-import { useRouter } from '@/i18n/routing';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useBackNavigation } from '@/hooks/use-back-navigation';
 import { ROUTES } from '@/routes';
 
 interface BackButtonProps {
@@ -20,26 +20,14 @@ export function BackButton({
   label,
   fallbackHref = ROUTES.HOME,
 }: BackButtonProps) {
-  const router = useRouter();
-
-  const handleBack = () => {
-    if (typeof window === 'undefined') {
-      router.push(fallbackHref);
-      return;
-    }
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(fallbackHref);
-    }
-  };
+  const { goBack } = useBackNavigation();
 
   return (
     <Button
       variant="outline"
       size="default"
       className="rounded-full px-5"
-      onClick={handleBack}
+      onClick={() => goBack(fallbackHref)}
     >
       <ArrowLeft className="size-3.5" />
       {label}
