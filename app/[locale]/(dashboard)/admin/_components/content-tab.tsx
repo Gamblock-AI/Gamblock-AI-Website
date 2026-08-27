@@ -1568,6 +1568,7 @@ export function ContentTab(props: ContentTabProps) {
 
   if (!document) return null;
   const translation = document.translations[locale];
+  const isPublished = !isCreating && selected?.status === 'published';
   return (
     <div className="space-y-5">
       {isStuck ? (
@@ -1641,8 +1642,12 @@ export function ContentTab(props: ContentTabProps) {
             disabled={busy}
             onClick={() => void transition('publish')}
           >
-            <Upload className="size-4" />
-            {t('publish')}
+            {isPublished ? (
+              <Save className="size-4" />
+            ) : (
+              <Upload className="size-4" />
+            )}
+            {isPublished ? t('save') : t('publish')}
           </Button>
           {!isCreating && selected ? (
             <Button

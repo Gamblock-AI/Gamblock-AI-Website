@@ -32,9 +32,12 @@ import {
 import { Pagination } from '@/components/dashboard/pagination';
 import {
   type AccountabilityMembership,
+  type FlaggedAccountabilityMember,
   type MemberAggregate,
+  type PaginatedData,
   useAccountability,
 } from '@/hooks/use-accountability';
+import { useApiQuery } from '@/hooks/use-api';
 import { usePagination } from '@/hooks/use-pagination';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { Link } from '@/i18n/routing';
@@ -100,38 +103,12 @@ const liveMemberStatuses = new Set([
 
 type MonitorFlag = 'status' | 'protection' | 'inactive' | 'noCheckIn';
 
-const monitorSeverity: Record<MonitorFlag, number> = {
-  status: 0,
-  protection: 1,
-  inactive: 2,
-  noCheckIn: 3,
-};
-
 const monitorFlagLabel: Record<MonitorFlag, string> = {
   status: 'reasonStatus',
   protection: 'reasonProtection',
   inactive: 'reasonInactive',
   noCheckIn: 'reasonNoCheckIn',
 };
-
-// Monitoring triage flags derived from the consented aggregate summaries. It
-// surfaces students who need the partner's attention without exposing any raw
-// browsing or personal recovery detail.
-function monitorFlags(member: AccountabilityMembership): MonitorFlag[] {
-  const flags: MonitorFlag[] = [];
-  if (member.status !== 'active') flags.push('status');
-  if (member.aggregate.protection_status === 'attention') {
-    flags.push('protection');
-  }
-  if (
-    member.aggregate.last_heartbeat_bucket === 'older' ||
-    member.aggregate.last_heartbeat_bucket === 'never'
-  ) {
-    flags.push('inactive');
-  }
-  if (member.aggregate.check_in_days === 0) flags.push('noCheckIn');
-  return flags;
-}
 
 export function PartnerProgress() {
   const p = useTranslations('progressExperience');
@@ -159,21 +136,16 @@ export function PartnerProgress() {
     liveMemberStatuses.has(member.status)
   );
 
-  const flagged = useMemo(() => {
-    return liveMembers
-      .map((member) => ({ member, flags: monitorFlags(member) }))
-      .filter((item) => item.flags.length > 0)
-      .sort((left, right) => {
-        const leftSeverity = Math.min(
-          ...left.flags.map((flag) => monitorSeverity[flag])
-        );
-        const rightSeverity = Math.min(
-          ...right.flags.map((flag) => monitorSeverity[flag])
-        );
-        if (leftSeverity !== rightSeverity) return leftSeverity - rightSeverity;
-        return left.member.student_name.localeCompare(right.member.student_name);
-      });
-  }, [liveMembers]);
+  const [flaggedPage, setFlaggedPage] = useState(1);
+  const { data: flaggedData, loading: flaggedLoading } =
+    useApiQuery<PaginatedData<FlaggedAccountabilityMember>>(
+      `/accountability/flagged-members?page=${flaggedPage}&limit=3`
+    );
+
+  const flaggedItems = flaggedData?.items ?? [];
+  const flaggedTotal = flaggedData?.total_count ?? 0;
+  const flaggedTotalPages = flaggedData?.total_pages ?? 1;
+  const flaggedPageSize = flaggedData?.page_size ?? 3;
 
   const filteredSharedMembers = useMemo(() => {
     return accountability.workspace.members.filter((member) => {
@@ -199,12 +171,6 @@ export function PartnerProgress() {
 
   const sharedPagination = usePagination({
     items: filteredSharedMembers,
-    pageSize: 5,
-    initialPage: 1,
-  });
-
-  const flaggedPagination = usePagination({
-    items: flagged,
     pageSize: 5,
     initialPage: 1,
   });
@@ -235,7 +201,7 @@ export function PartnerProgress() {
           className="xl:col-span-5"
         >
           <div className="flex-1 space-y-3">
-            {flagged.length === 0 ? (
+            {!flaggedLoading && flaggedTotal === 0 ? (
               <div className="border-border/80 bg-muted/20 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center">
                 <span className="border-border/80 bg-card text-muted-foreground/80 flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
                   <ShieldCheck className="size-5" aria-hidden="true" />
@@ -249,7 +215,7 @@ export function PartnerProgress() {
               </div>
             ) : (
               <>
-                {flaggedPagination.paginatedItems.map(({ member, flags }) => (
+                {flaggedItems.map(({ member, flags }) => (
                   <div
                     key={member.id}
                     className="group relative flex flex-col justify-between rounded-2xl border border-amber/35 bg-gradient-to-br from-amber/[0.05] via-card to-card p-4 shadow-2xs transition-all duration-200 hover:border-amber/55 hover:shadow-xs"
@@ -309,19 +275,22 @@ export function PartnerProgress() {
                   </div>
                 ))}
 
-                {flaggedPagination.totalPages > 1 ? (
+                {flaggedTotalPages > 1 ? (
                   <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2 border rounded-xl p-2.5">
                     <span className="text-muted-foreground text-[0.6875rem] font-semibold">
                       {tPagination('showingRange', {
-                        start: flaggedPagination.startIndex,
-                        end: flaggedPagination.endIndex,
-                        total: flaggedPagination.totalItems,
+                        start: (flaggedPage - 1) * flaggedPageSize + 1,
+                        end: Math.min(
+                          flaggedPage * flaggedPageSize,
+                          flaggedTotal
+                        ),
+                        total: flaggedTotal,
                       })}
                     </span>
                     <Pagination
-                      currentPage={flaggedPagination.page}
-                      totalPages={flaggedPagination.totalPages}
-                      onPageChange={flaggedPagination.setPage}
+                      currentPage={flaggedPage}
+                      totalPages={flaggedTotalPages}
+                      onPageChange={setFlaggedPage}
                       size="sm"
                       variant="flat"
                     />
@@ -335,13 +304,13 @@ export function PartnerProgress() {
             <span className="flex items-center gap-1.5 font-medium">
               <Users className="size-3.5" aria-hidden="true" />
               {p('monitorSummary', {
-                attention: flagged.length,
+                attention: flaggedTotal,
                 total: liveMembers.length,
               })}
             </span>
             <span className="font-semibold text-amber-800">
-              {flagged.length > 0
-                ? p('monitorActionRequired', { count: flagged.length })
+              {flaggedTotal > 0
+                ? p('monitorActionRequired', { count: flaggedTotal })
                 : p('monitorAllClear')}
             </span>
           </div>

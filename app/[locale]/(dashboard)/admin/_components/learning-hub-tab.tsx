@@ -1073,6 +1073,8 @@ export function LearningHubTab({
     }
   };
 
+  const isPublished = !isCreating && selected?.status === 'published';
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-1">
@@ -1378,8 +1380,12 @@ export function LearningHubTab({
                     disabled={busy}
                     onClick={() => void (isCreating ? handleCreate(true) : transition('publish'))}
                   >
-                    <Send className="size-4" />
-                    {t('learningHubPublish')}
+                    {isPublished ? (
+                      <Save className="size-4" />
+                    ) : (
+                      <Send className="size-4" />
+                    )}
+                    {isPublished ? t('save') : t('learningHubPublish')}
                   </Button>
                   {!isCreating && selected ? (
                     <Button

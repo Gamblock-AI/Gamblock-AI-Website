@@ -3,7 +3,6 @@
 import {
   type Dispatch,
   type FormEvent,
-  type ReactNode,
   type SetStateAction,
   useEffect,
   useMemo,
@@ -51,7 +50,6 @@ import {
   type AccountabilityMembership,
   useAccountability,
 } from '@/hooks/use-accountability';
-import { refreshCurrentUser, useLocalUser } from '@/hooks/use-local-user';
 import { usePagination } from '@/hooks/use-pagination';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
@@ -66,17 +64,12 @@ import {
 
 export function PartnerGroupsWorkspace({
   t,
-  user,
   accountability,
 }: {
   t: Translation;
-  user: ReturnType<typeof useLocalUser>;
   accountability: ReturnType<typeof useAccountability>;
 }) {
   const tPagination = useTranslations('pagination');
-  const [phone, setPhone] = useState(user.phone_e164 ?? '');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [previewCode, setPreviewCode] = useState('');
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   const [removalReasons, setRemovalReasons] = useState<Record<string, string>>(
@@ -96,7 +89,6 @@ export function PartnerGroupsWorkspace({
       },
     });
 
-  const verified = Boolean(user.phone_verified_at);
   const liveStatuses = new Set([
     'active',
     'leave_pending',
@@ -158,29 +150,6 @@ export function PartnerGroupsWorkspace({
     try {
       await action;
       toastSuccess(message);
-    } catch (error) {
-      toastError(error);
-    }
-  };
-
-  const requestPhoneCode = async () => {
-    try {
-      const result = await accountability.startPhoneVerification(phone.trim());
-      setPreviewCode(result.preview_code ?? '');
-      toastSuccess(t('phoneCodeSent'));
-    } catch (error) {
-      toastError(error);
-    }
-  };
-
-  const verifyPhone = async (event: FormEvent) => {
-    event.preventDefault();
-    try {
-      await accountability.confirmPhoneVerification(verificationCode.trim());
-      await refreshCurrentUser();
-      setVerificationCode('');
-      setPreviewCode('');
-      toastSuccess(t('phoneVerified'));
     } catch (error) {
       toastError(error);
     }
@@ -283,152 +252,66 @@ export function PartnerGroupsWorkspace({
         </div>
       </DashboardPanel>
 
-      {/* 2. WhatsApp Verification & Group Management Grids */}
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-        <VerificationCard
-          title={t('verificationTitle')}
-          verified={verified}
-          verifiedLabel={t('verified')}
-          pendingLabel={t('notVerified')}
+      {/* 2. Group Management */}
+      <DashboardPanel
+        icon={UserPlus}
+        title={t('createGroupTitle')}
+        description={t('createGroupBody')}
+        density="compact"
+        className="shadow-2xs"
+      >
+        <form
+          onSubmit={(e) => void createGroup(e)}
+          className="flex flex-1 flex-col justify-between space-y-4"
         >
           <div className="space-y-4">
-            <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
-              {t('verificationBody')}
-            </p>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="group-name"
+                className="text-navy flex items-center text-xs font-bold"
+              >
+                <span>{t('groupName')}</span>
+                <RequiredMark />
+              </label>
+              <input
+                id="group-name"
+                value={groupName}
+                onChange={(event) => setGroupName(event.target.value)}
+                placeholder={t('groupNamePlaceholder')}
+                className="border-input bg-background/80 focus-visible:ring-navy/20 h-10 w-full rounded-xl border px-3 text-xs outline-none focus-visible:ring-2"
+              />
+            </div>
 
-            <div className="border-border/80 bg-background/60 rounded-xl border p-4 space-y-4">
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="phone"
-                  className="text-navy flex items-center text-xs font-bold"
-                >
-                  <span>{t('phoneLabel')}</span>
-                  <RequiredMark />
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    placeholder="+628123456789"
-                    className="border-input bg-background focus-visible:ring-navy/20 h-10 w-full rounded-xl border px-3 text-xs outline-none focus-visible:ring-2"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={accountability.mutating || !phone.trim()}
-                    onClick={() => void requestPhoneCode()}
-                    className="h-10 text-xs shrink-0 font-bold"
-                  >
-                    {t('sendCode')}
-                  </Button>
-                </div>
-              </div>
-
-              {previewCode ? (
-                <div className="border-navy/15 bg-azure/50 rounded-xl border p-3">
-                  <p className="text-navy-light text-[0.6875rem] font-bold uppercase tracking-wider">
-                    {t('phoneVerification')}
-                  </p>
-                  <p className="text-navy mt-1 font-mono text-sm font-extrabold tracking-widest">
-                    {previewCode}
-                  </p>
-                </div>
-              ) : null}
-
-              <form onSubmit={(e) => void verifyPhone(e)} className="space-y-3">
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="verification-code"
-                    className="text-navy flex items-center text-xs font-bold"
-                  >
-                    <span>{t('codeVerificationLabel')}</span>
-                    <RequiredMark />
-                  </label>
-                  <input
-                    id="verification-code"
-                    value={verificationCode}
-                    onChange={(event) => setVerificationCode(event.target.value)}
-                    placeholder={t('codeVerificationPlaceholder')}
-                    className="border-input bg-background focus-visible:ring-navy/20 h-10 w-full rounded-xl border px-3 text-xs outline-none focus-visible:ring-2"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={accountability.mutating || !verificationCode.trim()}
-                  className="w-full gap-2 text-xs font-bold"
-                >
-                  <Check className="size-4" aria-hidden="true" />
-                  {t('verifyCode')}
-                </Button>
-              </form>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="group-description"
+                className="text-navy flex items-center text-xs font-bold"
+              >
+                <span>{t('groupDescription')}</span>
+                <OptionalMark />
+              </label>
+              <Textarea
+                id="group-description"
+                value={groupDescription}
+                onChange={(event) => setGroupDescription(event.target.value)}
+                placeholder={t('groupDescriptionPlaceholder')}
+                className="min-h-24 text-xs"
+              />
             </div>
           </div>
-        </VerificationCard>
 
-        {/* Create Group Form Card */}
-        <DashboardPanel
-          icon={UserPlus}
-          title={t('createGroupTitle')}
-          description={t('createGroupBody')}
-          density="compact"
-          fullHeight
-          className="shadow-2xs"
-        >
-          <form
-            onSubmit={(e) => void createGroup(e)}
-            className="flex flex-1 flex-col justify-between space-y-4"
-          >
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="group-name"
-                  className="text-navy flex items-center text-xs font-bold"
-                >
-                  <span>{t('groupName')}</span>
-                  <RequiredMark />
-                </label>
-                <input
-                  id="group-name"
-                  value={groupName}
-                  onChange={(event) => setGroupName(event.target.value)}
-                  placeholder={t('groupNamePlaceholder')}
-                  className="border-input bg-background/80 focus-visible:ring-navy/20 h-10 w-full rounded-xl border px-3 text-xs outline-none focus-visible:ring-2"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="group-description"
-                  className="text-navy flex items-center text-xs font-bold"
-                >
-                  <span>{t('groupDescription')}</span>
-                  <OptionalMark />
-                </label>
-                <Textarea
-                  id="group-description"
-                  value={groupDescription}
-                  onChange={(event) => setGroupDescription(event.target.value)}
-                  placeholder={t('groupDescriptionPlaceholder')}
-                  className="min-h-24 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="pt-1 space-y-2">
-              <Button
-                type="submit"
-                disabled={!verified || accountability.mutating}
-                className="w-full gap-2 text-xs font-bold"
-              >
-                <PlusCircle className="size-4" aria-hidden="true" />
-                {t('createGroup')}
-              </Button>
-            </div>
-          </form>
-        </DashboardPanel>
-      </div>
+          <div className="pt-1 space-y-2">
+            <Button
+              type="submit"
+              disabled={accountability.mutating || !groupName.trim()}
+              className="w-full gap-2 text-xs font-bold"
+            >
+              <PlusCircle className="size-4" aria-hidden="true" />
+              {t('createGroup')}
+            </Button>
+          </div>
+        </form>
+      </DashboardPanel>
 
       {/* 3. Grup dan Anggota Card */}
       <DashboardPanel
@@ -1056,30 +939,3 @@ function GroupCard({
     </article>
   );
 }
-
-function VerificationCard({
-  title,
-  verified,
-  verifiedLabel,
-  pendingLabel,
-  children,
-}: {
-  title: string;
-  verified: boolean;
-  verifiedLabel: string;
-  pendingLabel: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="border-border/80 bg-background/50 rounded-2xl border p-4 shadow-2xs">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-navy font-bold text-sm">{title}</p>
-        <DashboardStatus tone={verified ? 'sage' : 'amber'}>
-          {verified ? verifiedLabel : pendingLabel}
-        </DashboardStatus>
-      </div>
-      {children}
-    </div>
-  );
-}
-

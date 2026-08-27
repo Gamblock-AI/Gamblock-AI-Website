@@ -98,6 +98,31 @@ export interface ApprovalRequest {
   expires_at?: string;
 }
 
+export type MonitorFlag = 'status' | 'protection' | 'inactive' | 'noCheckIn';
+
+export interface FlaggedAccountabilityMember {
+  member: AccountabilityMembership;
+  flags: MonitorFlag[];
+}
+
+export interface PaginatedData<T> {
+  items: T[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_more: boolean;
+}
+
+export async function fetchFlaggedMembers(
+  page = 1,
+  limit = 3
+): Promise<PaginatedData<FlaggedAccountabilityMember>> {
+  return apiClient<PaginatedData<FlaggedAccountabilityMember>>(
+    `/accountability/flagged-members?page=${page}&limit=${limit}`
+  );
+}
+
 export interface AccountabilityWorkspace {
   role: 'user' | 'partner';
   groups: AccountabilityGroup[];

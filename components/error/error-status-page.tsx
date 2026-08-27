@@ -105,7 +105,7 @@ export function ErrorStatusPage({
               ) : backLabel ? (
                 <button
                   type="button"
-                  onClick={goBack}
+                  onClick={() => goBack()}
                   className="focus-visible:ring-navy/30 text-navy inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-bold whitespace-nowrap transition-colors hover:bg-white/80 focus-visible:ring-4 focus-visible:outline-none dark:text-white/90 dark:hover:bg-white/10"
                 >
                   <ArrowLeft className="size-4" aria-hidden="true" />
