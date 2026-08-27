@@ -15,6 +15,7 @@ import {
   DashboardPanel,
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
+import { Pagination } from '@/components/dashboard/pagination';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +23,7 @@ import type {
   SharingPreferences,
   useAccountability,
 } from '@/hooks/use-accountability';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { Link } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { ROUTES } from '@/routes';
@@ -72,7 +74,6 @@ export function StudentAccountability({
   );
   const [leaveReason, setLeaveReason] = useState('');
   const [dialog, setDialog] = useState<StudentDialog>(null);
-  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   const pendingApproval = accountability.requests.find(
     (request) => request.status === 'pending'
@@ -80,9 +81,12 @@ export function StudentAccountability({
   const pendingLeave = accountability.workspace.exit_requests.find(
     (request) => request.status === 'pending'
   );
-  const visibleRequests = historyExpanded
-    ? accountability.requests
-    : accountability.requests.slice(0, 5);
+  const historyQuery = usePaginatedQuery<Accountability['requests'][number]>({
+    path: '/approval-requests',
+    pageKey: 'page[approvalHistory]',
+    pageSize: 5,
+  });
+  const visibleRequests = historyQuery.items;
   const sharingDirty = membership
     ? !sharingEquals(sharingDraft, membership.sharing)
     : false;
@@ -433,7 +437,7 @@ export function StudentAccountability({
         title={t('requestHistoryTitle')}
         description={t('requestHistoryBody')}
       >
-        {visibleRequests.length ? (
+        {historyQuery.pagination.totalItems ? (
           <div className="space-y-3">
             {visibleRequests.map((request) => (
               <article
@@ -475,14 +479,16 @@ export function StudentAccountability({
                 </RequestStatus>
               </article>
             ))}
-            {accountability.requests.length > 5 ? (
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => setHistoryExpanded((current) => !current)}
-              >
-                {historyExpanded ? t('showLessHistory') : t('showAllHistory')}
-              </Button>
+            {historyQuery.pagination.totalPages > 1 ? (
+              <div className="flex justify-center pt-1">
+                <Pagination
+                  currentPage={historyQuery.pagination.page}
+                  totalPages={historyQuery.pagination.totalPages}
+                  onPageChange={historyQuery.pagination.setPage}
+                  size="sm"
+                  variant="flat"
+                />
+              </div>
             ) : null}
           </div>
         ) : (

@@ -1,15 +1,37 @@
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePagination } from './use-pagination';
 import { getPaginationItems } from '@/components/dashboard/pagination';
 
+let currentParams = new URLSearchParams();
+const mockReplace = vi.fn((url: string) => {
+  const queryIndex = url.indexOf('?');
+  currentParams = new URLSearchParams(
+    queryIndex >= 0 ? url.slice(queryIndex + 1) : ''
+  );
+});
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => currentParams,
+}));
+
+vi.mock('@/i18n/routing', () => ({
+  usePathname: () => '/id/recovery',
+  useRouter: () => ({ replace: mockReplace }),
+}));
+
 describe('usePagination', () => {
+  beforeEach(() => {
+    currentParams = new URLSearchParams();
+    mockReplace.mockClear();
+  });
+
   const dummyItems = Array.from({ length: 25 }, (_, i) => ({
     id: i + 1,
     name: `Item ${i + 1}`,
   }));
 
-  it('initializes with default options and slices first page correctly', () => {
+  it('uses server-returned items without slicing them locally', () => {
     const { result } = renderHook(() =>
       usePagination({ items: dummyItems, pageSize: 6 })
     );
@@ -18,9 +40,9 @@ describe('usePagination', () => {
     expect(result.current.totalPages).toBe(5); // ceil(25 / 6) = 5
     expect(result.current.totalItems).toBe(25);
     expect(result.current.pageSize).toBe(6);
-    expect(result.current.paginatedItems).toHaveLength(6);
+    expect(result.current.paginatedItems).toHaveLength(25);
     expect(result.current.paginatedItems[0].id).toBe(1);
-    expect(result.current.paginatedItems[5].id).toBe(6);
+    expect(result.current.paginatedItems[24].id).toBe(25);
     expect(result.current.startIndex).toBe(1);
     expect(result.current.endIndex).toBe(6);
     expect(result.current.hasPrevPage).toBe(false);
@@ -28,7 +50,7 @@ describe('usePagination', () => {
   });
 
   it('handles navigation across pages (next, prev, first, last)', () => {
-    const { result } = renderHook(() =>
+    const { result, rerender } = renderHook(() =>
       usePagination({ items: dummyItems, pageSize: 6 })
     );
 
@@ -36,57 +58,64 @@ describe('usePagination', () => {
     act(() => {
       result.current.nextPage();
     });
+    rerender();
     expect(result.current.page).toBe(2);
     expect(result.current.startIndex).toBe(7);
     expect(result.current.endIndex).toBe(12);
     expect(result.current.hasPrevPage).toBe(true);
     expect(result.current.hasNextPage).toBe(true);
-    expect(result.current.paginatedItems[0].id).toBe(7);
+    expect(result.current.paginatedItems[0].id).toBe(1);
 
     // Go to last page -> 5
     act(() => {
       result.current.goToLastPage();
     });
+    rerender();
     expect(result.current.page).toBe(5);
     expect(result.current.startIndex).toBe(25);
     expect(result.current.endIndex).toBe(25);
-    expect(result.current.paginatedItems).toHaveLength(1);
-    expect(result.current.paginatedItems[0].id).toBe(25);
+    expect(result.current.paginatedItems).toHaveLength(25);
+    expect(result.current.paginatedItems[0].id).toBe(1);
     expect(result.current.hasNextPage).toBe(false);
 
     // Prev page -> 4
     act(() => {
       result.current.prevPage();
     });
+    rerender();
     expect(result.current.page).toBe(4);
-    expect(result.current.paginatedItems).toHaveLength(6);
+    expect(result.current.paginatedItems).toHaveLength(25);
 
     // Go to first page -> 1
     act(() => {
       result.current.goToFirstPage();
     });
+    rerender();
     expect(result.current.page).toBe(1);
   });
 
   it('safely clamps out-of-bounds page requests', () => {
-    const { result } = renderHook(() =>
+    const { result, rerender } = renderHook(() =>
       usePagination({ items: dummyItems, pageSize: 6 })
     );
 
     act(() => {
       result.current.setPage(999);
     });
+    rerender();
     expect(result.current.page).toBe(5);
 
     act(() => {
       result.current.setPage(-10);
     });
+    rerender();
     expect(result.current.page).toBe(1);
 
     // Function updater
     act(() => {
       result.current.setPage((prev) => prev + 10);
     });
+    rerender();
     expect(result.current.page).toBe(5);
   });
 
@@ -99,6 +128,7 @@ describe('usePagination', () => {
     act(() => {
       result.current.setPage(5);
     });
+    rerender();
     expect(result.current.page).toBe(5);
 
     // Shrink items to 8 items -> 2 pages
@@ -107,7 +137,7 @@ describe('usePagination', () => {
 
     expect(result.current.totalPages).toBe(2);
     expect(result.current.page).toBe(2);
-    expect(result.current.paginatedItems).toHaveLength(2); // items 7, 8
+    expect(result.current.paginatedItems).toHaveLength(8);
   });
 
   it('handles empty items array gracefully', () => {
@@ -125,18 +155,17 @@ describe('usePagination', () => {
     expect(result.current.hasNextPage).toBe(false);
   });
 
-  it('supports changing page size dynamically', () => {
-    const { result } = renderHook(() =>
-      usePagination({ items: dummyItems, pageSize: 6 })
+  it('supports changing page size from the server contract', () => {
+    const { result, rerender } = renderHook(
+      ({ pageSize }) => usePagination({ items: dummyItems, pageSize }),
+      { initialProps: { pageSize: 6 } }
     );
 
-    act(() => {
-      result.current.setPageSize(10);
-    });
+    rerender({ pageSize: 10 });
 
     expect(result.current.pageSize).toBe(10);
     expect(result.current.totalPages).toBe(3); // ceil(25 / 10) = 3
-    expect(result.current.paginatedItems).toHaveLength(10);
+    expect(result.current.paginatedItems).toHaveLength(25);
   });
 
   it('works with totalItems without items array', () => {

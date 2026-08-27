@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Check, ClipboardList, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { ApprovalRequest } from '@/hooks/use-accountability';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import {
   dynamicLabelFallback,
@@ -35,7 +35,6 @@ import {
 import { ROUTES } from '@/routes';
 
 interface RequestsHistoryTableProps {
-  requests: ApprovalRequest[];
   onCancelRequest: (id: string) => Promise<void> | void;
   onResolveRequest?: (
     id: string,
@@ -60,7 +59,6 @@ function statusKey(status: string) {
 }
 
 export function RequestsHistoryTable({
-  requests,
   onCancelRequest,
   onResolveRequest,
   viewerRole,
@@ -83,35 +81,21 @@ export function RequestsHistoryTable({
         q: '',
         status: 'all',
       },
+      pageKey: 'page[approvalHistory]',
     });
 
   const formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
 
-  const filteredRequests = useMemo(() => {
-    return requests.filter((request) => {
-      const matchesQuery =
-        !filters.q.trim() ||
-        request.id.toLowerCase().includes(filters.q.toLowerCase().trim()) ||
-        (request.reason &&
-          request.reason
-            .toLowerCase()
-            .includes(filters.q.toLowerCase().trim()));
-      const matchesStatus =
-        filters.status === 'all' || request.status === filters.status;
-      return matchesQuery && matchesStatus;
-    });
-  }, [requests, filters]);
-
-  const pagination = usePagination({
-    items: filteredRequests,
+  const requestsQuery = usePaginatedQuery<ApprovalRequest>({
+    path: `/approval-requests?${new URLSearchParams({
+      ...(filters.q ? { q: filters.q } : {}),
+      ...(filters.status !== 'all' ? { status: filters.status } : {}),
+    }).toString()}`,
+    pageKey: 'page[approvalHistory]',
     pageSize: 5,
-    initialPage: 1,
   });
-
-  const { setPage } = pagination;
-  useEffect(() => {
-    setPage(1);
-  }, [filters.q, filters.status, setPage]);
+  const pagination = requestsQuery.pagination;
+  const visibleRequests = requestsQuery.items;
 
   return (
     <DashboardPanel
@@ -120,7 +104,7 @@ export function RequestsHistoryTable({
       description={t('historyDescription')}
     >
       <div className="space-y-4">
-        {requests.length > 0 ? (
+        {pagination.totalItems > 0 ? (
           <FilterToolbar
             isExpanded={showFilters}
             onToggle={() => setShowFilters((prev) => !prev)}
@@ -130,7 +114,7 @@ export function RequestsHistoryTable({
             headerRight={
               <span className="text-xs font-semibold text-muted-foreground">
                 {t('requestsCount', {
-                  count: filteredRequests.length,
+                  count: pagination.totalItems,
                 })}
               </span>
             }
@@ -170,14 +154,14 @@ export function RequestsHistoryTable({
           </FilterToolbar>
         ) : null}
 
-        {requests.length === 0 ? (
+        {pagination.totalItems === 0 ? (
           <EmptyState
             icon={ClipboardList}
             title={t('historyEmptyTitle')}
             hint={t('historyEmptyBody')}
             className="bg-muted/55 min-h-48"
           />
-        ) : filteredRequests.length === 0 ? (
+        ) : pagination.totalItems === 0 ? (
           <EmptyState
             icon={ClipboardList}
             title={t('historyEmptyTitle')}
@@ -186,7 +170,7 @@ export function RequestsHistoryTable({
           />
         ) : (
           <div className="space-y-3">
-            {pagination.paginatedItems.map((request) => {
+            {visibleRequests.map((request) => {
             const isPending = request.status === 'pending';
             const parsedDate = request.created_at
               ? new Date(request.created_at)
@@ -263,7 +247,7 @@ export function RequestsHistoryTable({
             );
           })}
 
-          {filteredRequests.length > 0 ? (
+          {pagination.totalItems > 0 ? (
             <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
               <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
                 {tPagination('showingRange', {

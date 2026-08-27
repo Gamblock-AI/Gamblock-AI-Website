@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertTriangle,
@@ -34,11 +34,9 @@ import {
   type AccountabilityMembership,
   type FlaggedAccountabilityMember,
   type MemberAggregate,
-  type PaginatedData,
   useAccountability,
 } from '@/hooks/use-accountability';
-import { useApiQuery } from '@/hooks/use-api';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
@@ -127,6 +125,7 @@ export function PartnerProgress() {
         groupId: 'all',
         protection: 'all',
       },
+      pageKey: 'page[sharedMembers]',
     });
 
   const groupNames = new Map(
@@ -136,49 +135,25 @@ export function PartnerProgress() {
     liveMemberStatuses.has(member.status)
   );
 
-  const [flaggedPage, setFlaggedPage] = useState(1);
-  const { data: flaggedData, loading: flaggedLoading } =
-    useApiQuery<PaginatedData<FlaggedAccountabilityMember>>(
-      `/accountability/flagged-members?page=${flaggedPage}&limit=3`
-    );
-
-  const flaggedItems = flaggedData?.items ?? [];
-  const flaggedTotal = flaggedData?.total_count ?? 0;
-  const flaggedTotalPages = flaggedData?.total_pages ?? 1;
-  const flaggedPageSize = flaggedData?.page_size ?? 3;
-
-  const filteredSharedMembers = useMemo(() => {
-    return accountability.workspace.members.filter((member) => {
-      const matchesQuery =
-        !filters.q.trim() ||
-        member.student_name
-          .toLowerCase()
-          .includes(filters.q.toLowerCase().trim());
-      const matchesGroup =
-        filters.groupId === 'all' || member.group_id === filters.groupId;
-      const matchesProtection =
-        filters.protection === 'all' ||
-        (filters.protection === 'ready' &&
-          member.aggregate.protection_status === 'ready') ||
-        (filters.protection === 'attention' &&
-          member.aggregate.protection_status === 'attention') ||
-        (filters.protection === 'unknown' &&
-          (!member.aggregate.protection_status ||
-            member.aggregate.protection_status === 'unknown'));
-      return matchesQuery && matchesGroup && matchesProtection;
-    });
-  }, [accountability.workspace.members, filters]);
-
-  const sharedPagination = usePagination({
-    items: filteredSharedMembers,
-    pageSize: 5,
-    initialPage: 1,
+  const flaggedQuery = usePaginatedQuery<FlaggedAccountabilityMember>({
+    path: '/accountability/flagged-members',
+    pageKey: 'page[flaggedMembers]',
+    pageSize: 3,
   });
-
-  const { setPage: setSharedPage } = sharedPagination;
-  useEffect(() => {
-    setSharedPage(1);
-  }, [filters.q, filters.groupId, filters.protection, setSharedPage]);
+  const sharedQueryParams = new URLSearchParams();
+  if (filters.q.trim()) sharedQueryParams.set('q', filters.q.trim());
+  if (filters.groupId !== 'all') sharedQueryParams.set('group_id', filters.groupId);
+  if (filters.protection !== 'all') sharedQueryParams.set('protection', filters.protection);
+  const sharedQuery = usePaginatedQuery<AccountabilityMembership>({
+    path: `/accountability/members?${sharedQueryParams.toString()}`,
+    pageKey: 'page[sharedMembers]',
+    pageSize: 5,
+  });
+  const flaggedItems = flaggedQuery.items;
+  const flaggedPagination = flaggedQuery.pagination;
+  const flaggedTotal = flaggedPagination.totalItems;
+  const sharedPagination = sharedQuery.pagination;
+  const filteredSharedMembers = sharedQuery.items;
 
   return (
     <DashboardPage>
@@ -201,7 +176,7 @@ export function PartnerProgress() {
           className="xl:col-span-5"
         >
           <div className="flex-1 space-y-3">
-            {!flaggedLoading && flaggedTotal === 0 ? (
+            {!flaggedQuery.loading && flaggedTotal === 0 ? (
               <div className="border-border/80 bg-muted/20 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center">
                 <span className="border-border/80 bg-card text-muted-foreground/80 flex size-12 items-center justify-center rounded-2xl border shadow-2xs">
                   <ShieldCheck className="size-5" aria-hidden="true" />
@@ -275,22 +250,19 @@ export function PartnerProgress() {
                   </div>
                 ))}
 
-                {flaggedTotalPages > 1 ? (
+                {flaggedPagination.totalPages > 1 ? (
                   <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2 border rounded-xl p-2.5">
                     <span className="text-muted-foreground text-[0.6875rem] font-semibold">
                       {tPagination('showingRange', {
-                        start: (flaggedPage - 1) * flaggedPageSize + 1,
-                        end: Math.min(
-                          flaggedPage * flaggedPageSize,
-                          flaggedTotal
-                        ),
+                        start: flaggedPagination.startIndex,
+                        end: flaggedPagination.endIndex,
                         total: flaggedTotal,
                       })}
                     </span>
                     <Pagination
-                      currentPage={flaggedPage}
-                      totalPages={flaggedTotalPages}
-                      onPageChange={setFlaggedPage}
+                      currentPage={flaggedPagination.page}
+                      totalPages={flaggedPagination.totalPages}
+                      onPageChange={flaggedPagination.setPage}
                       size="sm"
                       variant="flat"
                     />
@@ -489,7 +461,7 @@ export function PartnerProgress() {
             </span>
             <span className="font-semibold text-navy">
               {p('membersCount', {
-                count: accountability.workspace.members.length,
+                count: sharedPagination.totalItems,
               })}
             </span>
           </div>

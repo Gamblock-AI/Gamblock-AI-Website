@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { useApiQuery } from './use-api';
+import { usePaginatedQuery } from './use-paginated-query';
 
 export interface SupportCaseRecord {
   id: string;
@@ -70,6 +71,23 @@ export function useSupportRequest() {
     error,
     refetch,
   };
+}
+
+export function usePaginatedSupportRequest(
+  filters: { q?: string; type?: string; status?: string; bucket?: string } = {},
+  pageKey = 'page[supportHistory]',
+  pageSize = 5
+) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value && value !== 'all') params.set(key, value);
+  }
+  const query = usePaginatedQuery<SupportCaseRecord>({
+    path: `/support-cases?${params.toString()}`,
+    pageKey,
+    pageSize,
+  });
+  return { ...query, cases: query.items };
 }
 
 export function useSupportCase(caseId: string) {

@@ -10,13 +10,11 @@ import {
 } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
 import { useAccountability } from '@/hooks/use-accountability';
-import { useLocalUser } from '@/hooks/use-local-user';
 import { PartnerGroupsWorkspace } from './_components/partner-groups-workspace';
 import { StudentPartnersWorkspace } from './_components/student-partners-workspace';
 
 export default function PartnersPage() {
   const t = useTranslations('partnersV2');
-  const user = useLocalUser();
   const accountability = useAccountability();
   const isPartner = accountability.workspace.role === 'partner';
 
@@ -59,7 +57,6 @@ export default function PartnersPage() {
       ) : isPartner ? (
         <PartnerGroupsWorkspace
           t={t}
-          user={user}
           accountability={accountability}
         />
       ) : (

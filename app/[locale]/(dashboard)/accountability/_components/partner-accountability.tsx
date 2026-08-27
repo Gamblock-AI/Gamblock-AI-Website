@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { StudentAvatar } from '@/components/dashboard/student-avatar';
 import { ExpandableRow } from '@/components/dashboard/expandable-row';
 import type { useAccountability } from '@/hooks/use-accountability';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { Link } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { ROUTES } from '@/routes';
@@ -49,24 +49,24 @@ export function PartnerAccountability({
   const [expandedLeaves, setExpandedLeaves] = useState<Record<string, boolean>>(
     {}
   );
-  const pendingApprovals = accountability.requests.filter(
-    (request) => request.status === 'pending'
-  );
-  const pendingLeaves = accountability.workspace.exit_requests.filter(
-    (request) => request.status === 'pending'
-  );
-
-  const approvalsPagination = usePagination({
-    items: pendingApprovals,
+  const approvalsQuery = usePaginatedQuery<
+    Accountability['requests'][number]
+  >({
+    path: '/approval-requests?status=pending',
+    pageKey: 'page[approvalQueue]',
     pageSize: 5,
-    initialPage: 1,
   });
-
-  const leavesPagination = usePagination({
-    items: pendingLeaves,
+  const leavesQuery = usePaginatedQuery<
+    Accountability['workspace']['exit_requests'][number]
+  >({
+    path: '/accountability/exit-requests?status=pending',
+    pageKey: 'page[leaveQueue]',
     pageSize: 5,
-    initialPage: 1,
   });
+  const pendingApprovals = approvalsQuery.items;
+  const pendingLeaves = leavesQuery.items;
+  const approvalsPagination = approvalsQuery.pagination;
+  const leavesPagination = leavesQuery.pagination;
   const membersById = useMemo(
     () =>
       new Map(

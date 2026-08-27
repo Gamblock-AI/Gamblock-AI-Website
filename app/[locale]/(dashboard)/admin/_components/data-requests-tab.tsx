@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/table';
 import type { AdminDataRequest } from '@/hooks/use-admin-operations';
 import { Pagination } from '@/components/dashboard/pagination';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { CompactTabNav } from '@/components/common/compact-tab-nav';
 import { ROUTES } from '@/routes';
@@ -96,65 +96,43 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
     } else {
       params.delete(key);
     }
+    params.delete('page[dataRequests]');
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const clearFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete('dataStatus');
+    params.delete('page[dataRequests]');
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const hasActiveFilters = dataStatusFilter !== 'all';
   const activeFilterCount = dataStatusFilter !== 'all' ? 1 : 0;
+  const activeRequestsList = useMemo(
+    () => props.dataRequests.filter((request) =>
+      ['pending', 'pending_confirmation', 'queued', 'processing', 'failed'].includes(request.status)
+    ),
+    [props.dataRequests]
+  );
+  const historyRequestsList = useMemo(
+    () => props.dataRequests.filter((request) =>
+      ['completed', 'rejected', 'cancelled'].includes(request.status)
+    ),
+    [props.dataRequests]
+  );
 
-  const activeRequestsList = useMemo(() => {
-    return (props.dataRequests ?? []).filter((r) => {
-      const s = r.status.toLowerCase();
-      return (
-        s === 'pending' ||
-        s === 'queued' ||
-        s === 'processing' ||
-        s === 'failed'
-      );
-    });
-  }, [props.dataRequests]);
-
-  const historyRequestsList = useMemo(() => {
-    return (props.dataRequests ?? []).filter((r) => {
-      const s = r.status.toLowerCase();
-      return (
-        s === 'completed' ||
-        s === 'rejected' ||
-        s === 'cancelled'
-      );
-    });
-  }, [props.dataRequests]);
-
-  const baseList =
-    currentTab === 'active' ? activeRequestsList : historyRequestsList;
-
-  const filteredRequests = useMemo(() => {
-    return baseList.filter((request) => {
-      if (
-        dataStatusFilter !== 'all' &&
-        request.status.toLowerCase() !== dataStatusFilter.toLowerCase()
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [baseList, dataStatusFilter]);
-
-  const {
-    page: requestsPage,
-    setPage: setRequestsPage,
-    totalPages: totalRequestsPages,
-    pagedItems: pagedDataRequests,
-    startIndex: requestsStartIndex,
-    endIndex: requestsEndIndex,
-    totalItems: totalDataRequests,
-  } = usePagination<AdminDataRequest>({ items: filteredRequests, pageSize: 10 });
+  const dataRequestsQuery = usePaginatedQuery<AdminDataRequest>({
+    path: `/admin/data-requests?${new URLSearchParams({
+      bucket: currentTab,
+      ...(dataStatusFilter !== 'all' ? { status: dataStatusFilter } : {}),
+    }).toString()}`,
+    pageKey: 'page[dataRequests]',
+    pageSize: 10,
+  });
+  const pagedDataRequests = dataRequestsQuery.items;
+  const pagination = dataRequestsQuery.pagination;
+  const totalDataRequests = pagination.totalItems;
 
   const dataRequestTitle = (request: AdminDataRequest) => {
     if (request.type === 'delete_account') {
@@ -336,7 +314,7 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredRequests.length === 0 ? (
+            {totalDataRequests === 0 ? (
               <TableEmptyRow
                 colSpan={currentTab === 'active' ? 6 : 5}
                 icon={FileClock}
@@ -437,15 +415,15 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
           <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
             <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
               {tPagination('showingRange', {
-                start: requestsStartIndex,
-                end: requestsEndIndex,
+                start: pagination.startIndex,
+                end: pagination.endIndex,
                 total: totalDataRequests,
               })}
             </span>
             <Pagination
-              currentPage={requestsPage}
-              totalPages={totalRequestsPages}
-              onPageChange={setRequestsPage}
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={pagination.setPage}
               variant="flat"
               size="sm"
             />

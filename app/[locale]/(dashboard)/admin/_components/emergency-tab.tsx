@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   CheckCircle2,
@@ -22,7 +22,7 @@ import {
   FilterSelect,
   FilterToggleButton,
 } from '@/components/dashboard/filter-toolbar';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { ROUTES } from '@/routes';
@@ -40,7 +40,6 @@ interface EmergencyTabProps {
 }
 
 export function EmergencyTab({
-  requests = [],
   emergencyKey,
   keyLoading,
   clearEmergencyKey,
@@ -55,24 +54,6 @@ export function EmergencyTab({
   const [keyCopied, setKeyCopied] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
-  const activeRequestsList = useMemo(() => {
-    return (requests ?? []).filter(
-      (r) => r.status === 'pending' || r.status === 'reviewed'
-    );
-  }, [requests]);
-
-  const historyRequestsList = useMemo(() => {
-    return (requests ?? []).filter(
-      (r) =>
-        r.status === 'approved' ||
-        r.status === 'rejected' ||
-        r.status === 'expired'
-    );
-  }, [requests]);
-
-  const currentRequestsList =
-    currentTab === 'history' ? historyRequestsList : activeRequestsList;
-
   const {
     getFilter,
     setFilter,
@@ -85,35 +66,24 @@ export function EmergencyTab({
     filterKeys: ['status', 'q'],
     defaultValues: { status: 'all' },
     ignoredKeys: ['tab'],
-    pageKey: 'page',
+    pageKey: 'page[emergency]',
   });
 
   const statusFilter = getFilter('status', 'all');
   const searchQuery = getFilter('q', '');
 
-  const filteredRequests = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return currentRequestsList.filter((r) => {
-      const matchStatus = statusFilter === 'all' || r.status === statusFilter;
-      const matchQ =
-        !q ||
-        r.id.toLowerCase().includes(q) ||
-        r.requested_by.toLowerCase().includes(q) ||
-        r.device_id.toLowerCase().includes(q);
-      return matchStatus && matchQ;
-    });
-  }, [currentRequestsList, statusFilter, searchQuery]);
-
-  const {
-    pagedItems: pagedRequests,
-    page: requestsPage,
-    totalPages: totalRequestsPages,
-    setPage: setRequestsPage,
-    startIndex: requestsStartIndex,
-    endIndex: requestsEndIndex,
-    totalItems: totalRequests,
-  } = usePagination({ items: filteredRequests, pageSize: 5 });
-
+  const emergencyQuery = usePaginatedQuery<EmergencyKeyRequest>({
+    path: `/admin/emergency-key-requests?${new URLSearchParams({
+      bucket: currentTab,
+      ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+      ...(searchQuery ? { q: searchQuery } : {}),
+    }).toString()}`,
+    pageKey: 'page[emergency]',
+    pageSize: 5,
+  });
+  const pagedRequests = emergencyQuery.items;
+  const pagination = emergencyQuery.pagination;
+  const totalRequests = pagination.totalItems;
   const approve = async (requestId: string) => {
     setApprovingId(requestId);
     try {
@@ -177,9 +147,9 @@ export function EmergencyTab({
             icon: <KeyRound className="size-3.5" />,
             href: `${ROUTES.ADMIN_EMERGENCY}?tab=active`,
             activeAdornment:
-              activeRequestsList.length > 0 ? (
+              currentTab === 'active' && totalRequests > 0 ? (
                 <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
-                  {activeRequestsList.length}
+                  {totalRequests}
                 </span>
               ) : null,
           },
@@ -189,16 +159,16 @@ export function EmergencyTab({
             icon: <History className="size-3.5" />,
             href: `${ROUTES.ADMIN_EMERGENCY}?tab=history`,
             activeAdornment:
-              historyRequestsList.length > 0 ? (
+              currentTab === 'history' && totalRequests > 0 ? (
                 <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
-                  {historyRequestsList.length}
+                  {totalRequests}
                 </span>
               ) : null,
           },
         ]}
       />
 
-      {currentRequestsList.length > 0 ? (
+      {totalRequests > 0 ? (
         <section className="border-border bg-card shadow-soft overflow-hidden rounded-2xl border">
           {/* Panel Header */}
           <div className="border-border/80 border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -244,7 +214,6 @@ export function EmergencyTab({
                   value={searchQuery}
                   onChangeValue={(val) => {
                     setFilter('q', val);
-                    setRequestsPage(1);
                   }}
                   placeholder="Cari ID, pemohon, atau perangkat..."
                   className="w-full sm:w-64"
@@ -254,7 +223,6 @@ export function EmergencyTab({
                   value={statusFilter}
                   onChange={(e) => {
                     setFilter('status', e.target.value);
-                    setRequestsPage(1);
                   }}
                   ariaLabel={t('filterDataStatus')}
                 >
@@ -288,7 +256,6 @@ export function EmergencyTab({
                 <FilterResetButton
                   onClick={() => {
                     clearFilters(['status', 'q']);
-                    setRequestsPage(1);
                   }}
                   label={t('clearFilters') || 'Reset'}
                 />
@@ -308,7 +275,6 @@ export function EmergencyTab({
                 <FilterResetButton
                   onClick={() => {
                     clearFilters(['status', 'q']);
-                    setRequestsPage(1);
                   }}
                   label={t('clearFilters') || 'Reset Filter'}
                 />
@@ -331,15 +297,15 @@ export function EmergencyTab({
             <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
               <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
                 {tPagination('showingRange', {
-                  start: requestsStartIndex,
-                  end: requestsEndIndex,
+                  start: pagination.startIndex,
+                  end: pagination.endIndex,
                   total: totalRequests,
                 })}
               </span>
               <Pagination
-                currentPage={requestsPage}
-                totalPages={totalRequestsPages}
-                onPageChange={setRequestsPage}
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={pagination.setPage}
                 variant="flat"
                 size="sm"
               />

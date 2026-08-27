@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { usePaginatedQuery } from './use-paginated-query';
 
 export type RichTextDocument = {
   type?: string;
@@ -205,6 +206,22 @@ export function useEducationModules(locale: string, enabled = true) {
     normalizeEducationModules
   );
   return { modules: result.data ?? [], ...result };
+}
+
+export function usePaginatedEducationModules(
+  locale: string,
+  filters: { query?: string; category?: string } = {}
+) {
+  const params = new URLSearchParams({ locale });
+  if (filters.query) params.set('q', filters.query);
+  if (filters.category && filters.category !== 'all') {
+    params.set('category', filters.category);
+  }
+  return usePaginatedQuery<EducationModule>({
+    path: `/psychoeducation/modules?${params.toString()}`,
+    pageKey: 'page[education]',
+    pageSize: 6,
+  });
 }
 
 export function useEducationModule(slug: string, locale: string) {

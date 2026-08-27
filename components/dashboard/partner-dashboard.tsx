@@ -229,7 +229,6 @@ export function PartnerDashboard({ name }: PartnerDashboardProps) {
 
           <PartnerAnalyticsPanel
             groups={accountability.workspace.groups}
-            members={accountability.workspace.members}
             selectedGroupID={selectedGroupID}
             onSelectedGroupIDChange={handleGroupChange}
             searchQuery={searchQuery}
@@ -406,4 +405,3 @@ function SummaryMetric({
     </div>
   );
 }
-

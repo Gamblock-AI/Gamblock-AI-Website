@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -20,25 +20,13 @@ import {
   DashboardStatus,
 } from '@/components/dashboard/dashboard-page';
 import { Pagination } from '@/components/dashboard/pagination';
-import { usePagination } from '@/hooks/use-pagination';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Link, useRouter } from '@/i18n/routing';
-import { slugifyProvider } from '@/lib/skills/external-platforms';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
-import { useLearningHub } from '@/hooks/use-learning-hub';
+import { useLearningHubProviders } from '@/hooks/use-learning-hub';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/routes';
-
-interface LearningProvider {
-  slug: string;
-  name: string;
-  logoUrl?: string;
-  description?: string;
-  count: number;
-}
-
-const PROVIDERS_PER_PAGE = 9;
 
 function ProviderLogo({
   name,
@@ -93,78 +81,27 @@ function ProviderLogo({
 export function SkillsHubClient() {
   const t = useTranslations('skillsHub');
   const locale = useLocale();
-  const hub = useLearningHub(locale);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const urlTimerRef = useRef<number | null>(null);
-
-  const providers: LearningProvider[] = useMemo(() => {
-    if (!hub.catalog) return [];
-    const bySlug = new Map<string, LearningProvider>();
-    for (const item of hub.catalog.items) {
-      if (!item.provider) continue;
-      const slug = slugifyProvider(item.provider);
-      const existing = bySlug.get(slug);
-      if (existing) {
-        existing.count += 1;
-        if (!existing.logoUrl && item.provider_logo_url) {
-          existing.logoUrl = item.provider_logo_url;
-        }
-        if (!existing.description && item.provider_description) {
-          existing.description = item.provider_description;
-        }
-      } else {
-        bySlug.set(slug, {
-          slug,
-          name: item.provider,
-          logoUrl: item.provider_logo_url,
-          description: item.provider_description,
-          count: 1,
-        });
-      }
-    }
-    return Array.from(bySlug.values()).sort(
-      (left, right) => right.count - left.count
-    );
-  }, [hub.catalog]);
-
-  const filteredProviders = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase(locale);
-    if (!normalized) return providers;
-    return providers.filter(
-      (provider) =>
-        provider.name.toLocaleLowerCase(locale).includes(normalized) ||
-        provider.slug.toLocaleLowerCase(locale).includes(normalized) ||
-        provider.description
-          ?.toLocaleLowerCase(locale)
-          .includes(normalized)
-    );
-  }, [locale, providers, query]);
-
-  const {
-    page,
-    setPage,
-    totalPages,
-    paginatedItems: pagedProviders,
-  } = usePagination({
-    items: filteredProviders,
-    pageSize: PROVIDERS_PER_PAGE,
-  });
+  const hub = useLearningHubProviders(locale, query);
+  const providers = hub.items;
+  const pagination = hub.pagination;
 
   const handleChange = (value: string) => {
     setQuery(value);
-    setPage(1);
     if (urlTimerRef.current) clearTimeout(urlTimerRef.current);
     urlTimerRef.current = window.setTimeout(() => {
       urlTimerRef.current = null;
-      router.replace(
-        {
-          pathname: ROUTES.SKILLS,
-          query: value.trim() ? { q: value } : {},
-        },
-        { scroll: false }
-      );
+      const params = new URLSearchParams(searchParams.toString());
+      if (value.trim()) params.set('q', value.trim());
+      else params.delete('q');
+      params.delete('page[skillsProviders]');
+      const query = params.toString();
+      router.replace(query ? `${ROUTES.SKILLS}?${query}` : ROUTES.SKILLS, {
+        scroll: false,
+      });
     }, 350);
   };
 
@@ -188,11 +125,11 @@ export function SkillsHubClient() {
         title={t('selectorTitle')}
         description={t('selectorDescription')}
         action={
-          providers.length > 0 ? (
+          pagination.totalItems > 0 ? (
             <DashboardStatus tone="navy">
               <span className="flex items-center gap-1.5 font-semibold">
                 <LayoutGrid className="text-navy size-3.5" aria-hidden="true" />
-                {t('platformsCount', { count: providers.length })}
+                {t('platformsCount', { count: pagination.totalItems })}
               </span>
             </DashboardStatus>
           ) : null
@@ -256,7 +193,7 @@ export function SkillsHubClient() {
               </div>
             </div>
 
-            {filteredProviders.length === 0 ? (
+            {providers.length === 0 ? (
               <div className="border-border/80 bg-muted/20 rounded-2xl border border-dashed p-8 text-center">
                 <SearchX
                   className="text-muted-foreground/60 mx-auto size-8"
@@ -278,7 +215,7 @@ export function SkillsHubClient() {
             ) : (
               <div>
                 <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-                  {pagedProviders.map((provider) => {
+                  {providers.map((provider) => {
                     const isFeatured = provider.slug === 'gamblock-ai';
                     return (
                       <Link
@@ -293,7 +230,7 @@ export function SkillsHubClient() {
                       >
                         <ProviderLogo
                           name={provider.name}
-                          logoUrl={provider.logoUrl}
+                          logoUrl={provider.logo_url}
                           isFeatured={isFeatured}
                         />
                         <div className="min-w-0 flex-1">
@@ -336,9 +273,9 @@ export function SkillsHubClient() {
                 </div>
                 <div className="mt-8 flex justify-center">
                   <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={pagination.setPage}
                   />
                 </div>
               </div>

@@ -34,7 +34,7 @@ import {
 import type { AdminSupportCase } from '@/hooks/use-admin-operations';
 import { SupportStatusBadge } from '@/components/dashboard/support-status-badge';
 import { Pagination } from '@/components/dashboard/pagination';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { CompactTabNav } from '@/components/common/compact-tab-nav';
 import { ROUTES } from '@/routes';
@@ -125,6 +125,7 @@ export function SupportTab(props: SupportTabProps) {
     } else {
       params.delete(key);
     }
+    params.delete('page[support]');
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
@@ -134,6 +135,7 @@ export function SupportTab(props: SupportTabProps) {
     params.delete('priority');
     params.delete('status');
     params.delete('assignee');
+    params.delete('page[support]');
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
@@ -152,48 +154,19 @@ export function SupportTab(props: SupportTabProps) {
     });
   }, [props.cases]);
 
-  const baseList = currentTab === 'active' ? activeCasesList : historyCasesList;
-
-  const filteredCases = useMemo(() => {
-    return baseList.filter((item) => {
-      // Priority filter
-      if (
-        priorityFilter !== 'all' &&
-        item.priority.toLowerCase() !== priorityFilter.toLowerCase()
-      ) {
-        return false;
-      }
-      // Status filter
-      if (statusFilter !== 'all') {
-        const itemStatus = normalizeSupportStatus(item.status);
-        const targetStatus = normalizeSupportStatus(statusFilter);
-        if (itemStatus !== targetStatus) {
-          return false;
-        }
-      }
-      // Assignee filter: 'me' vs 'others'
-      if (assigneeFilter === 'me') {
-        if (!props.userId || item.owner !== props.userId) {
-          return false;
-        }
-      } else if (assigneeFilter === 'others') {
-        if (props.userId && item.owner === props.userId) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [baseList, priorityFilter, statusFilter, assigneeFilter, props.userId]);
-
-  const {
-    pagedItems: pagedCases,
-    page: casesPage,
-    totalPages: totalCasesPages,
-    setPage: setCasesPage,
-    startIndex: casesStartIndex,
-    endIndex: casesEndIndex,
-    totalItems: totalCases,
-  } = usePagination<AdminSupportCase>({ items: filteredCases, pageSize: 10 });
+  const casesQuery = usePaginatedQuery<AdminSupportCase>({
+    path: `/admin/support-cases?${new URLSearchParams({
+      bucket: currentTab,
+      ...(priorityFilter !== 'all' ? { priority: priorityFilter } : {}),
+      ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+      ...(assigneeFilter !== 'all' ? { assignee: assigneeFilter } : {}),
+    }).toString()}`,
+    pageKey: 'page[support]',
+    pageSize: 10,
+  });
+  const pagedCases = casesQuery.items;
+  const casesPagination = casesQuery.pagination;
+  const totalCases = casesPagination.totalItems;
 
   useEffect(() => {
     if (!caseID || selected?.id === caseID) return;
@@ -832,7 +805,7 @@ export function SupportTab(props: SupportTabProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCases.length === 0 ? (
+            {totalCases === 0 ? (
               <TableEmptyRow
                 colSpan={6}
                 icon={Inbox}
@@ -930,15 +903,15 @@ export function SupportTab(props: SupportTabProps) {
           <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
             <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
               {tPagination('showingRange', {
-                start: casesStartIndex,
-                end: casesEndIndex,
+                start: casesPagination.startIndex,
+                end: casesPagination.endIndex,
                 total: totalCases,
               })}
             </span>
             <Pagination
-              currentPage={casesPage}
-              totalPages={totalCasesPages}
-              onPageChange={setCasesPage}
+              currentPage={casesPagination.page}
+              totalPages={casesPagination.totalPages}
+              onPageChange={casesPagination.setPage}
               variant="flat"
               size="sm"
             />

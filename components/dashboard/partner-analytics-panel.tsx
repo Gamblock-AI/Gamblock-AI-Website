@@ -30,7 +30,8 @@ import type {
   AccountabilityGroup,
   AccountabilityMembership,
 } from '@/hooks/use-accountability';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import type { PaginatedData } from '@/hooks/use-pagination';
 import { cn } from '@/lib/utils';
 
 interface Translation {
@@ -67,16 +68,23 @@ const educationKey = {
   near_complete: 'education.nearComplete',
 } as const;
 
+interface AccountabilityAnalyticsPage extends PaginatedData<AccountabilityMembership> {
+  total_detections: number;
+  shared_activity_members: number;
+  total_members: number;
+  ready_members: number;
+  attention_members: number;
+  detection_scale_max: number;
+}
+
 export function PartnerAnalyticsPanel({
   groups,
-  members,
   selectedGroupID,
   onSelectedGroupIDChange,
   searchQuery = '',
   onSearchQueryChange = () => {},
 }: {
   groups: AccountabilityGroup[];
-  members: AccountabilityMembership[];
   selectedGroupID: string;
   onSelectedGroupIDChange: (groupID: string) => void;
   searchQuery?: string;
@@ -95,28 +103,42 @@ export function PartnerAnalyticsPanel({
     activeGroups.some((group) => group.id === selectedGroupID)
       ? selectedGroupID
       : 'all';
+  const analyticsParams = new URLSearchParams();
+  if (effectiveGroupID !== 'all') analyticsParams.set('group_id', effectiveGroupID);
+  if (deferredSearchQuery.trim()) analyticsParams.set('q', deferredSearchQuery.trim());
+  const analyticsQuery = usePaginatedQuery<
+    AccountabilityMembership,
+    AccountabilityAnalyticsPage
+  >({
+    path: `/accountability/analytics/members?${analyticsParams.toString()}`,
+    pageKey: 'page[analyticsMembers]',
+    pageSize: 5,
+  });
   const analytics = useMemo(
     () =>
       buildPartnerAnalytics(
         groups,
-        members,
+        analyticsQuery.items,
         effectiveGroupID,
-        deferredSearchQuery,
+        '',
         locale
       ),
-    [deferredSearchQuery, effectiveGroupID, groups, locale, members]
+    [analyticsQuery.items, effectiveGroupID, groups, locale]
   );
-
-  const pagination = usePagination({
-    items: analytics.visibleMembers,
-    pageSize: 5,
-    initialPage: 1,
-  });
-  const { setPage } = pagination;
+  const pagination = analyticsQuery.pagination;
+  const analyticsData = analyticsQuery.data;
+  const totalDetections = analyticsData?.total_detections ?? analytics.totalDetections;
+  const sharedActivityMembers =
+    analyticsData?.shared_activity_members ?? analytics.sharedActivityMembers;
+  const totalMembers = analyticsData?.total_members ?? analytics.totalMembers;
+  const readyMembers = analyticsData?.ready_members ?? analytics.readyMembers;
+  const attentionMembers = analyticsData?.attention_members ?? analytics.attentionMembers;
+  const detectionScaleMax =
+    analyticsData?.detection_scale_max ?? analytics.detectionScaleMax;
 
   useEffect(() => {
-    setPage(1);
-  }, [effectiveGroupID, deferredSearchQuery, setPage]);
+    pagination.resetPage();
+  }, [effectiveGroupID, deferredSearchQuery, pagination]);
 
   return (
     <DashboardPanel
@@ -132,7 +154,7 @@ export function PartnerAnalyticsPanel({
           icon={ShieldAlert}
           tone="crimson"
           label={t('totalDetections')}
-          value={t('detectionTimes', { count: analytics.totalDetections })}
+          value={t('detectionTimes', { count: totalDetections })}
           body={t('sevenDayPeriod')}
         />
         <AnalyticsMetric
@@ -140,8 +162,8 @@ export function PartnerAnalyticsPanel({
           tone="azure"
           label={t('sharingCoverage')}
           value={t('sharingCoverageValue', {
-            shared: analytics.sharedActivityMembers,
-            total: analytics.totalMembers,
+            shared: sharedActivityMembers,
+            total: totalMembers,
           })}
           body={t('sharingCoverageBody')}
         />
@@ -149,15 +171,15 @@ export function PartnerAnalyticsPanel({
           icon={ShieldCheck}
           tone="sage"
           label={t('readyProtection')}
-          value={analytics.readyMembers}
+          value={readyMembers}
           body={t('consentedHealth')}
         />
         <AnalyticsMetric
           icon={AlertTriangle}
-          tone={analytics.attentionMembers > 0 ? 'amber' : 'navy'}
-          attention={analytics.attentionMembers > 0}
+          tone={attentionMembers > 0 ? 'amber' : 'navy'}
+          attention={attentionMembers > 0}
           label={t('needsAttention')}
-          value={analytics.attentionMembers}
+          value={attentionMembers}
           body={t('consentedHealth')}
         />
       </div>
@@ -206,23 +228,21 @@ export function PartnerAnalyticsPanel({
       </div>
 
       <div data-tour="tour-partner-table" className="space-y-3">
-        {analytics.members.length === 0 ? (
+        {pagination.totalItems === 0 ? (
           <AnalyticsEmpty message={t('noMembers')} />
-        ) : analytics.visibleMembers.length === 0 ? (
-          <AnalyticsEmpty message={t('noSearchResults')} />
         ) : (
           <div className="space-y-3">
             <MemberTable
-              members={pagination.paginatedItems}
-              detectionScaleMax={analytics.detectionScaleMax}
+              members={analytics.visibleMembers}
+              detectionScaleMax={detectionScaleMax}
               t={t}
             />
             <MemberCards
-              members={pagination.paginatedItems}
-              detectionScaleMax={analytics.detectionScaleMax}
+              members={analytics.visibleMembers}
+              detectionScaleMax={detectionScaleMax}
               t={t}
             />
-            {analytics.visibleMembers.length > 0 ? (
+            {pagination.totalItems > 0 ? (
               <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
                 <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
                   {tPagination('showingRange', {

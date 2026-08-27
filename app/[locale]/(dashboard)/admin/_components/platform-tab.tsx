@@ -44,7 +44,7 @@ import {
   FilterSelect,
   FilterToggleButton,
 } from '@/components/dashboard/filter-toolbar';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
@@ -377,41 +377,25 @@ export function PlatformTab({
   } = useQueryFilters({
     filterKeys: ['accountRole', 'accountStatus', 'accountQ'],
     defaultValues: { accountRole: 'all', accountStatus: 'all' },
-    pageKey: 'accountPage',
+    pageKey: 'page[accounts]',
   });
 
   const accountRoleFilter = getAccountFilter('accountRole', 'all');
   const accountStatusFilter = getAccountFilter('accountStatus', 'all');
   const accountSearchQuery = getAccountFilter('accountQ', '');
 
-  const filteredAccounts = useMemo(() => {
-    const q = accountSearchQuery.trim().toLowerCase();
-    return accounts.filter((acc) => {
-      const matchRole =
-        accountRoleFilter === 'all' || acc.role === accountRoleFilter;
-      const matchStatus =
-        accountStatusFilter === 'all' ||
-        (accountStatusFilter === 'disabled'
-          ? Boolean(acc.disabled_at)
-          : !acc.disabled_at);
-      const matchQ =
-        !q ||
-        acc.display_name.toLowerCase().includes(q) ||
-        acc.email.toLowerCase().includes(q) ||
-        (acc.phone_e164 && acc.phone_e164.toLowerCase().includes(q));
-      return matchRole && matchStatus && matchQ;
-    });
-  }, [accounts, accountRoleFilter, accountStatusFilter, accountSearchQuery]);
-
-  const {
-    pagedItems: pageAccounts,
-    page: accountPage,
-    totalPages: totalAccountPages,
-    setPage: setAccountPage,
-    startIndex: accountsStartIndex,
-    endIndex: accountsEndIndex,
-    totalItems: totalAccounts,
-  } = usePagination({ items: filteredAccounts, pageSize: 6 });
+  const accountsQuery = usePaginatedQuery<AdminAccount>({
+    path: `/admin/accounts?${new URLSearchParams({
+      ...(accountRoleFilter !== 'all' ? { role: accountRoleFilter } : {}),
+      ...(accountStatusFilter !== 'all' ? { status: accountStatusFilter } : {}),
+      ...(accountSearchQuery ? { q: accountSearchQuery } : {}),
+    }).toString()}`,
+    pageKey: 'page[accounts]',
+    pageSize: 6,
+  });
+  const pageAccounts = accountsQuery.items;
+  const accountPagination = accountsQuery.pagination;
+  const totalAccounts = accountPagination.totalItems;
 
   // Filters for Audit Events table
   const {
@@ -425,7 +409,7 @@ export function PlatformTab({
   } = useQueryFilters({
     filterKeys: ['auditAction', 'auditQ'],
     defaultValues: { auditAction: 'all' },
-    pageKey: 'auditPage',
+    pageKey: 'page[audit]',
   });
 
   const auditActionFilter = getAuditFilter('auditAction', 'all');
@@ -439,30 +423,17 @@ export function PlatformTab({
     return Array.from(actionSet).sort();
   }, [auditEvents]);
 
-  const filteredAuditEvents = useMemo(() => {
-    const q = auditSearchQuery.trim().toLowerCase();
-    return auditEvents.filter((ev) => {
-      const matchAction =
-        auditActionFilter === 'all' || ev.action === auditActionFilter;
-      const matchQ =
-        !q ||
-        ev.actor.toLowerCase().includes(q) ||
-        ev.action.toLowerCase().includes(q) ||
-        ev.target.toLowerCase().includes(q) ||
-        (ev.reason && ev.reason.toLowerCase().includes(q));
-      return matchAction && matchQ;
-    });
-  }, [auditEvents, auditActionFilter, auditSearchQuery]);
-
-  const {
-    pagedItems: pageAuditEvents,
-    page: auditPage,
-    totalPages: totalAuditPages,
-    setPage: setAuditPage,
-    startIndex: auditStartIndex,
-    endIndex: auditEndIndex,
-    totalItems: totalAuditEvents,
-  } = usePagination({ items: filteredAuditEvents, pageSize: 10 });
+  const auditQuery = usePaginatedQuery<AdminAuditEvent>({
+    path: `/admin/audit-events?${new URLSearchParams({
+      ...(auditActionFilter !== 'all' ? { action: auditActionFilter } : {}),
+      ...(auditSearchQuery ? { q: auditSearchQuery } : {}),
+    }).toString()}`,
+    pageKey: 'page[audit]',
+    pageSize: 10,
+  });
+  const pageAuditEvents = auditQuery.items;
+  const auditPagination = auditQuery.pagination;
+  const totalAuditEvents = auditPagination.totalItems;
 
   const localizeRole = (accountRole: string) =>
     tDynamic(dynamicLabelKey('role', accountRole), {
@@ -854,7 +825,6 @@ export function PlatformTab({
                   value={accountSearchQuery}
                   onChangeValue={(val) => {
                     setAccountFilter('accountQ', val);
-                    setAccountPage(1);
                   }}
                   placeholder="Cari nama, email, telepon..."
                   className="w-full sm:w-60"
@@ -864,7 +834,6 @@ export function PlatformTab({
                   value={accountRoleFilter}
                   onChange={(e) => {
                     setAccountFilter('accountRole', e.target.value);
-                    setAccountPage(1);
                   }}
                   ariaLabel={t('filterRole')}
                 >
@@ -878,7 +847,6 @@ export function PlatformTab({
                   value={accountStatusFilter}
                   onChange={(e) => {
                     setAccountFilter('accountStatus', e.target.value);
-                    setAccountPage(1);
                   }}
                   ariaLabel={t('filterAccountStatus')}
                 >
@@ -892,7 +860,6 @@ export function PlatformTab({
                 <FilterResetButton
                   onClick={() => {
                     clearAccountFilters(['accountRole', 'accountStatus', 'accountQ']);
-                    setAccountPage(1);
                   }}
                   label={t('clearFilters') || 'Reset'}
                 />
@@ -935,7 +902,6 @@ export function PlatformTab({
                       <FilterResetButton
                         onClick={() => {
                           clearAccountFilters(['accountRole', 'accountStatus', 'accountQ']);
-                          setAccountPage(1);
                         }}
                         label={t('clearFilters') || 'Reset Filter'}
                       />
@@ -996,15 +962,15 @@ export function PlatformTab({
             <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
               <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
                 {tPagination('showingRange', {
-                  start: accountsStartIndex,
-                  end: accountsEndIndex,
+                  start: accountPagination.startIndex,
+                  end: accountPagination.endIndex,
                   total: totalAccounts,
                 })}
               </span>
               <Pagination
-                currentPage={accountPage}
-                totalPages={totalAccountPages}
-                onPageChange={setAccountPage}
+                currentPage={accountPagination.page}
+                totalPages={accountPagination.totalPages}
+                onPageChange={accountPagination.setPage}
                 variant="flat"
                 size="sm"
               />
@@ -1047,7 +1013,6 @@ export function PlatformTab({
                 value={auditSearchQuery}
                 onChangeValue={(val) => {
                   setAuditFilter('auditQ', val);
-                  setAuditPage(1);
                 }}
                 placeholder="Cari aktor, aksi, target, alasan..."
                 className="w-full sm:w-64"
@@ -1058,7 +1023,6 @@ export function PlatformTab({
                   value={auditActionFilter}
                   onChange={(e) => {
                     setAuditFilter('auditAction', e.target.value);
-                    setAuditPage(1);
                   }}
                   ariaLabel={t('filterAuditAction')}
                 >
@@ -1076,7 +1040,6 @@ export function PlatformTab({
               <FilterResetButton
                 onClick={() => {
                   clearAuditFilters(['auditAction', 'auditQ']);
-                  setAuditPage(1);
                 }}
                 label={t('clearFilters') || 'Reset'}
               />
@@ -1122,7 +1085,6 @@ export function PlatformTab({
                     <FilterResetButton
                       onClick={() => {
                         clearAuditFilters(['auditAction', 'auditQ']);
-                        setAuditPage(1);
                       }}
                       label={t('clearFilters') || 'Reset Filter'}
                     />
@@ -1164,15 +1126,15 @@ export function PlatformTab({
           <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border-t px-4 py-2.5 sm:px-5">
             <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
               {tPagination('showingRange', {
-                start: auditStartIndex,
-                end: auditEndIndex,
+                start: auditPagination.startIndex,
+                end: auditPagination.endIndex,
                 total: totalAuditEvents,
               })}
             </span>
             <Pagination
-              currentPage={auditPage}
-              totalPages={totalAuditPages}
-              onPageChange={setAuditPage}
+              currentPage={auditPagination.page}
+              totalPages={auditPagination.totalPages}
+              onPageChange={auditPagination.setPage}
               variant="flat"
               size="sm"
             />

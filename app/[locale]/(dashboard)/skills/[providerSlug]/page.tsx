@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useMemo } from 'react';
+import { use } from 'react';
 import {
   ArrowLeft,
   Clock3,
@@ -10,14 +10,10 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { DashboardPage } from '@/components/dashboard/dashboard-page';
 import { Pagination } from '@/components/dashboard/pagination';
-import { usePagination } from '@/hooks/use-pagination';
 import { useBackNavigation } from '@/hooks/use-back-navigation';
 import { ROUTES } from '@/routes';
-import { slugifyProvider } from '@/lib/skills/external-platforms';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
-import { useLearningHub, type LearningItem } from '@/hooks/use-learning-hub';
-
-const COURSES_PER_PAGE = 9;
+import { useLearningHubItems, type LearningItem } from '@/hooks/use-learning-hub';
 
 const kindKeys: Record<LearningItem['kind'], string> = {
   course: 'kindCourse',
@@ -106,28 +102,11 @@ export default function ProviderDetailPage({
   const t = useTranslations('skillsHub');
   const locale = useLocale();
   const { providerSlug } = use(params);
-  const hub = useLearningHub(locale);
+  const hub = useLearningHubItems(locale, providerSlug);
   const { goBack } = useBackNavigation();
-
-  const providerItems = useMemo(
-    () =>
-      (hub.catalog?.items ?? []).filter(
-        (item) => item.provider && slugifyProvider(item.provider) === providerSlug
-      ),
-    [hub.catalog, providerSlug]
-  );
-
-  const {
-    page,
-    setPage,
-    totalPages,
-    paginatedItems: pagedItems,
-  } = usePagination({
-    items: providerItems,
-    pageSize: COURSES_PER_PAGE,
-  });
-
-  const provider = providerItems[0];
+  const providerItems = hub.items;
+  const provider = hub.data?.provider;
+  const pagination = hub.pagination;
 
   return (
     <DashboardPage>
@@ -141,30 +120,30 @@ export default function ProviderDetailPage({
       </button>
 
       <div className="border-border/80 bg-gradient-to-r from-card via-azure/15 to-card shadow-2xs mt-3 flex items-center gap-4 rounded-2xl border p-4 sm:p-5">
-        {provider?.provider_logo_url ? (
+        {provider?.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={resolveEducationMediaURL(provider.provider_logo_url)}
+            src={resolveEducationMediaURL(provider.logo_url)}
             alt=""
             className="bg-card flex size-12 shrink-0 items-center justify-center rounded-xl border border-border/80 object-contain p-1.5 shadow-2xs"
           />
         ) : (
           <span className="bg-gradient-to-br from-navy to-indigo-700 text-white flex size-12 shrink-0 items-center justify-center rounded-xl text-base font-black shadow-2xs">
-            {provider?.provider?.slice(0, 2).toUpperCase() ?? '?'}
+            {provider?.name?.slice(0, 2).toUpperCase() ?? '?'}
           </span>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-navy text-lg font-black tracking-tight sm:text-xl">
-              {provider?.provider ?? t('providerUnknown')}
+              {provider?.name ?? t('providerUnknown')}
             </h1>
             <span className="bg-navy/10 text-navy rounded-full px-2.5 py-0.5 text-xs font-bold">
-              {t('courseCount', { count: providerItems.length })}
+              {t('courseCount', { count: pagination.totalItems })}
             </span>
           </div>
-          {provider?.provider_description ? (
+          {provider?.description ? (
             <p className="text-muted-foreground mt-0.5 max-w-2xl text-xs leading-relaxed sm:text-sm line-clamp-2">
-              {provider.provider_description}
+              {provider.description}
             </p>
           ) : null}
         </div>
@@ -185,15 +164,15 @@ export default function ProviderDetailPage({
       ) : (
         <div className="mt-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {pagedItems.map((item) => (
+            {providerItems.map((item) => (
               <CourseCard key={item.id} item={item} />
             ))}
           </div>
           <div className="mt-8 flex justify-center">
             <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.setPage}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
@@ -30,7 +30,8 @@ import {
   usePartnerContactRequests,
 } from '@/hooks/use-accountability';
 import { useLocalUser } from '@/hooks/use-local-user';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import type { UsePaginationResult } from '@/hooks/use-pagination';
 import { Link } from '@/i18n/routing';
 import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 import { toastError, toastSuccess } from '@/lib/feedback';
@@ -50,18 +51,30 @@ export function PartnerContactWorkspace() {
   const user = useLocalUser();
   const isPartner = workspace?.role === 'partner' || user.role === 'partner';
   const membership = workspace?.membership;
+  const incomingQuery = usePaginatedQuery<PartnerContactRequest>({
+    path: '/accountability/contact-requests?bucket=incoming',
+    pageKey: 'page[incomingContacts]',
+    pageSize: 5,
+  });
+  const historyQuery = usePaginatedQuery<PartnerContactRequest>({
+    path: '/accountability/contact-requests?bucket=history',
+    pageKey: 'page[contactHistory]',
+    pageSize: 5,
+  });
+  const studentRequestsQuery = usePaginatedQuery<PartnerContactRequest>({
+    path: '/accountability/contact-requests?bucket=all',
+    pageKey: 'page[contactRequests]',
+    pageSize: 5,
+  });
   const toggleExpanded = (id: string) =>
     setExpanded((current) => ({ ...current, [id]: !current[id] }));
 
   // Partner view splits requests into actionable ("Permintaan dari siswa")
   // and finished ("Riwayat permintaan siswa"); the student view keeps the
   // single request list as before.
-  const incoming = contacts.requests.filter((request) =>
-    ['pending', 'acknowledged', 'escalated'].includes(request.status)
-  );
-  const history = contacts.requests.filter((request) =>
-    ['closed', 'cancelled'].includes(request.status)
-  );
+  const incoming = incomingQuery.items;
+  const history = historyQuery.items;
+  const studentRequests = studentRequestsQuery.items;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -162,6 +175,7 @@ export function PartnerContactWorkspace() {
           <div className="flex flex-1 flex-col justify-between gap-3">
             <ContactRequestList
               requests={incoming}
+              pagination={incomingQuery.pagination}
               isPartner
               mutating={contacts.mutating}
               locale={locale}
@@ -256,7 +270,12 @@ export function PartnerContactWorkspace() {
       >
         <div className="flex flex-1 flex-col justify-between">
           <ContactRequestList
-            requests={isPartner ? history : contacts.requests}
+            requests={isPartner ? history : studentRequests}
+            pagination={
+              isPartner
+                ? historyQuery.pagination
+                : studentRequestsQuery.pagination
+            }
             isPartner={isPartner}
             mutating={contacts.mutating}
             locale={locale}
@@ -332,13 +351,13 @@ function ContactBoundary({
 
 function ContactRequestList({
   requests,
+  pagination,
   isPartner,
   mutating,
   locale,
   currentTime,
   expanded,
   onToggle,
-  limit,
   emptyIcon,
   emptyTitle,
   emptyBody,
@@ -346,13 +365,13 @@ function ContactRequestList({
   onTransition,
 }: {
   requests: PartnerContactRequest[];
+  pagination: UsePaginationResult<PartnerContactRequest>;
   isPartner: boolean;
   mutating: boolean;
   locale: string;
   currentTime: number;
   expanded: Record<string, boolean>;
   onToggle: (id: string) => void;
-  limit?: number;
   emptyIcon?: LucideIcon;
   emptyTitle: string;
   emptyBody: string;
@@ -364,20 +383,6 @@ function ContactRequestList({
   const formatter = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  });
-
-  const sorted = useMemo(() => {
-    const list = [...requests].sort(
-      (left, right) =>
-        Date.parse(right.created_at) - Date.parse(left.created_at)
-    );
-    return limit ? list.slice(0, limit) : list;
-  }, [requests, limit]);
-
-  const pagination = usePagination({
-    items: sorted,
-    pageSize: 5,
-    initialPage: 1,
   });
 
   if (!requests.length) {
@@ -402,7 +407,7 @@ function ContactRequestList({
 
   return (
     <div className="space-y-3">
-      {pagination.paginatedItems.map((request) => {
+      {requests.map((request) => {
         const createdAt = new Date(request.created_at);
         const canEscalate =
           !isPartner &&

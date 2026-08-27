@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   ArrowRight,
   CircleHelp,
@@ -23,10 +23,9 @@ import { Pagination } from '@/components/dashboard/pagination';
 import { SupportStatusBadge } from '@/components/dashboard/support-status-badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { usePagination } from '@/hooks/use-pagination';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import {
-  useSupportRequest,
+  usePaginatedSupportRequest,
   type SupportCaseRecord,
 } from '@/hooks/use-support-request';
 import { Link } from '@/i18n/routing';
@@ -255,7 +254,6 @@ export function SupportHistoryPageClient() {
   const t = useTranslations('supportWorkspace');
   const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
-  const support = useSupportRequest();
   const [showFilters, setShowFilters] = useState(false);
 
   const { filters, setFilter, resetFilters, activeFilterCount } =
@@ -266,31 +264,21 @@ export function SupportHistoryPageClient() {
         type: 'all',
         status: 'all',
       },
+      pageKey: 'page[supportHistory]',
     });
 
-  const filteredCases = useMemo(() => {
-    return (support.cases ?? []).filter((item) => {
-      const matchesQuery =
-        !filters.q.trim() ||
-        item.id.toLowerCase().includes(filters.q.toLowerCase().trim()) ||
-        item.title.toLowerCase().includes(filters.q.toLowerCase().trim());
-      const matchesType =
-        filters.type === 'all' || item.type === filters.type;
-      const matchesStatus =
-        filters.status === 'all' || item.status === filters.status;
-      return matchesQuery && matchesType && matchesStatus;
-    });
-  }, [support.cases, filters]);
+  const support = usePaginatedSupportRequest(
+    {
+      q: filters.q,
+      type: filters.type,
+      status: filters.status,
+      bucket: 'history',
+    },
+    'page[supportHistory]',
+    5
+  );
 
-  const pagination = usePagination({
-    items: filteredCases,
-    pageSize: 5,
-    initialPage: 1,
-  });
-  const { setPage } = pagination;
-  useEffect(() => {
-    setPage(1);
-  }, [filters.q, filters.type, filters.status, setPage]);
+  const pagination = support.pagination;
 
   return (
     <DashboardPanel
@@ -320,7 +308,7 @@ export function SupportHistoryPageClient() {
           headerRight={
             <span className="text-xs font-semibold text-muted-foreground">
               {t('ticketsCount', {
-                count: filteredCases.length,
+                count: pagination.totalItems,
               })}
             </span>
           }
@@ -402,12 +390,12 @@ export function SupportHistoryPageClient() {
         </FilterToolbar>
 
         <SupportCaseList
-          cases={pagination.paginatedItems}
+          cases={support.cases}
           loading={support.loading}
           error={support.error}
         />
 
-        {filteredCases.length > 0 ? (
+        {pagination.totalItems > 0 ? (
           <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
             <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
               {tPagination('showingRange', {

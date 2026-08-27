@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useEducationModules } from '@/hooks/use-education';
+import { usePaginatedEducationModules } from '@/hooks/use-education';
 import { Link } from '@/i18n/routing';
 import {
   DashboardPage,
@@ -28,7 +28,6 @@ import {
 } from '@/components/dashboard/filter-toolbar';
 import { Pagination } from '@/components/dashboard/pagination';
 import { ThumbnailCarousel } from '@/components/education/thumbnail-carousel';
-import { usePagination } from '@/hooks/use-pagination';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import {
   dynamicLabelFallback,
@@ -41,8 +40,6 @@ export function EducationLibraryClient() {
   const t = useTranslations('educationLibrary');
   const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
-  const { modules, loading, error, refetch } = useEducationModules(locale);
-
   const { filters, setFilter, resetFilters, activeFilterCount } =
     useQueryFilters({
       pathname: ROUTES.EDUCATION,
@@ -50,9 +47,16 @@ export function EducationLibraryClient() {
         q: '',
         category: 'all',
       },
+      pageKey: 'page[education]',
     });
 
   const [showFilters, setShowFilters] = useState(false);
+  const modulesQuery = usePaginatedEducationModules(locale, {
+    query: filters.q,
+    category: filters.category,
+  });
+  const modules = modulesQuery.items;
+  const { loading, error, refetch } = modulesQuery;
 
   const categories = useMemo(
     () =>
@@ -65,35 +69,12 @@ export function EducationLibraryClient() {
       ? filters.category
       : 'all';
 
-  const filtered = useMemo(
-    () =>
-      modules.filter((item) => {
-        const matchesQuery = `${item.title} ${item.summary}`
-          .toLocaleLowerCase()
-          .includes(filters.q.toLocaleLowerCase());
-        return (
-          matchesQuery &&
-          (effectiveCategory === 'all' || item.category === effectiveCategory)
-        );
-      }),
-    [effectiveCategory, modules, filters.q]
-  );
-
   const continued = modules.find(
     (item) =>
       item.progress.progress_percent > 0 && item.progress.progress_percent < 100
   );
 
-  const pagination = usePagination({
-    items: filtered,
-    pageSize: 6,
-    initialPage: 1,
-  });
-  const { setPage } = pagination;
-
-  useEffect(() => {
-    setPage(1);
-  }, [filters.q, filters.category, setPage]);
+  const pagination = modulesQuery.pagination;
 
   return (
     <DashboardPage>
@@ -167,7 +148,7 @@ export function EducationLibraryClient() {
         headerRight={
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-muted-foreground">
-              {t('showingModulesCount', { count: filtered.length })}
+              {t('showingModulesCount', { count: pagination.totalItems })}
             </span>
           </div>
         }
@@ -230,7 +211,7 @@ export function EducationLibraryClient() {
             {t('retry')}
           </Button>
         </Card>
-      ) : filtered.length === 0 ? (
+      ) : modules.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title={modules.length ? t('noResultsTitle') : t('emptyTitle')}
@@ -240,7 +221,7 @@ export function EducationLibraryClient() {
       ) : (
         <div className="space-y-6">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {pagination.paginatedItems.map((module) => {
+            {modules.map((module) => {
               const progress = module.progress.progress_percent;
               return (
                 <article
@@ -312,7 +293,7 @@ export function EducationLibraryClient() {
             })}
           </div>
 
-          {filtered.length > 0 ? (
+          {pagination.totalItems > 0 ? (
             <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
               <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
                 {tPagination('showingRange', {

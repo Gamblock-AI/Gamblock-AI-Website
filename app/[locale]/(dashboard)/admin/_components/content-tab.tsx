@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   ArrowDown,
@@ -38,7 +38,7 @@ import {
   FilterSearchInput,
   FilterToggleButton,
 } from '@/components/dashboard/filter-toolbar';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { ThumbnailPlaceholder } from '@/components/education/thumbnail-placeholder';
 import type {
@@ -849,38 +849,22 @@ export function ContentTab(props: ContentTabProps) {
     filterKeys: ['status', 'q'],
     defaultValues: { status: 'all' },
     ignoredKeys: ['lang', 'moduleID'],
-    pageKey: 'page',
+    pageKey: 'page[content]',
   });
 
   const catalogStatus = getFilter('status', 'all');
   const catalogQuery = getFilter('q', '');
 
-  const filteredModules = useMemo(() => {
-    const q = catalogQuery.trim().toLowerCase();
-    return props.modules.filter((m) => {
-      const matchesQuery =
-        !q ||
-        (m.title || '').toLowerCase().includes(q) ||
-        (m.slug || '').toLowerCase().includes(q) ||
-        (m.summary || '').toLowerCase().includes(q);
-      const matchesStatus =
-        catalogStatus === 'all' || m.status === catalogStatus;
-      return matchesQuery && matchesStatus;
-    });
-  }, [props.modules, catalogQuery, catalogStatus]);
-
-  const {
-    page: catalogPage,
-    setPage: setCatalogPage,
-    totalPages: catalogTotalPages,
-    paginatedItems: pagedModules,
-    totalItems: catalogTotalItems,
-    startIndex: catalogStartIndex,
-    endIndex: catalogEndIndex,
-  } = usePagination({
-    items: filteredModules,
+  const modulesQuery = usePaginatedQuery<AdminEducationModule>({
+    path: `/admin/content/modules?${new URLSearchParams({
+      ...(catalogStatus !== 'all' ? { status: catalogStatus } : {}),
+      ...(catalogQuery ? { q: catalogQuery } : {}),
+    }).toString()}`,
+    pageKey: 'page[content]',
     pageSize: 6,
   });
+  const pagedModules = modulesQuery.items;
+  const pagination = modulesQuery.pagination;
 
   if (moduleID !== prevModuleID) {
     setPrevModuleID(moduleID);
@@ -1355,7 +1339,6 @@ export function ContentTab(props: ContentTabProps) {
                 value={catalogQuery}
                 onChangeValue={(val) => {
                   setCatalogFilter('q', val);
-                  setCatalogPage(1);
                 }}
                 placeholder="Cari judul, slug, atau ringkasan..."
                 className="flex-1 max-w-sm"
@@ -1376,7 +1359,6 @@ export function ContentTab(props: ContentTabProps) {
                       type="button"
                       onClick={() => {
                         setCatalogFilter('status', status);
-                        setCatalogPage(1);
                       }}
                       className={cn(
                         'rounded-xl px-2.5 py-1 text-xs font-bold transition-colors whitespace-nowrap',
@@ -1396,7 +1378,6 @@ export function ContentTab(props: ContentTabProps) {
               <FilterResetButton
                 onClick={() => {
                   clearCatalogFilters(['status', 'q']);
-                  setCatalogPage(1);
                 }}
                 label={t('clearFilters') || 'Reset'}
                 className="self-end sm:self-center"
@@ -1405,13 +1386,13 @@ export function ContentTab(props: ContentTabProps) {
           </div>
         ) : null}
 
-        {catalogTotalItems > 0 ? (
+        {pagination.totalItems > 0 ? (
           <div className="text-muted-foreground/80 flex items-center justify-between text-xs font-semibold px-1">
             <span>
               {tPagination('showingRange', {
-                start: catalogStartIndex,
-                end: catalogEndIndex,
-                total: catalogTotalItems,
+                start: pagination.startIndex,
+                end: pagination.endIndex,
+                total: pagination.totalItems,
               })}
             </span>
           </div>
@@ -1473,7 +1454,7 @@ export function ContentTab(props: ContentTabProps) {
                 </button>
               );
             })
-          ) : props.modules.length > 0 ? (
+          ) : pagination.totalItems > 0 ? (
             <div className="border-border bg-card shadow-soft col-span-full flex flex-col items-center justify-center gap-3 rounded-2xl border py-12 px-6 text-center">
               <Search className="text-muted-foreground size-8 opacity-60" />
               <div className="space-y-1">
@@ -1487,7 +1468,6 @@ export function ContentTab(props: ContentTabProps) {
                 size="sm"
                 onClick={() => {
                   clearCatalogFilters(['status', 'q']);
-                  setCatalogPage(1);
                 }}
               >
                 {t('clearFilters') || 'Reset Filter'}
@@ -1508,19 +1488,19 @@ export function ContentTab(props: ContentTabProps) {
           )}
         </div>
 
-        {catalogTotalPages > 1 ? (
+        {pagination.totalPages > 1 ? (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 pt-2">
             <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
               {tPagination('showingRange', {
-                start: catalogStartIndex,
-                end: catalogEndIndex,
-                total: catalogTotalItems,
+                start: pagination.startIndex,
+                end: pagination.endIndex,
+                total: pagination.totalItems,
               })}
             </span>
             <Pagination
-              currentPage={catalogPage}
-              totalPages={catalogTotalPages}
-              onPageChange={setCatalogPage}
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.setPage}
               variant="flat"
               size="sm"
             />

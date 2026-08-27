@@ -74,7 +74,7 @@ export function useQueryFilters(options: UseQueryFiltersOptions = {}) {
   const activeKeys = useMemo(() => {
     const keys: string[] = [];
     searchParams.forEach((val, key) => {
-      if (ignoredKeys.includes(key)) return;
+      if (ignoredKeys.includes(key) || key === 'page' || key.startsWith('page[')) return;
       if (filterKeys && !filterKeys.includes(key)) return;
       if (val && val !== '' && val !== 'all' && val !== mergedDefaults[key]) {
         keys.push(key);

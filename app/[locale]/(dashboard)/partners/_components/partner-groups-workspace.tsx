@@ -4,7 +4,6 @@ import {
   type Dispatch,
   type FormEvent,
   type SetStateAction,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -50,7 +49,7 @@ import {
   type AccountabilityMembership,
   useAccountability,
 } from '@/hooks/use-accountability';
-import { usePagination } from '@/hooks/use-pagination';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
@@ -87,6 +86,7 @@ export function PartnerGroupsWorkspace({
         q: '',
         status: 'all',
       },
+      pageKey: 'page[groups]',
     });
 
   const liveStatuses = new Set([
@@ -121,30 +121,15 @@ export function PartnerGroupsWorkspace({
     (request) => request.status === 'pending'
   ).length;
 
-  const filteredGroups = useMemo(() => {
-    return accountability.workspace.groups.filter((group) => {
-      const matchesQuery =
-        !filters.q.trim() ||
-        group.name.toLowerCase().includes(filters.q.toLowerCase().trim()) ||
-        (group.description &&
-          group.description
-            .toLowerCase()
-            .includes(filters.q.toLowerCase().trim()));
-      const matchesStatus =
-        filters.status === 'all' || group.status === filters.status;
-      return matchesQuery && matchesStatus;
-    });
-  }, [accountability.workspace.groups, filters]);
-
-  const groupsPagination = usePagination({
-    items: filteredGroups,
+  const groupQueryParams = new URLSearchParams();
+  if (filters.q.trim()) groupQueryParams.set('q', filters.q.trim());
+  if (filters.status !== 'all') groupQueryParams.set('status', filters.status);
+  const groupsQuery = usePaginatedQuery<AccountabilityGroup>({
+    path: `/accountability/groups?${groupQueryParams.toString()}`,
+    pageKey: 'page[groups]',
     pageSize: 5,
-    initialPage: 1,
   });
-  const { setPage: setGroupsPage } = groupsPagination;
-  useEffect(() => {
-    setGroupsPage(1);
-  }, [filters.q, filters.status, setGroupsPage]);
+  const groupsPagination = groupsQuery.pagination;
 
   const run = async (action: Promise<unknown>, message: string) => {
     try {
@@ -333,7 +318,7 @@ export function PartnerGroupsWorkspace({
               headerRight={
                 <span className="text-xs font-semibold text-muted-foreground">
                   {t('groupsCount', {
-                    count: filteredGroups.length,
+                    count: groupsPagination.totalItems,
                   })}
                 </span>
               }
@@ -375,7 +360,7 @@ export function PartnerGroupsWorkspace({
               body={t('noGroupsBody')}
               className="flex-1"
             />
-          ) : filteredGroups.length === 0 ? (
+          ) : groupsPagination.totalItems === 0 ? (
             <EmptyLine
               icon={FolderKanban}
               title={t('noGroups')}
@@ -413,7 +398,7 @@ export function PartnerGroupsWorkspace({
                 />
               ))}
 
-              {filteredGroups.length > 0 ? (
+              {groupsPagination.totalItems > 0 ? (
                 <div className="border-border/80 bg-muted/15 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border rounded-xl px-4 py-2.5 sm:px-5">
                   <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-center">
                     {tPagination('showingRange', {
@@ -500,33 +485,19 @@ function GroupCard({
   const displayCode = code || group.join_code;
 
   const activeMembers = useMemo(
-    () =>
-      members.filter((item) =>
-        ['active', 'leave_pending', 'support_review', 'safety_suspended'].includes(
-          item.status
-        )
-      ),
+    () => members.filter((item) =>
+      ['active', 'leave_pending', 'support_review', 'safety_suspended'].includes(item.status)
+    ),
     [members]
   );
-
-  const filteredMembers = useMemo(() => {
-    if (!searchQuery.trim()) return activeMembers;
-    const query = searchQuery.toLowerCase().trim();
-    return activeMembers.filter((m) =>
-      m.student_name.toLowerCase().includes(query)
-    );
-  }, [activeMembers, searchQuery]);
-
-  const memberPagination = usePagination({
-    items: filteredMembers,
+  const memberQueryParams = new URLSearchParams({ group_id: group.id });
+  if (searchQuery.trim()) memberQueryParams.set('q', searchQuery.trim());
+  const membersQuery = usePaginatedQuery<AccountabilityMembership>({
+    path: `/accountability/members?${memberQueryParams.toString()}`,
+    pageKey: `page[groupMembers][${group.id}]`,
     pageSize: 5,
-    initialPage: 1,
   });
-  const { setPage: setMemberPage } = memberPagination;
-  useEffect(() => {
-    setMemberPage(1);
-  }, [searchQuery, setMemberPage]);
-
+  const memberPagination = membersQuery.pagination;
   const allExpanded =
     activeMembers.length > 0 &&
     activeMembers.every((m) => expandedMembers[m.id]);
@@ -714,7 +685,7 @@ function GroupCard({
               {t('noStudentsInGroupBody')}
             </p>
           </div>
-        ) : filteredMembers.length === 0 ? (
+        ) : memberPagination.totalItems === 0 ? (
           <p className="text-muted-foreground py-3 text-center text-xs">
             {t('noMatchingStudents')}
           </p>
