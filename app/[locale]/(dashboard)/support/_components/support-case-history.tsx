@@ -23,13 +23,14 @@ import { Pagination } from '@/components/dashboard/pagination';
 import { SupportStatusBadge } from '@/components/dashboard/support-status-badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import {
   usePaginatedSupportRequest,
   type SupportCaseRecord,
 } from '@/hooks/use-support-request';
 import { Link } from '@/i18n/routing';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
@@ -258,14 +259,21 @@ export function SupportHistoryPageClient() {
 
   const { filters, setFilter, resetFilters, activeFilterCount } =
     useQueryFilters({
-      pathname: ROUTES.SUPPORT_HISTORY,
-      defaultFilters: {
+      resourceKey: 'supportHistory',
+      filterKeys: ['q', 'type', 'status'],
+      defaultValues: {
         q: '',
         type: 'all',
         status: 'all',
       },
-      pageKey: 'page[supportHistory]',
+      pageKey: DASHBOARD_QUERY_KEYS.pages.supportHistory,
+      removeKeys: ['q', 'type', 'status'],
     });
+  const queryInput = useQueryFilterInput({
+    resourceKey: 'supportHistory',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.supportHistory,
+    removeKeys: ['q'],
+  });
 
   const support = usePaginatedSupportRequest(
     {
@@ -274,7 +282,7 @@ export function SupportHistoryPageClient() {
       status: filters.status,
       bucket: 'history',
     },
-    'page[supportHistory]',
+    DASHBOARD_QUERY_KEYS.pages.supportHistory,
     5
   );
 
@@ -304,7 +312,10 @@ export function SupportHistoryPageClient() {
           onToggle={() => setShowFilters((prev) => !prev)}
           activeCount={activeFilterCount}
           hasActiveFilters={activeFilterCount > 0}
-          onReset={resetFilters}
+          onReset={() => {
+            resetFilters();
+            queryInput.reset();
+          }}
           headerRight={
             <span className="text-xs font-semibold text-muted-foreground">
               {t('ticketsCount', {
@@ -316,8 +327,8 @@ export function SupportHistoryPageClient() {
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full">
             <div className="w-full sm:w-64">
               <FilterSearchInput
-                value={filters.q}
-                onChangeValue={(val) => setFilter('q', val)}
+                value={queryInput.value}
+                onChangeValue={queryInput.onChange}
                 placeholder={t('searchTickets')}
                 ariaLabel={t('searchTickets')}
               />
@@ -381,7 +392,10 @@ export function SupportHistoryPageClient() {
 
               {activeFilterCount > 0 ? (
                 <FilterResetButton
-                  onClick={resetFilters}
+                  onClick={() => {
+                    resetFilters();
+                    queryInput.reset();
+                  }}
                   label={t('resetFilters')}
                 />
               ) : null}

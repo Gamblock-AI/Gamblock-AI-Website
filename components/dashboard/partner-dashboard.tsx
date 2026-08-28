@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   BarChart3,
@@ -13,7 +12,6 @@ import {
   Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
 import {
   DashboardNotice,
   DashboardPage,
@@ -28,9 +26,11 @@ import {
   type AnalyticsPeriod,
   type AnalyticsSummary,
 } from '@/hooks/use-analytics';
-import { useRouter } from '@/i18n/routing';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
+import { useQueryFilters } from '@/hooks/use-query-filters';
+import { useQueryTab } from '@/hooks/use-query-tab';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import { AnalyticsInsights } from './analytics/analytics-insights';
 import { AnalyticsMetric } from './analytics/analytics-metric';
 import { PartnerAnalyticsPanel } from './partner-analytics-panel';
@@ -49,68 +49,34 @@ const liveMemberStatuses = new Set([
 
 export function PartnerDashboard({ name }: PartnerDashboardProps) {
   const t = useTranslations('partnerDashboard');
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [selectedGroupID, setSelectedGroupID] = useState(
-    () => searchParams.get('group') ?? 'all'
-  );
-  const [searchQuery, setSearchQuery] = useState(
-    () => searchParams.get('q') ?? ''
-  );
-  const [period, setPeriod] = useState<AnalyticsPeriod>(() =>
-    searchParams.get('period') === '30' ? 30 : 14
-  );
-  const searchTimerRef = useRef<number | null>(null);
-
-  const updateParams = (
-    nextGroup: string,
-    nextQuery: string,
-    nextPeriod: AnalyticsPeriod
-  ) => {
-    const params: Record<string, string> = {};
-    if (nextQuery.trim()) params.q = nextQuery.trim();
-    if (nextGroup && nextGroup !== 'all') params.group = nextGroup;
-    if (nextPeriod !== 14) params.period = String(nextPeriod);
-    router.replace(
-      {
-        pathname: ROUTES.DASHBOARD,
-        query: Object.keys(params).length ? params : {},
-      },
-      { scroll: false }
-    );
-  };
-
-  const clearSearchTimer = () => {
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current);
-      searchTimerRef.current = null;
-    }
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    clearSearchTimer();
-    searchTimerRef.current = window.setTimeout(() => {
-      searchTimerRef.current = null;
-      updateParams(selectedGroupID, value, period);
-    }, 350);
-  };
-
-  const handleGroupChange = (groupID: string) => {
-    setSelectedGroupID(groupID);
-    clearSearchTimer();
-    updateParams(groupID, searchQuery, period);
-  };
+  const { filters, setFilter } = useQueryFilters({
+    resourceKey: 'analyticsMembers',
+    filterKeys: ['q', 'group'],
+    defaultValues: { q: '', group: 'all' },
+    pageKey: DASHBOARD_QUERY_KEYS.pages.analyticsMembers,
+    removeKeys: ['q', 'group'],
+  });
+  const queryInput = useQueryFilterInput({
+    resourceKey: 'analyticsMembers',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.analyticsMembers,
+    removeKeys: ['q'],
+  });
+  const { value: period, setValue: setPeriod } = useQueryTab<AnalyticsPeriod>({
+    queryKey: DASHBOARD_QUERY_KEYS.analyticsPeriod,
+    values: [14, 30],
+    defaultValue: 14,
+    resetKeys: [DASHBOARD_QUERY_KEYS.pages.analyticsMembers],
+    history: 'push',
+  });
+  const selectedGroupID = filters.group;
+  const searchQuery = queryInput.value;
+  const handleSearchChange = queryInput.onChange;
+  const handleGroupChange = (groupID: string) =>
+    setFilter('group', groupID);
 
   const handlePeriodChange = (nextPeriod: AnalyticsPeriod) => {
     setPeriod(nextPeriod);
-    clearSearchTimer();
-    updateParams(selectedGroupID, searchQuery, nextPeriod);
   };
-
-  useEffect(() => {
-    return () => clearSearchTimer();
-  }, []);
 
   const accountability = useAccountability();
   const activeGroups = accountability.workspace.groups.filter(

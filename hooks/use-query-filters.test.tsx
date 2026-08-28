@@ -31,9 +31,13 @@ describe('useQueryFilters', () => {
   });
 
   it('reads filter values with fallback and defaults', () => {
-    currentParams = new URLSearchParams('priority=urgent&status=waiting_support');
+    currentParams = new URLSearchParams(
+      'filter%5Btickets%5D%5Bpriority%5D=urgent&filter%5Btickets%5D%5Bstatus%5D=waiting_support'
+    );
     const { result } = renderHook(() =>
       useQueryFilters({
+        resourceKey: 'tickets',
+        filterKeys: ['priority', 'status', 'assignee'],
         defaultValues: { assignee: 'all' },
       })
     );
@@ -46,13 +50,13 @@ describe('useQueryFilters', () => {
 
   it('correctly calculates active filter count and activeKeys', () => {
     currentParams = new URLSearchParams(
-      'section=items&priority=urgent&status=all&q=test'
+      'tab%5Bsupport%5D=team&filter%5Btickets%5D%5Bpriority%5D=urgent&filter%5Btickets%5D%5Bstatus%5D=all&filter%5Btickets%5D%5Bq%5D=test'
     );
     const { result } = renderHook(() =>
       useQueryFilters({
         filterKeys: ['priority', 'status', 'q'],
+        resourceKey: 'tickets',
         defaultValues: { status: 'all' },
-        ignoredKeys: ['section'],
       })
     );
 
@@ -61,11 +65,37 @@ describe('useQueryFilters', () => {
     expect(result.current.activeKeys).toEqual(['priority', 'q']);
   });
 
-  it('updates a single filter and resets page if configured', () => {
-    currentParams = new URLSearchParams('page=3&status=published');
+  it('preserves unrelated namespaced navigation state while resetting its own page key', () => {
+    currentParams = new URLSearchParams(
+      'tab%5Bsupport%5D=team&filter%5Btickets%5D%5Bstatus%5D=open&page%5Bsupport%5D=3&page%5Baudit%5D=5'
+    );
     const { result } = renderHook(() =>
       useQueryFilters({
-        pageKey: 'page',
+        resourceKey: 'tickets',
+        filterKeys: ['status'],
+        pageKey: 'page[support]',
+      })
+    );
+
+    act(() => {
+      result.current.setFilter('status', 'closed');
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith(
+      '/admin/tickets?tab%5Bsupport%5D=team&filter%5Btickets%5D%5Bstatus%5D=closed&page%5Baudit%5D=5',
+      { scroll: false }
+    );
+  });
+
+  it('updates a single filter and resets page if configured', () => {
+    currentParams = new URLSearchParams(
+      'page%5Bcontent%5D=3&filter%5Bcontent%5D%5Bstatus%5D=published'
+    );
+    const { result } = renderHook(() =>
+      useQueryFilters({
+        resourceKey: 'content',
+        filterKeys: ['status'],
+        pageKey: 'page[content]',
       })
     );
 
@@ -73,9 +103,12 @@ describe('useQueryFilters', () => {
       result.current.setFilter('status', 'draft');
     });
 
-    expect(mockReplace).toHaveBeenCalledWith('/admin/tickets?status=draft', {
-      scroll: false,
-    });
+    expect(mockReplace).toHaveBeenCalledWith(
+      '/admin/tickets?filter%5Bcontent%5D%5Bstatus%5D=draft',
+      {
+        scroll: false,
+      }
+    );
 
     act(() => {
       result.current.setFilter('status', 'all');
@@ -86,11 +119,34 @@ describe('useQueryFilters', () => {
     });
   });
 
+  it('removes legacy flat keys without reading their values', () => {
+    currentParams = new URLSearchParams('q=legacy&status=legacy&page%5Bcontent%5D=2');
+    renderHook(() =>
+      useQueryFilters({
+        resourceKey: 'content',
+        filterKeys: ['q', 'status'],
+        pageKey: 'page[content]',
+        removeKeys: ['q', 'status'],
+      })
+    );
+
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    const url = mockReplace.mock.calls[0][0];
+    const query = new URLSearchParams(url.split('?')[1]);
+    expect(query.has('q')).toBe(false);
+    expect(query.has('status')).toBe(false);
+    expect(query.has('filter[content][q]')).toBe(false);
+    expect(query.has('filter[content][status]')).toBe(false);
+    expect(query.get('page[content]')).toBe('2');
+  });
+
   it('updates multiple filters at once', () => {
-    currentParams = new URLSearchParams('page=2');
+    currentParams = new URLSearchParams('page%5Btickets%5D=2');
     const { result } = renderHook(() =>
       useQueryFilters({
-        pageKey: 'page',
+        resourceKey: 'tickets',
+        filterKeys: ['priority', 'status'],
+        pageKey: 'page[tickets]',
       })
     );
 
@@ -102,20 +158,20 @@ describe('useQueryFilters', () => {
     });
 
     expect(mockReplace).toHaveBeenCalledWith(
-      '/admin/tickets?priority=high&status=open',
+      '/admin/tickets?filter%5Btickets%5D%5Bpriority%5D=high&filter%5Btickets%5D%5Bstatus%5D=open',
       { scroll: false }
     );
   });
 
   it('clears specific or all active filters and safely handles event objects', () => {
     currentParams = new URLSearchParams(
-      'section=items&priority=urgent&status=open&page=2'
+      'tab%5BadminTickets%5D=active&filter%5BadminTickets%5D%5Bpriority%5D=urgent&filter%5BadminTickets%5D%5Bstatus%5D=open&page%5BadminTickets%5D=2'
     );
     const { result } = renderHook(() =>
       useQueryFilters({
+        resourceKey: 'adminTickets',
         filterKeys: ['priority', 'status'],
-        pageKey: 'page',
-        ignoredKeys: ['section'],
+        pageKey: 'page[adminTickets]',
       })
     );
 
@@ -124,7 +180,7 @@ describe('useQueryFilters', () => {
     });
 
     expect(mockReplace).toHaveBeenCalledWith(
-      '/admin/tickets?section=items&status=open',
+      '/admin/tickets?tab%5BadminTickets%5D=active&filter%5BadminTickets%5D%5Bstatus%5D=open',
       { scroll: false }
     );
 
@@ -135,14 +191,16 @@ describe('useQueryFilters', () => {
     });
 
     expect(mockReplace).toHaveBeenCalledWith(
-      '/admin/tickets?section=items',
+      '/admin/tickets?tab%5BadminTickets%5D=active',
       { scroll: false }
     );
   });
 
   it('handles collapsible toggle state', () => {
     currentParams = new URLSearchParams();
-    const { result } = renderHook(() => useQueryFilters());
+    const { result } = renderHook(() =>
+      useQueryFilters({ resourceKey: 'tickets', filterKeys: [] })
+    );
 
     expect(result.current.isExpanded).toBe(false);
 

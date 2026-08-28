@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import {
   CheckCircle2,
   Clock3,
@@ -24,8 +23,10 @@ import {
 } from '@/components/dashboard/filter-toolbar';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
+import { useQueryTab } from '@/hooks/use-query-tab';
 import { toastError, toastSuccess } from '@/lib/feedback';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import { EmergencyKeyCard } from './emergency-key-card';
 import { AdminStatusBadge } from './admin-shared';
 
@@ -49,8 +50,14 @@ export function EmergencyTab({
   const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
   const locale = useLocale();
-  const searchParams = useSearchParams();
-  const currentTab = (searchParams.get('tab') as EmergencyTabSection) || 'active';
+  const { value: currentTab, setValue: setCurrentTab } = useQueryTab<EmergencyTabSection>({
+    queryKey: DASHBOARD_QUERY_KEYS.adminEmergencyTab,
+    values: ['active', 'history'],
+    defaultValue: 'active',
+    resetKeys: [DASHBOARD_QUERY_KEYS.pages.emergency],
+    removeKeys: ['tab', 'q', 'status'],
+    history: 'push',
+  });
   const [keyCopied, setKeyCopied] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
@@ -63,14 +70,20 @@ export function EmergencyTab({
     activeFilterCount: activeEmergencyFilterCount,
     hasActiveFilters: hasActiveEmergencyFilters,
   } = useQueryFilters({
+    resourceKey: 'emergency',
     filterKeys: ['status', 'q'],
     defaultValues: { status: 'all' },
-    ignoredKeys: ['tab'],
-    pageKey: 'page[emergency]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.emergency,
+    removeKeys: ['q', 'status'],
+  });
+  const emergencySearchInput = useQueryFilterInput({
+    resourceKey: 'emergency',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.emergency,
+    removeKeys: ['q', 'status'],
   });
 
   const statusFilter = getFilter('status', 'all');
-  const searchQuery = getFilter('q', '');
+  const searchQuery = emergencySearchInput.value;
 
   const emergencyQuery = usePaginatedQuery<EmergencyKeyRequest>({
     path: `/admin/emergency-key-requests?${new URLSearchParams({
@@ -78,7 +91,7 @@ export function EmergencyTab({
       ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
       ...(searchQuery ? { q: searchQuery } : {}),
     }).toString()}`,
-    pageKey: 'page[emergency]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.emergency,
     pageSize: 5,
   });
   const pagedRequests = emergencyQuery.items;
@@ -140,12 +153,12 @@ export function EmergencyTab({
       <CompactTabNav<EmergencyTabSection>
         ariaLabel={t('emergencyTabNavigation')}
         value={currentTab}
+        onValueChange={setCurrentTab}
         items={[
           {
             value: 'active',
             label: t('emergencyTabActive'),
             icon: <KeyRound className="size-3.5" />,
-            href: `${ROUTES.ADMIN_EMERGENCY}?tab=active`,
             activeAdornment:
               currentTab === 'active' && totalRequests > 0 ? (
                 <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
@@ -157,7 +170,6 @@ export function EmergencyTab({
             value: 'history',
             label: t('emergencyTabHistory'),
             icon: <History className="size-3.5" />,
-            href: `${ROUTES.ADMIN_EMERGENCY}?tab=history`,
             activeAdornment:
               currentTab === 'history' && totalRequests > 0 ? (
                 <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
@@ -212,9 +224,7 @@ export function EmergencyTab({
               <div className="flex flex-wrap items-center gap-2.5">
                 <FilterSearchInput
                   value={searchQuery}
-                  onChangeValue={(val) => {
-                    setFilter('q', val);
-                  }}
+                  onChangeValue={emergencySearchInput.onChange}
                   placeholder="Cari ID, pemohon, atau perangkat..."
                   className="w-full sm:w-64"
                 />
@@ -256,6 +266,7 @@ export function EmergencyTab({
                 <FilterResetButton
                   onClick={() => {
                     clearFilters(['status', 'q']);
+                    emergencySearchInput.reset();
                   }}
                   label={t('clearFilters') || 'Reset'}
                 />
@@ -275,6 +286,7 @@ export function EmergencyTab({
                 <FilterResetButton
                   onClick={() => {
                     clearFilters(['status', 'q']);
+                    emergencySearchInput.reset();
                   }}
                   label={t('clearFilters') || 'Reset Filter'}
                 />

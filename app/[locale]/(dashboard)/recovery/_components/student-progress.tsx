@@ -33,8 +33,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useProgressSnapshot } from '@/hooks/use-progress-snapshot';
+import { useQueryTab } from '@/hooks/use-query-tab';
 import { toastError, toastSuccess } from '@/lib/feedback';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import { printProgressSnapshot } from './progress-export';
 import {
   activityCategories,
@@ -64,7 +65,7 @@ const CATEGORY_ICONS: Record<ProgressCategory, LucideIcon> = {
   protection: ShieldAlert,
 };
 
-export function StudentProgress({ range }: { range: RangeDays }) {
+export function StudentProgress({ range: initialRange }: { range: RangeDays }) {
   const p = useTranslations('progressExperience');
   const locale = useLocale();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -73,6 +74,14 @@ export function StudentProgress({ range }: { range: RangeDays }) {
   const [confirmExport, setConfirmExport] = useState<'csv' | 'pdf' | null>(
     null
   );
+  const { value: selectedRange, setValue: setRange } = useQueryTab<RangeDays>({
+    queryKey: DASHBOARD_QUERY_KEYS.recoveryTab,
+    values: [7, 30, 90],
+    defaultValue: initialRange,
+    resetKeys: [DASHBOARD_QUERY_KEYS.pages.recovery],
+    removeKeys: ['range'],
+  });
+  const range = selectedRange;
   const snapshot = useProgressSnapshot(range);
 
   const days = useMemo(() => buildCalendarDays(range), [range]);
@@ -177,10 +186,10 @@ export function StudentProgress({ range }: { range: RangeDays }) {
       <CompactTabNav<RangeDays>
         ariaLabel={p('rangeLabel')}
         value={range}
+        onValueChange={setRange}
         items={([7, 30, 90] as const).map((value) => ({
           value,
           label: p('days', { count: value }),
-          href: `${ROUTES.RECOVERY}?range=${value}`,
         }))}
       />
 

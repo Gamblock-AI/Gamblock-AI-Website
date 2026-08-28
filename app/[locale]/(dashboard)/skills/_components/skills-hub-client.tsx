@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -12,7 +12,6 @@ import {
   X,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
 import {
   DashboardPage,
   DashboardPageHeader,
@@ -22,11 +21,13 @@ import {
 import { Pagination } from '@/components/dashboard/pagination';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Link, useRouter } from '@/i18n/routing';
+import { Link } from '@/i18n/routing';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { useLearningHubProviders } from '@/hooks/use-learning-hub';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 
 function ProviderLogo({
   name,
@@ -81,35 +82,21 @@ function ProviderLogo({
 export function SkillsHubClient() {
   const t = useTranslations('skillsHub');
   const locale = useLocale();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
-  const urlTimerRef = useRef<number | null>(null);
-  const hub = useLearningHubProviders(locale, query);
+  const { filters } = useQueryFilters({
+    resourceKey: 'skillsProviders',
+    filterKeys: ['q'],
+    defaultValues: { q: '' },
+    pageKey: DASHBOARD_QUERY_KEYS.pages.skillsProviders,
+    removeKeys: ['q'],
+  });
+  const queryInput = useQueryFilterInput({
+    resourceKey: 'skillsProviders',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.skillsProviders,
+    removeKeys: ['q'],
+  });
+  const hub = useLearningHubProviders(locale, filters.q);
   const providers = hub.items;
   const pagination = hub.pagination;
-
-  const handleChange = (value: string) => {
-    setQuery(value);
-    if (urlTimerRef.current) clearTimeout(urlTimerRef.current);
-    urlTimerRef.current = window.setTimeout(() => {
-      urlTimerRef.current = null;
-      const params = new URLSearchParams(searchParams.toString());
-      if (value.trim()) params.set('q', value.trim());
-      else params.delete('q');
-      params.delete('page[skillsProviders]');
-      const query = params.toString();
-      router.replace(query ? `${ROUTES.SKILLS}?${query}` : ROUTES.SKILLS, {
-        scroll: false,
-      });
-    }, 350);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (urlTimerRef.current) clearTimeout(urlTimerRef.current);
-    };
-  }, []);
 
   return (
     <DashboardPage>
@@ -175,15 +162,15 @@ export function SkillsHubClient() {
                 />
                 <input
                   type="text"
-                  value={query}
-                  onChange={(e) => handleChange(e.target.value)}
+                  value={queryInput.value}
+                  onChange={(e) => queryInput.onChange(e.target.value)}
                   placeholder={t('searchPlaceholder')}
                   className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-navy focus-visible:ring-navy/20 h-10 w-full rounded-xl border pr-9 pl-10 text-xs outline-none transition-all focus-visible:ring-2 sm:text-sm"
                 />
-                {query ? (
+                {queryInput.value ? (
                   <button
                     type="button"
-                    onClick={() => handleChange('')}
+                    onClick={queryInput.reset}
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-1"
                     aria-label={t('clearSearch')}
                   >
@@ -200,14 +187,14 @@ export function SkillsHubClient() {
                   aria-hidden="true"
                 />
                 <p className="text-navy mt-2 text-sm font-bold">
-                  {t('noSearchResults', { query })}
+                  {t('noSearchResults', { query: queryInput.value })}
                 </p>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="mt-3"
-                  onClick={() => handleChange('')}
+                  onClick={queryInput.reset}
                 >
                   {t('clearSearch')}
                 </Button>

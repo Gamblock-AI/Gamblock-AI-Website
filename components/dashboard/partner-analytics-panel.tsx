@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useDeferredValue, useMemo, useState, type ReactNode } from 'react';
+import { useDeferredValue, useMemo, useState, type ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
@@ -33,6 +33,7 @@ import type {
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import type { PaginatedData } from '@/hooks/use-pagination';
 import { cn } from '@/lib/utils';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 
 interface Translation {
   (key: string, values?: Record<string, string | number>): string;
@@ -111,7 +112,7 @@ export function PartnerAnalyticsPanel({
     AccountabilityAnalyticsPage
   >({
     path: `/accountability/analytics/members?${analyticsParams.toString()}`,
-    pageKey: 'page[analyticsMembers]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.analyticsMembers,
     pageSize: 5,
   });
   const analytics = useMemo(
@@ -135,10 +136,6 @@ export function PartnerAnalyticsPanel({
   const attentionMembers = analyticsData?.attention_members ?? analytics.attentionMembers;
   const detectionScaleMax =
     analyticsData?.detection_scale_max ?? analytics.detectionScaleMax;
-
-  useEffect(() => {
-    pagination.resetPage();
-  }, [effectiveGroupID, deferredSearchQuery, pagination]);
 
   return (
     <DashboardPanel

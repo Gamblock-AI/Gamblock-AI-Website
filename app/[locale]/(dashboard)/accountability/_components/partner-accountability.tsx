@@ -16,7 +16,7 @@ import type { useAccountability } from '@/hooks/use-accountability';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { Link } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 import { AccountabilityConfirmDialog } from './accountability-confirm-dialog';
 import {
   EmptyLine,
@@ -53,14 +53,14 @@ export function PartnerAccountability({
     Accountability['requests'][number]
   >({
     path: '/approval-requests?status=pending',
-    pageKey: 'page[approvalQueue]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.approvalQueue,
     pageSize: 5,
   });
   const leavesQuery = usePaginatedQuery<
     Accountability['workspace']['exit_requests'][number]
   >({
     path: '/accountability/exit-requests?status=pending',
-    pageKey: 'page[leaveQueue]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.leaveQueue,
     pageSize: 5,
   });
   const pendingApprovals = approvalsQuery.items;
@@ -158,7 +158,7 @@ export function PartnerAccountability({
           <div className="space-y-3">
             {pendingApprovals.length ? (
               <>
-                {approvalsPagination.paginatedItems.map((request) => {
+                {approvalsPagination.items.map((request) => {
                   const member = membersById.get(request.membership_id);
                   return (
                     <ExpandableRow
@@ -312,7 +312,7 @@ export function PartnerAccountability({
           <div className="space-y-3">
             {pendingLeaves.length ? (
               <>
-                {leavesPagination.paginatedItems.map((request) => {
+                {leavesPagination.items.map((request) => {
                   const member = membersById.get(request.membership_id);
                   const unsafe = request.kind === 'unsafe';
                   return (
@@ -356,7 +356,7 @@ export function PartnerAccountability({
                             {t('unsafePartnerNotice')}
                           </p>
                           <Link
-                            href={`${ROUTES.SUPPORT}?channel=team`}
+                            href={`${ROUTES.SUPPORT}?${DASHBOARD_QUERY_KEYS.supportTab}=team`}
                             className="text-navy mt-2 inline-flex min-h-10 items-center text-xs font-semibold underline underline-offset-4"
                           >
                             {t('openTeamSupport')}

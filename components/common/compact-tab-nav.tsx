@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 
 type CompactTabValue = string | number;
@@ -7,7 +6,6 @@ type CompactTabValue = string | number;
 export type CompactTabNavItem<TValue extends CompactTabValue> = {
   value: TValue;
   label: ReactNode;
-  href?: string;
   icon?: ReactNode;
   activeAdornment?: ReactNode;
   disabled?: boolean;
@@ -17,14 +15,14 @@ type CompactTabNavProps<TValue extends CompactTabValue> = {
   ariaLabel: string;
   value: TValue;
   items: readonly CompactTabNavItem<TValue>[];
-  onValueChange?: (value: TValue) => void;
+  onValueChange: (value: TValue) => void;
   className?: string;
 };
 
 /**
- * Compact, flat segmented navigation for in-place selectors and linked page
- * channels. It deliberately uses buttons/links rather than the generated
- * Tabs primitive because these controls switch a range or a route, not panels.
+ * Compact, flat segmented navigation for query-backed in-place selectors.
+ * Query state and history behavior belong to the consumer's reusable hook;
+ * this component only renders the accessible control surface.
  */
 export function CompactTabNav<TValue extends CompactTabValue>({
   ariaLabel,
@@ -61,23 +59,14 @@ export function CompactTabNav<TValue extends CompactTabValue>({
           </>
         );
 
-        return item.href ? (
-          <Link
-            key={String(item.value)}
-            href={item.href}
-            aria-current={active ? 'page' : undefined}
-            className={itemClassName}
-          >
-            {content}
-          </Link>
-        ) : (
+        return (
           <button
             key={String(item.value)}
             type="button"
             disabled={item.disabled}
             aria-pressed={active}
             className={itemClassName}
-            onClick={() => onValueChange?.(item.value)}
+            onClick={() => onValueChange(item.value)}
           >
             {content}
           </button>

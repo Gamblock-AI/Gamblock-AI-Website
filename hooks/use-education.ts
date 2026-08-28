@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import { usePaginatedQuery } from './use-paginated-query';
 
 export type RichTextDocument = {
@@ -219,7 +220,7 @@ export function usePaginatedEducationModules(
   }
   return usePaginatedQuery<EducationModule>({
     path: `/psychoeducation/modules?${params.toString()}`,
-    pageKey: 'page[education]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.education,
     pageSize: 6,
   });
 }

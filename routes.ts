@@ -1,3 +1,5 @@
+import { filterQueryKey, scopedFilterQueryKey } from '@/lib/query-params';
+
 export const ROUTES = {
   HOME: '/',
   DASHBOARD: '/dashboard',
@@ -43,6 +45,110 @@ export const ROUTES = {
   MINI_GAMES_PICTURE_FORGE: '/mini-games/picture-forge',
   MINI_GAMES_TWIN_TRACE: '/mini-games/twin-trace',
   MINI_GAMES_BRAIN_SUMMIT: '/mini-games/brain-summit',
+} as const;
+
+export const DASHBOARD_QUERY_KEYS = {
+  supportTab: 'tab[support]',
+  recoveryTab: 'tab[recovery]',
+  adminTicketsTab: 'tab[adminTickets]',
+  adminDataRequestsTab: 'tab[adminDataRequests]',
+  adminEmergencyTab: 'tab[adminEmergency]',
+  adminLearningHubTab: 'tab[adminLearningHub]',
+  analyticsPeriod: 'period',
+  state: {
+    contentLanguage: 'lang[content]',
+    learningHubLanguage: 'lang[learningHub]',
+    learningHubItem: 'item[learningHub]',
+  },
+  filters: {
+    analyticsMembers: {
+      query: filterQueryKey('analyticsMembers', 'q'),
+      group: filterQueryKey('analyticsMembers', 'group'),
+    },
+    education: {
+      query: filterQueryKey('education', 'q'),
+      category: filterQueryKey('education', 'category'),
+    },
+    skillsProviders: {
+      query: filterQueryKey('skillsProviders', 'q'),
+    },
+    approvalHistory: {
+      query: filterQueryKey('approvalHistory', 'q'),
+      status: filterQueryKey('approvalHistory', 'status'),
+    },
+    groups: {
+      query: filterQueryKey('groups', 'q'),
+      status: filterQueryKey('groups', 'status'),
+    },
+    groupMembers: (groupID: string) => ({
+      query: scopedFilterQueryKey('groupMembers', groupID, 'q'),
+    }),
+    sharedMembers: {
+      query: filterQueryKey('sharedMembers', 'q'),
+      group: filterQueryKey('sharedMembers', 'group'),
+      protection: filterQueryKey('sharedMembers', 'protection'),
+    },
+    supportHistory: {
+      query: filterQueryKey('supportHistory', 'q'),
+      type: filterQueryKey('supportHistory', 'type'),
+      status: filterQueryKey('supportHistory', 'status'),
+    },
+    tickets: {
+      query: filterQueryKey('tickets', 'q'),
+      status: filterQueryKey('tickets', 'status'),
+      priority: filterQueryKey('tickets', 'priority'),
+      assignee: filterQueryKey('tickets', 'assignee'),
+    },
+    dataRequests: {
+      status: filterQueryKey('dataRequests', 'status'),
+    },
+    emergency: {
+      query: filterQueryKey('emergency', 'q'),
+      status: filterQueryKey('emergency', 'status'),
+    },
+    learningHub: {
+      query: filterQueryKey('learningHub', 'q'),
+      status: filterQueryKey('learningHub', 'status'),
+    },
+    content: {
+      query: filterQueryKey('content', 'q'),
+      status: filterQueryKey('content', 'status'),
+    },
+    accounts: {
+      query: filterQueryKey('accounts', 'q'),
+      role: filterQueryKey('accounts', 'role'),
+      status: filterQueryKey('accounts', 'status'),
+    },
+    audit: {
+      query: filterQueryKey('audit', 'q'),
+      action: filterQueryKey('audit', 'action'),
+    },
+  },
+  pages: {
+    analyticsMembers: 'page[analyticsMembers]',
+    education: 'page[education]',
+    skillsProviders: 'page[skillsProviders]',
+    skillsItems: 'page[skillsItems]',
+    recovery: 'page[recovery]',
+    approvalHistory: 'page[approvalHistory]',
+    approvalQueue: 'page[approvalQueue]',
+    leaveQueue: 'page[leaveQueue]',
+    groups: 'page[groups]',
+    incomingContacts: 'page[incomingContacts]',
+    contactHistory: 'page[contactHistory]',
+    contactRequests: 'page[contactRequests]',
+    flaggedMembers: 'page[flaggedMembers]',
+    sharedMembers: 'page[sharedMembers]',
+    supportHistory: 'page[supportHistory]',
+    tickets: 'page[support]',
+    dataRequests: 'page[dataRequests]',
+    emergency: 'page[emergency]',
+    learningHub: 'page[learningHub]',
+    content: 'page[content]',
+    accounts: 'page[accounts]',
+    audit: 'page[audit]',
+    groupMembers: (groupID: string) => `page[groupMembers][${groupID}]`,
+  },
 } as const;
 
 export const PROTECTED_ROUTES = [

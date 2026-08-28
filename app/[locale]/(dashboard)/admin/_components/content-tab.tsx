@@ -40,6 +40,7 @@ import {
 } from '@/components/dashboard/filter-toolbar';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
 import { ThumbnailPlaceholder } from '@/components/education/thumbnail-placeholder';
 import type {
   AdminEducationDocument,
@@ -62,7 +63,8 @@ import {
 } from '@/lib/i18n/dynamic-labels';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from '@/i18n/routing';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
+import { updateQueryURL } from '@/lib/query-params';
 import {
   AdminStatusBadge,
   adminFieldClassName,
@@ -809,7 +811,7 @@ export function ContentTab(props: ContentTabProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { getModule, moduleID } = props;
-  const langParam = searchParams.get('lang');
+  const langParam = searchParams.get(DASHBOARD_QUERY_KEYS.state.contentLanguage);
   const locale: 'id' | 'en' = langParam === 'en' ? 'en' : 'id';
   const isNew = moduleID === 'new';
   const [prevModuleID, setPrevModuleID] = useState(moduleID);
@@ -846,21 +848,27 @@ export function ContentTab(props: ContentTabProps) {
     activeFilterCount: activeCatalogFilterCount,
     hasActiveFilters: hasActiveCatalogFilters,
   } = useQueryFilters({
+    resourceKey: 'content',
     filterKeys: ['status', 'q'],
     defaultValues: { status: 'all' },
-    ignoredKeys: ['lang', 'moduleID'],
-    pageKey: 'page[content]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.content,
+    removeKeys: ['q', 'status', 'lang'],
+  });
+  const catalogSearchInput = useQueryFilterInput({
+    resourceKey: 'content',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.content,
+    removeKeys: ['q', 'status', 'lang'],
   });
 
   const catalogStatus = getFilter('status', 'all');
-  const catalogQuery = getFilter('q', '');
+  const catalogQuery = catalogSearchInput.value;
 
   const modulesQuery = usePaginatedQuery<AdminEducationModule>({
     path: `/admin/content/modules?${new URLSearchParams({
       ...(catalogStatus !== 'all' ? { status: catalogStatus } : {}),
       ...(catalogQuery ? { q: catalogQuery } : {}),
     }).toString()}`,
-    pageKey: 'page[content]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.content,
     pageSize: 6,
   });
   const pagedModules = modulesQuery.items;
@@ -889,7 +897,14 @@ export function ContentTab(props: ContentTabProps) {
     setSlug('');
     setDocument(makeDocument('', ''));
     setFieldErrors({});
-    router.push(`${ROUTES.ADMIN_CONTENT_NEW}?lang=id`);
+    router.push(
+      updateQueryURL(
+        ROUTES.ADMIN_CONTENT_NEW,
+        searchParams,
+        { [DASHBOARD_QUERY_KEYS.state.contentLanguage]: 'id' },
+        ['lang']
+      )
+    );
   };
 
   const clearFieldError = (...keys: string[]) => {
@@ -909,14 +924,16 @@ export function ContentTab(props: ContentTabProps) {
   useEffect(() => {
     if (moduleID && langParam !== 'id' && langParam !== 'en') {
       const params = new URLSearchParams(searchParams.toString());
-      params.set('lang', 'id');
+      params.delete('lang');
+      params.set(DASHBOARD_QUERY_KEYS.state.contentLanguage, 'id');
       router.replace(`${pathname}?${params.toString()}`);
     }
   }, [langParam, moduleID, pathname, router, searchParams]);
 
   const setLocale = (newLocale: 'id' | 'en') => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('lang', newLocale);
+    params.delete('lang');
+    params.set(DASHBOARD_QUERY_KEYS.state.contentLanguage, newLocale);
     router.replace(`${pathname}?${params.toString()}`);
   };
 
@@ -1011,7 +1028,14 @@ export function ContentTab(props: ContentTabProps) {
         setDocument(normalizeEducationDocument(educationModule.draft_document));
         setSlug(educationModule.slug);
         toastSuccess(t('moduleCreated'));
-        router.replace(`${ROUTES.ADMIN_CONTENT}/${educationModule.id}?lang=${locale}`);
+        router.replace(
+          updateQueryURL(
+            `${ROUTES.ADMIN_CONTENT}/${educationModule.id}`,
+            searchParams,
+            { [DASHBOARD_QUERY_KEYS.state.contentLanguage]: locale },
+            ['lang']
+          )
+        );
       } else if (selected) {
         const educationModule = await props.saveModule(
           selected,
@@ -1106,7 +1130,14 @@ export function ContentTab(props: ContentTabProps) {
       setDocument(normalizeEducationDocument(educationModule.draft_document));
       setSlug(educationModule.slug);
       if (isCreating) {
-        router.replace(`${ROUTES.ADMIN_CONTENT}/${educationModule.id}?lang=${locale}`);
+        router.replace(
+          updateQueryURL(
+            `${ROUTES.ADMIN_CONTENT}/${educationModule.id}`,
+            searchParams,
+            { [DASHBOARD_QUERY_KEYS.state.contentLanguage]: locale },
+            ['lang']
+          )
+        );
       }
       toastSuccess(
         action === 'publish'
@@ -1338,7 +1369,7 @@ export function ContentTab(props: ContentTabProps) {
               <FilterSearchInput
                 value={catalogQuery}
                 onChangeValue={(val) => {
-                  setCatalogFilter('q', val);
+                  catalogSearchInput.onChange(val);
                 }}
                 placeholder="Cari judul, slug, atau ringkasan..."
                 className="flex-1 max-w-sm"
@@ -1377,7 +1408,8 @@ export function ContentTab(props: ContentTabProps) {
             {hasActiveCatalogFilters ? (
               <FilterResetButton
                 onClick={() => {
-                  clearCatalogFilters(['status', 'q']);
+                  clearCatalogFilters(['status']);
+                  catalogSearchInput.reset();
                 }}
                 label={t('clearFilters') || 'Reset'}
                 className="self-end sm:self-center"
@@ -1409,7 +1441,16 @@ export function ContentTab(props: ContentTabProps) {
                 <button
                   type="button"
                   key={module.id}
-                  onClick={() => router.push(`${ROUTES.ADMIN_CONTENT}/${module.id}?lang=id`)}
+                  onClick={() =>
+                    router.push(
+                      updateQueryURL(
+                        `${ROUTES.ADMIN_CONTENT}/${module.id}`,
+                        searchParams,
+                        { [DASHBOARD_QUERY_KEYS.state.contentLanguage]: 'id' },
+                        ['lang']
+                      )
+                    )
+                  }
                   className="group border-border/80 bg-card shadow-soft hover:shadow-md hover:border-navy/30 flex flex-col justify-between overflow-hidden rounded-2xl border text-left transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-navy/20"
                 >
                   <div>
@@ -1467,7 +1508,8 @@ export function ContentTab(props: ContentTabProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  clearCatalogFilters(['status', 'q']);
+                  clearCatalogFilters(['status']);
+                  catalogSearchInput.reset();
                 }}
               >
                 {t('clearFilters') || 'Reset Filter'}

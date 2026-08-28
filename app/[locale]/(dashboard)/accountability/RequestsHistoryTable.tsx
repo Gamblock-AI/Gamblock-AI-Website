@@ -27,12 +27,13 @@ import {
 import { EmptyState } from '@/components/ui/empty-state';
 import type { ApprovalRequest } from '@/hooks/use-accountability';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
 } from '@/lib/i18n/dynamic-labels';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 
 interface RequestsHistoryTableProps {
   onCancelRequest: (id: string) => Promise<void> | void;
@@ -76,13 +77,20 @@ export function RequestsHistoryTable({
 
   const { filters, setFilter, resetFilters, activeFilterCount } =
     useQueryFilters({
-      pathname: ROUTES.ACCOUNTABILITY,
-      defaultFilters: {
+      resourceKey: 'approvalHistory',
+      filterKeys: ['q', 'status'],
+      defaultValues: {
         q: '',
         status: 'all',
       },
-      pageKey: 'page[approvalHistory]',
+      pageKey: DASHBOARD_QUERY_KEYS.pages.approvalHistory,
+      removeKeys: ['q', 'status'],
     });
+  const queryInput = useQueryFilterInput({
+    resourceKey: 'approvalHistory',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.approvalHistory,
+    removeKeys: ['q'],
+  });
 
   const formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
 
@@ -91,7 +99,7 @@ export function RequestsHistoryTable({
       ...(filters.q ? { q: filters.q } : {}),
       ...(filters.status !== 'all' ? { status: filters.status } : {}),
     }).toString()}`,
-    pageKey: 'page[approvalHistory]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.approvalHistory,
     pageSize: 5,
   });
   const pagination = requestsQuery.pagination;
@@ -110,7 +118,10 @@ export function RequestsHistoryTable({
             onToggle={() => setShowFilters((prev) => !prev)}
             activeCount={activeFilterCount}
             hasActiveFilters={activeFilterCount > 0}
-            onReset={resetFilters}
+            onReset={() => {
+              resetFilters();
+              queryInput.reset();
+            }}
             headerRight={
               <span className="text-xs font-semibold text-muted-foreground">
                 {t('requestsCount', {
@@ -122,8 +133,8 @@ export function RequestsHistoryTable({
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full">
               <div className="w-full sm:w-64">
                 <FilterSearchInput
-                  value={filters.q}
-                  onChangeValue={(val) => setFilter('q', val)}
+                  value={queryInput.value}
+                  onChangeValue={queryInput.onChange}
                   placeholder={t('searchRequests')}
                   ariaLabel={t('searchRequests')}
                 />
@@ -145,7 +156,10 @@ export function RequestsHistoryTable({
                 </FilterSelect>
                 {activeFilterCount > 0 ? (
                   <FilterResetButton
-                    onClick={resetFilters}
+                    onClick={() => {
+                      resetFilters();
+                      queryInput.reset();
+                    }}
                     label={t('resetFilters')}
                   />
                 ) : null}

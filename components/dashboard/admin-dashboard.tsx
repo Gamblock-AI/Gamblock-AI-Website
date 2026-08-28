@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertTriangle,
@@ -29,9 +28,10 @@ import {
   type AnalyticsSummary,
 } from '@/hooks/use-analytics';
 import { useLocalUser } from '@/hooks/use-local-user';
+import { useQueryTab } from '@/hooks/use-query-tab';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 import { AnalyticsInsights } from './analytics/analytics-insights';
 import { AnalyticsMetric } from './analytics/analytics-metric';
 
@@ -39,7 +39,13 @@ export function AdminDashboard({ name }: { name: string }) {
   const t = useTranslations('adminDashboard');
   const user = useLocalUser();
   const verified = Boolean(user.phone_verified_at);
-  const [period, setPeriod] = useState<AnalyticsPeriod>(14);
+  const { value: period, setValue: setPeriod } = useQueryTab<AnalyticsPeriod>({
+    queryKey: DASHBOARD_QUERY_KEYS.analyticsPeriod,
+    values: [14, 30],
+    defaultValue: 14,
+    resetKeys: [DASHBOARD_QUERY_KEYS.pages.analyticsMembers],
+    history: 'push',
+  });
   const operations = useAdminOperations(
     verified ? user.role : undefined,
     'overview'
@@ -115,7 +121,7 @@ export function AdminDashboard({ name }: { name: string }) {
                 icon={AlertTriangle}
                 label={t('failedData')}
                 value={overview.failed_data_requests ?? 0}
-                href={ROUTES.DATA_REQUESTS}
+                href={ROUTES.ADMIN_DATA_REQUESTS}
               />
               <AttentionMetric
                 icon={KeyRound}

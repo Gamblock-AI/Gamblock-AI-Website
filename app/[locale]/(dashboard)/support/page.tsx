@@ -1,33 +1,60 @@
 import { redirect } from 'next/navigation';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 import { SupportWorkspaceClient } from './_components/support-workspace-client';
+
+const VALID_CHANNELS = ['partner', 'team', 'hotline'] as const;
+const LEGACY_QUERY_KEYS = ['channel', 'range', 'tab'] as const;
+
+type SupportPageSearchParams = Record<
+  string,
+  string | string[] | undefined
+>;
+
+function toSearchParams(searchParams: SupportPageSearchParams) {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value === undefined) continue;
+    for (const item of Array.isArray(value) ? value : [value]) {
+      params.append(key, item);
+    }
+  }
+
+  return params;
+}
 
 export default async function SupportPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ channel?: string | string[] }>;
+  searchParams: Promise<SupportPageSearchParams>;
 }) {
   const { locale } = await params;
-  const requestedChannel = (await searchParams).channel;
+  const currentSearchParams = toSearchParams(await searchParams);
+  const queryKey = DASHBOARD_QUERY_KEYS.supportTab;
+  const requestedChannels = currentSearchParams.getAll(queryKey);
+  const requestedChannel = requestedChannels[0];
+  const hasLegacyQuery = LEGACY_QUERY_KEYS.some((key) =>
+    currentSearchParams.has(key)
+  );
+  const isCanonical =
+    requestedChannels.length === 1 &&
+    VALID_CHANNELS.includes(
+      requestedChannel as (typeof VALID_CHANNELS)[number]
+    );
 
-  if (
-    requestedChannel !== 'partner' &&
-    requestedChannel !== 'hotline' &&
-    requestedChannel !== 'team'
-  ) {
-    // Default to the first navigation tab (partner channel) when no channel
-    // query parameter is present.
-    redirect(`/${locale}${ROUTES.SUPPORT}?channel=partner`);
+  if (!isCanonical || hasLegacyQuery) {
+    currentSearchParams.delete(queryKey);
+    currentSearchParams.set(
+      queryKey,
+      isCanonical ? requestedChannel! : 'partner'
+    );
+    for (const key of LEGACY_QUERY_KEYS) currentSearchParams.delete(key);
+    redirect(
+      `/${locale}${ROUTES.SUPPORT}?${currentSearchParams.toString()}`
+    );
   }
 
-  const channel =
-    requestedChannel === 'hotline'
-      ? 'hotline'
-      : requestedChannel === 'team'
-        ? 'team'
-        : 'partner';
-
-  return <SupportWorkspaceClient channel={channel} />;
+  return <SupportWorkspaceClient />;
 }

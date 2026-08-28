@@ -40,9 +40,9 @@ describe('usePagination', () => {
     expect(result.current.totalPages).toBe(5); // ceil(25 / 6) = 5
     expect(result.current.totalItems).toBe(25);
     expect(result.current.pageSize).toBe(6);
-    expect(result.current.paginatedItems).toHaveLength(25);
-    expect(result.current.paginatedItems[0].id).toBe(1);
-    expect(result.current.paginatedItems[24].id).toBe(25);
+    expect(result.current.items).toHaveLength(25);
+    expect(result.current.items[0].id).toBe(1);
+    expect(result.current.items[24].id).toBe(25);
     expect(result.current.startIndex).toBe(1);
     expect(result.current.endIndex).toBe(6);
     expect(result.current.hasPrevPage).toBe(false);
@@ -64,7 +64,7 @@ describe('usePagination', () => {
     expect(result.current.endIndex).toBe(12);
     expect(result.current.hasPrevPage).toBe(true);
     expect(result.current.hasNextPage).toBe(true);
-    expect(result.current.paginatedItems[0].id).toBe(1);
+    expect(result.current.items[0].id).toBe(1);
 
     // Go to last page -> 5
     act(() => {
@@ -74,8 +74,8 @@ describe('usePagination', () => {
     expect(result.current.page).toBe(5);
     expect(result.current.startIndex).toBe(25);
     expect(result.current.endIndex).toBe(25);
-    expect(result.current.paginatedItems).toHaveLength(25);
-    expect(result.current.paginatedItems[0].id).toBe(1);
+    expect(result.current.items).toHaveLength(25);
+    expect(result.current.items[0].id).toBe(1);
     expect(result.current.hasNextPage).toBe(false);
 
     // Prev page -> 4
@@ -84,7 +84,7 @@ describe('usePagination', () => {
     });
     rerender();
     expect(result.current.page).toBe(4);
-    expect(result.current.paginatedItems).toHaveLength(25);
+    expect(result.current.items).toHaveLength(25);
 
     // Go to first page -> 1
     act(() => {
@@ -137,7 +137,7 @@ describe('usePagination', () => {
 
     expect(result.current.totalPages).toBe(2);
     expect(result.current.page).toBe(2);
-    expect(result.current.paginatedItems).toHaveLength(8);
+    expect(result.current.items).toHaveLength(8);
   });
 
   it('handles empty items array gracefully', () => {
@@ -148,7 +148,7 @@ describe('usePagination', () => {
     expect(result.current.page).toBe(1);
     expect(result.current.totalPages).toBe(1);
     expect(result.current.totalItems).toBe(0);
-    expect(result.current.paginatedItems).toEqual([]);
+    expect(result.current.items).toEqual([]);
     expect(result.current.startIndex).toBe(0);
     expect(result.current.endIndex).toBe(0);
     expect(result.current.hasPrevPage).toBe(false);
@@ -165,7 +165,7 @@ describe('usePagination', () => {
 
     expect(result.current.pageSize).toBe(10);
     expect(result.current.totalPages).toBe(3); // ceil(25 / 10) = 3
-    expect(result.current.paginatedItems).toHaveLength(25);
+    expect(result.current.items).toHaveLength(25);
   });
 
   it('works with totalItems without items array', () => {
@@ -178,7 +178,7 @@ describe('usePagination', () => {
     expect(result.current.totalItems).toBe(30);
     expect(result.current.startIndex).toBe(11);
     expect(result.current.endIndex).toBe(20);
-    expect(result.current.paginatedItems).toEqual([]);
+    expect(result.current.items).toEqual([]);
   });
 });
 

@@ -26,7 +26,7 @@ import type {
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { Link } from '@/i18n/routing';
 import { toastError, toastSuccess } from '@/lib/feedback';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 import { AccountabilityConfirmDialog } from './accountability-confirm-dialog';
 import {
   EmptyLine,
@@ -83,7 +83,7 @@ export function StudentAccountability({
   );
   const historyQuery = usePaginatedQuery<Accountability['requests'][number]>({
     path: '/approval-requests',
-    pageKey: 'page[approvalHistory]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.approvalHistory,
     pageSize: 5,
   });
   const visibleRequests = historyQuery.items;
@@ -421,7 +421,7 @@ export function StudentAccountability({
                   {t('safetyReviewBody')}
                 </p>
                 <Link
-                  href={`${ROUTES.SUPPORT}?channel=team`}
+                  href={`${ROUTES.SUPPORT}?${DASHBOARD_QUERY_KEYS.supportTab}=team`}
                   className="bg-navy hover:bg-navy-light focus-visible:ring-navy/30 mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 text-sm font-semibold text-white transition-colors outline-none focus-visible:ring-2 motion-reduce:transition-none"
                 >
                   {t('openTeamSupport')}

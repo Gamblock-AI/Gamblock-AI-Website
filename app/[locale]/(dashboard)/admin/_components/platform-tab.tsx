@@ -46,6 +46,7 @@ import {
 } from '@/components/dashboard/filter-toolbar';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { useQueryFilters } from '@/hooks/use-query-filters';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
 import {
@@ -57,6 +58,7 @@ import {
   AdminFormField,
   adminFieldClassName,
 } from './admin-shared';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 
 const PLATFORMS = [
   'instagram',
@@ -375,14 +377,21 @@ export function PlatformTab({
     activeFilterCount: activeAccountFilterCount,
     hasActiveFilters: hasActiveAccountFilters,
   } = useQueryFilters({
-    filterKeys: ['accountRole', 'accountStatus', 'accountQ'],
-    defaultValues: { accountRole: 'all', accountStatus: 'all' },
-    pageKey: 'page[accounts]',
+    resourceKey: 'accounts',
+    filterKeys: ['q', 'role', 'status'],
+    defaultValues: { role: 'all', status: 'all' },
+    pageKey: DASHBOARD_QUERY_KEYS.pages.accounts,
+    removeKeys: ['q', 'role', 'status'],
+  });
+  const accountSearchInput = useQueryFilterInput({
+    resourceKey: 'accounts',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.accounts,
+    removeKeys: ['q', 'role', 'status'],
   });
 
-  const accountRoleFilter = getAccountFilter('accountRole', 'all');
-  const accountStatusFilter = getAccountFilter('accountStatus', 'all');
-  const accountSearchQuery = getAccountFilter('accountQ', '');
+  const accountRoleFilter = getAccountFilter('role', 'all');
+  const accountStatusFilter = getAccountFilter('status', 'all');
+  const accountSearchQuery = accountSearchInput.value;
 
   const accountsQuery = usePaginatedQuery<AdminAccount>({
     path: `/admin/accounts?${new URLSearchParams({
@@ -390,7 +399,7 @@ export function PlatformTab({
       ...(accountStatusFilter !== 'all' ? { status: accountStatusFilter } : {}),
       ...(accountSearchQuery ? { q: accountSearchQuery } : {}),
     }).toString()}`,
-    pageKey: 'page[accounts]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.accounts,
     pageSize: 6,
   });
   const pageAccounts = accountsQuery.items;
@@ -407,13 +416,20 @@ export function PlatformTab({
     activeFilterCount: activeAuditFilterCount,
     hasActiveFilters: hasActiveAuditFilters,
   } = useQueryFilters({
-    filterKeys: ['auditAction', 'auditQ'],
-    defaultValues: { auditAction: 'all' },
-    pageKey: 'page[audit]',
+    resourceKey: 'audit',
+    filterKeys: ['q', 'action'],
+    defaultValues: { action: 'all' },
+    pageKey: DASHBOARD_QUERY_KEYS.pages.audit,
+    removeKeys: ['q', 'action'],
+  });
+  const auditSearchInput = useQueryFilterInput({
+    resourceKey: 'audit',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.audit,
+    removeKeys: ['q', 'action'],
   });
 
-  const auditActionFilter = getAuditFilter('auditAction', 'all');
-  const auditSearchQuery = getAuditFilter('auditQ', '');
+  const auditActionFilter = getAuditFilter('action', 'all');
+  const auditSearchQuery = auditSearchInput.value;
 
   const availableAuditActions = useMemo(() => {
     const actionSet = new Set<string>();
@@ -428,7 +444,7 @@ export function PlatformTab({
       ...(auditActionFilter !== 'all' ? { action: auditActionFilter } : {}),
       ...(auditSearchQuery ? { q: auditSearchQuery } : {}),
     }).toString()}`,
-    pageKey: 'page[audit]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.audit,
     pageSize: 10,
   });
   const pageAuditEvents = auditQuery.items;
@@ -824,7 +840,7 @@ export function PlatformTab({
                 <FilterSearchInput
                   value={accountSearchQuery}
                   onChangeValue={(val) => {
-                    setAccountFilter('accountQ', val);
+                    accountSearchInput.onChange(val);
                   }}
                   placeholder="Cari nama, email, telepon..."
                   className="w-full sm:w-60"
@@ -833,7 +849,7 @@ export function PlatformTab({
                 <FilterSelect
                   value={accountRoleFilter}
                   onChange={(e) => {
-                    setAccountFilter('accountRole', e.target.value);
+                    setAccountFilter('role', e.target.value);
                   }}
                   ariaLabel={t('filterRole')}
                 >
@@ -846,7 +862,7 @@ export function PlatformTab({
                 <FilterSelect
                   value={accountStatusFilter}
                   onChange={(e) => {
-                    setAccountFilter('accountStatus', e.target.value);
+                    setAccountFilter('status', e.target.value);
                   }}
                   ariaLabel={t('filterAccountStatus')}
                 >
@@ -859,7 +875,8 @@ export function PlatformTab({
               {hasActiveAccountFilters ? (
                 <FilterResetButton
                   onClick={() => {
-                    clearAccountFilters(['accountRole', 'accountStatus', 'accountQ']);
+                    clearAccountFilters(['role', 'status']);
+                    accountSearchInput.reset();
                   }}
                   label={t('clearFilters') || 'Reset'}
                 />
@@ -901,7 +918,8 @@ export function PlatformTab({
                       </p>
                       <FilterResetButton
                         onClick={() => {
-                          clearAccountFilters(['accountRole', 'accountStatus', 'accountQ']);
+                          clearAccountFilters(['role', 'status']);
+                          accountSearchInput.reset();
                         }}
                         label={t('clearFilters') || 'Reset Filter'}
                       />
@@ -1012,7 +1030,7 @@ export function PlatformTab({
               <FilterSearchInput
                 value={auditSearchQuery}
                 onChangeValue={(val) => {
-                  setAuditFilter('auditQ', val);
+                  auditSearchInput.onChange(val);
                 }}
                 placeholder="Cari aktor, aksi, target, alasan..."
                 className="w-full sm:w-64"
@@ -1022,7 +1040,7 @@ export function PlatformTab({
                 <FilterSelect
                   value={auditActionFilter}
                   onChange={(e) => {
-                    setAuditFilter('auditAction', e.target.value);
+                    setAuditFilter('action', e.target.value);
                   }}
                   ariaLabel={t('filterAuditAction')}
                 >
@@ -1039,7 +1057,8 @@ export function PlatformTab({
             {hasActiveAuditFilters ? (
               <FilterResetButton
                 onClick={() => {
-                  clearAuditFilters(['auditAction', 'auditQ']);
+                  clearAuditFilters(['action']);
+                  auditSearchInput.reset();
                 }}
                 label={t('clearFilters') || 'Reset'}
               />
@@ -1084,7 +1103,8 @@ export function PlatformTab({
                     </p>
                     <FilterResetButton
                       onClick={() => {
-                        clearAuditFilters(['auditAction', 'auditQ']);
+                        clearAuditFilters(['action']);
+                        auditSearchInput.reset();
                       }}
                       label={t('clearFilters') || 'Reset Filter'}
                     />

@@ -32,9 +32,8 @@ export interface UsePaginationResult<T = unknown> {
   totalPages: number;
   totalItems: number;
   pageSize: number;
-  /** Compatibility aliases for the server-returned page; never slices locally. */
-  paginatedItems: T[];
-  pagedItems: T[];
+  /** Server-returned items for the active page; never slices locally. */
+  items: T[];
   startIndex: number;
   endIndex: number;
   hasNextPage: boolean;
@@ -115,8 +114,7 @@ export function usePagination<T = unknown>({
       totalPages,
       totalItems: normalizedTotalItems,
       pageSize,
-      paginatedItems: [...items],
-      pagedItems: [...items],
+      items: [...items],
       startIndex,
       endIndex,
       hasNextPage,

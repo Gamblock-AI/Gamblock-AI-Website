@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import { useApiQuery } from './use-api';
 import { usePaginatedQuery } from './use-paginated-query';
 
@@ -75,7 +76,7 @@ export function useSupportRequest() {
 
 export function usePaginatedSupportRequest(
   filters: { q?: string; type?: string; status?: string; bucket?: string } = {},
-  pageKey = 'page[supportHistory]',
+  pageKey = DASHBOARD_QUERY_KEYS.pages.supportHistory,
   pageSize = 5
 ) {
   const params = new URLSearchParams();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   BookOpen,
@@ -38,6 +38,8 @@ import {
   FilterToggleButton,
 } from '@/components/dashboard/filter-toolbar';
 import { useQueryFilters } from '@/hooks/use-query-filters';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
+import { useQueryTab } from '@/hooks/use-query-tab';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { ThumbnailCropper } from '@/components/education/thumbnail-cropper';
 import { apiClientBlob } from '@/lib/api-client';
@@ -65,7 +67,8 @@ import {
 } from '@/components/common/form-field';
 import { TranslateButton } from '@/components/admin/translate-button';
 import { slugify } from './content-tab';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
+import { usePathname, useRouter } from '@/i18n/routing';
 
 type Draft = {
   slug: string;
@@ -428,12 +431,17 @@ export function LearningHubTab({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const sectionParam = searchParams.get('section');
-  const section = sectionParam === 'taxonomy' ? 'taxonomy' : 'items';
-  const langParam = searchParams.get('lang');
+  const { value: section, setValue: setSection } = useQueryTab<'items' | 'taxonomy'>({
+    queryKey: DASHBOARD_QUERY_KEYS.adminLearningHubTab,
+    values: ['items', 'taxonomy'],
+    defaultValue: 'items',
+    removeKeys: ['section', 'lang', 'item', 'id', 'q', 'status'],
+    history: 'push',
+  });
+  const langParam = searchParams.get(DASHBOARD_QUERY_KEYS.state.learningHubLanguage);
   const isEn = appLocale === 'en' || langParam === 'en';
   const locale: 'id' | 'en' = isEn ? 'en' : 'id';
-  const itemParam = searchParams.get('item') || searchParams.get('id');
+  const itemParam = searchParams.get(DASHBOARD_QUERY_KEYS.state.learningHubItem);
 
   const {
     getFilter,
@@ -444,12 +452,20 @@ export function LearningHubTab({
     hasActiveFilters: hasActiveItemFilters,
     clearFilters: clearItemFilters,
   } = useQueryFilters({
+    resourceKey: 'learningHub',
     filterKeys: ['status', 'q'],
-    ignoredKeys: ['section', 'item', 'id', 'lang'],
+    defaultValues: { status: '' },
+    pageKey: DASHBOARD_QUERY_KEYS.pages.learningHub,
+    removeKeys: ['q', 'status', 'lang', 'item', 'id', 'section'],
+  });
+  const learningSearchInput = useQueryFilterInput({
+    resourceKey: 'learningHub',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.learningHub,
+    removeKeys: ['q', 'status', 'lang', 'item', 'id', 'section'],
   });
 
-  const filter = getFilter('status');
-  const searchQuery = getFilter('q');
+  const filter = getFilter('status', '');
+  const searchQuery = learningSearchInput.value;
   const [prevItemParam, setPrevItemParam] = useState(itemParam);
   const [selected, setSelected] = useState<AdminLearningHubItem | null>(() => {
     if (!itemParam) return null;
@@ -587,7 +603,8 @@ export function LearningHubTab({
 
   const setLocale = (newLocale: 'id' | 'en') => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('lang', newLocale);
+    params.delete('lang');
+    params.set(DASHBOARD_QUERY_KEYS.state.learningHubLanguage, newLocale);
     router.replace(`${pathname}?${params.toString()}`);
   };
 
@@ -739,7 +756,10 @@ export function LearningHubTab({
     setDraft(itemDraft(item));
     setFieldErrors({});
     const params = new URLSearchParams(searchParams.toString());
-    params.set('item', item.id);
+    params.delete(DASHBOARD_QUERY_KEYS.state.learningHubItem);
+    params.delete('item');
+    params.delete('id');
+    params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, item.id);
     router.replace(`${pathname}?${params.toString()}`);
   };
 
@@ -749,7 +769,7 @@ export function LearningHubTab({
     setDraft(emptyDraft());
     setFieldErrors({});
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('item');
+    params.delete(DASHBOARD_QUERY_KEYS.state.learningHubItem);
     params.delete('id');
     router.replace(`${pathname}?${params.toString()}`);
   };
@@ -760,7 +780,7 @@ export function LearningHubTab({
     setSelected(null);
     setFieldErrors({});
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('item');
+    params.delete(DASHBOARD_QUERY_KEYS.state.learningHubItem);
     params.delete('id');
     router.replace(`${pathname}?${params.toString()}`);
   };
@@ -789,7 +809,7 @@ export function LearningHubTab({
       setSelected(saved);
       setDraft(itemDraft(saved));
       const params = new URLSearchParams(searchParams.toString());
-      params.set('item', saved.id);
+      params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, saved.id);
       router.replace(`${pathname}?${params.toString()}`);
       toastSuccess(t('learningHubSaved'));
     } catch (error) {
@@ -813,7 +833,7 @@ export function LearningHubTab({
         setIsCreating(false);
         setFieldErrors({});
         const params = new URLSearchParams(searchParams.toString());
-        params.set('item', published.id);
+        params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, published.id);
         router.replace(`${pathname}?${params.toString()}`);
         toastSuccess(t('learningHubPublished'));
       } else {
@@ -822,7 +842,7 @@ export function LearningHubTab({
         setIsCreating(false);
         setFieldErrors({});
         const params = new URLSearchParams(searchParams.toString());
-        params.set('item', created.id);
+        params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, created.id);
         router.replace(`${pathname}?${params.toString()}`);
         toastSuccess(t('learningHubCreated'));
       }
@@ -848,7 +868,7 @@ export function LearningHubTab({
       setSelected(updated);
       setDraft(itemDraft(updated));
       const params = new URLSearchParams(searchParams.toString());
-      params.set('item', updated.id);
+      params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, updated.id);
       router.replace(`${pathname}?${params.toString()}`);
       toastSuccess(
         t(
@@ -889,7 +909,7 @@ export function LearningHubTab({
       setSelected(updated);
       setDraft(itemDraft(updated));
       const params = new URLSearchParams(searchParams.toString());
-      params.set('item', updated.id);
+      params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, updated.id);
       router.replace(`${pathname}?${params.toString()}`);
       setRollbackRevision(null);
       setRollbackReason('');
@@ -1055,6 +1075,7 @@ export function LearningHubTab({
           setDraft(null);
           setIsCreating(false);
           const params = new URLSearchParams(searchParams.toString());
+          params.delete(DASHBOARD_QUERY_KEYS.state.learningHubItem);
           params.delete('item');
           params.delete('id');
           router.replace(`${pathname}?${params.toString()}`);
@@ -1101,16 +1122,15 @@ export function LearningHubTab({
       <CompactTabNav<'items' | 'taxonomy'>
         ariaLabel={t('learningHubTabNavigation')}
         value={section}
+        onValueChange={setSection}
         items={[
           {
             value: 'items' as const,
             label: t('learningHubTabItems'),
-            href: `${ROUTES.ADMIN_LEARNING_HUB}?section=items`,
           },
           {
             value: 'taxonomy' as const,
             label: t('learningHubTabTaxonomy'),
-            href: `${ROUTES.ADMIN_LEARNING_HUB}?section=taxonomy`,
           },
         ]}
       />
@@ -1146,7 +1166,7 @@ export function LearningHubTab({
               <div className="flex flex-col gap-2.5 pt-1 animate-in fade-in slide-in-from-top-1 duration-150">
                 <FilterSearchInput
                   value={searchQuery}
-                  onChangeValue={(val) => setQueryFilter('q', val)}
+                  onChangeValue={learningSearchInput.onChange}
                   placeholder="Cari materi atau slug..."
                   className="w-full sm:w-full"
                 />
@@ -1174,7 +1194,10 @@ export function LearningHubTab({
 
                   {hasActiveItemFilters ? (
                     <FilterResetButton
-                      onClick={() => clearItemFilters(['status', 'q'])}
+                      onClick={() => {
+                        clearItemFilters(['status']);
+                        learningSearchInput.reset();
+                      }}
                       label={t('clearFilters') || 'Reset'}
                       className="shrink-0"
                     />

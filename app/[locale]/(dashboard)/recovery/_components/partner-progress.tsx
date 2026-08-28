@@ -37,10 +37,11 @@ import {
   useAccountability,
 } from '@/hooks/use-accountability';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 
 interface ProgressTranslation {
   (key: string, values?: Record<string, string | number>): string;
@@ -119,14 +120,21 @@ export function PartnerProgress() {
 
   const { filters, setFilter, resetFilters, activeFilterCount } =
     useQueryFilters({
-      pathname: ROUTES.RECOVERY,
-      defaultFilters: {
+      resourceKey: 'sharedMembers',
+      filterKeys: ['q', 'group', 'protection'],
+      defaultValues: {
         q: '',
-        groupId: 'all',
+        group: 'all',
         protection: 'all',
       },
-      pageKey: 'page[sharedMembers]',
+      pageKey: DASHBOARD_QUERY_KEYS.pages.sharedMembers,
+      removeKeys: ['q', 'group', 'groupId', 'group_id', 'protection'],
     });
+  const queryInput = useQueryFilterInput({
+    resourceKey: 'sharedMembers',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.sharedMembers,
+    removeKeys: ['q'],
+  });
 
   const groupNames = new Map(
     accountability.workspace.groups.map((group) => [group.id, group.name])
@@ -137,16 +145,16 @@ export function PartnerProgress() {
 
   const flaggedQuery = usePaginatedQuery<FlaggedAccountabilityMember>({
     path: '/accountability/flagged-members',
-    pageKey: 'page[flaggedMembers]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.flaggedMembers,
     pageSize: 3,
   });
   const sharedQueryParams = new URLSearchParams();
   if (filters.q.trim()) sharedQueryParams.set('q', filters.q.trim());
-  if (filters.groupId !== 'all') sharedQueryParams.set('group_id', filters.groupId);
+  if (filters.group !== 'all') sharedQueryParams.set('group_id', filters.group);
   if (filters.protection !== 'all') sharedQueryParams.set('protection', filters.protection);
   const sharedQuery = usePaginatedQuery<AccountabilityMembership>({
     path: `/accountability/members?${sharedQueryParams.toString()}`,
-    pageKey: 'page[sharedMembers]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.sharedMembers,
     pageSize: 5,
   });
   const flaggedItems = flaggedQuery.items;
@@ -237,7 +245,7 @@ export function PartnerProgress() {
                     </div>
 
                     <Link
-                      href={`${ROUTES.SUPPORT}?channel=partner`}
+                      href={`${ROUTES.SUPPORT}?${DASHBOARD_QUERY_KEYS.supportTab}=partner`}
                       className="mt-3.5 flex min-h-9.5 items-center justify-center gap-2 rounded-xl border border-amber/40 bg-amber/15 text-xs font-bold text-amber-900 transition-all duration-200 hover:border-transparent hover:bg-amber-500 hover:text-white shadow-2xs group-hover:border-amber/50"
                     >
                       <MessageCircleHeart
@@ -313,16 +321,16 @@ export function PartnerProgress() {
               <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full">
                 <div className="w-full sm:w-56">
                   <FilterSearchInput
-                    value={filters.q}
-                    onChangeValue={(val) => setFilter('q', val)}
+                    value={queryInput.value}
+                    onChangeValue={queryInput.onChange}
                     placeholder={p('searchMembers')}
                     ariaLabel={p('searchMembers')}
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <FilterSelect
-                    value={filters.groupId}
-                    onChange={(e) => setFilter('groupId', e.target.value)}
+                    value={filters.group}
+                    onChange={(e) => setFilter('group', e.target.value)}
                     ariaLabel={p('allGroups')}
                   >
                     <option value="all">{p('allGroups')}</option>
@@ -352,7 +360,7 @@ export function PartnerProgress() {
               </div>
             </FilterToolbar>
 
-            {sharedPagination.paginatedItems.map((member) => (
+            {sharedPagination.items.map((member) => (
               <ExpandableRow
                 key={member.id}
                 open={Boolean(expandedMembers[member.id])}

@@ -12,7 +12,6 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AvatarImage } from '@/components/account/avatar-image';
 import {
@@ -35,16 +34,20 @@ import type { AdminSupportCase } from '@/hooks/use-admin-operations';
 import { SupportStatusBadge } from '@/components/dashboard/support-status-badge';
 import { Pagination } from '@/components/dashboard/pagination';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import { useQueryFilters } from '@/hooks/use-query-filters';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
+import { useQueryTab } from '@/hooks/use-query-tab';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { CompactTabNav } from '@/components/common/compact-tab-nav';
-import { ROUTES } from '@/routes';
-import { usePathname, useRouter } from '@/i18n/routing';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
+import { useRouter } from '@/i18n/routing';
 import {
   dynamicLabelKey,
   normalizeSupportStatus,
 } from '@/lib/i18n/dynamic-labels';
 import {
   FilterResetButton,
+  FilterSearchInput,
   FilterSelect,
   FilterToggleButton,
 } from '@/components/dashboard/filter-toolbar';
@@ -74,10 +77,20 @@ export function SupportTab(props: SupportTabProps) {
   const tPagination = useTranslations('pagination');
   const locale = useLocale();
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentTab =
-    (searchParams.get('tab') as SupportTabSection) || 'active';
+  const { value: currentTab, setValue: setCurrentTab } = useQueryTab<SupportTabSection>({
+    queryKey: DASHBOARD_QUERY_KEYS.adminTicketsTab,
+    values: ['active', 'history'],
+    defaultValue: 'active',
+    resetKeys: [DASHBOARD_QUERY_KEYS.pages.tickets],
+    removeKeys: ['tab', 'q', 'status', 'priority', 'assignee'],
+    clearKeys: [
+      DASHBOARD_QUERY_KEYS.filters.tickets.query,
+      DASHBOARD_QUERY_KEYS.filters.tickets.status,
+      DASHBOARD_QUERY_KEYS.filters.tickets.priority,
+      DASHBOARD_QUERY_KEYS.filters.tickets.assignee,
+    ],
+    history: 'push',
+  });
   const { caseID, getSupportCase } = props;
   const [selected, setSelected] = useState<AdminSupportCase | null>(null);
   const [reply, setReply] = useState('');
@@ -101,44 +114,29 @@ export function SupportTab(props: SupportTabProps) {
   } | null>(null);
   const [modalReason, setModalReason] = useState('');
 
-  // Query param filters
-  const priorityFilter = searchParams.get('priority') || 'all';
-  const statusFilter = searchParams.get('status') || 'all';
-  const assigneeFilter = searchParams.get('assignee') || 'all';
-
-  const hasActiveFilters =
-    priorityFilter !== 'all' ||
-    statusFilter !== 'all' ||
-    assigneeFilter !== 'all';
-
-  const [showFilters, setShowFilters] = useState(() => hasActiveFilters);
-
-  const activeFilterCount =
-    (priorityFilter !== 'all' ? 1 : 0) +
-    (statusFilter !== 'all' ? 1 : 0) +
-    (assigneeFilter !== 'all' ? 1 : 0);
-
-  const updateParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== 'all') {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    params.delete('page[support]');
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
-
-  const clearFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('priority');
-    params.delete('status');
-    params.delete('assignee');
-    params.delete('page[support]');
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
+  const {
+    getFilter,
+    setFilter,
+    clearFilters: clearQueryFilters,
+    isExpanded: showFilters,
+    toggleExpanded: toggleFilters,
+    activeFilterCount,
+    hasActiveFilters,
+  } = useQueryFilters({
+    resourceKey: 'tickets',
+    filterKeys: ['q', 'status', 'priority', 'assignee'],
+    defaultValues: { status: 'all', priority: 'all', assignee: 'all' },
+    pageKey: DASHBOARD_QUERY_KEYS.pages.tickets,
+    removeKeys: ['q', 'status', 'priority', 'assignee'],
+  });
+  const ticketSearchInput = useQueryFilterInput({
+    resourceKey: 'tickets',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.tickets,
+    removeKeys: ['q', 'status', 'priority', 'assignee'],
+  });
+  const priorityFilter = getFilter('priority', 'all');
+  const statusFilter = getFilter('status', 'all');
+  const assigneeFilter = getFilter('assignee', 'all');
 
   const activeCasesList = useMemo(() => {
     return (props.cases ?? []).filter((c) => {
@@ -161,7 +159,7 @@ export function SupportTab(props: SupportTabProps) {
       ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
       ...(assigneeFilter !== 'all' ? { assignee: assigneeFilter } : {}),
     }).toString()}`,
-    pageKey: 'page[support]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.tickets,
     pageSize: 10,
   });
   const pagedCases = casesQuery.items;
@@ -633,20 +631,12 @@ export function SupportTab(props: SupportTabProps) {
       <CompactTabNav<SupportTabSection>
         ariaLabel={t('supportTabNavigation')}
         value={currentTab}
-        onValueChange={(val) => {
-          const params = new URLSearchParams(searchParams.toString());
-          params.set('tab', val);
-          params.delete('status');
-          params.delete('priority');
-          params.delete('assignee');
-          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        }}
+        onValueChange={setCurrentTab}
         items={[
           {
             value: 'active',
             label: t('ticketTabActive'),
             icon: <Inbox className="size-3.5" />,
-            href: `${ROUTES.ADMIN_TICKETS}?tab=active`,
             activeAdornment:
               activeCasesList.length > 0 ? (
                 <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
@@ -658,7 +648,6 @@ export function SupportTab(props: SupportTabProps) {
             value: 'history',
             label: t('ticketTabHistory'),
             icon: <History className="size-3.5" />,
-            href: `${ROUTES.ADMIN_TICKETS}?tab=history`,
             activeAdornment:
               historyCasesList.length > 0 ? (
                 <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
@@ -698,7 +687,7 @@ export function SupportTab(props: SupportTabProps) {
           <div className="flex items-center gap-2 self-start sm:self-center">
             <FilterToggleButton
               isExpanded={showFilters}
-              onToggle={() => setShowFilters((prev) => !prev)}
+              onToggle={toggleFilters}
               hasActiveFilters={hasActiveFilters}
               activeCount={activeFilterCount}
               label={t('filterToggle')}
@@ -715,10 +704,17 @@ export function SupportTab(props: SupportTabProps) {
                 {t('filterLabel')}
               </span>
 
+              <FilterSearchInput
+                value={ticketSearchInput.value}
+                onChangeValue={ticketSearchInput.onChange}
+                placeholder="Cari tiket..."
+                className="w-full sm:w-56"
+              />
+
               {/* Priority Filter */}
               <FilterSelect
                 value={priorityFilter}
-                onChange={(e) => updateParam('priority', e.target.value)}
+                onChange={(e) => setFilter('priority', e.target.value)}
                 ariaLabel={t('filterPriority')}
               >
                 <option value="all">{t('filterAllPriorities')}</option>
@@ -739,7 +735,7 @@ export function SupportTab(props: SupportTabProps) {
               {/* Status Filter */}
               <FilterSelect
                 value={statusFilter}
-                onChange={(e) => updateParam('status', e.target.value)}
+                onChange={(e) => setFilter('status', e.target.value)}
                 ariaLabel={t('filterStatus')}
               >
                 <option value="all">{t('filterAllStatuses')}</option>
@@ -775,7 +771,7 @@ export function SupportTab(props: SupportTabProps) {
               {/* Assignee Filter */}
               <FilterSelect
                 value={assigneeFilter}
-                onChange={(e) => updateParam('assignee', e.target.value)}
+                onChange={(e) => setFilter('assignee', e.target.value)}
                 ariaLabel={t('filterAssignee')}
               >
                 <option value="all">{t('filterAllAssignees')}</option>
@@ -786,7 +782,10 @@ export function SupportTab(props: SupportTabProps) {
 
             {hasActiveFilters ? (
               <FilterResetButton
-                onClick={clearFilters}
+                onClick={() => {
+                  clearQueryFilters(['status', 'priority', 'assignee']);
+                  ticketSearchInput.reset();
+                }}
                 label={t('clearFilters')}
               />
             ) : null}
@@ -819,7 +818,10 @@ export function SupportTab(props: SupportTabProps) {
                 description={
                   hasActiveFilters ? (
                     <FilterResetButton
-                      onClick={clearFilters}
+                      onClick={() => {
+                        clearQueryFilters(['status', 'priority', 'assignee']);
+                        ticketSearchInput.reset();
+                      }}
                       label={t('clearFilters')}
                       className="mt-2"
                     />

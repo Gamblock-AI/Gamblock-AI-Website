@@ -28,7 +28,7 @@ import {
   useAccountability,
 } from '@/hooks/use-accountability';
 import { toastError, toastSuccess } from '@/lib/feedback';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 import {
   BoundaryItem,
   formatDate,
@@ -358,7 +358,7 @@ export function StudentPartnersWorkspace({
             body={t('manageAccountabilityBody')}
           />
           <QuickLink
-            href={`${ROUTES.SUPPORT}?channel=partner`}
+            href={`${ROUTES.SUPPORT}?${DASHBOARD_QUERY_KEYS.supportTab}=partner`}
             icon={MessageCircleHeart}
             title={t('openPartnerSupportTitle')}
             body={t('openPartnerSupportBody')}

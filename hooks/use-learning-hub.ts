@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import { usePaginatedQuery } from './use-paginated-query';
 import type { PaginatedData } from './use-pagination';
 
@@ -95,7 +96,7 @@ export function useLearningHubProviders(locale: string, query = '') {
   if (query.trim()) params.set('q', query.trim());
   return usePaginatedQuery<LearningProvider>({
     path: `/learning-hub/providers?${params.toString()}`,
-    pageKey: 'page[skillsProviders]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.skillsProviders,
     pageSize: 9,
   });
 }
@@ -104,7 +105,7 @@ export function useLearningHubItems(locale: string, providerSlug: string) {
   const params = new URLSearchParams({ locale, provider: providerSlug });
   return usePaginatedQuery<LearningItem, LearningItemsPage>({
     path: `/learning-hub/items?${params.toString()}`,
-    pageKey: 'page[skillsItems]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.skillsItems,
     pageSize: 9,
   });
 }

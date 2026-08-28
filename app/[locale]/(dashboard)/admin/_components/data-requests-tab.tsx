@@ -11,7 +11,6 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,10 +31,11 @@ import {
 import type { AdminDataRequest } from '@/hooks/use-admin-operations';
 import { Pagination } from '@/components/dashboard/pagination';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import { useQueryFilters } from '@/hooks/use-query-filters';
+import { useQueryTab } from '@/hooks/use-query-tab';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { CompactTabNav } from '@/components/common/compact-tab-nav';
-import { ROUTES } from '@/routes';
-import { usePathname, useRouter } from '@/i18n/routing';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import {
   FilterResetButton,
   FilterSelect,
@@ -61,11 +61,15 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
   const tDynamic = useTranslations('dynamicLabels');
   const tPagination = useTranslations('pagination');
   const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentTab =
-    (searchParams.get('tab') as DataRequestTabSection) || 'active';
+  const { value: currentTab, setValue: setCurrentTab } = useQueryTab<DataRequestTabSection>({
+    queryKey: DASHBOARD_QUERY_KEYS.adminDataRequestsTab,
+    values: ['active', 'history'],
+    defaultValue: 'active',
+    resetKeys: [DASHBOARD_QUERY_KEYS.pages.dataRequests],
+    removeKeys: ['tab', 'dataStatus', 'status'],
+    clearKeys: [DASHBOARD_QUERY_KEYS.filters.dataRequests.status],
+    history: 'push',
+  });
 
   const dateFormatter = useMemo(
     () =>
@@ -85,30 +89,22 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
   const [modalReason, setModalReason] = useState('');
   const [modalBusy, setModalBusy] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-
-  const dataStatusFilter = searchParams.get('dataStatus') || 'all';
-
-  const updateParam = (key: string, value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== 'all') {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    params.delete('page[dataRequests]');
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
-
-  const clearFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('dataStatus');
-    params.delete('page[dataRequests]');
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
-
-  const hasActiveFilters = dataStatusFilter !== 'all';
-  const activeFilterCount = dataStatusFilter !== 'all' ? 1 : 0;
+  const {
+    getFilter,
+    setFilter,
+    clearFilters,
+    isExpanded: showFilters,
+    toggleExpanded: toggleFilters,
+    hasActiveFilters,
+    activeFilterCount,
+  } = useQueryFilters({
+    resourceKey: 'dataRequests',
+    filterKeys: ['status'],
+    defaultValues: { status: 'all' },
+    pageKey: DASHBOARD_QUERY_KEYS.pages.dataRequests,
+    removeKeys: ['dataStatus', 'status'],
+  });
+  const dataStatusFilter = getFilter('status', 'all');
   const activeRequestsList = useMemo(
     () => props.dataRequests.filter((request) =>
       ['pending', 'pending_confirmation', 'queued', 'processing', 'failed'].includes(request.status)
@@ -127,7 +123,7 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
       bucket: currentTab,
       ...(dataStatusFilter !== 'all' ? { status: dataStatusFilter } : {}),
     }).toString()}`,
-    pageKey: 'page[dataRequests]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.dataRequests,
     pageSize: 10,
   });
   const pagedDataRequests = dataRequestsQuery.items;
@@ -175,18 +171,12 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
       <CompactTabNav<DataRequestTabSection>
         ariaLabel={t('dataRequestsTitle')}
         value={currentTab}
-        onValueChange={(val) => {
-          const params = new URLSearchParams(searchParams.toString());
-          params.set('tab', val);
-          params.delete('dataStatus');
-          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        }}
+        onValueChange={setCurrentTab}
         items={[
           {
             value: 'active',
             label: t('dataRequestTabActive'),
             icon: <Inbox className="size-3.5" />,
-            href: `${ROUTES.ADMIN_DATA_REQUESTS}?tab=active`,
             activeAdornment:
               activeRequestsList.length > 0 ? (
                 <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
@@ -198,7 +188,6 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
             value: 'history',
             label: t('dataRequestTabHistory'),
             icon: <History className="size-3.5" />,
-            href: `${ROUTES.ADMIN_DATA_REQUESTS}?tab=history`,
             activeAdornment:
               historyRequestsList.length > 0 ? (
                 <span className="ml-1 rounded-full bg-azure px-2 py-0.2 text-[10px] font-bold text-navy">
@@ -237,7 +226,7 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
           <div className="flex items-center gap-2 self-start sm:self-center">
             <FilterToggleButton
               isExpanded={showFilters}
-              onToggle={() => setShowFilters((prev) => !prev)}
+              onToggle={toggleFilters}
               hasActiveFilters={hasActiveFilters}
               activeCount={activeFilterCount}
               label={t('filterToggle') || 'Filter'}
@@ -256,7 +245,7 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
 
               <FilterSelect
                 value={dataStatusFilter}
-                onChange={(e) => updateParam('dataStatus', e.target.value)}
+                onChange={(e) => setFilter('status', e.target.value)}
                 ariaLabel={t('filterDataStatus')}
               >
                 <option value="all">{t('filterAllDataStatuses')}</option>
@@ -293,7 +282,7 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
 
             {hasActiveFilters ? (
               <FilterResetButton
-                onClick={clearFilters}
+                onClick={() => clearFilters(['status'])}
                 label={t('clearFilters') || 'Reset'}
               />
             ) : null}
@@ -328,7 +317,7 @@ export function DataRequestsTab(props: DataRequestsTabProps) {
                 description={
                   hasActiveFilters ? (
                     <FilterResetButton
-                      onClick={clearFilters}
+                      onClick={() => clearFilters(['status'])}
                       label={t('clearFilters') || 'Reset Filter'}
                       className="mt-2"
                     />

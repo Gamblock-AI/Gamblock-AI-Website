@@ -50,10 +50,11 @@ import {
   useAccountability,
 } from '@/hooks/use-accountability';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import {
   EmptyLine,
   Info,
@@ -81,13 +82,20 @@ export function PartnerGroupsWorkspace({
 
   const { filters, setFilter, resetFilters, activeFilterCount } =
     useQueryFilters({
-      pathname: ROUTES.PARTNERS,
-      defaultFilters: {
+      resourceKey: 'groups',
+      filterKeys: ['q', 'status'],
+      defaultValues: {
         q: '',
         status: 'all',
       },
-      pageKey: 'page[groups]',
+      pageKey: DASHBOARD_QUERY_KEYS.pages.groups,
+      removeKeys: ['q', 'status'],
     });
+  const queryInput = useQueryFilterInput({
+    resourceKey: 'groups',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.groups,
+    removeKeys: ['q'],
+  });
 
   const liveStatuses = new Set([
     'active',
@@ -126,7 +134,7 @@ export function PartnerGroupsWorkspace({
   if (filters.status !== 'all') groupQueryParams.set('status', filters.status);
   const groupsQuery = usePaginatedQuery<AccountabilityGroup>({
     path: `/accountability/groups?${groupQueryParams.toString()}`,
-    pageKey: 'page[groups]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.groups,
     pageSize: 5,
   });
   const groupsPagination = groupsQuery.pagination;
@@ -314,7 +322,10 @@ export function PartnerGroupsWorkspace({
               onToggle={() => setShowFilters((prev) => !prev)}
               activeCount={activeFilterCount}
               hasActiveFilters={activeFilterCount > 0}
-              onReset={resetFilters}
+              onReset={() => {
+                resetFilters();
+                queryInput.reset();
+              }}
               headerRight={
                 <span className="text-xs font-semibold text-muted-foreground">
                   {t('groupsCount', {
@@ -326,8 +337,8 @@ export function PartnerGroupsWorkspace({
               <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full">
                 <div className="w-full sm:w-64">
                   <FilterSearchInput
-                    value={filters.q}
-                    onChangeValue={(val) => setFilter('q', val)}
+                    value={queryInput.value}
+                    onChangeValue={queryInput.onChange}
                     placeholder={t('searchGroups')}
                     ariaLabel={t('searchGroups')}
                   />
@@ -344,7 +355,10 @@ export function PartnerGroupsWorkspace({
                   </FilterSelect>
                   {activeFilterCount > 0 ? (
                     <FilterResetButton
-                      onClick={resetFilters}
+                      onClick={() => {
+                        resetFilters();
+                        queryInput.reset();
+                      }}
                       label={t('resetFilters')}
                     />
                   ) : null}
@@ -369,7 +383,7 @@ export function PartnerGroupsWorkspace({
             />
           ) : (
             <div className="space-y-4">
-              {groupsPagination.paginatedItems.map((group) => (
+              {groupsPagination.items.map((group) => (
                 <GroupCard
                   key={group.id}
                   t={t}
@@ -480,9 +494,22 @@ function GroupCard({
   const [expandedMembers, setExpandedMembers] = useState<
     Record<string, boolean>
   >({});
-  const [searchQuery, setSearchQuery] = useState('');
   const [copied, setCopied] = useState(false);
   const displayCode = code || group.join_code;
+  const memberResourceKey = `groupMembers][${group.id}`;
+  const memberPageKey = DASHBOARD_QUERY_KEYS.pages.groupMembers(group.id);
+  const { filters: memberFilters } = useQueryFilters({
+    resourceKey: memberResourceKey,
+    filterKeys: ['q'],
+    defaultValues: { q: '' },
+    pageKey: memberPageKey,
+    removeKeys: ['q'],
+  });
+  const memberQueryInput = useQueryFilterInput({
+    resourceKey: memberResourceKey,
+    pageKey: memberPageKey,
+    removeKeys: ['q'],
+  });
 
   const activeMembers = useMemo(
     () => members.filter((item) =>
@@ -491,10 +518,12 @@ function GroupCard({
     [members]
   );
   const memberQueryParams = new URLSearchParams({ group_id: group.id });
-  if (searchQuery.trim()) memberQueryParams.set('q', searchQuery.trim());
+  if (memberFilters.q.trim()) {
+    memberQueryParams.set('q', memberFilters.q.trim());
+  }
   const membersQuery = usePaginatedQuery<AccountabilityMembership>({
     path: `/accountability/members?${memberQueryParams.toString()}`,
-    pageKey: `page[groupMembers][${group.id}]`,
+    pageKey: memberPageKey,
     pageSize: 5,
   });
   const memberPagination = membersQuery.pagination;
@@ -663,8 +692,8 @@ function GroupCard({
             <Search className="text-muted-foreground absolute left-3 top-1/2 size-3.5 -translate-y-1/2" />
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={memberQueryInput.value}
+              onChange={(e) => memberQueryInput.onChange(e.target.value)}
               placeholder={t('searchStudents')}
               aria-label={t('searchStudents')}
               className="border-input bg-background/80 focus-visible:ring-navy/20 h-9 w-full rounded-xl border pl-8.5 pr-3 text-xs outline-none focus-visible:ring-2"
@@ -691,7 +720,7 @@ function GroupCard({
           </p>
         ) : (
           <div className="space-y-2.5">
-            {memberPagination.paginatedItems.map((membership) => {
+            {memberPagination.items.map((membership) => {
               const isExpanded = Boolean(expandedMembers[membership.id]);
               const protection = membership.aggregate.protection_status;
               const isProtectionReady = protection === 'ready';

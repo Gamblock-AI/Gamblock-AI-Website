@@ -28,12 +28,13 @@ import {
 } from '@/components/dashboard/filter-toolbar';
 import { Pagination } from '@/components/dashboard/pagination';
 import { ThumbnailCarousel } from '@/components/education/thumbnail-carousel';
+import { useQueryFilterInput } from '@/hooks/use-query-filter-input';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import {
   dynamicLabelFallback,
   dynamicLabelKey,
 } from '@/lib/i18n/dynamic-labels';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 
 export function EducationLibraryClient() {
   const locale = useLocale();
@@ -42,13 +43,21 @@ export function EducationLibraryClient() {
   const tPagination = useTranslations('pagination');
   const { filters, setFilter, resetFilters, activeFilterCount } =
     useQueryFilters({
-      pathname: ROUTES.EDUCATION,
-      defaultFilters: {
+      resourceKey: 'education',
+      filterKeys: ['q', 'category'],
+      defaultValues: {
         q: '',
         category: 'all',
       },
-      pageKey: 'page[education]',
+      pageKey: DASHBOARD_QUERY_KEYS.pages.education,
+      removeKeys: ['q', 'category'],
     });
+  const queryInput = useQueryFilterInput({
+    resourceKey: 'education',
+    field: 'q',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.education,
+    removeKeys: ['q'],
+  });
 
   const [showFilters, setShowFilters] = useState(false);
   const modulesQuery = usePaginatedEducationModules(locale, {
@@ -144,7 +153,10 @@ export function EducationLibraryClient() {
         onToggle={() => setShowFilters((prev) => !prev)}
         activeCount={activeFilterCount}
         hasActiveFilters={activeFilterCount > 0}
-        onReset={resetFilters}
+        onReset={() => {
+          resetFilters();
+          queryInput.reset();
+        }}
         headerRight={
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-muted-foreground">
@@ -156,8 +168,8 @@ export function EducationLibraryClient() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between w-full">
           <div className="w-full sm:w-80">
             <FilterSearchInput
-              value={filters.q}
-              onChangeValue={(val) => setFilter('q', val)}
+              value={queryInput.value}
+              onChangeValue={queryInput.onChange}
               placeholder={t('searchPlaceholder')}
               ariaLabel={t('search')}
             />
@@ -179,7 +191,10 @@ export function EducationLibraryClient() {
             </FilterSelect>
             {activeFilterCount > 0 ? (
               <FilterResetButton
-                onClick={resetFilters}
+                onClick={() => {
+                  resetFilters();
+                  queryInput.reset();
+                }}
                 label={t('resetFilters')}
               />
             ) : null}

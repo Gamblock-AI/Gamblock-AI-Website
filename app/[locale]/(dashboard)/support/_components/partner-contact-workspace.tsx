@@ -36,7 +36,7 @@ import { Link } from '@/i18n/routing';
 import { OptionalMark, RequiredMark } from '@/components/common/form-field';
 import { toastError, toastSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/routes';
+import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 
 export function PartnerContactWorkspace() {
   const t = useTranslations('supportWorkspace');
@@ -53,17 +53,17 @@ export function PartnerContactWorkspace() {
   const membership = workspace?.membership;
   const incomingQuery = usePaginatedQuery<PartnerContactRequest>({
     path: '/accountability/contact-requests?bucket=incoming',
-    pageKey: 'page[incomingContacts]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.incomingContacts,
     pageSize: 5,
   });
   const historyQuery = usePaginatedQuery<PartnerContactRequest>({
     path: '/accountability/contact-requests?bucket=history',
-    pageKey: 'page[contactHistory]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.contactHistory,
     pageSize: 5,
   });
   const studentRequestsQuery = usePaginatedQuery<PartnerContactRequest>({
     path: '/accountability/contact-requests?bucket=all',
-    pageKey: 'page[contactRequests]',
+    pageKey: DASHBOARD_QUERY_KEYS.pages.contactRequests,
     pageSize: 5,
   });
   const toggleExpanded = (id: string) =>

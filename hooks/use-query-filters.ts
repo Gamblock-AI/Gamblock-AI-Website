@@ -1,36 +1,45 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { usePathname, useRouter } from '@/i18n/routing';
+import {
+  filterQueryKey,
+  LEGACY_DASHBOARD_QUERY_KEYS,
+  mergeQueryKeys,
+  updateQueryURL,
+} from '@/lib/query-params';
 
 export interface UseQueryFiltersOptions {
-  /** Filter keys that should be monitored for active filter count and state */
-  filterKeys?: string[];
-  /** Ignored keys when determining active filter count (e.g. 'section', 'item', 'lang', 'page') */
-  ignoredKeys?: string[];
+  /** Resource namespace used for canonical browser keys. */
+  resourceKey: string;
+  /** Semantic filter fields monitored for active filter count and state. */
+  filterKeys: readonly string[];
   /** Default values for specific keys (e.g. { status: 'all', priority: 'all' }) */
-  defaultValues?: Record<string, string>;
+  defaultValues?: Readonly<Record<string, string>>;
   /** Alias for defaultValues */
-  defaultFilters?: Record<string, string>;
+  defaultFilters?: Readonly<Record<string, string>>;
   /** Optional pathname override */
   pathname?: string;
   /** Key for pagination reset, e.g. 'page'. When set, updating a filter will reset this key to 1. */
   pageKey?: string;
+  /** Flat keys from the pre-namespace URL contract to remove without reading. */
+  removeKeys?: readonly string[];
 }
 
-export function useQueryFilters(options: UseQueryFiltersOptions = {}) {
+export function useQueryFilters(options: UseQueryFiltersOptions) {
   const searchParams = useSearchParams();
   const routingPathname = usePathname();
   const router = useRouter();
 
   const {
+    resourceKey,
     filterKeys,
-    ignoredKeys = ['section', 'item', 'id', 'lang', 'tab', 'page'],
     defaultValues = {},
     defaultFilters = {},
     pathname: customPathname,
     pageKey,
+    removeKeys = [],
   } = options;
 
   const mergedDefaults = useMemo(
@@ -38,11 +47,33 @@ export function useQueryFilters(options: UseQueryFiltersOptions = {}) {
     [defaultFilters, defaultValues]
   );
   const pathname = customPathname ?? routingPathname;
+  const cleanupKeys = useMemo(
+    () => mergeQueryKeys(LEGACY_DASHBOARD_QUERY_KEYS, removeKeys),
+    [removeKeys]
+  );
+  const keyFor = useCallback(
+    (field: string) => filterQueryKey(resourceKey, field),
+    [resourceKey]
+  );
+
+  const canonicalKeys = useMemo(
+    () => new Map(filterKeys.map((field) => [field, keyFor(field)])),
+    [filterKeys, keyFor]
+  );
+
+  useEffect(() => {
+    if (cleanupKeys.some((key) => searchParams.has(key))) {
+      router.replace(
+        updateQueryURL(pathname, searchParams, {}, cleanupKeys),
+        { scroll: false }
+      );
+    }
+  }, [cleanupKeys, pathname, router, searchParams]);
 
   // Read filter value safely
   const getFilter = useCallback(
     (key: string, fallback?: string): string => {
-      const value = searchParams.get(key);
+      const value = searchParams.get(keyFor(key));
       if (value !== null && value !== '') {
         return value;
       }
@@ -51,13 +82,13 @@ export function useQueryFilters(options: UseQueryFiltersOptions = {}) {
       }
       return mergedDefaults[key] ?? '';
     },
-    [searchParams, mergedDefaults]
+    [keyFor, searchParams, mergedDefaults]
   );
 
   // Check if a specific filter has an active, non-default value
   const isFilterActive = useCallback(
     (key: string): boolean => {
-      const val = searchParams.get(key);
+      const val = searchParams.get(keyFor(key));
       if (!val || val === '' || val === 'all') {
         return false;
       }
@@ -67,21 +98,20 @@ export function useQueryFilters(options: UseQueryFiltersOptions = {}) {
       }
       return true;
     },
-    [searchParams, mergedDefaults]
+    [keyFor, searchParams, mergedDefaults]
   );
 
   // Determine active keys and count
   const activeKeys = useMemo(() => {
     const keys: string[] = [];
-    searchParams.forEach((val, key) => {
-      if (ignoredKeys.includes(key) || key === 'page' || key.startsWith('page[')) return;
-      if (filterKeys && !filterKeys.includes(key)) return;
+    for (const key of filterKeys) {
+      const val = searchParams.get(canonicalKeys.get(key) ?? key);
       if (val && val !== '' && val !== 'all' && val !== mergedDefaults[key]) {
         keys.push(key);
       }
-    });
+    }
     return keys;
-  }, [searchParams, ignoredKeys, filterKeys, mergedDefaults]);
+  }, [canonicalKeys, filterKeys, searchParams, mergedDefaults]);
 
   const hasActiveFilters = activeKeys.length > 0;
   const activeFilterCount = activeKeys.length;
@@ -92,29 +122,36 @@ export function useQueryFilters(options: UseQueryFiltersOptions = {}) {
   // Update a single filter key
   const setFilter = useCallback(
     (key: string, value: string | null | undefined, resetPage = true) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const queryKey = keyFor(key);
       const defaultVal = mergedDefaults[key];
 
-      if (
+      const nextValue =
         value === null ||
         value === undefined ||
         value === '' ||
         value === 'all' ||
         (defaultVal !== undefined && value === defaultVal)
-      ) {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-
-      if (resetPage && pageKey) {
-        params.delete(pageKey);
-      }
-
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+          ? null
+          : value;
+      router.replace(
+        updateQueryURL(
+          pathname,
+          searchParams,
+          { [queryKey]: nextValue },
+          resetPage && pageKey ? [pageKey, ...cleanupKeys] : cleanupKeys
+        ),
+        { scroll: false }
+      );
     },
-    [searchParams, pathname, router, mergedDefaults, pageKey]
+    [
+      cleanupKeys,
+      keyFor,
+      searchParams,
+      pathname,
+      router,
+      mergedDefaults,
+      pageKey,
+    ]
   );
 
   // Update multiple filters at once
@@ -123,7 +160,7 @@ export function useQueryFilters(options: UseQueryFiltersOptions = {}) {
       updates: Record<string, string | null | undefined>,
       resetPage = true
     ) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const queryUpdates: Record<string, string | null> = {};
 
       for (const [key, value] of Object.entries(updates)) {
         const defaultVal = mergedDefaults[key];
@@ -134,40 +171,61 @@ export function useQueryFilters(options: UseQueryFiltersOptions = {}) {
           value === 'all' ||
           (defaultVal !== undefined && value === defaultVal)
         ) {
-          params.delete(key);
+          queryUpdates[keyFor(key)] = null;
         } else {
-          params.set(key, value);
+          queryUpdates[keyFor(key)] = value;
         }
       }
 
-      if (resetPage && pageKey) {
-        params.delete(pageKey);
-      }
-
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      router.replace(
+        updateQueryURL(
+          pathname,
+          searchParams,
+          queryUpdates,
+          resetPage && pageKey ? [pageKey, ...cleanupKeys] : cleanupKeys
+        ),
+        { scroll: false }
+      );
     },
-    [searchParams, pathname, router, mergedDefaults, pageKey]
+    [
+      cleanupKeys,
+      keyFor,
+      searchParams,
+      pathname,
+      router,
+      mergedDefaults,
+      pageKey,
+    ]
   );
 
   // Clear specified filters or all active filters
   const clearFilters = useCallback(
     (keysToClear?: string[] | unknown, resetPage = true) => {
-      const params = new URLSearchParams(searchParams.toString());
       const targets = Array.isArray(keysToClear) ? keysToClear : activeKeys;
-
-      for (const key of targets) {
-        params.delete(key);
-      }
-
-      if ((typeof resetPage === 'boolean' ? resetPage : true) && pageKey) {
-        params.delete(pageKey);
-      }
-
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      const updates = Object.fromEntries(
+        targets.map((key) => [keyFor(key), null])
+      );
+      router.replace(
+        updateQueryURL(
+          pathname,
+          searchParams,
+          updates,
+          (typeof resetPage === 'boolean' ? resetPage : true) && pageKey
+            ? [pageKey, ...cleanupKeys]
+            : cleanupKeys
+        ),
+        { scroll: false }
+      );
     },
-    [searchParams, pathname, router, activeKeys, pageKey]
+    [
+      cleanupKeys,
+      keyFor,
+      searchParams,
+      pathname,
+      router,
+      activeKeys,
+      pageKey,
+    ]
   );
 
   const toggleExpanded = useCallback(() => {
