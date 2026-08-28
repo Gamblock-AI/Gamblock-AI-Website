@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useApiQuery, type UseQueryResult } from './use-api';
 
 export interface AnalyticsTotals {
@@ -52,6 +53,29 @@ export const EMPTY_ANALYTICS: AnalyticsSummary = {
   shared_member_count: 0,
 };
 
+function useLiveAnalytics(
+  path: string,
+  enabled = true
+): UseQueryResult<AnalyticsSummary> {
+  const query = useApiQuery<AnalyticsSummary>(path, enabled);
+  const { refetch } = query;
+
+  useEffect(() => {
+    if (!enabled) return;
+    const refresh = () => {
+      void refetch();
+    };
+    const interval = window.setInterval(refresh, 15000);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [enabled, refetch]);
+
+  return query;
+}
+
 export function usePartnerAnalytics(
   days: AnalyticsPeriod,
   groupId?: string,
@@ -59,7 +83,7 @@ export function usePartnerAnalytics(
 ): UseQueryResult<AnalyticsSummary> {
   const params = new URLSearchParams({ days: String(days) });
   if (groupId) params.set('group_id', groupId);
-  return useApiQuery<AnalyticsSummary>(
+  return useLiveAnalytics(
     `/accountability/analytics?${params.toString()}`,
     enabled
   );
@@ -69,5 +93,5 @@ export function usePlatformAnalytics(
   days: AnalyticsPeriod,
   enabled = true
 ): UseQueryResult<AnalyticsSummary> {
-  return useApiQuery<AnalyticsSummary>(`/admin/analytics?days=${days}`, enabled);
+  return useLiveAnalytics(`/admin/analytics?days=${days}`, enabled);
 }
