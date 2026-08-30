@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { normalizeQueryParams } from '@/lib/query-params';
 import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
 import { SupportWorkspaceClient } from './_components/support-workspace-client';
 
@@ -31,7 +32,9 @@ export default async function SupportPage({
   searchParams: Promise<SupportPageSearchParams>;
 }) {
   const { locale } = await params;
-  const currentSearchParams = toSearchParams(await searchParams);
+  const currentSearchParams = normalizeQueryParams(
+    toSearchParams(await searchParams)
+  );
   const queryKey = DASHBOARD_QUERY_KEYS.supportTab;
   const requestedChannels = currentSearchParams.getAll(queryKey);
   const requestedChannel = requestedChannels[0];

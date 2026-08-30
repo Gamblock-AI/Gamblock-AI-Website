@@ -94,6 +94,27 @@ describe('usePagination', () => {
     expect(result.current.page).toBe(1);
   });
 
+  it('reads a legacy bracketed page and writes the canonical dot key', () => {
+    currentParams = new URLSearchParams('page%5Brecovery%5D=2');
+    const { result } = renderHook(() =>
+      usePagination({
+        items: dummyItems,
+        pageSize: 6,
+        pageKey: 'page.recovery',
+      })
+    );
+
+    expect(result.current.page).toBe(2);
+
+    act(() => {
+      result.current.nextPage();
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith('/id/recovery?page.recovery=3', {
+      scroll: false,
+    });
+  });
+
   it('safely clamps out-of-bounds page requests', () => {
     const { result, rerender } = renderHook(() =>
       usePagination({ items: dummyItems, pageSize: 6 })

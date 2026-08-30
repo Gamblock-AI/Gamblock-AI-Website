@@ -7,6 +7,7 @@ import {
   filterQueryKey,
   LEGACY_DASHBOARD_QUERY_KEYS,
   mergeQueryKeys,
+  normalizeQueryParams,
   updateQueryURL,
 } from '@/lib/query-params';
 
@@ -34,14 +35,19 @@ export function useQueryFilterInput({
   const pathname = usePathname();
   const router = useRouter();
   const queryKey = filterQueryKey(resourceKey, field);
-  const canonicalValue = searchParams.get(queryKey) ?? '';
+  const searchParamsString = searchParams.toString();
+  const normalizedSearchParams = useMemo(
+    () => normalizeQueryParams(searchParamsString),
+    [searchParamsString]
+  );
+  const canonicalValue = normalizedSearchParams.get(queryKey) ?? '';
   const cleanupKeys = useMemo(
     () => mergeQueryKeys(LEGACY_DASHBOARD_QUERY_KEYS, removeKeys),
     [removeKeys]
   );
   const [draft, setDraft] = useState<DraftValue | null>(null);
   const timerRef = useRef<number | null>(null);
-  const latestSearchParamsRef = useRef(searchParams);
+  const latestSearchParamsRef = useRef(normalizedSearchParams);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -88,8 +94,8 @@ export function useQueryFilterInput({
 
   useEffect(() => clearTimer, [clearTimer]);
   useEffect(() => {
-    latestSearchParamsRef.current = searchParams;
-  }, [searchParams]);
+    latestSearchParamsRef.current = normalizedSearchParams;
+  }, [normalizedSearchParams]);
 
   return {
     value:

@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { usePathname, useRouter } from '@/i18n/routing';
-import { updateQueryURL } from '@/lib/query-params';
+import {
+  normalizeQueryParams,
+  updateQueryURL,
+} from '@/lib/query-params';
 
 export type QueryTabValue = string | number;
 
@@ -40,12 +43,17 @@ export function useQueryTab<TValue extends QueryTabValue>({
   const pathname = usePathname();
   const router = useRouter();
   const cleanupKeys = removeKeys;
+  const searchParamsString = searchParams.toString();
+  const normalizedSearchParams = useMemo(
+    () => normalizeQueryParams(searchParamsString),
+    [searchParamsString]
+  );
   const allowedValues = useMemo(
     () => new Set(values.map(asQueryValue)),
     [values]
   );
 
-  const canonicalValues = searchParams.getAll(queryKey);
+  const canonicalValues = normalizedSearchParams.getAll(queryKey);
   const canonicalValue =
     canonicalValues.length === 1 ? canonicalValues[0] : null;
   const hasValidCanonicalValue =
@@ -58,18 +66,26 @@ export function useQueryTab<TValue extends QueryTabValue>({
   const isCanonical =
     canonicalValues.length === 1 &&
     hasValidCanonicalValue &&
-    cleanupKeys.every((key) => !searchParams.has(key));
+    cleanupKeys.every((key) => !normalizedSearchParams.has(key)) &&
+    normalizedSearchParams.toString() === searchParamsString;
 
   const buildUrl = useCallback(
     (nextValue: TValue) => {
       return updateQueryURL(
         pathname,
-        searchParams,
+        normalizedSearchParams,
         { [queryKey]: asQueryValue(nextValue) },
         [...resetKeys, ...cleanupKeys, ...clearKeys]
       );
     },
-    [clearKeys, cleanupKeys, pathname, queryKey, resetKeys, searchParams]
+    [
+      clearKeys,
+      cleanupKeys,
+      normalizedSearchParams,
+      pathname,
+      queryKey,
+      resetKeys,
+    ]
   );
 
   const replaceCanonicalValue = useCallback(

@@ -69,6 +69,7 @@ import { TranslateButton } from '@/components/admin/translate-button';
 import { slugify } from './content-tab';
 import { DASHBOARD_QUERY_KEYS } from '@/routes';
 import { usePathname, useRouter } from '@/i18n/routing';
+import { normalizeQueryParams, updateQueryURL } from '@/lib/query-params';
 
 type Draft = {
   slug: string;
@@ -431,6 +432,11 @@ export function LearningHubTab({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParamsString = searchParams.toString();
+  const normalizedSearchParams = useMemo(
+    () => normalizeQueryParams(searchParamsString),
+    [searchParamsString]
+  );
   const { value: section, setValue: setSection } = useQueryTab<'items' | 'taxonomy'>({
     queryKey: DASHBOARD_QUERY_KEYS.adminLearningHubTab,
     values: ['items', 'taxonomy'],
@@ -438,10 +444,14 @@ export function LearningHubTab({
     removeKeys: ['section', 'lang', 'item', 'id', 'q', 'status'],
     history: 'push',
   });
-  const langParam = searchParams.get(DASHBOARD_QUERY_KEYS.state.learningHubLanguage);
+  const langParam = normalizedSearchParams.get(
+    DASHBOARD_QUERY_KEYS.state.learningHubLanguage
+  );
   const isEn = appLocale === 'en' || langParam === 'en';
   const locale: 'id' | 'en' = isEn ? 'en' : 'id';
-  const itemParam = searchParams.get(DASHBOARD_QUERY_KEYS.state.learningHubItem);
+  const itemParam = normalizedSearchParams.get(
+    DASHBOARD_QUERY_KEYS.state.learningHubItem
+  );
 
   const {
     getFilter,
@@ -602,10 +612,14 @@ export function LearningHubTab({
   }, [draft, isCreating]);
 
   const setLocale = (newLocale: 'id' | 'en') => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('lang');
-    params.set(DASHBOARD_QUERY_KEYS.state.learningHubLanguage, newLocale);
-    router.replace(`${pathname}?${params.toString()}`);
+    router.replace(
+      updateQueryURL(
+        pathname,
+        normalizedSearchParams,
+        { [DASHBOARD_QUERY_KEYS.state.learningHubLanguage]: newLocale },
+        ['lang']
+      )
+    );
   };
 
   const visibleItems = useMemo(() => {
@@ -755,12 +769,14 @@ export function LearningHubTab({
     setSelected(item);
     setDraft(itemDraft(item));
     setFieldErrors({});
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(DASHBOARD_QUERY_KEYS.state.learningHubItem);
-    params.delete('item');
-    params.delete('id');
-    params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, item.id);
-    router.replace(`${pathname}?${params.toString()}`);
+    router.replace(
+      updateQueryURL(
+        pathname,
+        normalizedSearchParams,
+        { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: item.id },
+        ['item', 'id']
+      )
+    );
   };
 
   const startCreate = () => {
@@ -768,10 +784,14 @@ export function LearningHubTab({
     setSelected(null);
     setDraft(emptyDraft());
     setFieldErrors({});
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(DASHBOARD_QUERY_KEYS.state.learningHubItem);
-    params.delete('id');
-    router.replace(`${pathname}?${params.toString()}`);
+    router.replace(
+      updateQueryURL(
+        pathname,
+        normalizedSearchParams,
+        { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: null },
+        ['id']
+      )
+    );
   };
 
   const cancelCreate = () => {
@@ -779,10 +799,14 @@ export function LearningHubTab({
     setDraft(null);
     setSelected(null);
     setFieldErrors({});
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(DASHBOARD_QUERY_KEYS.state.learningHubItem);
-    params.delete('id');
-    router.replace(`${pathname}?${params.toString()}`);
+    router.replace(
+      updateQueryURL(
+        pathname,
+        normalizedSearchParams,
+        { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: null },
+        ['id']
+      )
+    );
   };
 
   const updateDraft = (next: Partial<Draft>) => {
@@ -808,9 +832,13 @@ export function LearningHubTab({
       const saved = await saveItem(selected, payload);
       setSelected(saved);
       setDraft(itemDraft(saved));
-      const params = new URLSearchParams(searchParams.toString());
-      params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, saved.id);
-      router.replace(`${pathname}?${params.toString()}`);
+      router.replace(
+        updateQueryURL(
+          pathname,
+          normalizedSearchParams,
+          { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: saved.id }
+        )
+      );
       toastSuccess(t('learningHubSaved'));
     } catch (error) {
       toastError(error, t('learningHubSaveError'));
@@ -832,18 +860,26 @@ export function LearningHubTab({
         setDraft(itemDraft(published));
         setIsCreating(false);
         setFieldErrors({});
-        const params = new URLSearchParams(searchParams.toString());
-        params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, published.id);
-        router.replace(`${pathname}?${params.toString()}`);
+        router.replace(
+          updateQueryURL(
+            pathname,
+            normalizedSearchParams,
+            { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: published.id }
+          )
+        );
         toastSuccess(t('learningHubPublished'));
       } else {
         setSelected(created);
         setDraft(itemDraft(created));
         setIsCreating(false);
         setFieldErrors({});
-        const params = new URLSearchParams(searchParams.toString());
-        params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, created.id);
-        router.replace(`${pathname}?${params.toString()}`);
+        router.replace(
+          updateQueryURL(
+            pathname,
+            normalizedSearchParams,
+            { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: created.id }
+          )
+        );
         toastSuccess(t('learningHubCreated'));
       }
     } catch (error) {
@@ -867,9 +903,13 @@ export function LearningHubTab({
       const updated = await transitionItem(saved.id, action);
       setSelected(updated);
       setDraft(itemDraft(updated));
-      const params = new URLSearchParams(searchParams.toString());
-      params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, updated.id);
-      router.replace(`${pathname}?${params.toString()}`);
+      router.replace(
+        updateQueryURL(
+          pathname,
+          normalizedSearchParams,
+          { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: updated.id }
+        )
+      );
       toastSuccess(
         t(
           action === 'publish'
@@ -908,9 +948,13 @@ export function LearningHubTab({
       );
       setSelected(updated);
       setDraft(itemDraft(updated));
-      const params = new URLSearchParams(searchParams.toString());
-      params.set(DASHBOARD_QUERY_KEYS.state.learningHubItem, updated.id);
-      router.replace(`${pathname}?${params.toString()}`);
+      router.replace(
+        updateQueryURL(
+          pathname,
+          normalizedSearchParams,
+          { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: updated.id }
+        )
+      );
       setRollbackRevision(null);
       setRollbackReason('');
       toastSuccess(t('learningHubRolledBack'));
@@ -1074,11 +1118,14 @@ export function LearningHubTab({
           setSelected(null);
           setDraft(null);
           setIsCreating(false);
-          const params = new URLSearchParams(searchParams.toString());
-          params.delete(DASHBOARD_QUERY_KEYS.state.learningHubItem);
-          params.delete('item');
-          params.delete('id');
-          router.replace(`${pathname}?${params.toString()}`);
+          router.replace(
+            updateQueryURL(
+              pathname,
+              normalizedSearchParams,
+              { [DASHBOARD_QUERY_KEYS.state.learningHubItem]: null },
+              ['item', 'id']
+            )
+          );
         }
       }
       setDeleteConfirmOpen(false);

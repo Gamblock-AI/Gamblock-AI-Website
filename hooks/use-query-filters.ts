@@ -7,6 +7,7 @@ import {
   filterQueryKey,
   LEGACY_DASHBOARD_QUERY_KEYS,
   mergeQueryKeys,
+  normalizeQueryParams,
   updateQueryURL,
 } from '@/lib/query-params';
 
@@ -29,6 +30,11 @@ export interface UseQueryFiltersOptions {
 
 export function useQueryFilters(options: UseQueryFiltersOptions) {
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const normalizedSearchParams = useMemo(
+    () => normalizeQueryParams(searchParamsString),
+    [searchParamsString]
+  );
   const routingPathname = usePathname();
   const router = useRouter();
 
@@ -62,18 +68,18 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
   );
 
   useEffect(() => {
-    if (cleanupKeys.some((key) => searchParams.has(key))) {
+    if (cleanupKeys.some((key) => normalizedSearchParams.has(key))) {
       router.replace(
-        updateQueryURL(pathname, searchParams, {}, cleanupKeys),
+        updateQueryURL(pathname, normalizedSearchParams, {}, cleanupKeys),
         { scroll: false }
       );
     }
-  }, [cleanupKeys, pathname, router, searchParams]);
+  }, [cleanupKeys, normalizedSearchParams, pathname, router]);
 
   // Read filter value safely
   const getFilter = useCallback(
     (key: string, fallback?: string): string => {
-      const value = searchParams.get(keyFor(key));
+      const value = normalizedSearchParams.get(keyFor(key));
       if (value !== null && value !== '') {
         return value;
       }
@@ -82,13 +88,13 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
       }
       return mergedDefaults[key] ?? '';
     },
-    [keyFor, searchParams, mergedDefaults]
+    [keyFor, mergedDefaults, normalizedSearchParams]
   );
 
   // Check if a specific filter has an active, non-default value
   const isFilterActive = useCallback(
     (key: string): boolean => {
-      const val = searchParams.get(keyFor(key));
+      const val = normalizedSearchParams.get(keyFor(key));
       if (!val || val === '' || val === 'all') {
         return false;
       }
@@ -98,20 +104,20 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
       }
       return true;
     },
-    [keyFor, searchParams, mergedDefaults]
+    [keyFor, mergedDefaults, normalizedSearchParams]
   );
 
   // Determine active keys and count
   const activeKeys = useMemo(() => {
     const keys: string[] = [];
     for (const key of filterKeys) {
-      const val = searchParams.get(canonicalKeys.get(key) ?? key);
+      const val = normalizedSearchParams.get(canonicalKeys.get(key) ?? key);
       if (val && val !== '' && val !== 'all' && val !== mergedDefaults[key]) {
         keys.push(key);
       }
     }
     return keys;
-  }, [canonicalKeys, filterKeys, searchParams, mergedDefaults]);
+  }, [canonicalKeys, filterKeys, mergedDefaults, normalizedSearchParams]);
 
   const hasActiveFilters = activeKeys.length > 0;
   const activeFilterCount = activeKeys.length;
@@ -136,7 +142,7 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
       router.replace(
         updateQueryURL(
           pathname,
-          searchParams,
+          normalizedSearchParams,
           { [queryKey]: nextValue },
           resetPage && pageKey ? [pageKey, ...cleanupKeys] : cleanupKeys
         ),
@@ -146,7 +152,7 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
     [
       cleanupKeys,
       keyFor,
-      searchParams,
+      normalizedSearchParams,
       pathname,
       router,
       mergedDefaults,
@@ -180,7 +186,7 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
       router.replace(
         updateQueryURL(
           pathname,
-          searchParams,
+          normalizedSearchParams,
           queryUpdates,
           resetPage && pageKey ? [pageKey, ...cleanupKeys] : cleanupKeys
         ),
@@ -190,7 +196,7 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
     [
       cleanupKeys,
       keyFor,
-      searchParams,
+      normalizedSearchParams,
       pathname,
       router,
       mergedDefaults,
@@ -208,7 +214,7 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
       router.replace(
         updateQueryURL(
           pathname,
-          searchParams,
+          normalizedSearchParams,
           updates,
           (typeof resetPage === 'boolean' ? resetPage : true) && pageKey
             ? [pageKey, ...cleanupKeys]
@@ -220,7 +226,7 @@ export function useQueryFilters(options: UseQueryFiltersOptions) {
     [
       cleanupKeys,
       keyFor,
-      searchParams,
+      normalizedSearchParams,
       pathname,
       router,
       activeKeys,

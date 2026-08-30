@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { routing } from './i18n/routing';
+import { normalizeQueryParams } from './lib/query-params';
 import { GUEST_ROUTES, PROTECTED_ROUTES, ROUTES } from './routes';
 
 const intlMiddleware = createMiddleware(routing);
@@ -28,6 +29,13 @@ export function proxy(request: NextRequest) {
   // Keep next-intl's request header override intact. It carries the resolved
   // locale into the App Router and is required for matching app/[locale].
   const response = intlMiddleware(request);
+
+  const normalizedSearchParams = normalizeQueryParams(request.nextUrl.searchParams);
+  if (normalizedSearchParams.toString() !== request.nextUrl.searchParams.toString()) {
+    const url = request.nextUrl.clone();
+    url.search = normalizedSearchParams.toString();
+    return NextResponse.redirect(url);
+  }
 
   const token = request.cookies.get('gamblock_access_token')?.value;
 

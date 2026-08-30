@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   ArrowDown,
@@ -64,7 +64,7 @@ import {
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from '@/i18n/routing';
 import { DASHBOARD_QUERY_KEYS, ROUTES } from '@/routes';
-import { updateQueryURL } from '@/lib/query-params';
+import { normalizeQueryParams, updateQueryURL } from '@/lib/query-params';
 import {
   AdminStatusBadge,
   adminFieldClassName,
@@ -810,8 +810,15 @@ export function ContentTab(props: ContentTabProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const normalizedSearchParams = useMemo(
+    () => normalizeQueryParams(searchParamsString),
+    [searchParamsString]
+  );
   const { getModule, moduleID } = props;
-  const langParam = searchParams.get(DASHBOARD_QUERY_KEYS.state.contentLanguage);
+  const langParam = normalizedSearchParams.get(
+    DASHBOARD_QUERY_KEYS.state.contentLanguage
+  );
   const locale: 'id' | 'en' = langParam === 'en' ? 'en' : 'id';
   const isNew = moduleID === 'new';
   const [prevModuleID, setPrevModuleID] = useState(moduleID);
@@ -923,18 +930,26 @@ export function ContentTab(props: ContentTabProps) {
 
   useEffect(() => {
     if (moduleID && langParam !== 'id' && langParam !== 'en') {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('lang');
-      params.set(DASHBOARD_QUERY_KEYS.state.contentLanguage, 'id');
-      router.replace(`${pathname}?${params.toString()}`);
+      router.replace(
+        updateQueryURL(
+          pathname,
+          normalizedSearchParams,
+          { [DASHBOARD_QUERY_KEYS.state.contentLanguage]: 'id' },
+          ['lang']
+        )
+      );
     }
-  }, [langParam, moduleID, pathname, router, searchParams]);
+  }, [langParam, moduleID, normalizedSearchParams, pathname, router]);
 
   const setLocale = (newLocale: 'id' | 'en') => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('lang');
-    params.set(DASHBOARD_QUERY_KEYS.state.contentLanguage, newLocale);
-    router.replace(`${pathname}?${params.toString()}`);
+    router.replace(
+      updateQueryURL(
+        pathname,
+        normalizedSearchParams,
+        { [DASHBOARD_QUERY_KEYS.state.contentLanguage]: newLocale },
+        ['lang']
+      )
+    );
   };
 
   useEffect(() => {

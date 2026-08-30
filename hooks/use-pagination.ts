@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { usePathname, useRouter } from '@/i18n/routing';
+import { normalizeQueryParams, updateQueryURL } from '@/lib/query-params';
 
 export interface PaginatedData<T> {
   items: T[];
@@ -21,7 +22,7 @@ export interface UsePaginationOptions<T = unknown> {
   hasMore?: boolean;
   pageSize?: number;
   initialPage?: number;
-  /** URL key, normally `page[resource]`. */
+  /** URL key, normally `page.resource`. */
   pageKey?: string;
 }
 
@@ -59,6 +60,11 @@ export function usePagination<T = unknown>({
   pageKey = 'page',
 }: UsePaginationOptions<T> = {}): UsePaginationResult<T> {
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const normalizedSearchParams = useMemo(
+    () => normalizeQueryParams(searchParamsString),
+    [searchParamsString]
+  );
   const pathname = usePathname();
   const router = useRouter();
   const pageSize = Math.max(1, initialPageSize);
@@ -67,23 +73,27 @@ export function usePagination<T = unknown>({
     1,
     providedTotalPages ?? Math.ceil(normalizedTotalItems / pageSize)
   );
-  const requestedPage = readPage(searchParams.get(pageKey), initialPage);
+  const requestedPage = readPage(
+    normalizedSearchParams.get(pageKey),
+    initialPage
+  );
   const hasKnownTotal =
     providedTotalPages !== undefined || totalItems > 0 || items.length > 0;
   const page = hasKnownTotal ? Math.min(requestedPage, totalPages) : requestedPage;
 
   const replacePage = useCallback(
     (nextPage: number) => {
-      const params = new URLSearchParams(searchParams.toString());
       const safePage = Math.max(1, Math.min(Math.trunc(nextPage), totalPages));
-      if (safePage === 1) params.delete(pageKey);
-      else params.set(pageKey, String(safePage));
-      const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, {
+      const url = updateQueryURL(
+        pathname,
+        normalizedSearchParams,
+        { [pageKey]: safePage === 1 ? null : safePage }
+      );
+      router.replace(url, {
         scroll: false,
       });
     },
-    [pageKey, pathname, router, searchParams, totalPages]
+    [normalizedSearchParams, pageKey, pathname, router, totalPages]
   );
 
   useEffect(() => {

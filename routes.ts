@@ -1,4 +1,9 @@
-import { filterQueryKey, scopedFilterQueryKey } from '@/lib/query-params';
+import {
+  filterQueryKey,
+  namespacedQueryKey,
+  scopedFilterQueryKey,
+  stateQueryKey,
+} from '@/lib/query-params';
 
 export const ROUTES = {
   HOME: '/',
@@ -48,17 +53,17 @@ export const ROUTES = {
 } as const;
 
 export const DASHBOARD_QUERY_KEYS = {
-  supportTab: 'tab[support]',
-  recoveryTab: 'tab[recovery]',
-  adminTicketsTab: 'tab[adminTickets]',
-  adminDataRequestsTab: 'tab[adminDataRequests]',
-  adminEmergencyTab: 'tab[adminEmergency]',
-  adminLearningHubTab: 'tab[adminLearningHub]',
+  supportTab: stateQueryKey('tab', 'support'),
+  recoveryTab: stateQueryKey('tab', 'recovery'),
+  adminTicketsTab: stateQueryKey('tab', 'adminTickets'),
+  adminDataRequestsTab: stateQueryKey('tab', 'adminDataRequests'),
+  adminEmergencyTab: stateQueryKey('tab', 'adminEmergency'),
+  adminLearningHubTab: stateQueryKey('tab', 'adminLearningHub'),
   analyticsPeriod: 'period',
   state: {
-    contentLanguage: 'lang[content]',
-    learningHubLanguage: 'lang[learningHub]',
-    learningHubItem: 'item[learningHub]',
+    contentLanguage: stateQueryKey('lang', 'content'),
+    learningHubLanguage: stateQueryKey('lang', 'learningHub'),
+    learningHubItem: stateQueryKey('item', 'learningHub'),
   },
   filters: {
     analyticsMembers: {
@@ -125,29 +130,30 @@ export const DASHBOARD_QUERY_KEYS = {
     },
   },
   pages: {
-    analyticsMembers: 'page[analyticsMembers]',
-    education: 'page[education]',
-    skillsProviders: 'page[skillsProviders]',
-    skillsItems: 'page[skillsItems]',
-    recovery: 'page[recovery]',
-    approvalHistory: 'page[approvalHistory]',
-    approvalQueue: 'page[approvalQueue]',
-    leaveQueue: 'page[leaveQueue]',
-    groups: 'page[groups]',
-    incomingContacts: 'page[incomingContacts]',
-    contactHistory: 'page[contactHistory]',
-    contactRequests: 'page[contactRequests]',
-    flaggedMembers: 'page[flaggedMembers]',
-    sharedMembers: 'page[sharedMembers]',
-    supportHistory: 'page[supportHistory]',
-    tickets: 'page[support]',
-    dataRequests: 'page[dataRequests]',
-    emergency: 'page[emergency]',
-    learningHub: 'page[learningHub]',
-    content: 'page[content]',
-    accounts: 'page[accounts]',
-    audit: 'page[audit]',
-    groupMembers: (groupID: string) => `page[groupMembers][${groupID}]`,
+    analyticsMembers: stateQueryKey('page', 'analyticsMembers'),
+    education: stateQueryKey('page', 'education'),
+    skillsProviders: stateQueryKey('page', 'skillsProviders'),
+    skillsItems: stateQueryKey('page', 'skillsItems'),
+    recovery: stateQueryKey('page', 'recovery'),
+    approvalHistory: stateQueryKey('page', 'approvalHistory'),
+    approvalQueue: stateQueryKey('page', 'approvalQueue'),
+    leaveQueue: stateQueryKey('page', 'leaveQueue'),
+    groups: stateQueryKey('page', 'groups'),
+    incomingContacts: stateQueryKey('page', 'incomingContacts'),
+    contactHistory: stateQueryKey('page', 'contactHistory'),
+    contactRequests: stateQueryKey('page', 'contactRequests'),
+    flaggedMembers: stateQueryKey('page', 'flaggedMembers'),
+    sharedMembers: stateQueryKey('page', 'sharedMembers'),
+    supportHistory: stateQueryKey('page', 'supportHistory'),
+    tickets: stateQueryKey('page', 'support'),
+    dataRequests: stateQueryKey('page', 'dataRequests'),
+    emergency: stateQueryKey('page', 'emergency'),
+    learningHub: stateQueryKey('page', 'learningHub'),
+    content: stateQueryKey('page', 'content'),
+    accounts: stateQueryKey('page', 'accounts'),
+    audit: stateQueryKey('page', 'audit'),
+    groupMembers: (groupID: string) =>
+      namespacedQueryKey('page', 'groupMembers', groupID),
   },
 } as const;
 
