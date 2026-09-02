@@ -46,7 +46,7 @@ daily missions, skill recommendations, self-regulation review loop.
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 | Profile avatar | implemented | The student Profile page opens an on-demand avatar action dialog from the profile image itself. Users can choose, crop, zoom, rotate 90°, upload, or confirm removal through the existing authenticated `/v1/me/avatar` contract; client output is a 512×512 WebP and no browsing data is involved. |
 
-Context version: `2026-08-31.2`
+Context version: `2026-09-02.1`
 
 ### Dashboard URL query contract
 
@@ -100,3 +100,10 @@ Test, build, E2E hanya dijalankan jika user meminta eksplisit.
 3. Bump `context_version` di `AGENTS.md`, file ini, dan `manifest.yaml`
 4. Update `README.md` jika onboarding developer berubah
 5. Jalankan context verifier dan lint
+
+## Cross-repository testing
+
+Runtime and cross-repository evaluation evidence is owned by the public
+[Gamblock-AI-Testing repository](https://github.com/Gamblock-AI/Gamblock-AI-Testing).
+This website snapshot records implementation status only; it must not duplicate
+the canonical testing summary.
