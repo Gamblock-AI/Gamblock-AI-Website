@@ -203,12 +203,24 @@ reintroduce deploy-user SSH keys.
 Playwright specs live in `e2e/`. Do not break existing specs; add coverage for
 new authenticated flows under `e2e/`.
 
+## Cross-repository testing handoff
+
+When the user explicitly requests website testing to be retained as project
+evidence, run the relevant website command and then synchronize the canonical
+report through `../gamblock-ai-testing/docs/tools/run_evaluation.py` with
+`--run-code-tests`. A website command run by itself is not a completed evidence
+handoff. Inspect both repositories and provide the test receipt required by
+the umbrella/testing context, including public report changes, private/local
+artifacts, validation, and commit/push status. If the testing checkout is
+unavailable, report the exact blocker and do not claim that `next/report.md`
+was updated.
+
 ## AI context maintenance
 
 - `AGENTS.md` is canonical. `CLAUDE.md`, `GEMINI.md`,
   `.github/copilot-instructions.md`, and `.cursor/rules/gamblock-ai.mdc` are
   provider adapters and must remain thin.
-- Context version: `2026-09-02.3`.
+- Context version: `2026-09-02.4`.
 - `docs/ai/manifest.yaml` inventories every required context surface. Keep its
   `context_version` synchronized with this file and `docs/ai/README.md`.
 - When paths, commands, architecture, or invariants change, update the canonical
