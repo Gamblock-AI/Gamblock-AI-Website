@@ -208,7 +208,7 @@ new authenticated flows under `e2e/`.
 - `AGENTS.md` is canonical. `CLAUDE.md`, `GEMINI.md`,
   `.github/copilot-instructions.md`, and `.cursor/rules/gamblock-ai.mdc` are
   provider adapters and must remain thin.
-- Context version: `2026-09-02.1`.
+- Context version: `2026-09-02.2`.
 - `docs/ai/manifest.yaml` inventories every required context surface. Keep its
   `context_version` synchronized with this file and `docs/ai/README.md`.
 - When paths, commands, architecture, or invariants change, update the canonical
