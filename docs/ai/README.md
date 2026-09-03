@@ -46,7 +46,7 @@ daily missions, skill recommendations, self-regulation review loop.
 | Data export/deletion | implemented | AES-256-GCM encrypted export ZIP, self-service deletion |
 | Profile avatar | implemented | The student Profile page opens an on-demand avatar action dialog from the profile image itself. Users can choose, crop, zoom, rotate 90°, upload, or confirm removal through the existing authenticated `/v1/me/avatar` contract; client output is a 512×512 WebP and no browsing data is involved. |
 
-Context version: `2026-09-03.2`
+Context version: `2026-09-03.3`
 
 ### Dashboard URL query contract
 
@@ -109,3 +109,18 @@ This website snapshot records implementation status only; it must not duplicate
 the canonical testing summary. When an explicit website test is requested for
 project evidence, the agent must synchronize `next/report.md` and provide a
 test receipt listing public and private/local data changes.
+
+## Website test coverage status
+
+- Route protection has direct Vitest coverage in `proxy.test.ts` for locale-aware
+  authentication redirects, safe `next` targets, the legacy `/progress` redirect,
+  and query-key normalization.
+- The cross-repository website check runs the complete Vitest suite and the
+  Playwright browser suite. Its aggregate results are retained in
+  `gamblock-ai-testing/next/report.md`.
+- Playwright covers the public routes plus 11 authenticated student,
+  recommendation, partner, admin, privacy, onboarding, and session-expiry
+  scenarios. Authenticated flows use a deterministic in-browser mock API; this
+  validates the Next.js surface without claiming live backend integration.
+- Visual regression and performance testing remain outside the current PKM
+  evidence scope.

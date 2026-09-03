@@ -16,6 +16,7 @@ export default defineConfig({
         __dirname,
         'node_modules/next/navigation.js'
       ),
+      'next/server': path.resolve(__dirname, 'node_modules/next/server.js'),
     },
   },
 });

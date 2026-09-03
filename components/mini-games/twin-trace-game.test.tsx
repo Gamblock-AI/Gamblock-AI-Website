@@ -22,6 +22,11 @@ vi.mock('@/i18n/routing', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/en',
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+}));
+
 vi.mock('next/image', () => ({
   default: ({ alt = '', ...props }: ImgHTMLAttributes<HTMLImageElement>) => (
     <img alt={alt} {...props} />

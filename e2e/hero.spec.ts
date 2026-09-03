@@ -9,9 +9,13 @@ test('Landing hero renders with brand heading, CTAs and key stat', async ({ page
   await expect(heading).toContainText(/kendali|control/i);
 
   // Primary + secondary CTAs are present.
-  await expect(page.getByRole('link', { name: /mulai|start|langkah|step/i }).first()).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /mulai|start|langkah|step/i }).first()
+  ).toBeVisible();
 
-  // Hero stat (Rp286,84 T) extracted from the PPATK proposal data is shown.
+  // Crisis stat (Rp286,84 T) extracted from PPATK data is shown after its
+  // scroll-triggered counter enters the viewport.
+  await page.getByText(/perputaran dana judi online/i).scrollIntoViewIfNeeded();
   await expect(page.getByText(/Rp286[.,]84/).first()).toBeVisible();
 });
 
