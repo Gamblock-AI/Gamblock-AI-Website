@@ -14,8 +14,8 @@ export function PlatformSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <Section tone="white" className="py-20 md:py-28">
-      <div className="border-navy/8 overflow-hidden rounded-3xl border bg-white shadow-[0_30px_90px_rgba(22,41,76,0.12)]">
+    <Section tone="white" className="py-24 md:py-32">
+      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
         <div className="grid items-stretch lg:grid-cols-[0.82fr_1.18fr]">
           <Reveal className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
             <Pill variant="navy" className="mb-4 w-fit">

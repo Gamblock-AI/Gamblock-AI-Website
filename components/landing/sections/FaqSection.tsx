@@ -26,7 +26,7 @@ export function FaqSection() {
   ] as const;
 
   return (
-    <Section id="faq" tone="pastel" containerClassName="max-w-3xl">
+    <Section id="faq" tone="pastel" className="py-24 md:py-32" containerClassName="max-w-4xl">
       <Reveal className="mb-10 text-center">
         <Pill variant="navy" className="mb-4">
           <HelpCircle className="size-3.5" />

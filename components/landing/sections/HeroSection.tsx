@@ -1,49 +1,88 @@
 'use client';
 
 import { ArrowRight, BookOpen } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
-import { GradientBlob } from '@/components/ui/gradient-blob';
-import { MascotFloat } from '@/components/landing/MascotFloat';
 import { Reveal } from '@/components/common/Reveal';
 import { ROUTES } from '@/routes';
 
 export function HeroSection() {
   const t = useTranslations('LandingPage');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const reduceMotion = useReducedMotion();
+  const [videoReady, setVideoReady] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const syncPlayback = () => {
+      if (document.visibilityState === 'hidden' || reduceMotion) {
+        video.pause();
+        return;
+      }
+
+      void video.play().catch(() => {
+        // Autoplay can be rejected by the browser; the poster remains visible.
+      });
+    };
+
+    syncPlayback();
+    document.addEventListener('visibilitychange', syncPlayback);
+    return () => document.removeEventListener('visibilitychange', syncPlayback);
+  }, [reduceMotion]);
 
   return (
-    <section className="relative overflow-hidden px-6 pt-24 pb-16 md:px-10 lg:min-h-[100dvh]">
-      <GradientBlob
-        className="top-20 left-[-8rem] h-80 w-80"
-        color="bg-sky-light"
+    <section className="relative isolate flex min-h-[min(46rem,100dvh)] items-center overflow-hidden bg-navy px-4 pt-28 pb-20 sm:px-6 md:min-h-[42rem] md:px-10 md:pt-32 lg:min-h-[calc(100dvh-1rem)]">
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center opacity-80"
+        style={{ backgroundImage: "url('/videos/landing/hero-background.v1-poster.webp')" }}
+        aria-hidden="true"
       />
-      <GradientBlob
-        className="top-32 right-[-6rem] h-96 w-96"
-        color="bg-azure"
-      />
+      <video
+        ref={videoRef}
+        autoPlay={!reduceMotion}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        poster="/videos/landing/hero-background.v1-poster.webp"
+        onCanPlay={() => setVideoReady(true)}
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 -z-10 size-full object-cover transition-opacity duration-700 motion-reduce:transition-none ${videoReady && !reduceMotion ? 'opacity-100' : 'opacity-0'}`}
+      >
+        <source src="/videos/landing/hero-background.v1.webm" type="video/webm" />
+        <source src="/videos/landing/hero-background.v1.mp4" type="video/mp4" />
+      </video>
+      <div className="pointer-events-none absolute inset-0 -z-[5] bg-[linear-gradient(180deg,rgba(6,22,50,0.80)_0%,rgba(10,31,65,0.48)_45%,rgba(6,15,35,0.88)_100%)]" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 -z-[5] bg-[radial-gradient(circle_at_50%_45%,rgba(61,214,245,0.18),transparent_52%)]" aria-hidden="true" />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-8 lg:min-h-[calc(100dvh-6rem)] lg:grid-cols-[0.94fr_1.06fr] lg:gap-8">
-        <div>
+      <div className="relative mx-auto w-full max-w-[90rem] text-center">
+        <div className="mx-auto max-w-[90rem]">
           <Reveal delay={0.05}>
-            <h1 className="text-display text-navy max-w-3xl text-4xl leading-[1.05] sm:text-5xl md:text-6xl lg:text-[4.25rem]">
-              {t('titleLead')}{' '}
-              <span className="text-crimson">{t('titleAccent')}</span>{' '}
-              {t('titleTail')}
-            </h1>
+            <div className="mx-auto max-w-[90rem]">
+              <h1 className="text-display text-[clamp(2.5rem,4.6vw,4.5rem)] leading-[1.04] text-white">
+                <span className="block whitespace-normal sm:whitespace-nowrap">{t('titleLead')}</span>
+                <span className="text-sky block whitespace-normal sm:whitespace-nowrap">{t('titleAccent')}</span>
+                <span className="block whitespace-normal sm:whitespace-nowrap">{t('titleTail')}</span>
+              </h1>
+            </div>
           </Reveal>
           <Reveal delay={0.12}>
-            <p className="text-muted-foreground mt-6 max-w-2xl text-base leading-8 md:text-lg">
+            <p className="mx-auto mt-7 max-w-2xl text-base leading-7 text-white/75 md:text-lg md:leading-8">
               {t('subtitle')}
             </p>
           </Reveal>
           <Reveal delay={0.18}>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
               <Button
                 render={<Link href={ROUTES.REGISTER} />}
-                variant="primary"
+                variant="accent"
                 size="lg"
-                className="rounded-full px-7 shadow-[0_14px_30px_rgba(22,41,76,0.18)]"
+                className="rounded-full px-7 shadow-card"
               >
                 {t('btnStart')}
                 <ArrowRight className="size-4" />
@@ -52,7 +91,7 @@ export function HeroSection() {
                 render={<Link href={ROUTES.TECHNOLOGY} />}
                 variant="outline"
                 size="lg"
-                className="border-navy/15 rounded-full bg-white/70"
+                className="rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20 focus-visible:ring-white/70"
               >
                 <BookOpen className="size-4" />
                 {t('btnLearn')}
@@ -60,31 +99,6 @@ export function HeroSection() {
             </div>
           </Reveal>
         </div>
-
-        <Reveal
-          delay={0.1}
-          className="relative flex min-h-[31rem] items-center justify-center lg:-mr-12 lg:min-h-[calc(100dvh-7rem)] lg:justify-end"
-        >
-          <div
-            className="absolute h-[68%] w-[68%] rounded-full bg-sky-light/35 blur-3xl"
-            aria-hidden
-          />
-          <div
-            className="bg-navy/10 absolute bottom-[8%] h-16 w-[68%] rounded-full blur-2xl"
-            aria-hidden
-          />
-          <MascotFloat
-            src="/images/landing/generated/gami-guide-hero.webp"
-            alt="Gami, pendamping digital Gamblock-AI, melambai dengan ramah"
-            width={862}
-            height={1256}
-            preload
-            sizes="(max-width: 1024px) 82vw, 46vw"
-            parallax={40}
-            className="relative h-[31rem] sm:h-[36rem] lg:h-[min(76dvh,46rem)]"
-            imgClassName="h-full w-auto max-w-full object-contain drop-shadow-[0_34px_48px_rgba(22,41,76,0.24)] select-none"
-          />
-        </Reveal>
       </div>
     </section>
   );

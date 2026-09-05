@@ -66,7 +66,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
-      <nav className="pointer-events-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-full border border-white/70 bg-white/88 px-3 py-2.5 shadow-[0_12px_40px_rgba(22,41,76,0.10)] backdrop-blur-xl">
+      <nav className="pointer-events-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-full border border-border/80 bg-card/90 px-3 py-2.5 shadow-soft backdrop-blur-xl">
         {/* Brand */}
         <Link href={ROUTES.HOME} className="flex items-center gap-2 pl-2">
           <Image

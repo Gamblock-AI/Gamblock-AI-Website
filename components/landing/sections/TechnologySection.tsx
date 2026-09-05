@@ -10,7 +10,7 @@ export function TechnologySection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <Section id="teknologi" tone="navy" className="overflow-hidden py-20 md:py-28">
+    <Section id="teknologi" tone="navy" className="overflow-hidden py-24 md:py-32">
       <div className="absolute -right-32 top-0 h-96 w-96 rounded-full bg-sky/15 blur-3xl" aria-hidden />
       <div className="relative grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
         <Reveal>
@@ -28,9 +28,9 @@ export function TechnologySection() {
 
         <Reveal delay={0.08}>
           <div className="grid gap-4 md:grid-cols-2">
-            <article className="rounded-2xl border-sky/20 bg-sky/10 border p-6 backdrop-blur">
+            <article className="rounded-3xl border border-sky/20 bg-sky/10 p-6 backdrop-blur">
               <div className="flex items-center justify-between">
-                <span className="flex size-11 items-center justify-center bg-sky text-navy rounded-xl">
+                <span className="flex size-11 items-center justify-center rounded-2xl bg-sky text-navy">
                   <Smartphone className="size-5" />
                 </span>
                 <span className="rounded-full bg-sky/15 text-sky-light px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em]">
@@ -45,9 +45,9 @@ export function TechnologySection() {
               </ul>
             </article>
 
-            <article className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 backdrop-blur">
+            <article className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 backdrop-blur">
               <div className="flex items-center justify-between">
-                <span className="flex size-11 items-center justify-center rounded-xl bg-white/10 text-white">
+                <span className="flex size-11 items-center justify-center rounded-2xl bg-white/10 text-white">
                   <Server className="size-5" />
                 </span>
                 <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">

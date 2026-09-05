@@ -52,7 +52,7 @@ export function TeamSection() {
   ] as const;
 
   return (
-    <Section id="tim" tone="dots">
+    <Section id="tim" tone="white" className="py-24 md:py-32">
       {/* Intro */}
       <Reveal className="mx-auto max-w-2xl text-center">
         <Pill variant="navy" className="mb-4">
@@ -74,7 +74,7 @@ export function TeamSection() {
             <p className="text-base font-extrabold leading-tight tracking-tight text-crimson sm:text-xl">
               {t(s.valueKey)}
             </p>
-            <p className="mt-1 text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
+            <p className="mt-1 text-xs leading-snug text-muted-foreground sm:text-sm">
               {t(s.labelKey)}
             </p>
           </div>

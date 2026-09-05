@@ -94,6 +94,17 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Versioned hero media can stay in the browser cache for a year. Bump
+        // the `.v1` filename when the source video or poster changes.
+        source: '/videos/landing/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
           {

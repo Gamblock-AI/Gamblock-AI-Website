@@ -12,8 +12,8 @@ export function FinalCtaSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <section className="relative overflow-hidden px-6 py-20 md:px-10 md:py-28">
-      <div className="relative mx-auto grid max-w-6xl items-center overflow-hidden rounded-3xl bg-navy px-7 pb-0 pt-10 shadow-[0_32px_90px_rgba(22,41,76,0.22)] sm:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:px-14 lg:pt-14">
+    <section className="relative overflow-hidden px-6 py-24 md:px-10 md:py-32">
+      <div className="relative mx-auto grid max-w-6xl items-center overflow-hidden rounded-3xl border border-white/10 bg-navy px-7 pb-0 pt-10 shadow-card sm:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:px-14 lg:pt-14">
         <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-sky/15 blur-3xl" aria-hidden />
         <Reveal className="relative z-10 pb-10 lg:pb-14">
           <p className="text-label text-sky">{t('psychoKicker')}</p>

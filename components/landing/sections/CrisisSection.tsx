@@ -43,10 +43,10 @@ export function CrisisSection() {
   ];
 
   return (
-    <Section id="dampak" tone="white" className="py-20 md:py-28">
+    <Section id="dampak" tone="white" className="py-24 md:py-32">
       <div className="grid items-center gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
         <Reveal>
-          <div className="relative overflow-hidden rounded-2xl bg-navy shadow-[0_28px_70px_rgba(22,41,76,0.18)]">
+          <div className="relative overflow-hidden rounded-3xl bg-navy shadow-card">
             <Image
               src="/images/landing/generated/impact-student.webp"
               alt="Mahasiswa Indonesia belajar di meja dengan suasana tenang"
@@ -75,7 +75,7 @@ export function CrisisSection() {
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             {stats.map((stat, index) => (
               <Reveal key={stat.labelKey} delay={0.05 + index * 0.05}>
-                <article className="h-full rounded-2xl border border-navy/8 bg-white/82 p-5 shadow-soft backdrop-blur">
+                <article className="h-full rounded-3xl border border-border bg-card/90 p-5 shadow-soft backdrop-blur">
                   <p className="text-2xl font-extrabold tracking-tight text-navy">
                     <StatCounter
                       value={stat.value}

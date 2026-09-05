@@ -15,7 +15,7 @@ const FEATURES = [
     body: 'f1Body',
     image: '/images/landing/generated/pillar-detection.webp',
     alt: 'Laptop dengan simbol perlindungan untuk deteksi lokal',
-    className: 'lg:col-span-7',
+    className: 'lg:col-span-6',
   },
   {
     icon: Sparkles,
@@ -24,7 +24,7 @@ const FEATURES = [
     body: 'f2Body',
     image: '/images/landing/generated/pillar-interrupt.webp',
     alt: 'Susunan batu tenang dengan simbol jeda untuk Pattern Interrupt',
-    className: 'lg:col-span-5',
+    className: 'lg:col-span-6',
   },
   {
     icon: HeartHandshake,
@@ -33,7 +33,7 @@ const FEATURES = [
     body: 'f3Body',
     image: '/images/landing/generated/pillar-accountability.webp',
     alt: 'Dua mahasiswa Indonesia saling mendukung dalam percakapan',
-    className: 'lg:col-span-5',
+    className: 'lg:col-span-6',
   },
   {
     icon: HeartPulse,
@@ -42,7 +42,7 @@ const FEATURES = [
     body: 'f4Body',
     image: '/images/landing/generated/pillar-recovery.webp',
     alt: 'Mahasiswa menulis refleksi ditemani Gami',
-    className: 'lg:col-span-7',
+    className: 'lg:col-span-6',
   },
 ] as const;
 
@@ -50,7 +50,7 @@ export function FeaturesSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <Section id="fitur" tone="pastel" className="py-20 md:py-28">
+    <Section id="fitur" tone="pastel" className="py-24 md:py-32">
       <Reveal className="mx-auto mb-12 max-w-3xl text-center">
         <Pill variant="navy" className="mb-4">
           {t('featuresKicker')}
@@ -66,7 +66,7 @@ export function FeaturesSection() {
           const Icon = feature.icon;
           return (
             <Reveal key={feature.kicker} delay={index * 0.04} className={feature.className}>
-              <article className="group grid h-full min-h-[31rem] overflow-hidden rounded-2xl border border-navy/8 bg-white shadow-soft transition-transform duration-300 hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none md:grid-rows-[15rem_1fr]">
+              <article className="group grid h-full min-h-[28rem] overflow-hidden rounded-3xl border border-border bg-card/95 shadow-soft transition-transform duration-300 hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none md:grid-rows-[14rem_1fr]">
                 <div className="relative overflow-hidden bg-sky-light/35">
                   <Image
                     src={feature.image}

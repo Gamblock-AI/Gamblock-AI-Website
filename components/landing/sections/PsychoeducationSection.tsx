@@ -17,7 +17,7 @@ export function PsychoeducationSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <Section tone="pastel" className="py-20 md:py-28">
+    <Section tone="pastel" className="py-24 md:py-32">
       <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
         <div>
           <Reveal>
@@ -33,11 +33,11 @@ export function PsychoeducationSection() {
             </p>
           </Reveal>
 
-          <div className="mt-8 divide-y divide-navy/8 rounded-2xl border border-navy/8 bg-white/82 px-5 shadow-soft backdrop-blur sm:px-6">
+          <div className="mt-8 divide-y divide-border rounded-3xl border border-border bg-card/90 px-5 shadow-soft backdrop-blur sm:px-6">
             {ITEMS.map(({ icon: Icon, titleKey, bodyKey }, index) => (
               <Reveal key={titleKey} delay={0.06 + index * 0.04}>
                 <div className="flex items-start gap-4 py-5">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy/8 text-navy">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-navy/8 text-navy">
                     <Icon className="size-5" />
                   </span>
                   <div>
@@ -51,17 +51,17 @@ export function PsychoeducationSection() {
         </div>
 
         <Reveal delay={0.08} className="relative">
-          <div className="relative overflow-hidden rounded-[2.25rem] border border-white bg-white p-3 shadow-[0_28px_70px_rgba(22,41,76,0.16)]">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-3 shadow-card">
             <Image
               src="/images/landing/generated/pillar-recovery.webp"
               alt="Mahasiswa menulis jurnal refleksi dalam ruang yang hangat"
               width={1200}
               height={900}
               sizes="(max-width: 1024px) 100vw, 42vw"
-              className="aspect-[4/3] w-full rounded-[1.7rem] object-cover"
+              className="aspect-[4/3] w-full rounded-2xl object-cover"
             />
           </div>
-          <div className="absolute -bottom-8 -left-5 flex h-36 w-36 items-end justify-center overflow-hidden rounded-2xl border-4 border-white bg-sky-light shadow-card sm:h-44 sm:w-44">
+          <div className="absolute -bottom-8 -left-5 flex h-36 w-36 items-end justify-center overflow-hidden rounded-3xl border-4 border-card bg-sky-light shadow-card sm:h-44 sm:w-44">
             <Image
               src="/images/landing/generated/gami-reflect.webp"
               alt="Gami duduk tenang untuk menemani refleksi"
