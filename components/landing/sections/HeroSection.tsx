@@ -39,7 +39,7 @@ export function HeroSection() {
     <section className="relative isolate flex min-h-[min(46rem,100dvh)] items-center overflow-hidden bg-navy px-4 pt-28 pb-20 sm:px-6 md:min-h-[42rem] md:px-10 md:pt-32 lg:min-h-[calc(100dvh-1rem)]">
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center opacity-80"
-        style={{ backgroundImage: "url('/videos/landing/hero-background.v1-poster.webp')" }}
+        style={{ backgroundImage: "url('/videos/landing/hero-background.v2-poster.webp')" }}
         aria-hidden="true"
       />
       <video
@@ -48,14 +48,14 @@ export function HeroSection() {
         muted
         loop
         playsInline
-        preload="auto"
-        poster="/videos/landing/hero-background.v1-poster.webp"
-        onCanPlay={() => setVideoReady(true)}
+        preload="metadata"
+        poster="/videos/landing/hero-background.v2-poster.webp"
+        onPlaying={() => setVideoReady(true)}
         aria-hidden="true"
         className={`pointer-events-none absolute inset-0 -z-10 size-full object-cover transition-opacity duration-700 motion-reduce:transition-none ${videoReady && !reduceMotion ? 'opacity-100' : 'opacity-0'}`}
       >
-        <source src="/videos/landing/hero-background.v1.webm" type="video/webm" />
-        <source src="/videos/landing/hero-background.v1.mp4" type="video/mp4" />
+        <source src="/videos/landing/hero-background.v2.mp4" type="video/mp4" />
+        <source src="/videos/landing/hero-background.v2.webm" type="video/webm" />
       </video>
       <div className="pointer-events-none absolute inset-0 -z-[5] bg-[linear-gradient(180deg,rgba(6,22,50,0.80)_0%,rgba(10,31,65,0.48)_45%,rgba(6,15,35,0.88)_100%)]" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-0 -z-[5] bg-[radial-gradient(circle_at_50%_45%,rgba(61,214,245,0.18),transparent_52%)]" aria-hidden="true" />

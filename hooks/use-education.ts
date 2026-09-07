@@ -122,7 +122,7 @@ function normalizeEducationProgress(
   };
 }
 
-function normalizeEducationModule(module: EducationModule): EducationModule {
+export function normalizeEducationModule(module: EducationModule): EducationModule {
   return {
     ...module,
     thumbnails: Array.isArray(module.thumbnails) ? module.thumbnails : [],
@@ -218,11 +218,16 @@ export function usePaginatedEducationModules(
   if (filters.category && filters.category !== 'all') {
     params.set('category', filters.category);
   }
-  return usePaginatedQuery<EducationModule>({
+  const result = usePaginatedQuery<EducationModule>({
     path: `/psychoeducation/modules?${params.toString()}`,
     pageKey: DASHBOARD_QUERY_KEYS.pages.education,
     pageSize: 6,
   });
+
+  return {
+    ...result,
+    items: result.items.map(normalizeEducationModule),
+  };
 }
 
 export function useEducationModule(slug: string, locale: string) {

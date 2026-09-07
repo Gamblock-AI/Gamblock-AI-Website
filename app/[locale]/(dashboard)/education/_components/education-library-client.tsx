@@ -244,7 +244,7 @@ export function EducationLibraryClient() {
                   className="group border-border bg-card shadow-soft hover:shadow-card flex h-full flex-col overflow-hidden rounded-3xl border transition hover:-translate-y-0.5 motion-reduce:transform-none"
                 >
                   <ThumbnailCarousel
-                    thumbnails={module.thumbnails.slice(0, 1)}
+                    thumbnails={module.thumbnails?.slice(0, 1) ?? []}
                     urls={module.thumbnail_urls}
                     locale={locale}
                     title={module.title}
