@@ -20,17 +20,32 @@ const NAV_LINKS = [
 ] as const;
 
 /**
- * MarketingNav — light, floating pill navigation (tina.io-style).
- * Becomes opaque + shadowed once the user scrolls past the hero fold.
+ * MarketingNav — floating pill navigation for public marketing pages.
+ * On the landing hero, it begins dark and becomes a white surface after scroll.
  * Pass `minimal` for legal/standalone pages: hides the menu + auth CTA and
  * shows a single "back to home" action instead.
  */
-export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
+export function MarketingNav({ minimal = false, heroAware = false }: { minimal?: boolean; heroAware?: boolean }) {
   const t = useTranslations('Nav');
   const user = useLocalUser();
   const [open, setOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const drawerAreaRef = useRef<HTMLDivElement>(null);
   const drawerTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!heroAware) return;
+
+    const syncScrolledState = () => {
+      const nextScrolledState = window.scrollY > 16;
+      setIsScrolled((currentScrolledState) => (
+        currentScrolledState === nextScrolledState ? currentScrolledState : nextScrolledState
+      ));
+    };
+    syncScrolledState();
+    window.addEventListener('scroll', syncScrolledState, { passive: true });
+    return () => window.removeEventListener('scroll', syncScrolledState);
+  }, [heroAware]);
 
   useEffect(() => {
     if (!open) return;
@@ -63,10 +78,24 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
   const isSignedIn = Boolean(user.id || user.email);
   const primaryHref = isSignedIn ? ROUTES.DASHBOARD : ROUTES.LOGIN;
   const primaryLabel = isSignedIn ? t('dashboard') : t('login');
+  const isHeroOverlay = heroAware && !isScrolled;
+  const navSurfaceClass = isHeroOverlay
+    ? 'border-white/15 bg-[#071a3a]/80 shadow-[0_14px_38px_rgba(2,12,30,0.22)]'
+    : 'border-navy/10 bg-white/92 shadow-[0_14px_38px_rgba(20,52,100,0.16)]';
+  const navTextClass = isHeroOverlay ? 'text-white' : 'text-navy';
+  const navLinkClass = isHeroOverlay
+    ? 'text-white/75 hover:bg-white/10 hover:text-white focus-visible:ring-sky/70'
+    : 'text-navy/70 hover:bg-navy/5 hover:text-navy focus-visible:ring-navy/35';
+  const drawerSurfaceClass = isHeroOverlay
+    ? 'border-white/15 bg-[#071a3a] text-white'
+    : 'border-navy/10 bg-white text-navy';
+  const drawerLinkClass = isHeroOverlay
+    ? 'text-white/80 hover:bg-white/10 focus-visible:ring-sky/70'
+    : 'text-navy/75 hover:bg-navy/5 focus-visible:ring-navy/35';
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
-      <nav className="pointer-events-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-full border border-border/80 bg-card/90 px-3 py-2.5 shadow-soft backdrop-blur-xl">
+      <nav className={`pointer-events-auto flex w-full max-w-[82rem] items-center justify-between gap-3 rounded-[1.35rem] border px-3 py-2.5 backdrop-blur-xl transition-colors duration-300 motion-reduce:transition-none ${navSurfaceClass}`}>
         {/* Brand */}
         <Link href={ROUTES.HOME} className="flex items-center gap-2 pl-2">
           <Image
@@ -77,8 +106,8 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
             className="size-10 object-contain"
             preload
           />
-          <span className="text-navy text-base font-extrabold tracking-tight">
-            Gamblock<span className="text-crimson">-AI</span>
+          <span className={`text-base font-extrabold tracking-tight transition-colors duration-300 motion-reduce:transition-none ${navTextClass}`}>
+            Gamblock<span className="text-sky">-AI</span>
           </span>
         </Link>
 
@@ -93,7 +122,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
                 <Link
                   key={link.key}
                   href={link.href}
-                  className="text-navy/70 hover:bg-navy/5 hover:text-navy focus-visible:ring-navy/40 rounded-full px-3.5 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+                  className={`rounded-full px-3.5 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 ${navLinkClass}`}
                 >
                   {t(link.key)}
                 </Link>
@@ -107,7 +136,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
                 render={<Link href={primaryHref} />}
                 variant="primary"
                 size="default"
-                className="hidden rounded-full px-6 md:inline-flex"
+                className="hidden rounded-full bg-[#c8102e] px-6 text-white hover:bg-[#da1c3a] focus-visible:ring-white md:inline-flex"
               >
                 {primaryLabel}
                 <ArrowRight className="size-3.5" />
@@ -120,7 +149,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
                 aria-expanded={open}
                 className="focus-visible:ring-navy/40 -m-1 flex size-11 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 lg:hidden"
               >
-                <span className="bg-navy/5 text-navy hover:bg-navy/10 flex size-9 items-center justify-center rounded-full transition-colors">
+                <span className={`flex size-9 items-center justify-center rounded-full transition-colors ${isHeroOverlay ? 'bg-white/12 text-white hover:bg-white/20' : 'bg-navy/8 text-navy hover:bg-navy/12'}`}>
                   {open ? (
                     <X className="size-5" />
                   ) : (
@@ -137,7 +166,7 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
       {!minimal && open && (
         <div
           ref={drawerAreaRef}
-          className="border-border bg-card shadow-card animate-in fade-in slide-in-from-top-2 pointer-events-auto absolute inset-x-4 top-20 rounded-3xl border p-4 duration-200 motion-reduce:animate-none lg:hidden"
+          className={`animate-in pointer-events-auto absolute inset-x-4 top-20 rounded-3xl border p-4 shadow-card fade-in slide-in-from-top-2 duration-200 motion-reduce:animate-none lg:hidden ${drawerSurfaceClass}`}
         >
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => (
@@ -145,19 +174,19 @@ export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
                 key={link.key}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="text-navy/80 hover:bg-navy/5 focus-visible:ring-navy/40 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+                className={`rounded-2xl px-4 py-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 ${drawerLinkClass}`}
               >
                 {t(link.key)}
               </Link>
             ))}
           </div>
-          <div className="border-border mt-3 flex items-center justify-between border-t pt-3">
+          <div className={`mt-3 flex items-center justify-between border-t pt-3 ${isHeroOverlay ? 'border-white/15' : 'border-navy/10'}`}>
             <LanguageSwitcher />
             <Button
               render={<Link href={primaryHref} onClick={() => setOpen(false)} />}
               variant="primary"
               size="sm"
-              className="rounded-full"
+              className="rounded-full bg-[#c8102e] text-white hover:bg-[#da1c3a]"
             >
               {primaryLabel}
             </Button>

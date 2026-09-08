@@ -38,7 +38,7 @@ export function LegalPage({ title, updatedLabel, intro, sections }: LegalPagePro
             {sections.map((s, i) => (
               <section key={s.heading}>
                 <h2 className="text-heading text-xl text-navy md:text-2xl">
-                  <span className="mr-2 text-crimson">{i + 1}.</span>
+                  <span className="mr-2 text-sky">{i + 1}.</span>
                   {s.heading}
                 </h2>
                 <div className="mt-3 space-y-3">

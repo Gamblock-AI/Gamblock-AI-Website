@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/images/landing/generated/og-home.webp',
+        url: '/images/landing/generated-v3/og-home-v3.webp',
         width: 1200,
         height: 630,
         alt: 'Gamblock-AI, pertahanan digital berbasis On-Device AI',
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: 'Gamblock-AI · Pertahanan Digital Berbasis On-Device AI',
     description:
       'Deteksi cerdas, intervensi psikologis otomatis, dan rehabilitasi mandiri untuk melawan darurat judi online.',
-    images: ['/images/landing/generated/og-home.webp'],
+    images: ['/images/landing/generated-v3/og-home-v3.webp'],
   },
   manifest: '/manifest.webmanifest',
   appleWebApp: {

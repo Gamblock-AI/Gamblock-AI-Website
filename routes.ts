@@ -42,6 +42,7 @@ export const ROUTES = {
   HELP: '/help',
   CONTACT: '/contact',
   DOWNLOAD: '/download',
+  PLATFORMS: '/platforms',
   TECHNOLOGY: '/technology',
   DAMPAK: '/dampak',
   PKM: '/pkm',

@@ -14,8 +14,8 @@ export function PlatformSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <Section tone="white" className="py-24 md:py-32">
-      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+    <Section tone="white" className="marketing-wave-bottom py-24 md:py-32">
+      <div className="overflow-hidden rounded-[2rem] border border-white/80 bg-card shadow-card">
         <div className="grid items-stretch lg:grid-cols-[0.82fr_1.18fr]">
           <Reveal className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
             <Pill variant="navy" className="mb-4 w-fit">
@@ -45,8 +45,8 @@ export function PlatformSection() {
             className="relative min-h-[24rem] overflow-hidden sm:min-h-[30rem] lg:min-h-0 lg:self-stretch"
           >
             <Image
-              src="/images/landing/generated/platform-student-context.webp"
-              alt="Mahasiswa berjalan di kampus ditemani Gami dalam satu alur perlindungan"
+              src="/images/landing/generated-v2/platform-devices.webp"
+              alt={t('platformImageAlt')}
               fill
               sizes="(max-width: 1024px) 100vw, 58vw"
               className="object-cover object-center"

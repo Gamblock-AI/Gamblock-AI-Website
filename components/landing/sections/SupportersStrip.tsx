@@ -15,16 +15,18 @@ export function SupportersStrip() {
   const t = useTranslations('LandingPage');
 
   return (
-    <section className="border-y border-border bg-card/80 px-6 py-9 backdrop-blur-sm md:px-10 md:py-10">
+    <section className="relative overflow-hidden border-y border-border/80 bg-white/90 px-6 py-10 backdrop-blur-sm md:px-10 md:py-12">
+      <div className="pointer-events-none absolute -left-24 top-1/2 size-48 -translate-y-1/2 rounded-full bg-sky/10 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -right-24 top-1/2 size-48 -translate-y-1/2 rounded-full bg-azure blur-3xl" aria-hidden="true" />
       <div className="mx-auto max-w-6xl">
-        <p className="text-label mb-6 text-center text-muted-foreground">
+        <p className="text-label relative mb-6 text-center text-navy/50">
           {t('supportersLabel')}
         </p>
-        <div className="grid grid-cols-2 items-center justify-items-center gap-x-4 gap-y-5 sm:grid-cols-3 md:flex md:flex-wrap md:justify-center md:gap-x-10 md:gap-y-5">
+        <div className="relative grid grid-cols-2 items-center justify-items-center gap-x-4 gap-y-5 sm:grid-cols-3 md:flex md:flex-wrap md:justify-center md:gap-x-10 md:gap-y-5">
           {SUPPORTERS.map((supporter) => (
             <span
               key={supporter.name}
-              className="flex min-w-0 items-center justify-center gap-3 md:shrink-0"
+              className="flex min-w-0 items-center justify-center gap-3 rounded-2xl px-2 py-1 md:shrink-0"
               title={supporter.name}
             >
               <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card shadow-soft">

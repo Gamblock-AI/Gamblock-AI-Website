@@ -71,15 +71,15 @@ export function SiteFooter() {
   return (
     <footer className="bg-footer-navy relative overflow-hidden text-white">
       <Image
-        src="/images/landing/generated/gami-encourage.webp"
+        src="/images/landing/generated-v3/gami-cta-transparent.webp"
         alt=""
         aria-hidden
         width={1024}
         height={1536}
-        className="pointer-events-none absolute -right-10 -bottom-28 w-80 opacity-[0.05] select-none"
+        className="pointer-events-none absolute -right-10 -bottom-28 w-80 opacity-[0.12] select-none"
       />
 
-      <div className="relative mx-auto max-w-6xl px-6 py-16 md:px-10">
+      <div className="relative mx-auto max-w-[82rem] px-6 py-16 md:px-10">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           {/* Brand + CTA */}
           <div className="space-y-5">
@@ -94,7 +94,7 @@ export function SiteFooter() {
                 />
               </span>
               <span className="text-lg font-extrabold tracking-tight text-white">
-                Gamblock<span className="text-crimson-light">-AI</span>
+                Gamblock<span className="text-sky">-AI</span>
               </span>
             </div>
             <p className="max-w-xs text-sm leading-relaxed text-white/60">
@@ -164,7 +164,7 @@ export function SiteFooter() {
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 md:flex-row md:items-center">
           <p className="text-xs text-white/70">{t('copyright')}</p>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="bg-crimson rounded-full px-3 py-1 text-[10px] font-bold tracking-wider text-white uppercase">
+            <span className="bg-sky rounded-full px-3 py-1 text-[10px] font-bold tracking-wider text-navy uppercase">
               {t('badgePkm')}
             </span>
             <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold tracking-wider text-white/80 uppercase">
