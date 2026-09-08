@@ -29,22 +29,22 @@ export function CrisisSection() {
   ] as const;
 
   return (
-    <section id="dampak" className="relative overflow-hidden bg-[#f4faff] px-4 pb-24 sm:px-6 md:px-10 md:pb-32">
+    <section id="dampak" className="relative overflow-x-clip overflow-y-visible bg-[#f4faff] px-4 pb-24 sm:px-6 md:px-10 md:pb-32">
       <div className="relative mx-auto max-w-[82rem]">
-        <div className="relative -mt-16 grid overflow-hidden rounded-[2rem] bg-white shadow-[0_24px_60px_rgba(20,52,100,0.16)] md:-mt-24 lg:grid-cols-[0.92fr_1.08fr]">
-          <div className="relative min-h-[26rem] overflow-hidden bg-[#e7f4ff] sm:min-h-[32rem] lg:min-h-full">
-            <div className="absolute -left-12 -top-16 size-64 rounded-full bg-sky/35" aria-hidden="true" />
+        <div data-impact-card className="relative grid overflow-visible rounded-[2rem] bg-white shadow-[0_24px_60px_rgba(20,52,100,0.16)] lg:grid-cols-[0.92fr_1.08fr]">
+          <div className="relative min-h-[26rem] overflow-visible rounded-t-[2rem] bg-[#e7f4ff] sm:min-h-[32rem] lg:rounded-l-[2rem] lg:rounded-tr-none lg:rounded-br-none lg:min-h-full">
             <Image
+              data-impact-mascot
               src="/images/landing/generated-v3/gami-bridge-transparent.webp"
               alt={t('crisisImageAlt')}
               width={1024}
               height={1536}
               sizes="(max-width: 1024px) 100vw, 42vw"
-              className="relative mx-auto h-full max-h-[38rem] w-auto max-w-full object-contain object-bottom"
+              className="pointer-events-none absolute bottom-0 left-1/2 z-10 h-[calc(100%+5rem)] max-h-[50rem] w-auto max-w-[92%] -translate-x-1/2 object-contain object-bottom"
             />
-            <span className="absolute bottom-7 left-7 rounded-full bg-[#c8102e] px-4 py-2 text-[0.67rem] font-extrabold tracking-[0.12em] text-white uppercase shadow-lg">{t('crisisKicker')}</span>
+            <span className="absolute bottom-7 left-7 z-20 rounded-full bg-[#c8102e] px-4 py-2 text-[0.67rem] font-extrabold tracking-[0.12em] text-white uppercase shadow-lg">{t('crisisKicker')}</span>
           </div>
-          <div className="relative p-7 sm:p-10 lg:p-14">
+          <div className="relative rounded-b-[2rem] p-7 sm:p-10 lg:rounded-r-[2rem] lg:rounded-bl-none lg:rounded-tl-none lg:p-14">
             <p className="text-label text-[#c8102e]">01 / {t('crisisKicker')}</p>
             <h2 className="marketing-display mt-4 max-w-3xl text-4xl text-navy md:text-6xl">{t('crisisTitle')}</h2>
             <p className="mt-6 max-w-2xl text-base leading-7 text-navy/65">{t('crisisSubtitle')}</p>

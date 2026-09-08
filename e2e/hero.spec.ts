@@ -17,6 +17,17 @@ test('Landing hero renders with brand heading, CTAs and key stat', async ({ page
   // scroll-triggered counter enters the viewport.
   await page.locator('#dampak').getByText(/perputaran dana judi online/i).scrollIntoViewIfNeeded();
   await expect(page.getByText(/Rp286[.,]84/).first()).toBeVisible();
+
+  const cardBox = await page.locator('[data-impact-card]').boundingBox();
+  const mascotBox = await page.locator('[data-impact-mascot]').boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(mascotBox).not.toBeNull();
+  expect(mascotBox!.y).toBeLessThan(cardBox!.y);
+
+  const horizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+  );
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
 });
 
 test('Marketing nav exposes language switcher and login', async ({ page }) => {
