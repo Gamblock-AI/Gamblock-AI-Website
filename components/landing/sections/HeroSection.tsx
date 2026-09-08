@@ -13,11 +13,17 @@ export function HeroSection() {
   const t = useTranslations('LandingPage');
   const videoRef = useRef<HTMLVideoElement>(null);
   const reduceMotion = useReducedMotion();
-  const [videoReady, setVideoReady] = useState(false);
+  const [videoFrameReady, setVideoFrameReady] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    const markFrameReady = () => {
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        setVideoFrameReady(true);
+      }
+    };
 
     const syncPlayback = () => {
       if (document.visibilityState === 'hidden' || reduceMotion) {
@@ -30,6 +36,7 @@ export function HeroSection() {
       });
     };
 
+    markFrameReady();
     syncPlayback();
     document.addEventListener('visibilitychange', syncPlayback);
     return () => document.removeEventListener('visibilitychange', syncPlayback);
@@ -48,14 +55,22 @@ export function HeroSection() {
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         poster="/videos/landing/hero-background.v2-poster.webp"
-        onPlaying={() => setVideoReady(true)}
+        onLoadedData={() => setVideoFrameReady(true)}
         aria-hidden="true"
-        className={`pointer-events-none absolute inset-0 -z-10 size-full object-cover transition-opacity duration-700 motion-reduce:transition-none ${videoReady && !reduceMotion ? 'opacity-100' : 'opacity-0'}`}
+        className={`pointer-events-none absolute inset-0 -z-10 size-full object-cover transition-opacity duration-200 motion-reduce:transition-none ${videoFrameReady && !reduceMotion ? 'opacity-100' : 'opacity-0'}`}
       >
-        <source src="/videos/landing/hero-background.v2.mp4" type="video/mp4" />
-        <source src="/videos/landing/hero-background.v2.webm" type="video/webm" />
+        <source
+          src="/videos/landing/hero-background.v2.mp4"
+          type="video/mp4"
+          media="(prefers-reduced-motion: no-preference)"
+        />
+        <source
+          src="/videos/landing/hero-background.v2.webm"
+          type="video/webm"
+          media="(prefers-reduced-motion: no-preference)"
+        />
       </video>
       <div className="pointer-events-none absolute inset-0 -z-[5] bg-[linear-gradient(180deg,rgba(6,22,50,0.80)_0%,rgba(10,31,65,0.48)_45%,rgba(6,15,35,0.88)_100%)]" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-0 -z-[5] bg-[radial-gradient(circle_at_50%_45%,rgba(61,214,245,0.18),transparent_52%)]" aria-hidden="true" />

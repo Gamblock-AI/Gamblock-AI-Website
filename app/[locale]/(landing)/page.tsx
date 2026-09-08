@@ -16,24 +16,34 @@ import { FinalCtaSection } from '@/components/landing/sections/FinalCtaSection';
 
 export default function LandingPage() {
   return (
-    <div className="relative text-foreground">
-      <SkipLink />
-      <FixedBackground />
-      <MarketingNav />
-      <main id="main-content">
-        <HeroSection />
-        <SupportersStrip />
-        <CrisisSection />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <TechnologySection />
-        <PsychoeducationSection />
-        <PlatformSection />
-        <TeamSection />
-        <FaqSection />
-        <FinalCtaSection />
-      </main>
-      <SiteFooter />
-    </div>
+    <>
+      <link
+        rel="preload"
+        href="/videos/landing/hero-background.v2.mp4"
+        as="video"
+        type="video/mp4"
+        fetchPriority="high"
+        media="(prefers-reduced-motion: no-preference)"
+      />
+      <div className="relative text-foreground">
+        <SkipLink />
+        <FixedBackground />
+        <MarketingNav />
+        <main id="main-content">
+          <HeroSection />
+          <SupportersStrip />
+          <CrisisSection />
+          <FeaturesSection />
+          <HowItWorksSection />
+          <TechnologySection />
+          <PsychoeducationSection />
+          <PlatformSection />
+          <TeamSection />
+          <FaqSection />
+          <FinalCtaSection />
+        </main>
+        <SiteFooter />
+      </div>
+    </>
   );
 }
