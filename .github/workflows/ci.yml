@@ -125,8 +125,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to VPS via SSH
+      - name: Deploy to VPS via SSH (attempt 1)
+        id: deploy_vps_primary
         if: github.ref == 'refs/heads/main' && vars.ENABLE_VPS_DEPLOY == 'true'
+        continue-on-error: true
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
         with:
           host: ${{ vars.VPS_HOST }}
@@ -143,6 +145,40 @@ jobs:
           script: |
             cd /opt/docker-stack/applications/gamblock-ai-website && ./update.sh
             cd /opt/docker-stack/applications/gamblock-ai-website-staging && ./update.sh
+
+      - name: Wait before VPS SSH retry
+        if: always() && github.ref == 'refs/heads/main' && vars.ENABLE_VPS_DEPLOY == 'true' && steps.deploy_vps_primary.outcome == 'failure'
+        run: sleep 30
+
+      - name: Deploy to VPS via SSH (retry)
+        id: deploy_vps_retry
+        if: always() && github.ref == 'refs/heads/main' && vars.ENABLE_VPS_DEPLOY == 'true' && steps.deploy_vps_primary.outcome == 'failure'
+        continue-on-error: true
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
+        with:
+          host: ${{ vars.VPS_HOST }}
+          username: root
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          fingerprint: ${{ vars.VPS_HOST_FINGERPRINT }}
+          timeout: 120s
+          proxy_timeout: 120s
+          command_timeout: 15m
+          script: |
+            cd /opt/docker-stack/applications/gamblock-ai-website && ./update.sh
+            cd /opt/docker-stack/applications/gamblock-ai-website-staging && ./update.sh
+
+      - name: Confirm VPS deployment succeeded
+        if: always() && github.ref == 'refs/heads/main' && vars.ENABLE_VPS_DEPLOY == 'true'
+        env:
+          PRIMARY_OUTCOME: ${{ steps.deploy_vps_primary.outcome }}
+          RETRY_OUTCOME: ${{ steps.deploy_vps_retry.outcome }}
+        run: |
+          if [ "$PRIMARY_OUTCOME" = "success" ] || [ "$RETRY_OUTCOME" = "success" ]; then
+            exit 0
+          fi
+          echo "Both VPS deployment attempts failed." >&2
+          exit 1
 
   e2e:
     if: ${{ vars.ENABLE_CI_TESTS == 'true' }}
