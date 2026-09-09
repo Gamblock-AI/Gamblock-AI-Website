@@ -20,32 +20,16 @@ const NAV_LINKS = [
 ] as const;
 
 /**
- * MarketingNav — floating pill navigation for public marketing pages.
- * On the landing hero, it begins dark and becomes a white surface after scroll.
+ * MarketingNav — floating white navigation for public marketing pages.
  * Pass `minimal` for legal/standalone pages: hides the menu + auth CTA and
  * shows a single "back to home" action instead.
  */
-export function MarketingNav({ minimal = false, heroAware = false }: { minimal?: boolean; heroAware?: boolean }) {
+export function MarketingNav({ minimal = false }: { minimal?: boolean }) {
   const t = useTranslations('Nav');
   const user = useLocalUser();
   const [open, setOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const drawerAreaRef = useRef<HTMLDivElement>(null);
   const drawerTriggerRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!heroAware) return;
-
-    const syncScrolledState = () => {
-      const nextScrolledState = window.scrollY > 16;
-      setIsScrolled((currentScrolledState) => (
-        currentScrolledState === nextScrolledState ? currentScrolledState : nextScrolledState
-      ));
-    };
-    syncScrolledState();
-    window.addEventListener('scroll', syncScrolledState, { passive: true });
-    return () => window.removeEventListener('scroll', syncScrolledState);
-  }, [heroAware]);
 
   useEffect(() => {
     if (!open) return;
@@ -78,24 +62,10 @@ export function MarketingNav({ minimal = false, heroAware = false }: { minimal?:
   const isSignedIn = Boolean(user.id || user.email);
   const primaryHref = isSignedIn ? ROUTES.DASHBOARD : ROUTES.LOGIN;
   const primaryLabel = isSignedIn ? t('dashboard') : t('login');
-  const isHeroOverlay = heroAware && !isScrolled;
-  const navSurfaceClass = isHeroOverlay
-    ? 'border-white/15 bg-[#071a3a]/80 shadow-[0_14px_38px_rgba(2,12,30,0.22)]'
-    : 'border-navy/10 bg-white/92 shadow-[0_14px_38px_rgba(20,52,100,0.16)]';
-  const navTextClass = isHeroOverlay ? 'text-white' : 'text-navy';
-  const navLinkClass = isHeroOverlay
-    ? 'text-white/75 hover:bg-white/10 hover:text-white focus-visible:ring-sky/70'
-    : 'text-navy/70 hover:bg-navy/5 hover:text-navy focus-visible:ring-navy/35';
-  const drawerSurfaceClass = isHeroOverlay
-    ? 'border-white/15 bg-[#071a3a] text-white'
-    : 'border-navy/10 bg-white text-navy';
-  const drawerLinkClass = isHeroOverlay
-    ? 'text-white/80 hover:bg-white/10 focus-visible:ring-sky/70'
-    : 'text-navy/75 hover:bg-navy/5 focus-visible:ring-navy/35';
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
-      <nav className={`pointer-events-auto flex w-full max-w-[82rem] items-center justify-between gap-3 rounded-[1.35rem] border px-3 py-2.5 backdrop-blur-xl transition-colors duration-300 motion-reduce:transition-none ${navSurfaceClass}`}>
+      <nav className="pointer-events-auto flex w-full max-w-[82rem] items-center justify-between gap-3 rounded-[1.35rem] border border-navy/10 bg-white/95 px-3 py-2.5 shadow-[0_14px_38px_rgba(20,52,100,0.16)] backdrop-blur-xl">
         {/* Brand */}
         <Link href={ROUTES.HOME} className="flex items-center gap-2 pl-2">
           <Image
@@ -106,8 +76,8 @@ export function MarketingNav({ minimal = false, heroAware = false }: { minimal?:
             className="size-10 object-contain"
             preload
           />
-          <span className={`text-base font-extrabold tracking-tight transition-colors duration-300 motion-reduce:transition-none ${navTextClass}`}>
-            Gamblock<span className="text-sky">-AI</span>
+          <span className="text-base font-extrabold tracking-tight text-navy">
+            Gamblock<span className="text-[#c8102e]">-AI</span>
           </span>
         </Link>
 
@@ -122,7 +92,7 @@ export function MarketingNav({ minimal = false, heroAware = false }: { minimal?:
                 <Link
                   key={link.key}
                   href={link.href}
-                  className={`rounded-full px-3.5 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 ${navLinkClass}`}
+                  className="rounded-full px-3.5 py-2 text-sm font-semibold text-navy/70 transition-colors outline-none hover:bg-navy/5 hover:text-navy focus-visible:ring-2 focus-visible:ring-navy/35"
                 >
                   {t(link.key)}
                 </Link>
@@ -149,7 +119,7 @@ export function MarketingNav({ minimal = false, heroAware = false }: { minimal?:
                 aria-expanded={open}
                 className="focus-visible:ring-navy/40 -m-1 flex size-11 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 lg:hidden"
               >
-                <span className={`flex size-9 items-center justify-center rounded-full transition-colors ${isHeroOverlay ? 'bg-white/12 text-white hover:bg-white/20' : 'bg-navy/8 text-navy hover:bg-navy/12'}`}>
+                <span className="flex size-9 items-center justify-center rounded-full bg-navy/8 text-navy transition-colors hover:bg-navy/12">
                   {open ? (
                     <X className="size-5" />
                   ) : (
@@ -166,7 +136,7 @@ export function MarketingNav({ minimal = false, heroAware = false }: { minimal?:
       {!minimal && open && (
         <div
           ref={drawerAreaRef}
-          className={`animate-in pointer-events-auto absolute inset-x-4 top-20 rounded-3xl border p-4 shadow-card fade-in slide-in-from-top-2 duration-200 motion-reduce:animate-none lg:hidden ${drawerSurfaceClass}`}
+          className="animate-in pointer-events-auto absolute inset-x-4 top-20 rounded-3xl border border-navy/10 bg-white p-4 text-navy shadow-card fade-in slide-in-from-top-2 duration-200 motion-reduce:animate-none lg:hidden"
         >
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => (
@@ -174,13 +144,13 @@ export function MarketingNav({ minimal = false, heroAware = false }: { minimal?:
                 key={link.key}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className={`rounded-2xl px-4 py-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 ${drawerLinkClass}`}
+                className="rounded-2xl px-4 py-3 text-sm font-semibold text-navy/75 transition-colors outline-none hover:bg-navy/5 focus-visible:ring-2 focus-visible:ring-navy/35"
               >
                 {t(link.key)}
               </Link>
             ))}
           </div>
-          <div className={`mt-3 flex items-center justify-between border-t pt-3 ${isHeroOverlay ? 'border-white/15' : 'border-navy/10'}`}>
+          <div className="mt-3 flex items-center justify-between border-t border-navy/10 pt-3">
             <LanguageSwitcher />
             <Button
               render={<Link href={primaryHref} onClick={() => setOpen(false)} />}

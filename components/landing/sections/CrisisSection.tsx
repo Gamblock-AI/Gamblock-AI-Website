@@ -1,10 +1,10 @@
-'use client';
-
 import Image from 'next/image';
-import { ArrowUpRight, CircleAlert, Compass, PauseCircle, ShieldAlert } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Reveal } from '@/components/common/Reveal';
 import { Link } from '@/i18n/routing';
 import { ROUTES } from '@/routes';
+import { SectionDecoration } from '@/components/landing/SectionDecoration';
 
 const SUPPORTERS = [
   { name: 'Kemdiktisaintek', src: '/images/supporters/kemdiktisaintek-new.png' },
@@ -15,88 +15,101 @@ const SUPPORTERS = [
 ] as const;
 
 const PROBLEMS = [
-  { key: 'problemPoint1', icon: ShieldAlert },
-  { key: 'problemPoint2', icon: CircleAlert },
-  { key: 'problemPoint3', icon: PauseCircle },
+  { key: 'problemPoint1' },
+  { key: 'problemPoint2' },
+  { key: 'problemPoint3' },
 ] as const;
 
 export function CrisisSection() {
   const t = useTranslations('LandingPage');
   const stats = [
-    { value: 'Rp286,84 T', labelKey: 'crisisStat1Label', sourceKey: 'crisisStat1Source' },
-    { value: '12,3 juta', labelKey: 'crisisStat2Label', sourceKey: 'crisisStat2Source' },
-    { value: '960 ribu', labelKey: 'crisisStat3Label', sourceKey: 'crisisStat3Source' },
+    { value: 'Rp286,84 T', label: 'crisisStat1Label', source: 'crisisStat1Source', tone: 'bg-[#c8102e] text-white' },
+    { value: '12,3 juta', label: 'crisisStat2Label', source: 'crisisStat2Source', tone: 'bg-[#eaf7ff] text-navy' },
+    { value: '960 ribu', label: 'crisisStat3Label', source: 'crisisStat3Source', tone: 'bg-navy text-white' },
   ] as const;
 
   return (
-    <section id="dampak" className="relative overflow-x-clip overflow-y-visible bg-[#f4faff] px-4 pb-24 sm:px-6 md:px-10 md:pb-32">
-      <div className="relative mx-auto max-w-[82rem]">
-        <div data-impact-card className="relative grid overflow-visible rounded-[2rem] bg-white shadow-[0_24px_60px_rgba(20,52,100,0.16)] lg:grid-cols-[0.92fr_1.08fr]">
-          <div className="relative min-h-[26rem] overflow-visible rounded-t-[2rem] bg-[#e7f4ff] sm:min-h-[32rem] lg:rounded-l-[2rem] lg:rounded-tr-none lg:rounded-br-none lg:min-h-full">
-            <Image
-              data-impact-mascot
-              src="/images/landing/generated-v3/gami-bridge-transparent.webp"
-              alt={t('crisisImageAlt')}
-              width={1024}
-              height={1536}
-              sizes="(max-width: 1024px) 100vw, 42vw"
-              className="pointer-events-none absolute bottom-0 left-1/2 z-10 h-[calc(100%+5rem)] max-h-[50rem] w-auto max-w-[92%] -translate-x-1/2 object-contain object-bottom"
-            />
-            <span className="absolute bottom-7 left-7 z-20 rounded-full bg-[#c8102e] px-4 py-2 text-[0.67rem] font-extrabold tracking-[0.12em] text-white uppercase shadow-lg">{t('crisisKicker')}</span>
-          </div>
-          <div className="relative rounded-b-[2rem] p-7 sm:p-10 lg:rounded-r-[2rem] lg:rounded-bl-none lg:rounded-tl-none lg:p-14">
+    <section id="dampak" className="relative overflow-hidden bg-white px-4 py-24 sm:px-6 md:px-10 md:py-32">
+      <div className="pointer-events-none absolute -left-32 top-20 size-[28rem] rounded-full bg-sky/10 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -right-16 top-1/3 size-36 rounded-full border-[1.2rem] border-azure/80" aria-hidden="true" />
+      <SectionDecoration className="right-[9%] top-24" tone="pink" />
+      <SectionDecoration className="bottom-24 left-[4%] -rotate-12" tone="sky" size="md" />
+
+      <div className="relative z-10 mx-auto max-w-[82rem]">
+        <div className="grid items-end gap-8 lg:grid-cols-[1fr_0.9fr]">
+          <Reveal>
             <p className="text-label text-[#c8102e]">01 / {t('crisisKicker')}</p>
-            <h2 className="marketing-display mt-4 max-w-3xl text-4xl text-navy md:text-6xl">{t('crisisTitle')}</h2>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-navy/65">{t('crisisSubtitle')}</p>
-            <Link href={ROUTES.DAMPAK} className="mt-6 inline-flex items-center gap-2 rounded-full border border-navy/15 px-4 py-2 text-sm font-bold text-navy transition-colors hover:border-[#c8102e] hover:text-[#c8102e] focus-visible:ring-2 focus-visible:ring-sky">
-              {t('impactLink')} <ArrowUpRight className="size-4" />
+            <h2 className="marketing-display mt-4 max-w-4xl text-4xl text-navy md:text-6xl">
+              {t('crisisTitle')}
+            </h2>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <p className="max-w-2xl text-base font-medium leading-7 text-navy/75">{t('crisisSubtitle')}</p>
+            <Link
+              href={ROUTES.DAMPAK}
+              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-navy/15 bg-white px-4 py-2 text-sm font-bold text-navy outline-none transition-colors hover:border-[#c8102e] hover:text-[#c8102e] focus-visible:ring-2 focus-visible:ring-sky"
+            >
+              {t('impactLink')}
+              <ArrowUpRight className="size-4" aria-hidden="true" />
             </Link>
-            <div className="mt-9 grid gap-3 sm:grid-cols-3">
-              {stats.map((stat, index) => (
-                <article key={stat.labelKey} className={`rounded-2xl p-5 ${index === 0 ? 'bg-[#c8102e] text-white' : 'bg-[#eff7fd] text-navy'}`}>
-                  <p className="text-2xl font-extrabold tracking-tight">{stat.value}</p>
-                  <p className={`mt-2 text-xs leading-5 ${index === 0 ? 'text-white/80' : 'text-navy/65'}`}>{t(stat.labelKey)}</p>
-                  <p className={`mt-3 text-[0.62rem] font-bold tracking-[0.1em] uppercase ${index === 0 ? 'text-white/60' : 'text-navy/40'}`}>{t(stat.sourceKey)}</p>
-                </article>
-              ))}
-            </div>
-          </div>
+          </Reveal>
         </div>
 
-        <div className="mt-16 grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-          <div>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {stats.map((stat, index) => (
+            <Reveal key={stat.label} delay={index * 0.06}>
+              <article className={`relative h-full overflow-hidden rounded-[1.75rem] p-6 shadow-[0_18px_45px_-24px_rgba(22,41,76,0.35)] ${stat.tone}`}>
+                <div className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full border-[0.9rem] border-current opacity-10" aria-hidden="true" />
+                <p className="text-3xl font-extrabold tracking-tight md:text-4xl">{stat.value}</p>
+                <p className="mt-3 max-w-xs text-sm font-semibold leading-6 opacity-80">{t(stat.label)}</p>
+                <p className="mt-5 text-[0.62rem] font-extrabold uppercase tracking-[0.12em] opacity-55">{t(stat.source)}</p>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+
+        <div className="mt-16 grid items-center gap-10 rounded-[2.25rem] bg-[#f2f9fe] p-5 shadow-[0_24px_55px_-32px_rgba(22,41,76,0.32)] sm:p-8 lg:grid-cols-[0.86fr_1.14fr] lg:p-10">
+          <Reveal>
             <p className="text-label text-[#c8102e]">02 / {t('problemKicker')}</p>
-            <h2 className="marketing-display mt-4 text-4xl text-navy md:text-6xl">{t('problemTitle')}</h2>
-            <p className="mt-6 max-w-xl text-base leading-7 text-navy/65">{t('problemBody')}</p>
-            <p className="mt-5 text-xs font-bold tracking-wide text-navy/40">{t('crisisStat4Label')} · {t('crisisStat4Source')}</p>
-          </div>
-          <div className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-5 shadow-[0_20px_50px_rgba(20,52,100,0.12)] sm:p-7">
-            <Image src="/images/landing/generated-v3/problem-props.webp" alt="" aria-hidden width={1774} height={887} sizes="(max-width: 1024px) 100vw, 56vw" className="w-full rounded-2xl object-cover" />
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {PROBLEMS.map(({ key, icon: Icon }, index) => (
+            <h3 className="marketing-display mt-4 text-3xl text-navy md:text-5xl">{t('problemTitle')}</h3>
+            <p className="mt-5 text-sm font-medium leading-7 text-navy/75 md:text-base">{t('problemBody')}</p>
+            <p className="mt-5 text-[0.68rem] font-bold tracking-wide text-navy/40">
+              {t('crisisStat4Label')} · {t('crisisStat4Source')}
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.1} className="overflow-hidden rounded-[1.75rem] border border-white bg-white p-4 shadow-soft sm:p-5">
+            <Image
+              src="/images/landing/generated-v3/problem-props.webp"
+              alt=""
+              aria-hidden="true"
+              width={1774}
+              height={887}
+              sizes="(max-width: 1024px) 100vw, 52vw"
+              className="aspect-[2/1] w-full rounded-[1.35rem] object-cover"
+            />
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {PROBLEMS.map(({ key }) => (
                 <div key={key} className="rounded-2xl bg-[#f4faff] p-4">
-                  <span className={`flex size-9 items-center justify-center rounded-xl ${index === 1 ? 'bg-sky text-navy' : 'bg-navy text-white'}`}><Icon className="size-4" /></span>
-                  <p className="mt-4 text-sm font-bold leading-5 text-navy">{t(key)}</p>
+                  <p className="mt-3 text-xs font-bold leading-5 text-navy">{t(key)}</p>
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </div>
 
-        <div className="mt-20 border-y border-navy/10 py-8">
+        <Reveal className="mt-16 border-y border-navy/10 py-8">
           <p className="text-label mb-6 text-center text-navy/45">{t('supportersLabel')}</p>
-          <div className="grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 items-center gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {SUPPORTERS.map((supporter) => (
-              <div key={supporter.name} className="flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-3 py-3 text-center shadow-sm">
-                <Image src={supporter.src} alt={`Logo ${supporter.name}`} width={42} height={42} className="size-9 shrink-0 object-contain" />
+              <div key={supporter.name} className="flex min-h-16 items-center justify-center gap-3 rounded-2xl border border-navy/[0.06] bg-white px-3 py-3 text-center shadow-soft">
+                <Image src={supporter.src} alt={`Logo ${supporter.name}`} width={40} height={40} className="size-9 shrink-0 object-contain" />
                 <span className="text-xs font-bold leading-tight text-navy/65">{supporter.name}</span>
               </div>
             ))}
           </div>
-        </div>
+        </Reveal>
       </div>
-      <div className="pointer-events-none absolute -bottom-20 left-[-10%] h-44 w-[120%] rounded-[50%] bg-white" aria-hidden="true" />
-      <Compass className="pointer-events-none absolute right-[10%] top-[44%] size-16 rotate-12 text-sky/30" aria-hidden="true" />
     </section>
   );
 }

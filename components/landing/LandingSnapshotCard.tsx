@@ -38,7 +38,7 @@ export function LandingSnapshotCard() {
           >
             {t('snapshotTitle')}
           </h2>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+          <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-navy/75 sm:text-base sm:leading-7">
             {t('snapshotBody')}
           </p>
 
@@ -76,7 +76,7 @@ export function LandingSnapshotCard() {
           <div className="relative flex items-start justify-between gap-4">
             <div>
               <p className="text-label text-sky">{t('snapshotCardLabel')}</p>
-              <p className="mt-2 text-sm font-semibold text-white/65">
+              <p className="mt-2 text-sm font-semibold text-white/75">
                 {t('snapshotCardBody')}
               </p>
             </div>

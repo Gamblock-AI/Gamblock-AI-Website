@@ -1,62 +1,64 @@
-'use client';
-
-import Image from 'next/image';
+import { ArrowRight, Monitor, Smartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Reveal } from '@/components/common/Reveal';
+import { Link } from '@/i18n/routing';
+import { ROUTES } from '@/routes';
+import { SectionDecoration } from '@/components/landing/SectionDecoration';
+import { SectionTransition } from '@/components/landing/SectionTransition';
 
 const STEPS = [
-  { title: 'howStep1Title', body: 'howStep1Body' },
-  { title: 'howStep2Title', body: 'howStep2Body' },
-  { title: 'howStep3Title', body: 'howStep3Body' },
+  { title: 'howStep1Title', body: 'howStep1Body', tone: 'bg-white text-navy' },
+  { title: 'howStep2Title', body: 'howStep2Body', tone: 'bg-sky text-navy' },
+  { title: 'howStep3Title', body: 'howStep3Body', tone: 'bg-navy text-white' },
 ] as const;
 
 export function HowItWorksSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <section id="cara-kerja" className="relative overflow-hidden bg-[#f4faff] px-4 py-24 sm:px-6 md:px-10 md:py-36">
-      <div className="pointer-events-none absolute -left-28 top-28 size-[28rem] rounded-full bg-sky/20 blur-3xl" aria-hidden="true" />
-      <div className="relative mx-auto max-w-[82rem]">
-        <div className="mx-auto max-w-3xl text-center">
+    <section id="cara-kerja" className="relative overflow-hidden bg-[#f4faff] px-4 py-28 sm:px-6 md:px-10 md:py-36">
+      <SectionTransition tone="team-to-pale" />
+      <div className="pointer-events-none absolute -left-40 top-20 size-[32rem] rounded-full bg-sky/20 blur-3xl" aria-hidden="true" />
+      <SectionDecoration className="right-[7%] top-28" tone="pink" />
+      <SectionDecoration className="bottom-28 left-[8%] -rotate-12" tone="sky" size="md" />
+
+      <div className="relative z-10 mx-auto max-w-[82rem]">
+        <Reveal className="mx-auto max-w-4xl text-center">
           <p className="text-label text-[#c8102e]">04 / {t('howKicker')}</p>
           <h2 className="marketing-display mt-4 text-4xl text-navy md:text-6xl">{t('howTitle')}</h2>
-        </div>
-        <div className="relative mt-12 grid items-center gap-9 lg:grid-cols-[0.85fr_0.95fr_0.85fr]">
-          <ol className="grid gap-5 lg:order-1">
-            {STEPS.slice(0, 2).map(({ title, body }, index) => (
-              <li key={title} className={`relative rounded-[1.7rem] bg-white p-6 shadow-[0_16px_40px_rgba(20,52,100,0.11)] ${index === 1 ? 'lg:ml-10' : ''}`}>
-                <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden="true">
-                  <span className="absolute -right-14 -top-14 size-48 rounded-full border-[1.35rem] border-sky/15" />
-                  <span className="absolute right-14 top-10 size-2 rounded-full bg-[#c8102e]/25" />
-                </span>
-                <span className="absolute -left-3 -top-3 z-20 flex size-10 items-center justify-center rounded-full bg-[#c8102e] text-sm font-extrabold text-white shadow-lg">0{index + 1}</span>
-                <div className="relative z-10 pt-1">
-                  <h3 className="text-xl font-extrabold text-navy">{t(title)}</h3>
-                  <p className="mt-3 text-sm leading-6 text-navy/65">{t(body)}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <div className="relative mx-auto flex min-h-[29rem] w-full max-w-sm items-end justify-center overflow-hidden rounded-[2.25rem] border border-white bg-white shadow-[0_20px_55px_rgba(20,52,100,0.16)]">
-            <div className="absolute inset-x-7 bottom-7 h-3 rounded-full bg-sky/35 blur-sm" aria-hidden="true" />
-            <Image src="/images/landing/generated-v3/gami-journey-transparent.webp" alt={t('howImageAlt')} width={1122} height={1402} sizes="(max-width: 1024px) 80vw, 28vw" className="relative h-[28rem] w-auto max-w-full object-contain object-bottom" />
+        </Reveal>
+
+        <ol className="relative mt-14 grid gap-6 lg:grid-cols-3">
+          <div className="pointer-events-none absolute left-[15%] right-[15%] top-16 hidden border-t-2 border-dashed border-navy/15 lg:block" aria-hidden="true" />
+          {STEPS.map(({ title, body, tone }, index) => (
+            <li key={title} className="relative">
+              <Reveal delay={index * 0.08} y={34} className="h-full">
+                <article className={`relative h-full min-h-72 overflow-hidden rounded-[2rem] border border-white p-7 shadow-[0_22px_55px_-32px_rgba(22,41,76,0.4)] ${tone}`}>
+                  <div className="pointer-events-none absolute -right-16 -top-16 size-52 rounded-full border-[1.25rem] border-current opacity-10" aria-hidden="true" />
+                  <div className="relative flex items-center justify-between">
+                    <span className={`flex size-11 items-center justify-center rounded-full text-sm font-black ${index === 0 ? 'bg-[#c8102e] text-white' : index === 1 ? 'bg-white text-navy' : 'bg-[#c8102e] text-white'}`}>0{index + 1}</span>
+                  </div>
+                  <h3 className="relative mt-8 text-2xl font-extrabold leading-tight tracking-tight">{t(title)}</h3>
+                  <p className={`relative mt-4 text-sm font-medium leading-7 ${index === 2 ? 'text-white/80' : 'text-navy/75'}`}>{t(body)}</p>
+                </article>
+              </Reveal>
+            </li>
+          ))}
+        </ol>
+
+        <Reveal className="mt-10 flex flex-col items-start justify-between gap-6 rounded-[1.75rem] border border-navy/10 bg-white p-6 shadow-soft sm:flex-row sm:items-center">
+          <div>
+            <p className="text-label text-[#c8102e]">{t('platformKicker')}</p>
+            <p className="mt-2 max-w-2xl text-lg font-extrabold leading-tight text-navy">{t('platformTitle')}</p>
           </div>
-          <ol start={3} className="lg:order-3">
-            {STEPS.slice(2).map(({ title, body }) => (
-              <li key={title} className="relative rounded-[1.7rem] bg-navy p-6 text-white shadow-[0_16px_40px_rgba(20,52,100,0.2)] lg:-ml-10">
-                <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden="true">
-                  <span className="absolute -right-14 -top-14 size-48 rounded-full border-[1.35rem] border-sky/20" />
-                  <span className="absolute right-14 top-10 size-2 rounded-full bg-sky/60" />
-                </span>
-                <span className="absolute -right-3 -top-3 z-20 flex size-10 items-center justify-center rounded-full bg-sky text-sm font-extrabold text-navy shadow-lg">03</span>
-                <div className="relative z-10 pt-1">
-                  <h3 className="text-xl font-extrabold">{t(title)}</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/65">{t(body)}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <div className="pointer-events-none absolute left-[23%] right-[23%] top-1/2 -z-10 hidden border-t-2 border-dashed border-sky/55 lg:block" aria-hidden="true" />
-        </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex min-h-10 items-center gap-2 rounded-full bg-azure px-4 text-sm font-bold text-navy"><Smartphone className="size-4" aria-hidden="true" />{t('platformAndroid')}</span>
+            <span className="inline-flex min-h-10 items-center gap-2 rounded-full bg-azure px-4 text-sm font-bold text-navy"><Monitor className="size-4" aria-hidden="true" />{t('platformWindows')}</span>
+            <Link href={ROUTES.DOWNLOAD} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#c8102e] px-5 text-sm font-bold text-white outline-none transition-colors hover:bg-[#da1c3a] focus-visible:ring-2 focus-visible:ring-[#c8102e]/40 focus-visible:ring-offset-2">
+              {t('linkDownload')}<ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

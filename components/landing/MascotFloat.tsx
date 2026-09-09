@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { gsap } from '@/lib/gsap';
 import { cn } from '@/lib/utils';
 
 interface MascotFloatProps {
@@ -15,6 +14,8 @@ interface MascotFloatProps {
   imgClassName?: string;
   preload?: boolean;
   sizes?: string;
+  /** Enables the idle CSS float animation (disabled for static compositions). */
+  animate?: boolean;
   /** Strength of scroll parallax in px (0 disables parallax). */
   parallax?: number;
 }
@@ -32,26 +33,43 @@ export function MascotFloat({
   imgClassName,
   preload = false,
   sizes,
+  animate = true,
   parallax = 60,
 }: MascotFloatProps) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (reduce || !ref.current || parallax === 0) return;
-    const ctx = gsap.context(() => {
-      gsap.to(ref.current, {
-        y: parallax,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: ref.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: true,
-        },
-      });
-    }, ref);
-    return () => ctx.revert();
+    if (
+      reduce ||
+      !ref.current ||
+      parallax === 0 ||
+      !window.matchMedia('(min-width: 768px)').matches
+    ) return;
+
+    let cancelled = false;
+    let context: { revert: () => void } | undefined;
+
+    void import('@/lib/gsap').then(({ gsap }) => {
+      if (cancelled || !ref.current) return;
+      context = gsap.context(() => {
+        gsap.to(ref.current, {
+          y: parallax,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: ref.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        });
+      }, ref);
+    });
+
+    return () => {
+      cancelled = true;
+      context?.revert();
+    };
   }, [reduce, parallax]);
 
   return (
@@ -63,7 +81,7 @@ export function MascotFloat({
         height={height}
         preload={preload}
         sizes={sizes}
-        className={cn('h-auto w-full select-none drop-shadow-[0_30px_60px_rgba(22,41,76,0.25)] animate-float', imgClassName)}
+        className={cn('h-auto w-full select-none drop-shadow-[0_30px_60px_rgba(22,41,76,0.25)]', animate && 'animate-float', imgClassName)}
       />
     </div>
   );

@@ -63,21 +63,28 @@ const COLUMNS = [
 /**
  * SiteFooter — product navigation and academic project context.
  */
-export function SiteFooter() {
+export function SiteFooter({ homepage = false }: { homepage?: boolean }) {
   const t = useTranslations('Footer');
   const { links: socialLinks, loaded: socialLinksLoaded } =
     useSiteSocialLinks();
 
   return (
-    <footer className="bg-footer-navy relative overflow-hidden text-white">
-      <Image
-        src="/images/landing/generated-v3/gami-cta-transparent.webp"
-        alt=""
-        aria-hidden
-        width={1024}
-        height={1536}
-        className="pointer-events-none absolute -right-10 -bottom-28 w-80 opacity-[0.12] select-none"
-      />
+    <footer className={`bg-footer-navy relative overflow-hidden text-white ${homepage ? 'pt-8' : ''}`}>
+      {homepage ? (
+        <>
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white via-white/55 to-transparent" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-20 top-28 size-72 rounded-full border-[1.4rem] border-sky/10" aria-hidden="true" />
+        </>
+      ) : (
+        <Image
+          src="/images/landing/generated-v3/gami-cta-transparent.webp"
+          alt=""
+          aria-hidden
+          width={1024}
+          height={1536}
+          className="pointer-events-none absolute -right-10 -bottom-28 w-80 opacity-[0.12] select-none"
+        />
+      )}
 
       <div className="relative mx-auto max-w-[82rem] px-6 py-16 md:px-10">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
@@ -94,10 +101,10 @@ export function SiteFooter() {
                 />
               </span>
               <span className="text-lg font-extrabold tracking-tight text-white">
-                Gamblock<span className="text-sky">-AI</span>
+                Gamblock<span className="text-[#c8102e]">-AI</span>
               </span>
             </div>
-            <p className="max-w-xs text-sm leading-relaxed text-white/60">
+            <p className="max-w-xs text-sm font-medium leading-relaxed text-white/70">
               {t('tagline')}
             </p>
             {/* Height is reserved while loading so the columns below never shift. */}

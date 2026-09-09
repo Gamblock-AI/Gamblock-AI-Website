@@ -9,13 +9,12 @@ import { CrisisSection } from '@/components/landing/sections/CrisisSection';
 import { FeaturesSection } from '@/components/landing/sections/FeaturesSection';
 import { HowItWorksSection } from '@/components/landing/sections/HowItWorksSection';
 import { TechnologySection } from '@/components/landing/sections/TechnologySection';
-import { PsychoeducationSection } from '@/components/landing/sections/PsychoeducationSection';
 import { TeamSection } from '@/components/landing/sections/TeamSection';
 import { FaqSection } from '@/components/landing/sections/FaqSection';
 import { FinalCtaSection } from '@/components/landing/sections/FinalCtaSection';
 import { config } from '@/lib/config';
 
-const landingOgImage = '/images/landing/generated-v3/og-home-v3.webp';
+const landingOgImage = '/images/landing/generated-v4/og-home-v4.webp';
 
 export async function generateMetadata({
   params,
@@ -126,14 +125,13 @@ export default async function LandingPage({
       <div className="marketing-page relative text-foreground">
         <SkipLink />
         <FixedBackground />
-        <MarketingNav heroAware />
+        <MarketingNav />
         <main id="main-content">
           <HeroSection />
           <CrisisSection />
           <FeaturesSection />
           <HowItWorksSection />
           <TechnologySection />
-          <PsychoeducationSection />
           <TeamSection />
           <FaqSection />
           <FinalCtaSection />
@@ -142,7 +140,7 @@ export default async function LandingPage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        <SiteFooter />
+        <SiteFooter homepage />
       </div>
     </>
   );

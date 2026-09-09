@@ -14,7 +14,7 @@ export function PlatformSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <Section tone="white" className="marketing-wave-bottom py-24 md:py-32">
+    <Section tone="white" className="py-24 md:py-32">
       <div className="overflow-hidden rounded-[2rem] border border-white/80 bg-card shadow-card">
         <div className="grid items-stretch lg:grid-cols-[0.82fr_1.18fr]">
           <Reveal className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
@@ -22,7 +22,7 @@ export function PlatformSection() {
               {t('platformKicker')}
             </Pill>
             <h2 className="text-heading text-navy text-3xl md:text-4xl">{t('platformTitle')}</h2>
-            <p className="text-muted-foreground mt-4 max-w-xl text-base leading-7">
+            <p className="mt-4 max-w-xl text-base font-medium leading-7 text-navy/75">
               {t('platformBody')}
             </p>
             <div className="mt-7 flex flex-wrap gap-2.5">

@@ -25,7 +25,7 @@ export function PsychoeducationSection() {
         <div>
           <p className="text-label text-[#c8102e]">07 / {t('psychoKicker')}</p>
           <h2 className="marketing-display mt-4 max-w-3xl text-4xl text-navy md:text-6xl">{t('psychoTitle')}</h2>
-          <p className="mt-6 max-w-xl text-base leading-7 text-navy/65">{t('psychoBody')}</p>
+          <p className="mt-6 max-w-xl text-base font-medium leading-7 text-navy/75">{t('psychoBody')}</p>
           <div className="mt-9 grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
             {ITEMS.map(({ icon: Icon, title, body, tone }, index) => (
               <article key={title} className={`group relative overflow-hidden rounded-[1.6rem] p-5 transition-transform hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none ${tone} ${index === 0 ? 'text-navy' : ''}`}>
@@ -33,7 +33,7 @@ export function PsychoeducationSection() {
                   <span className={`flex size-11 shrink-0 items-center justify-center rounded-2xl ${index === 0 ? 'bg-navy text-white' : 'bg-white/15 text-white'}`}><Icon className="size-5" /></span>
                   <div>
                     <h3 className="text-lg font-extrabold">{t(title)}</h3>
-                    <p className={`mt-2 text-sm leading-6 ${index === 0 ? 'text-navy/70' : 'text-white/75'}`}>{t(body)}</p>
+                    <p className={`mt-2 text-sm font-medium leading-6 ${index === 0 ? 'text-navy/75' : 'text-white/80'}`}>{t(body)}</p>
                   </div>
                 </div>
                 <span className={`absolute -bottom-6 -right-2 text-7xl font-black ${index === 0 ? 'text-navy/10' : 'text-white/10'}`}>0{index + 1}</span>
