@@ -1,7 +1,19 @@
 'use client';
 
 import { Link } from '@/i18n/routing';
-import { ArrowRight, TrendingUp, Users, UserX, ShieldX, Zap, Activity, HeartHandshake } from 'lucide-react';
+import {
+  Activity,
+  ArrowRight,
+  CalendarDays,
+  ExternalLink,
+  HeartHandshake,
+  Newspaper,
+  ShieldX,
+  TrendingUp,
+  Users,
+  UserX,
+  Zap,
+} from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Section } from '@/components/ui/section';
@@ -15,10 +27,80 @@ import { FixedBackground } from '@/components/landing/FixedBackground';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { ROUTES } from '@/routes';
 
+const NEWS_UPDATED_AT = '2026-09-10';
+
+const NEWS_DATE_FORMATTERS = {
+  en: new Intl.DateTimeFormat('en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }),
+  id: new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }),
+} as const;
+
+const NEWS_ITEMS = [
+  {
+    source: 'ANTARA',
+    publishedAt: '2026-07-23',
+    topicKey: 'newsTopicScale',
+    summaryKey: 'news1Summary',
+    title: 'PPATK: Perputaran dana judi online Rp40,3 triliun pada triwulan I-2026',
+    href: 'https://www.antaranews.com/berita/5663168/ppatk-perputaran-dana-judi-online-rp403-triliun-pada-triwulan-i-2026',
+  },
+  {
+    source: 'Kompas',
+    publishedAt: '2026-05-29',
+    topicKey: 'newsTopicYouth',
+    summaryKey: 'news2Summary',
+    title: 'Judol Merebak di Kalangan Pelajar, Berawal dari Ajakan Teman hingga Sulit Berhenti',
+    href: 'https://amp.kompas.com/tren/read/2026/05/29/130000465/judol-merebak-di-kalangan-pelajar-berawal-dari-ajakan-teman-hingga-sulit',
+  },
+  {
+    source: 'Katadata',
+    publishedAt: '2026-07-24',
+    topicKey: 'newsTopicPayment',
+    summaryKey: 'news3Summary',
+    title: 'PPATK Ungkap Modus Baru: QRIS Jadi Jalur Utama Deposit Judol',
+    href: 'https://katadata.co.id/digital/teknologi/6a62ec8989a99/ppatk-ungkap-modus-baru-qris-jadi-jalur-utama-deposit-judol',
+  },
+  {
+    source: 'Tirto',
+    publishedAt: '2026-07-03',
+    topicKey: 'newsTopicExposure',
+    summaryKey: 'news4Summary',
+    title: 'Euforia Piala Dunia: Ladang Baru Sindikat Judol Berburu Korban',
+    href: 'https://tirto.id/euforia-piala-dunia-ladang-baru-sindikat-judol-berburu-korban-hy7t',
+  },
+  {
+    source: 'detikNews',
+    publishedAt: '2026-08-14',
+    topicKey: 'newsTopicAccess',
+    summaryKey: 'news5Summary',
+    title: 'Marak Judol Modus Deposit Pulsa, Bareskrim Imbau Orang Tua Awasi Anak',
+    href: 'https://news.detik.com/berita/d-8619345/marak-judol-modus-deposit-pulsa-bareskrim-imbau-orang-tua-awasi-anak',
+  },
+  {
+    source: 'ANTARA',
+    publishedAt: '2026-09-03',
+    topicKey: 'newsTopicEnforcement',
+    summaryKey: 'news6Summary',
+    title: 'Bareskrim ungkap jaringan judi daring dengan transaksi Rp1,03 triliun',
+    href: 'https://www.antaranews.com/berita/5724419/bareskrim-ungkap-jaringan-judi-daring-dengan-transaksi-rp103-triliun',
+  },
+] as const;
+
 export function DampakContent() {
   const t = useTranslations('DampakContent');
   const locale = useLocale();
-  const formatLocale = locale === 'en' ? 'en-US' : 'id-ID';
+  const isEnglish = locale === 'en';
+  const formatLocale = isEnglish ? 'en-US' : 'id-ID';
+  const newsDateFormatter = NEWS_DATE_FORMATTERS[isEnglish ? 'en' : 'id'];
 
   const crisis = [
     { icon: TrendingUp, value: 286.84, prefix: 'Rp', suffix: t('crisis1Suffix'), decimals: 2, label: t('crisis1'), src: 'PPATK, 2026' },
@@ -42,7 +124,7 @@ export function DampakContent() {
     <div className="relative text-foreground">
       <SkipLink />
       <FixedBackground />
-      <MarketingNav />
+      <MarketingNav minimal />
       <main id="main-content">
 
       {/* HERO */}
@@ -102,6 +184,77 @@ export function DampakContent() {
             ))}
           </div>
         </div>
+      </Section>
+
+      {/* MEDIA COVERAGE */}
+      <Section tone="plain" panel>
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <Reveal className="max-w-2xl">
+            <Pill variant="accent" className="mb-4">
+              <Newspaper className="size-3.5" aria-hidden="true" />
+              {t('newsKicker')}
+            </Pill>
+            <h2 className="text-heading text-3xl text-navy md:text-4xl">{t('newsTitle')}</h2>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+              {t('newsBody')}
+            </p>
+          </Reveal>
+
+          <Reveal className="shrink-0">
+            <div className="inline-flex items-center gap-2 rounded-full border border-navy/10 bg-sky-light/40 px-4 py-2 text-xs font-semibold text-navy/65">
+              <CalendarDays className="size-4 text-crimson" aria-hidden="true" />
+              {t('newsUpdated', {
+                date: newsDateFormatter.format(new Date(`${NEWS_UPDATED_AT}T00:00:00Z`)),
+              })}
+            </div>
+          </Reveal>
+        </div>
+
+        <ul className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {NEWS_ITEMS.map((item, index) => {
+            const readLabel = t('newsReadAt', { source: item.source });
+
+            return (
+              <li key={item.href}>
+                <Reveal className="h-full" delay={(index % 3) * 0.06}>
+                  <a
+                    href={item.href}
+                    hrefLang="id"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={`${readLabel}: ${item.title}`}
+                    className="group flex h-full flex-col rounded-3xl border border-navy/10 bg-sky-light/25 p-6 outline-none transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-navy/20 hover:shadow-soft focus-visible:ring-2 focus-visible:ring-crimson/50 focus-visible:ring-offset-2 motion-reduce:transform-none"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-label rounded-full bg-crimson/10 px-2.5 py-1 text-crimson">
+                        {t(item.topicKey)}
+                      </span>
+                      <span className="text-xs font-semibold text-navy/45">{item.source}</span>
+                    </div>
+
+                    <h3 lang="id" className="mt-5 text-lg font-bold leading-snug text-navy">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+                      {t(item.summaryKey)}
+                    </p>
+
+                    <div className="mt-6 border-t border-navy/10 pt-4">
+                      <p className="text-xs text-navy/45">
+                        {newsDateFormatter.format(new Date(`${item.publishedAt}T00:00:00Z`))}
+                        {isEnglish ? ` · ${t('newsSourceLanguage')}` : ''}
+                      </p>
+                      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-navy transition-colors group-hover:text-crimson">
+                        {readLabel}
+                        <ExternalLink className="size-3.5" aria-hidden="true" />
+                      </span>
+                    </div>
+                  </a>
+                </Reveal>
+              </li>
+            );
+          })}
+        </ul>
       </Section>
 
       {/* WHY BLOCKING ALONE FAILS */}
