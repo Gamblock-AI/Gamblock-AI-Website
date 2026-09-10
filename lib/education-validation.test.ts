@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { isValidEducationSourceURL } from './education-validation';
+import {
+  findEducationRichTextValidationError,
+  isValidEducationSourceURL,
+} from './education-validation';
 
 describe('isValidEducationSourceURL', () => {
   it('rejects the editor placeholder without a hostname', () => {
@@ -16,5 +19,29 @@ describe('isValidEducationSourceURL', () => {
     expect(isValidEducationSourceURL('http://example.com/reference')).toBe(
       false
     );
+  });
+});
+
+describe('findEducationRichTextValidationError', () => {
+  it('accepts italic as a text mark', () => {
+    expect(
+      findEducationRichTextValidationError({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              { type: 'text', text: 'Italic', marks: [{ type: 'italic' }] },
+            ],
+          },
+        ],
+      })
+    ).toBeNull();
+  });
+
+  it('still rejects unsupported node types', () => {
+    expect(
+      findEducationRichTextValidationError({ type: 'iframe' })
+    ).toBe('Elemen rich text iframe tidak didukung.');
   });
 });
