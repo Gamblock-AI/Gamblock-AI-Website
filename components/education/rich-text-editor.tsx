@@ -55,6 +55,19 @@ const educationMediaNode = (name: 'video' | 'pdf') =>
     },
   });
 
+// TipTap 3.28 includes link and underline in StarterKit. Keep the explicit
+// extensions below so the editor can configure link behavior, but disable the
+// StarterKit copies to avoid duplicate extension names on every editor mount.
+const educationEditorExtensions = [
+  StarterKit.configure({ link: false, underline: false }),
+  Link.configure({ openOnClick: false }),
+  Underline,
+  TextAlign.configure({ types: ['heading', 'paragraph'] }),
+  EducationImage,
+  educationMediaNode('video'),
+  educationMediaNode('pdf'),
+];
+
 function ToolbarButton({
   active,
   label,
@@ -101,15 +114,7 @@ export function RichTextEditor({
   const t = useTranslations('adminPage');
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit,
-      Link.configure({ openOnClick: false }),
-      Underline,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      EducationImage,
-      educationMediaNode('video'),
-      educationMediaNode('pdf'),
-    ],
+    extensions: educationEditorExtensions,
     content: value,
     editorProps: {
       attributes: {

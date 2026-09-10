@@ -55,6 +55,7 @@ import { RichTextEditor } from '@/components/education/rich-text-editor';
 import { ThumbnailCropper } from '@/components/education/thumbnail-cropper';
 import { resolveEducationMediaURL } from '@/components/education/media-url';
 import { apiClientBlob } from '@/lib/api-client';
+import { isValidEducationSourceURL } from '@/lib/education-validation';
 import { toastError, toastSuccess, toastValidationError } from '@/lib/feedback';
 import {
   dynamicLabelFallback,
@@ -333,7 +334,7 @@ export const makeDocument = (idTitle = '', enTitle = ''): AdminEducationDocument
     {
       title: '',
       publisher: '',
-      url: 'https://',
+      url: '',
       accessed_at: new Date().toISOString(),
     },
   ],
@@ -388,7 +389,7 @@ function normalizeEducationDocument(
       ? raw.sources.filter(Boolean).map((s) => ({
           title: s?.title || '',
           publisher: s?.publisher || '',
-          url: s?.url || 'https://',
+          url: (s?.url || '').trim(),
           accessed_at: s?.accessed_at || new Date().toISOString(),
         }))
       : defaultDoc.sources;
@@ -525,6 +526,69 @@ function hasRichTextContent(doc: unknown): boolean {
   return false;
 }
 
+const allowedRichTextNodes = new Set([
+  'doc',
+  'paragraph',
+  'text',
+  'heading',
+  'bulletList',
+  'orderedList',
+  'listItem',
+  'blockquote',
+  'horizontalRule',
+  'hardBreak',
+  'image',
+  'video',
+  'pdf',
+  'table',
+  'tableRow',
+  'tableHeader',
+  'tableCell',
+]);
+
+const allowedRichTextMarks = new Set([
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'link',
+  'code',
+]);
+
+function findRichTextValidationError(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return null;
+  if (Array.isArray(value)) {
+    for (const child of value) {
+      const error = findRichTextValidationError(child);
+      if (error) return error;
+    }
+    return null;
+  }
+
+  const node = value as Record<string, unknown>;
+  if (typeof node.type === 'string' && !allowedRichTextNodes.has(node.type)) {
+    return `Elemen rich text ${node.type} tidak didukung.`;
+  }
+  if (node.marks !== undefined) {
+    if (!Array.isArray(node.marks)) return 'Format mark rich text tidak valid.';
+    for (const mark of node.marks) {
+      if (!mark || typeof mark !== 'object' || Array.isArray(mark)) {
+        return 'Format mark rich text tidak valid.';
+      }
+      const markType = (mark as Record<string, unknown>).type;
+      if (typeof markType !== 'string' || !allowedRichTextMarks.has(markType)) {
+        return `Format mark rich text ${String(markType || 'unknown')} tidak didukung.`;
+      }
+    }
+  }
+
+  for (const child of Object.values(node)) {
+    const error = findRichTextValidationError(child);
+    if (error) return error;
+  }
+  return null;
+}
+
 type FieldErrors = Record<string, DraftValidationError>;
 
 function validateAllEducationDraft(
@@ -532,6 +596,38 @@ function validateAllEducationDraft(
   doc: AdminEducationDocument
 ): FieldErrors {
   const errors: FieldErrors = {};
+
+  if (!['student', 'partner', 'all'].includes(doc.audience)) {
+    errors['audience'] = {
+      message: 'Target audiens modul tidak valid.',
+      fieldId: 'field-audience',
+    };
+  }
+  if (!['article', 'partner_response_simulator'].includes(doc.experience_type)) {
+    errors['experience_type'] = {
+      message: 'Jenis pengalaman modul tidak valid.',
+      fieldId: 'field-experience-type',
+    };
+  }
+  if (
+    doc.experience_type === 'partner_response_simulator' &&
+    doc.audience === 'student'
+  ) {
+    errors['audience_experience'] = {
+      message: 'Simulator respons pendamping tidak dapat menargetkan mahasiswa.',
+      fieldId: 'field-audience',
+    };
+  }
+  if (
+    !Number.isInteger(doc.estimated_minutes) ||
+    doc.estimated_minutes < 1 ||
+    doc.estimated_minutes > 120
+  ) {
+    errors['estimated_minutes'] = {
+      message: 'Durasi modul harus berupa angka bulat antara 1 dan 120 menit.',
+      fieldId: 'field-duration',
+    };
+  }
 
   if (!doc.translations.id.title.trim()) {
     errors['title_id'] = {
@@ -593,14 +689,23 @@ function validateAllEducationDraft(
     };
   }
 
-  if (doc.thumbnails.length === 0) {
+  if (doc.thumbnails.length === 0 || doc.thumbnails.length > 8) {
     errors['thumbnails'] = {
-      message: 'Minimal 1 gambar thumbnail modul wajib diunggah.',
+      message:
+        doc.thumbnails.length > 8
+          ? 'Maksimal 8 gambar thumbnail modul dapat digunakan.'
+          : 'Minimal 1 gambar thumbnail modul wajib diunggah.',
       fieldId: 'field-thumbnails',
     };
   }
   for (let i = 0; i < doc.thumbnails.length; i++) {
     const thumb = doc.thumbnails[i];
+    if (!thumb.media_id) {
+      errors[`thumbnail_${i}`] = {
+        message: `Media thumbnail #${i + 1} belum valid.`,
+        fieldId: 'field-thumbnails',
+      };
+    }
     if (!thumb.alt_text?.id?.trim()) {
       errors[`thumbnail_alt_${i}_id`] = {
         message: `Teks alternatif thumbnail #${i + 1} (bahasa Indonesia) wajib diisi.`,
@@ -647,8 +752,33 @@ function validateAllEducationDraft(
       fieldId: 'field-sections',
     };
   }
+  const sectionIDs = new Set<string>();
+  const checkIDs = new Set<string>();
   for (let i = 0; i < doc.sections.length; i++) {
     const section = doc.sections[i];
+    if (!section.id || sectionIDs.has(section.id)) {
+      errors[`section_${i}_identity`] = {
+        message: `ID Bagian ${i + 1} belum valid atau tidak unik.`,
+        fieldId: `field-section-${i}-title`,
+      };
+    } else {
+      sectionIDs.add(section.id);
+    }
+    const idCheckID = section.translations.id?.knowledge_check?.id;
+    const enCheckID = section.translations.en?.knowledge_check?.id;
+    if (!idCheckID || !enCheckID || idCheckID !== enCheckID) {
+      errors[`section_${i}_kc_identity`] = {
+        message: `ID kuis Bagian ${i + 1} harus tersedia dan sama pada kedua bahasa.`,
+        fieldId: `field-section-${i}-kc-question`,
+      };
+    }
+    if (idCheckID && checkIDs.has(idCheckID)) {
+      errors[`section_${i}_kc_duplicate`] = {
+        message: `ID kuis Bagian ${i + 1} harus unik.`,
+        fieldId: `field-section-${i}-kc-question`,
+      };
+    }
+    if (idCheckID) checkIDs.add(idCheckID);
     for (const loc of ['id', 'en'] as const) {
       const locLabel = loc === 'id' ? 'bahasa Indonesia' : 'bahasa Inggris';
       const tr = section.translations[loc];
@@ -662,6 +792,14 @@ function validateAllEducationDraft(
       if (!hasRichTextContent(tr.content)) {
         errors[`section_${i}_content_${loc}`] = {
           message: `Isi materi Bagian ${i + 1} (${locLabel}) wajib diisi.`,
+          fieldId: `field-section-${i}-content`,
+          locale: loc,
+        };
+      }
+      const richTextError = findRichTextValidationError(tr.content);
+      if (richTextError) {
+        errors[`section_${i}_content_${loc}`] = {
+          message: richTextError,
           fieldId: `field-section-${i}-content`,
           locale: loc,
         };
@@ -752,7 +890,7 @@ function validateAllEducationDraft(
         fieldId: `field-source-title-${i}`,
       };
     }
-    if (!source.url?.trim() || !source.url.startsWith('https://')) {
+    if (!isValidEducationSourceURL(source.url)) {
       errors[`source_${i}_url`] = {
         message: `URL sumber rujukan #${i + 1} harus menggunakan protokol HTTPS yang valid.`,
         fieldId: `field-source-url-${i}`,
@@ -1779,7 +1917,12 @@ export function ContentTab(props: ContentTabProps) {
             <RequiredMark />
           </span>
           <select
-            className={adminFieldClassName}
+            id="field-audience"
+            className={cn(
+              adminFieldClassName,
+              (fieldErrors['audience'] || fieldErrors['audience_experience']) &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             value={document.audience}
             onChange={(event) =>
               mutate((draft) => {
@@ -1791,6 +1934,12 @@ export function ContentTab(props: ContentTabProps) {
             <option value="partner">{t('audiencePartner')}</option>
             <option value="all">{t('audienceAll')}</option>
           </select>
+          <FieldError
+            message={
+              fieldErrors['audience']?.message ||
+              fieldErrors['audience_experience']?.message
+            }
+          />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-navy text-xs font-bold">
@@ -1798,7 +1947,12 @@ export function ContentTab(props: ContentTabProps) {
             <RequiredMark />
           </span>
           <select
-            className={adminFieldClassName}
+            id="field-experience-type"
+            className={cn(
+              adminFieldClassName,
+              fieldErrors['experience_type'] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             value={document.experience_type}
             onChange={(event) =>
               mutate((draft) => {
@@ -1815,6 +1969,7 @@ export function ContentTab(props: ContentTabProps) {
               {t('experienceSimulator')}
             </option>
           </select>
+          <FieldError message={fieldErrors['experience_type']?.message} />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-navy text-xs font-bold">
@@ -1855,11 +2010,16 @@ export function ContentTab(props: ContentTabProps) {
             <RequiredMark />
           </span>
           <input
+            id="field-duration"
             type="number"
             min={1}
             max={120}
             placeholder="8"
-            className={adminFieldClassName}
+            className={cn(
+              adminFieldClassName,
+              fieldErrors['estimated_minutes'] &&
+                'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+            )}
             value={document.estimated_minutes}
             onChange={(event) =>
               mutate((draft) => {
@@ -1867,6 +2027,7 @@ export function ContentTab(props: ContentTabProps) {
               })
             }
           />
+          <FieldError message={fieldErrors['estimated_minutes']?.message} />
         </label>
         <label className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="text-navy text-xs font-bold">
@@ -1984,6 +2145,9 @@ export function ContentTab(props: ContentTabProps) {
                 className="aspect-video w-full object-cover"
               />
               <div className="space-y-2 p-3">
+                <FieldError
+                  message={fieldErrors[`thumbnail_${index}`]?.message}
+                />
                 <input
                   id={`field-thumbnail-alt-${index}`}
                   className={cn(
@@ -2066,7 +2230,10 @@ export function ContentTab(props: ContentTabProps) {
         </div>
       </section>
 
-      <section className="border-border bg-card rounded-2xl border p-5">
+      <section
+        id="field-videos"
+        className="border-border bg-card rounded-2xl border p-5"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-navy font-extrabold">
@@ -2287,6 +2454,9 @@ export function ContentTab(props: ContentTabProps) {
                   {t('remove')}
                 </Button>
               </div>
+              <FieldError
+                message={fieldErrors[`section_${sectionIndex}_identity`]?.message}
+              />
               <label className="mt-4 flex flex-col gap-1.5">
                 <span className="text-navy text-xs font-bold">
                   {t('sectionTitle')}
@@ -2296,7 +2466,8 @@ export function ContentTab(props: ContentTabProps) {
                   id={`field-section-${sectionIndex}-title`}
                   className={cn(
                     adminFieldClassName,
-                    fieldErrors[`section_${sectionIndex}_title_${locale}`] &&
+                    (fieldErrors[`section_${sectionIndex}_title_${locale}`] ||
+                      fieldErrors[`section_${sectionIndex}_identity`]) &&
                       'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
                   )}
                   placeholder={
@@ -2402,6 +2573,12 @@ export function ContentTab(props: ContentTabProps) {
                     {t('choicesHelp')}
                   </span>
                 </div>
+                <FieldError
+                  message={
+                    fieldErrors[`section_${sectionIndex}_kc_identity`]?.message ||
+                    fieldErrors[`section_${sectionIndex}_kc_duplicate`]?.message
+                  }
+                />
 
                 <label className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
@@ -2417,7 +2594,9 @@ export function ContentTab(props: ContentTabProps) {
                     id={`field-section-${sectionIndex}-kc-question`}
                     className={cn(
                       adminFieldClassName,
-                      fieldErrors[`section_${sectionIndex}_kc_question_${locale}`] &&
+                      (fieldErrors[`section_${sectionIndex}_kc_question_${locale}`] ||
+                        fieldErrors[`section_${sectionIndex}_kc_identity`] ||
+                        fieldErrors[`section_${sectionIndex}_kc_duplicate`]) &&
                         'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
                     )}
                     placeholder={
@@ -2728,7 +2907,7 @@ export function ContentTab(props: ContentTabProps) {
                 draft.sources.push({
                   title: '',
                   publisher: '',
-                  url: 'https://',
+                  url: '',
                   accessed_at: new Date().toISOString(),
                 });
               });
