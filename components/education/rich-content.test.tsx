@@ -12,9 +12,21 @@ describe('normalizeRichTextDocument', () => {
     const document: RichTextDocument = {
       type: 'doc',
       content: [
-        { type: 'orderedList', content: [listItem('one')] },
-        { type: 'orderedList', content: [listItem('two')] },
-        { type: 'orderedList', content: [listItem('three')] },
+        {
+          type: 'orderedList',
+          attrs: { start: 1 },
+          content: [listItem('one')],
+        },
+        {
+          type: 'orderedList',
+          attrs: { start: 2 },
+          content: [listItem('two')],
+        },
+        {
+          type: 'orderedList',
+          attrs: { start: 3 },
+          content: [listItem('three')],
+        },
       ],
     };
 
@@ -24,7 +36,7 @@ describe('normalizeRichTextDocument', () => {
     expect(normalized.content?.[0].content).toHaveLength(3);
   });
 
-  it('keeps lists separated by content or an explicit start value', () => {
+  it('keeps lists separated by content even when their start values differ', () => {
     const document: RichTextDocument = {
       type: 'doc',
       content: [

@@ -37,7 +37,7 @@ function canMergeListNodes(
     return false;
   }
   if (current.type !== 'orderedList') return true;
-  return (current.attrs?.start ?? null) === (next.attrs?.start ?? null);
+  return (current.attrs?.type ?? null) === (next.attrs?.type ?? null);
 }
 
 /**
@@ -237,15 +237,22 @@ function renderNode(
           {children}
         </ul>
       );
-    case 'orderedList':
+    case 'orderedList': {
+      const rawStart = node.attrs?.start;
+      const listStart =
+        typeof rawStart === 'number' && Number.isInteger(rawStart)
+          ? rawStart
+          : undefined;
       return (
         <ol
           key={key}
+          start={listStart}
           className="marker:text-navy-light my-3 list-decimal space-y-1 pl-6 marker:font-semibold"
         >
           {children}
         </ol>
       );
+      }
     case 'listItem':
       return (
         <li key={key} className="my-1 [&>p]:my-0">
