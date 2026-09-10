@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, RefreshCw, Route, ScanSearch } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Reveal } from '@/components/common/Reveal';
 import { Link } from '@/i18n/routing';
@@ -15,9 +15,9 @@ const SUPPORTERS = [
 ] as const;
 
 const PROBLEMS = [
-  { key: 'problemPoint1' },
-  { key: 'problemPoint2' },
-  { key: 'problemPoint3' },
+  { key: 'problemPoint1', icon: RefreshCw, iconTone: 'bg-[#fff0f3] text-[#c8102e]' },
+  { key: 'problemPoint2', icon: ScanSearch, iconTone: 'bg-[#e3f7ff] text-[#1685a6]' },
+  { key: 'problemPoint3', icon: Route, iconTone: 'bg-[#e9eef6] text-navy' },
 ] as const;
 
 export function CrisisSection() {
@@ -78,23 +78,29 @@ export function CrisisSection() {
             </p>
           </Reveal>
 
-          <Reveal delay={0.1} className="overflow-hidden rounded-[1.75rem] border border-white bg-white p-4 shadow-soft sm:p-5">
+          <Reveal delay={0.1} className="overflow-hidden rounded-[2rem] border border-navy/[0.08] bg-white p-3 shadow-[0_28px_65px_-38px_rgba(22,41,76,0.4)] sm:p-4">
             <Image
-              src="/images/landing/generated-v3/problem-props.webp"
+              src="/images/landing/generated-v4/problem-static-block-bypass.webp"
               alt=""
               aria-hidden="true"
               width={1774}
               height={887}
               sizes="(max-width: 1024px) 100vw, 52vw"
-              className="aspect-[2/1] w-full rounded-[1.35rem] object-cover"
+              className="aspect-[2/1] w-full rounded-[1.5rem] object-cover"
             />
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {PROBLEMS.map(({ key }) => (
-                <div key={key} className="rounded-2xl bg-[#f4faff] p-4">
-                  <p className="mt-3 text-xs font-bold leading-5 text-navy">{t(key)}</p>
-                </div>
+            <ol className="mt-3 grid overflow-hidden rounded-[1.5rem] border border-navy/[0.08] bg-[#f7fbfe] divide-y divide-navy/[0.08] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              {PROBLEMS.map(({ key, icon: Icon, iconTone }, index) => (
+                <li key={key} className="flex min-h-36 flex-col p-4 sm:p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-black tracking-[0.16em] text-navy/30" aria-hidden="true">0{index + 1}</span>
+                    <span className={`flex size-9 items-center justify-center rounded-xl ${iconTone}`}>
+                      <Icon className="size-4" aria-hidden="true" />
+                    </span>
+                  </div>
+                  <p className="mt-4 text-xs font-bold leading-5 text-navy">{t(key)}</p>
+                </li>
               ))}
-            </div>
+            </ol>
           </Reveal>
         </div>
 

@@ -15,7 +15,7 @@ export function FinalCtaSection() {
       <SectionDecoration className="-left-6 bottom-10" tone="pink" />
       <SectionDecoration className="-right-6 top-8 -rotate-12" tone="sky" />
       <Reveal className="relative z-10 mx-auto grid max-w-[82rem] overflow-hidden rounded-[2.75rem] bg-[#f7fbfe] shadow-[0_28px_72px_-32px_rgba(22,41,76,0.38)] lg:grid-cols-[1.08fr_0.92fr]">
-        <div className="relative z-10 flex flex-col justify-center overflow-hidden bg-white/85 p-7 sm:p-10 lg:p-14">
+        <div className="relative z-10 flex flex-col justify-center overflow-hidden bg-white p-7 sm:p-10 lg:p-14">
           <div className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full bg-[#eaf8ff]" aria-hidden="true" />
           <div className="pointer-events-none absolute -bottom-16 -right-14 size-48 rotate-12 rounded-[2.5rem] border-[0.9rem] border-[#c8102e]/10" aria-hidden="true" />
 
@@ -41,18 +41,14 @@ export function FinalCtaSection() {
           </div>
         </div>
 
-        <div className="relative min-h-[28rem] overflow-hidden bg-gradient-to-br from-[#e8f8ff] via-[#d8f4ff] to-[#beeaff] lg:min-h-[38rem]">
-          <div className="marketing-dot-field pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
-          <div className="pointer-events-none absolute left-1/2 top-1/2 size-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky/45 sm:size-[28rem]" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-white/55" aria-hidden="true" />
-          <div className="pointer-events-none absolute bottom-8 left-1/2 h-10 w-[68%] -translate-x-1/2 rounded-[50%] bg-navy/15 blur-xl" aria-hidden="true" />
+        <div className="relative min-h-[28rem] overflow-hidden bg-white lg:min-h-[38rem]">
           <Image
-            src="/images/mascot/gami-wave.webp"
+            src="/images/landing/generated-v4/gami-wave-organic-boundary.webp"
             alt={t('ctaImageAlt')}
-            width={768}
-            height={768}
+            width={1254}
+            height={1254}
             sizes="(max-width: 1024px) 88vw, 40vw"
-            className="absolute bottom-3 left-1/2 z-10 h-[88%] w-auto max-w-[94%] -translate-x-1/2 object-contain drop-shadow-[0_24px_24px_rgba(22,41,76,0.2)] sm:h-[92%] lg:bottom-1"
+            className="absolute inset-0 size-full object-cover object-center"
           />
         </div>
       </Reveal>

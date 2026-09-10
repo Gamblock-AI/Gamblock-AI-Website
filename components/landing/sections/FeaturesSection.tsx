@@ -30,18 +30,18 @@ export function FeaturesSection() {
           <p className="mt-6 max-w-2xl text-base font-medium leading-7 text-navy/75">{t('featuresSubtitle')}</p>
         </Reveal>
 
-        <div className="mt-12 grid items-stretch gap-6 lg:grid-cols-[0.84fr_1.16fr]">
-          <Reveal className="relative min-h-[34rem] overflow-hidden rounded-[2.4rem] border border-navy/10 bg-white shadow-[0_24px_60px_rgba(20,52,100,0.14)]" y={38}>
+        <div className="mt-12 grid items-start gap-6 lg:grid-cols-[0.84fr_1.16fr]">
+          <Reveal className="relative min-h-[30rem] overflow-hidden rounded-[2.4rem] border border-navy/10 bg-gradient-to-br from-white via-[#e8f5ff] to-[#dff5ff] shadow-[0_24px_60px_rgba(20,52,100,0.14)] lg:h-[44rem] lg:min-h-0 xl:h-[40rem]" y={38}>
             <MascotFloat
-              src="/images/landing/generated-v4/gami-protection-presenter.webp"
+              src="/images/landing/generated-v4/gami-protection-support-minimal.webp"
               alt={t('f1Alt')}
-              width={1000}
-              height={1200}
+              width={1254}
+              height={1254}
               animate={false}
               parallax={0}
               sizes="(max-width: 1024px) 92vw, 40vw"
-              className="h-full"
-              imgClassName="h-full min-h-[34rem] w-full object-cover drop-shadow-none"
+              className="flex h-full items-end justify-center"
+              imgClassName="h-full min-h-0 w-full object-cover object-center drop-shadow-none"
             />
             <div className="absolute inset-x-5 bottom-5 rounded-2xl border border-navy/10 bg-white/90 p-4 backdrop-blur-md">
               <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.14em] text-[#c8102e]">{t('snapshotCardLabel')}</p>
@@ -49,10 +49,10 @@ export function FeaturesSection() {
             </div>
           </Reveal>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:h-[44rem] lg:grid-rows-2 xl:h-[40rem]">
             {FEATURES.map(({ kicker, title, body, tone }, index) => (
               <Reveal key={kicker} delay={0.05 * index} y={26}>
-                <article className={`group relative h-full min-h-60 overflow-hidden rounded-[1.75rem] border border-navy/10 p-6 transition-transform duration-300 hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none ${tone}`}>
+                <article className={`group relative h-full min-h-0 overflow-hidden rounded-[1.75rem] border border-navy/10 p-5 transition-transform duration-300 hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none ${tone}`}>
                   <div className="pointer-events-none absolute -right-12 -top-12 size-40 rounded-full border-[1rem] border-current opacity-10" aria-hidden="true" />
                   <div className="relative">
                     <div className="flex items-center justify-between gap-4">
