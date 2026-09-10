@@ -26,6 +26,49 @@ const DEFAULT_MEDIA_LABELS: MediaLabels = {
   pdfOpen: 'Open in a new tab',
 };
 
+function canMergeListNodes(
+  current: RichTextDocument,
+  next: RichTextDocument
+) {
+  if (
+    current.type !== next.type ||
+    (current.type !== 'bulletList' && current.type !== 'orderedList')
+  ) {
+    return false;
+  }
+  if (current.type !== 'orderedList') return true;
+  return (current.attrs?.start ?? null) === (next.attrs?.start ?? null);
+}
+
+/**
+ * Published documents can contain adjacent list nodes after content has been
+ * translated or normalized by an older editor. Browsers restart numbering for
+ * each <ol>, so combine adjacent lists of the same type before rendering.
+ */
+export function normalizeRichTextDocument(
+  document: RichTextDocument
+): RichTextDocument {
+  function normalizeNode(node: RichTextDocument): RichTextDocument {
+    if (!node.content) return node;
+    const normalizedContent = node.content.map(normalizeNode);
+    const content: RichTextDocument[] = [];
+    for (const child of normalizedContent) {
+      const previous = content[content.length - 1];
+      if (previous && canMergeListNodes(previous, child)) {
+        content[content.length - 1] = {
+          ...previous,
+          content: [...(previous.content ?? []), ...(child.content ?? [])],
+        };
+      } else {
+        content.push(child);
+      }
+    }
+    return { ...node, content };
+  }
+
+  return normalizeNode(document);
+}
+
 function markedText(node: RichTextDocument): ReactNode {
   let value: ReactNode = node.text ?? '';
   for (const mark of node.marks ?? []) {
@@ -252,9 +295,10 @@ export function RichContent({
   onMediaOpened?: (mediaID: string) => void;
   labels?: MediaLabels;
 }) {
+  const normalizedDocument = normalizeRichTextDocument(document);
   return (
     <div className="rich-content prose prose-slate prose-headings:text-navy prose-a:text-navy-light prose-blockquote:border-sky prose-blockquote:bg-azure/50 prose-blockquote:px-5 prose-blockquote:py-1 prose-blockquote:not-italic prose-li:marker:text-navy-light max-w-none">
-      {renderNode(document, 'root', mediaURLs, onMediaOpened, labels)}
+      {renderNode(normalizedDocument, 'root', mediaURLs, onMediaOpened, labels)}
     </div>
   );
 }
