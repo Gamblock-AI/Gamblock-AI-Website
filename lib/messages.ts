@@ -72,7 +72,8 @@ export const MESSAGES: Record<string, string> = {
   analytics_period_invalid: 'Periode analitik tidak valid.',
   protection_analytics_failed: 'Gagal memuat analitik perlindungan.',
   reminder_preference_load_failed: 'Preferensi pengingat belum dapat dimuat.',
-  reminder_preference_update_failed: 'Preferensi pengingat belum dapat disimpan.',
+  reminder_preference_update_failed:
+    'Preferensi pengingat belum dapat disimpan.',
   reminder_preference_invalid: 'Waktu atau zona waktu pengingat tidak valid.',
   push_subscription_invalid: 'Langganan notifikasi tidak valid.',
   push_subscription_update_failed: 'Langganan notifikasi belum dapat disimpan.',
@@ -215,6 +216,7 @@ export const MESSAGES: Record<string, string> = {
     'Status peluncuran rilis belum dapat diperbarui.',
   admin_overview_failed: 'Gagal memuat ringkasan operasional.',
   site_social_links_failed: 'Pengaturan sosial media belum dapat diproses.',
+  download_apps_failed: 'Informasi rilis aplikasi belum dapat diproses.',
   audit_events_failed: 'Gagal memuat jejak audit.',
   operators_fetch_failed: 'Gagal memuat akun operator.',
   operator_invite_failed: 'Undangan operator belum dapat dikirim.',
@@ -234,8 +236,7 @@ export const MESSAGES: Record<string, string> = {
   // translation (DeepSeek)
   translation_failed: 'Gagal menerjemahkan konten. Silakan coba lagi.',
   translation_invalid_input: 'Input translasi tidak valid.',
-  translation_unavailable:
-    'Layanan AI penerjemahan sedang tidak tersedia.',
+  translation_unavailable: 'Layanan AI penerjemahan sedang tidak tersedia.',
   translation_rate_limited:
     'Penerjemahan AI sedang sibuk, coba lagi dalam beberapa saat.',
 
@@ -337,8 +338,7 @@ const MESSAGES_EN: Record<string, string> = {
     'The recommendation was not found or does not belong to you.',
   spk_intervention_complete_failed:
     'The recommendation could not be marked as done.',
-  blocked_events_rejected:
-    'The device block-time data could not be accepted.',
+  blocked_events_rejected: 'The device block-time data could not be accepted.',
   spk_preference_invalid: 'The preference is invalid.',
 
   // daily reminder & web push

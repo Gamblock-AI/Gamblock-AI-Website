@@ -117,11 +117,13 @@ encrypted account workflow. Partner recovery/progress must use reviewed CMS
 guidance and consented aggregates, never student room, journal, mood, focus, or
 practice detail. Education audience checks remain server-authoritative.
 
-The public `/pkm` route may describe
-methods, milestones, limitations, and deliverable states, but report, video,
-article, and release links stay non-public until a real review/publication
-record exists. The page must never promote Phase 4 instrumentation into an
-evaluated result.
+The public `/pkm` route may describe methods, milestones, limitations, and
+deliverable states, but report, video, and article links stay non-public until
+a real review/publication record exists. Application download links may be
+public only after an official stable GitHub Release record exists and only via
+the backend-managed, checksum-bearing release catalog; never substitute debug,
+staging, unsigned, or third-party assets. The page must never promote Phase 4
+instrumentation into an evaluated result.
 
 Production Docker images receive `NEXT_PUBLIC_API_URL` and
 `NEXT_PUBLIC_APP_URL` at build time. CI deploys from `main` only when

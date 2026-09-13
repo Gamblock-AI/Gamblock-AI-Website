@@ -38,7 +38,7 @@
     "updated": "Pusat bantuan Gamblock-AI",
     "intro": "Temukan jawaban cepat seputar pemasangan, akun, privasi, dan fitur pendampingan Gamblock-AI.",
     "s1Title": "Memulai",
-    "s1Body": "Edisi Android publik dipasang melalui Google Play. Edisi Research Android dan Pilot Windows hanya dipasang oleh tim pada perangkat uji yang disetujui.\nSetelah membuat akun, ikuti disclosure Accessibility sebelum memilih apakah akan mengaktifkan proteksi browser, lalu tautkan Accountability Partner bila diperlukan.",
+    "s1Body": "Rilis stabil Android, Windows, dan ekstensi browser yang ditandai publik dapat diunduh dari halaman Unduhan. Gunakan hanya asset GitHub Release resmi yang tercantum beserta checksum-nya.\nSetelah membuat akun, ikuti disclosure Accessibility sebelum memilih apakah akan mengaktifkan proteksi browser, lalu tautkan Accountability Partner bila diperlukan.",
     "s2Title": "Akun & Masuk",
     "s2Body": "Gunakan email terdaftar untuk masuk. Lupa kata sandi? Gunakan tautan \"Lupa kata sandi\" di halaman masuk untuk mengatur ulang.\nSatu akun Member terhubung ke satu grup pendamping pada satu waktu.",
     "s3Title": "Privasi & Keamanan",
@@ -66,13 +66,13 @@
     "updated": "Android publik dan pilot perangkat terkontrol",
     "intro": "Gamblock-AI berjalan sebagai layanan latar belakang yang ringan. Sebagai prototipe akademis, distribusi masih dalam tahap terbatas.",
     "s1Title": "Android",
-    "s1Body": "Edisi Android publik akan tersedia hanya melalui Google Play setelah lolos peninjauan. Accessibility Service bersifat opt-in dan digunakan untuk pemrosesan lokal pada Chrome/Edge yang didukung.\nAPK Research bukan unduhan publik dan hanya dipasang dengan bantuan tim pada perangkat pilot.",
+    "s1Body": "APK Android rilis stabil tersedia sebagai asset GitHub Release resmi ketika ditandai publik pada halaman Unduhan. Accessibility Service bersifat opt-in dan digunakan untuk pemrosesan lokal pada Chrome/Edge yang didukung.\nJangan memasang build debug, staging, unsigned, atau asset dari sumber lain.",
     "s2Title": "Windows",
-    "s2Body": "Klien Windows Pilot berjalan sebagai LocalSystem Service dengan SCM recovery dan dipasang melalui MSI bertanda tangan pada PC/VM uji terkontrol.\nInstaller Windows tidak dirilis untuk publik pada fase ini dan tidak boleh digantikan dengan ZIP atau script pemasangan manual.",
+    "s2Body": "Klien Windows Pilot berjalan sebagai LocalSystem Service dengan SCM recovery dan dipasang melalui MSI rilis stabil dari GitHub Release resmi.\nJangan mengganti installer tersebut dengan ZIP atau script pemasangan manual. Ekstensi browser dipasang dari ZIP rilis resminya dan tetap hanya menjadi sensor pasif yang terhubung ke Windows Service lokal.",
     "s3Title": "Kebutuhan Sistem",
     "s3Body": "Android 8.0+ atau Windows 10/11. Model AI berukuran di bawah 5 MB sehingga ringan di perangkat.\nKoneksi internet tidak wajib karena pemblokiran bekerja secara lokal (offline).",
     "s4Title": "Status Rilis",
-    "s4Body": "Gamblock-AI masih berstatus prototipe PKM-KC 2026. Ketersediaan Android publik bergantung pada peninjauan Google Play; cohort Research/Windows dibatasi pada peserta yang telah menyelesaikan persetujuan riset.\nTidak ada build debug atau unsigned yang dipublikasikan sebagai rilis pengguna."
+    "s4Body": "Gamblock-AI masih berstatus prototipe PKM-KC 2026. Katalog Unduhan dapat mempublikasikan rilis stabil Android, Windows, dan ekstensi browser yang memiliki asset GitHub Release resmi serta checksum SHA-256.\nTidak ada build debug, staging, atau unsigned yang dipublikasikan sebagai rilis pengguna."
   },
   "postIntervention": {
     "eyebrow": "Jeda yang aman",

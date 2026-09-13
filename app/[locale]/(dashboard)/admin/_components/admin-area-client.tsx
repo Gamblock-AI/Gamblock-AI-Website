@@ -13,6 +13,7 @@ import {
   FileText,
   GraduationCap,
   KeyRound,
+  PackageCheck,
   Settings2,
   Tickets,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ import { EmergencyTab } from './emergency-tab';
 import { PlatformTab } from './platform-tab';
 import { SupportTab } from './support-tab';
 import { DataRequestsTab } from './data-requests-tab';
+import { ReleasesTab } from './releases-tab';
 
 type AdminPageArea = Exclude<AdminArea, 'overview' | 'all'>;
 
@@ -71,11 +73,17 @@ export function AdminAreaClient({
                   description: t('emergencyDescription'),
                   icon: KeyRound,
                 }
-              : {
-                  title: t('tabPlatform'),
-                  description: t('platformDescription'),
-                  icon: Settings2,
-                };
+              : area === 'releases'
+                ? {
+                    title: t('tabReleases'),
+                    description: t('releasesDescription'),
+                    icon: PackageCheck,
+                  }
+                : {
+                    title: t('tabPlatform'),
+                    description: t('platformDescription'),
+                    icon: Settings2,
+                  };
 
   return (
     <DashboardPage density="compact" className="max-w-none">
@@ -153,6 +161,11 @@ export function AdminAreaClient({
           keyLoading={operations.keyLoading}
           clearEmergencyKey={operations.clearEmergencyKey}
           approveEmergencyKey={operations.approveEmergencyKey}
+        />
+      ) : area === 'releases' ? (
+        <ReleasesTab
+          apps={operations.downloadApps}
+          updateDownloadApp={operations.updateDownloadApp}
         />
       ) : (
         <PlatformTab

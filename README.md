@@ -182,9 +182,11 @@ separate, explicit sharing design before it is available. See `docs/ai/README.md
 
 The public `/pkm` route presents project method, milestone, evidence maturity,
 privacy/ethical safeguards, limitations, and the six Phase 5 output states.
-Draft reports, the video, article, and release artifacts are not exposed as
-approved downloads until their external review/submission/publication records
-exist. The landing footer provides the discoverable link.
+Draft reports, the video, and article are not exposed as approved downloads
+until their external review/submission/publication records exist. Separately,
+the landing download cards use the backend-managed public release catalog:
+only stable, official GitHub Release assets with a recorded SHA-256 checksum
+may be published. The landing footer provides the discoverable link.
 
 ## Error surfaces
 
@@ -265,10 +267,11 @@ students preview and explicitly confirm one active membership, then control
 category-specific aggregate sharing and safe exit. Students initiate protection
 pause/removal requests in the native client; the website remains the scoped
 partner decision and history surface. The unified `admin` operations panel
-provides separate Content, Learning Hub, Tickets, Emergency Access, and Platform
-destinations for revision/rollback authoring, claim-owned support replies,
-eligible data-request actions, direct three-role account provisioning, safe
-social links, audit history, and audited emergency access. Admins do not
+provides separate Content, Learning Hub, Tickets, Releases, Emergency Access,
+and Platform destinations for revision/rollback authoring, claim-owned support
+replies, eligible data-request actions, direct three-role account provisioning,
+safe social links, audited release metadata, audit history, and audited
+emergency access. Admins do not
 use the requester `/support` surface. Enabled non-null social links
 are rendered in the landing footer; empty settings produce no icon.
 

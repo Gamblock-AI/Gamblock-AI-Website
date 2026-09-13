@@ -25,6 +25,7 @@ export const ROUTES = {
   ADMIN_DATA_REQUESTS: '/admin/data-requests',
   ADMIN_EMERGENCY: '/admin/emergency',
   ADMIN_PLATFORM: '/admin/platform',
+  ADMIN_RELEASES: '/admin/releases',
   PARTNERS: '/partners',
   ACCOUNTABILITY: '/accountability',
   DATA_REQUESTS: '/data-requests',

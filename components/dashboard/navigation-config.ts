@@ -12,6 +12,7 @@ import {
   KeyRound,
   LayoutDashboard,
   NotebookPen,
+  PackageCheck,
   Settings2,
   Tickets,
   UsersRound,
@@ -37,7 +38,8 @@ export type DashboardNavKey =
   | 'adminTickets'
   | 'adminDataRequests'
   | 'adminEmergency'
-  | 'adminPlatform';
+  | 'adminPlatform'
+  | 'adminReleases';
 
 export interface DashboardNavItem {
   href: string;
@@ -157,6 +159,12 @@ export const dashboardNavigationGroups: readonly DashboardNavGroup[] = [
         href: ROUTES.ADMIN_PLATFORM,
         labelKey: 'adminPlatform',
         icon: Settings2,
+        roles: ['admin'],
+      },
+      {
+        href: ROUTES.ADMIN_RELEASES,
+        labelKey: 'adminReleases',
+        icon: PackageCheck,
         roles: ['admin'],
       },
     ],

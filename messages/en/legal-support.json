@@ -38,7 +38,7 @@
     "updated": "Gamblock-AI help center",
     "intro": "Find quick answers about installation, accounts, privacy, and the accountability features of Gamblock-AI.",
     "s1Title": "Getting Started",
-    "s1Body": "Install the public Android edition through Google Play. The Android Research and Windows Pilot editions are installed only by the team on approved test devices.\nAfter creating an account, read the Accessibility disclosure before choosing whether to enable browser protection, then link an Accountability Partner when needed.",
+    "s1Body": "Publicly marked stable Android, Windows, and browser-extension releases can be downloaded from the Downloads page. Use only the listed official GitHub Release assets and their checksums.\nAfter creating an account, read the Accessibility disclosure before choosing whether to enable browser protection, then link an Accountability Partner when needed.",
     "s2Title": "Account & Sign-in",
     "s2Body": "Use your registered email to sign in. Forgot your password? Use the \"Forgot password\" link on the sign-in page to reset it.\nOne Member account links to one partner group at a time.",
     "s3Title": "Privacy & Security",
@@ -66,13 +66,13 @@
     "updated": "Public Android and controlled-device pilots",
     "intro": "Gamblock-AI runs as a lightweight background service. As an academic prototype, distribution is still limited.",
     "s1Title": "Android",
-    "s1Body": "The public Android edition will be available only through Google Play after review. Its opt-in Accessibility Service performs local processing on supported Chrome/Edge surfaces.\nThe Research APK is not a public download and is installed with team assistance only on pilot devices.",
+    "s1Body": "A stable Android APK is available as an official GitHub Release asset when it is marked public on the Downloads page. Its opt-in Accessibility Service performs local processing on supported Chrome/Edge surfaces.\nDo not install debug, staging, unsigned, or third-party assets.",
     "s2Title": "Windows",
-    "s2Body": "The Windows Pilot client runs as a LocalSystem Service with SCM recovery and is installed through a signed MSI on controlled test PCs/VMs.\nThe Windows installer is not publicly released in this phase and must not be replaced with a ZIP or a manual installation script.",
+    "s2Body": "The Windows Pilot client runs as a LocalSystem Service with SCM recovery and is installed through its stable MSI from the official GitHub Release.\nDo not replace the installer with a ZIP or a manual installation script. The browser extension is installed from its official release ZIP and remains only a passive sensor connected to the local Windows Service.",
     "s3Title": "System Requirements",
     "s3Body": "Android 8.0+ or Windows 10/11. The AI model is under 5 MB, so it stays light on the device.\nAn internet connection isn't required since blocking works locally (offline).",
     "s4Title": "Release Status",
-    "s4Body": "Gamblock-AI remains a PKM-KC 2026 prototype. Public Android availability depends on Google Play review; the Research/Windows cohort is limited to participants who complete research consent.\nNo debug or unsigned build is published as an end-user release."
+    "s4Body": "Gamblock-AI remains a PKM-KC 2026 prototype. The Downloads catalog may publish stable Android, Windows, and browser-extension releases that have an official GitHub Release asset and SHA-256 checksum.\nNo debug, staging, or unsigned build is published as an end-user release."
   },
   "postIntervention": {
     "eyebrow": "A safe pause",
