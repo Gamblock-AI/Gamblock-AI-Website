@@ -1,27 +1,29 @@
 import { cn } from '@/lib/utils';
 
 type SectionTransitionTone =
+  | 'pale-to-team'
+  | 'team-to-pale'
   | 'light-to-dark'
   | 'dark-to-pale'
   | 'pale-to-light'
   | 'light-to-team'
-  | 'team-to-light'
-  | 'team-to-pale';
+  | 'team-to-light';
 
 const TONE_CLASSES: Record<SectionTransitionTone, string> = {
-  'light-to-dark': 'from-white via-white/70 to-[#0b1730]',
-  'dark-to-pale': 'from-[#0b1730] via-[#132c52] to-[#f4faff]',
-  'pale-to-light': 'from-[#f4faff] via-[#f4faff]/75 to-white',
-  'light-to-team': 'from-white via-[#e8f5ff]/75 to-[#e8f5ff]',
-  'team-to-light': 'from-[#e8f5ff] via-[#e8f5ff]/75 to-white',
-  'team-to-pale': 'from-[#e8f5ff] via-[#e5f4ff]/80 to-[#f4faff]',
+  'pale-to-team': 'from-[#f4faff] to-transparent',
+  'team-to-pale': 'from-[#d8edff] to-transparent',
+  'light-to-team': 'from-[#f4faff] to-transparent',
+  'team-to-light': 'from-[#d8edff] to-transparent',
+  'pale-to-light': 'from-[#f4faff] to-transparent',
+  'light-to-dark': 'from-[#f4faff] via-[#f4faff]/70 to-[#0b1730]',
+  'dark-to-pale': 'from-[#081a39] via-[#081a39]/80 to-transparent',
 };
 
 export function SectionTransition({ tone, className }: { tone: SectionTransitionTone; className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn('pointer-events-none absolute inset-x-0 top-0 z-0 h-20 bg-gradient-to-b', TONE_CLASSES[tone], className)}
+      className={cn('pointer-events-none absolute inset-x-0 top-0 z-0 h-28 bg-gradient-to-b', TONE_CLASSES[tone], className)}
     />
   );
 }

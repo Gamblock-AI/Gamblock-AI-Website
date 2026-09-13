@@ -9,6 +9,7 @@ import { CrisisSection } from '@/components/landing/sections/CrisisSection';
 import { FeaturesSection } from '@/components/landing/sections/FeaturesSection';
 import { HowItWorksSection } from '@/components/landing/sections/HowItWorksSection';
 import { TechnologySection } from '@/components/landing/sections/TechnologySection';
+import { DownloadSection } from '@/components/landing/sections/DownloadSection';
 import { TeamSection } from '@/components/landing/sections/TeamSection';
 import { FaqSection } from '@/components/landing/sections/FaqSection';
 import { FinalCtaSection } from '@/components/landing/sections/FinalCtaSection';
@@ -132,6 +133,7 @@ export default async function LandingPage({
           <FeaturesSection />
           <HowItWorksSection />
           <TechnologySection />
+          <DownloadSection />
           <TeamSection />
           <FaqSection />
           <FinalCtaSection />

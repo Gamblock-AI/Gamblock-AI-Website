@@ -29,7 +29,7 @@ export function CrisisSection() {
   ] as const;
 
   return (
-    <section id="dampak" className="relative overflow-hidden bg-white px-4 py-24 sm:px-6 md:px-10 md:py-32">
+    <section id="dampak" className="relative overflow-hidden bg-[#f4faff] px-4 py-24 sm:px-6 md:px-10 md:py-32">
       <div className="pointer-events-none absolute -left-32 top-20 size-[28rem] rounded-full bg-sky/10 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -right-16 top-1/3 size-36 rounded-full border-[1.2rem] border-azure/80" aria-hidden="true" />
       <SectionDecoration className="right-[9%] top-24" tone="pink" />

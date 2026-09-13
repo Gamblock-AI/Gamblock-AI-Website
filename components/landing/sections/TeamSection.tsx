@@ -22,8 +22,8 @@ export function TeamSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <section id="tim" className="relative overflow-hidden bg-[#e8f5ff] px-4 py-24 sm:px-6 md:px-10 md:py-32">
-      <SectionTransition tone="light-to-team" />
+    <section id="tim" className="relative overflow-hidden bg-[#d8edff] px-4 py-24 sm:px-6 md:px-10 md:py-32">
+      <SectionTransition tone="pale-to-team" />
       <SectionDecoration className="right-[8%] top-24" tone="white" />
       <SectionDecoration className="bottom-24 left-[5%] -rotate-12" tone="navy" size="md" />
       <div className="relative z-10 mx-auto max-w-[82rem]">

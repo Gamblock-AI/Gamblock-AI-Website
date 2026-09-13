@@ -16,6 +16,7 @@ const NAV_LINKS = [
   { href: `${ROUTES.HOME}#fitur`, key: 'features' },
   { href: `${ROUTES.HOME}#cara-kerja`, key: 'howItWorks' },
   { href: `${ROUTES.HOME}#teknologi`, key: 'technology' },
+  { href: `${ROUTES.HOME}#unduh`, key: 'download' },
   { href: `${ROUTES.HOME}#tim`, key: 'team' },
 ] as const;
 

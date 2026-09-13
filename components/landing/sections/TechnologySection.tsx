@@ -23,8 +23,8 @@ export function TechnologySection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <section id="teknologi" className="relative overflow-hidden bg-white px-4 py-24 sm:px-6 md:px-10 md:py-32">
-      <SectionTransition tone="pale-to-light" />
+    <section id="teknologi" className="relative overflow-hidden bg-[#d8edff] px-4 py-24 sm:px-6 md:px-10 md:py-32">
+      <SectionTransition tone="pale-to-team" />
       <div className="pointer-events-none absolute -right-40 top-12 size-[34rem] rounded-full bg-[#e2f3ff]" aria-hidden="true" />
       <div className="marketing-dot-field pointer-events-none absolute bottom-0 left-0 h-1/2 w-1/3 opacity-45" aria-hidden="true" />
       <SectionDecoration className="left-[8%] top-28" tone="pink" size="md" />
@@ -47,7 +47,7 @@ export function TechnologySection() {
         <div className="mt-10 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {METRICS.map(([value, label], index) => (
             <Reveal key={label} delay={index * 0.05}>
-              <div className={`h-full rounded-[1.5rem] border p-5 ${index === 3 ? 'border-navy bg-navy text-white' : 'border-navy/10 bg-[#f4faff] text-navy'}`}>
+              <div className={`h-full rounded-[1.5rem] border p-5 ${index === 3 ? 'border-navy bg-navy text-white shadow-card' : 'border-navy/10 bg-white text-navy shadow-sm'}`}>
                 <p className={`text-2xl font-extrabold tracking-tight md:text-3xl ${index === 3 ? 'text-sky' : index === 1 ? 'text-[#c8102e]' : ''}`}>{t(value)}</p>
                 <p className={`mt-2 text-xs font-semibold leading-5 ${index === 3 ? 'text-white/65' : 'text-navy/55'}`}>{t(label)}</p>
               </div>
@@ -68,7 +68,7 @@ export function TechnologySection() {
             </ul>
           </Reveal>
 
-          <Reveal delay={0.08} className="relative overflow-hidden rounded-[2.25rem] border border-navy/10 bg-[#eef8ff] p-7 shadow-soft sm:p-9">
+          <Reveal delay={0.08} className="relative overflow-hidden rounded-[2.25rem] border border-navy/10 bg-white p-7 shadow-card sm:p-9">
             <div className="pointer-events-none absolute -right-16 -top-16 size-52 rounded-full bg-sky/20" aria-hidden="true" />
             <p className="text-label relative mt-8 text-[#c8102e]">{t('accountDataLabel')}</p>
             <h3 className="relative mt-3 text-2xl font-extrabold leading-tight text-navy">{t('techCard2Title')}</h3>

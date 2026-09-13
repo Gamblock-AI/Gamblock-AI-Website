@@ -54,7 +54,7 @@ export function HowItWorksSection() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex min-h-10 items-center gap-2 rounded-full bg-azure px-4 text-sm font-bold text-navy"><Smartphone className="size-4" aria-hidden="true" />{t('platformAndroid')}</span>
             <span className="inline-flex min-h-10 items-center gap-2 rounded-full bg-azure px-4 text-sm font-bold text-navy"><Monitor className="size-4" aria-hidden="true" />{t('platformWindows')}</span>
-            <Link href={ROUTES.DOWNLOAD} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#c8102e] px-5 text-sm font-bold text-white outline-none transition-colors hover:bg-[#da1c3a] focus-visible:ring-2 focus-visible:ring-[#c8102e]/40 focus-visible:ring-offset-2">
+            <Link href={`${ROUTES.HOME}#unduh`} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#c8102e] px-5 text-sm font-bold text-white outline-none transition-colors hover:bg-[#da1c3a] focus-visible:ring-2 focus-visible:ring-[#c8102e]/40 focus-visible:ring-offset-2">
               {t('linkDownload')}<ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </div>

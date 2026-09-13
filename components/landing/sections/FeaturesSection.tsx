@@ -15,8 +15,8 @@ export function FeaturesSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <section id="fitur" className="relative isolate overflow-hidden bg-[#e8f5ff] px-4 py-28 text-navy sm:px-6 md:px-10 md:py-36">
-      <SectionTransition tone="light-to-team" />
+    <section id="fitur" className="relative isolate overflow-hidden bg-[#d8edff] px-4 py-28 text-navy sm:px-6 md:px-10 md:py-36">
+      <SectionTransition tone="pale-to-team" />
       <div className="pointer-events-none absolute -left-48 top-1/3 size-[34rem] rounded-full bg-sky/20 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -right-36 top-20 size-[30rem] rounded-full border border-sky/15" aria-hidden="true" />
       <div className="marketing-dot-field pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-20" aria-hidden="true" />
@@ -31,7 +31,7 @@ export function FeaturesSection() {
         </Reveal>
 
         <div className="mt-12 grid items-start gap-6 lg:grid-cols-[0.84fr_1.16fr]">
-          <Reveal className="relative min-h-[30rem] overflow-hidden rounded-[2.4rem] border border-navy/10 bg-gradient-to-br from-white via-[#e8f5ff] to-[#dff5ff] shadow-[0_24px_60px_rgba(20,52,100,0.14)] lg:h-[44rem] lg:min-h-0 xl:h-[40rem]" y={38}>
+          <Reveal className="relative min-h-[30rem] overflow-hidden rounded-[2.4rem] border border-navy/10 bg-gradient-to-br from-white via-[#d8edff] to-[#dff5ff] shadow-[0_24px_60px_rgba(20,52,100,0.14)] lg:h-[44rem] lg:min-h-0 xl:h-[40rem]" y={38}>
             <MascotFloat
               src="/images/landing/generated-v4/gami-protection-support-minimal.webp"
               alt={t('f1Alt')}

@@ -16,8 +16,8 @@ const FAQS = [
 export function FaqSection() {
   const t = useTranslations('LandingPage');
   return (
-    <section id="faq" className="relative overflow-hidden bg-white px-4 py-24 sm:px-6 md:px-10 md:py-32">
-      <SectionTransition tone="team-to-light" />
+    <section id="faq" className="relative overflow-hidden bg-[#f4faff] px-4 py-24 sm:px-6 md:px-10 md:py-32">
+      <SectionTransition tone="team-to-pale" />
       <div className="pointer-events-none absolute -left-28 bottom-0 size-[28rem] rounded-full bg-sky/20" aria-hidden="true" />
       <SectionDecoration className="right-[7%] top-20" tone="pink" />
       <SectionDecoration className="left-[12%] top-40 -rotate-12" tone="sky" size="md" />
@@ -27,7 +27,7 @@ export function FaqSection() {
           <h2 className="marketing-display mt-4 text-4xl text-navy md:text-6xl">{t('faqTitle')}</h2>
           <p className="mt-6 text-base font-medium leading-7 text-navy/75">{t('trustLabel')}</p>
         </div>
-        <Accordion className="rounded-[2rem] bg-[#f4faff] p-2 shadow-[0_18px_45px_rgba(20,52,100,0.12)] sm:p-4">
+        <Accordion className="rounded-[2rem] border border-navy/10 bg-white p-2 shadow-card sm:p-4">
           {FAQS.map(({ q, a }, index) => (
             <AccordionItem key={q} value={q} className="border-navy/10 px-3 sm:px-4">
               <AccordionTrigger className="gap-4 py-5 text-left text-base font-extrabold text-navy hover:no-underline hover:text-[#c8102e] aria-expanded:text-[#c8102e]">

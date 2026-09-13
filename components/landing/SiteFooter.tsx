@@ -72,7 +72,7 @@ export function SiteFooter({ homepage = false }: { homepage?: boolean }) {
     <footer className={`bg-footer-navy relative overflow-hidden text-white ${homepage ? 'pt-8' : ''}`}>
       {homepage ? (
         <>
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white via-white/55 to-transparent" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#d8edff] to-transparent" aria-hidden="true" />
           <div className="pointer-events-none absolute -right-20 top-28 size-72 rounded-full border-[1.4rem] border-sky/10" aria-hidden="true" />
         </>
       ) : (

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/common/Reveal';
 import { SectionDecoration } from '@/components/landing/SectionDecoration';
+import { SectionTransition } from '@/components/landing/SectionTransition';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/routes';
 
@@ -11,7 +12,8 @@ export function FinalCtaSection() {
   const t = useTranslations('LandingPage');
 
   return (
-    <section className="relative overflow-hidden bg-white px-4 pb-24 pt-4 sm:px-6 md:px-10 md:pb-32">
+    <section className="relative overflow-hidden bg-[#d8edff] px-4 pb-24 pt-16 sm:px-6 md:px-10 md:pb-32 md:pt-20">
+      <SectionTransition tone="pale-to-team" />
       <SectionDecoration className="-left-6 bottom-10" tone="pink" />
       <SectionDecoration className="-right-6 top-8 -rotate-12" tone="sky" />
       <Reveal className="relative z-10 mx-auto grid max-w-[82rem] overflow-hidden rounded-[2.75rem] bg-[#f7fbfe] shadow-[0_28px_72px_-32px_rgba(22,41,76,0.38)] lg:grid-cols-[1.08fr_0.92fr]">
