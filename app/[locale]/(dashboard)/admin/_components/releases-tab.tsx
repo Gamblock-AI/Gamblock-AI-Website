@@ -5,28 +5,219 @@ import { Download, Plus, Save, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { FieldError } from '@/components/common/form-field';
 import type { AdminDownloadApp } from '@/hooks/use-admin-operations';
 import type {
   DownloadAsset,
   DownloadPlatform,
   LocalizedText,
 } from '@/hooks/use-public-download-apps';
-import { toastError, toastSuccess } from '@/lib/feedback';
+import { errorCode } from '@/lib/messages';
+import { reportDevelopmentError } from '@/lib/diagnostics';
+import { toastError, toastSuccess, toastValidationError } from '@/lib/feedback';
+import { cn } from '@/lib/utils';
 import { AdminFormField, adminFieldClassName } from './admin-shared';
 
 function cloneApp(app: AdminDownloadApp): AdminDownloadApp {
   return JSON.parse(JSON.stringify(app)) as AdminDownloadApp;
 }
 
+type ReleaseValidationErrors = Record<string, string>;
+type ReleaseTranslator = ReturnType<typeof useTranslations>;
+
+const stableVersionPattern = /^v?\d+\.\d+\.\d+(?:\+[0-9A-Za-z.-]+)?$/;
+const assetIDPattern = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+const sha256Pattern = /^[a-f0-9]{64}$/;
+
+function releaseFieldClass(error?: string) {
+  return cn(
+    adminFieldClassName,
+    error &&
+      'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+  );
+}
+
+function addLocalizedValidationErrors(
+  errors: ReleaseValidationErrors,
+  key: string,
+  value: LocalizedText,
+  label: string,
+  limit: number,
+  t: ReleaseTranslator
+) {
+  const fields = [
+    { locale: 'id', label: t('languageIndonesian'), value: value.id },
+    { locale: 'en', label: t('languageEnglish'), value: value.en },
+  ] as const;
+  for (const field of fields) {
+    const fieldKey = `${key}.${field.locale}`;
+    const fieldLabel = `${label} — ${field.label}`;
+    if (!field.value.trim()) {
+      errors[fieldKey] = t('releaseValidationRequired', { field: fieldLabel });
+    } else if (field.value.length > limit) {
+      errors[fieldKey] = t('releaseValidationMaxLength', {
+        field: fieldLabel,
+        limit,
+      });
+    }
+  }
+}
+
+function validateReleaseDraft(
+  app: AdminDownloadApp,
+  reason: string,
+  t: ReleaseTranslator
+): ReleaseValidationErrors {
+  const errors: ReleaseValidationErrors = {};
+  const version = app.version.trim();
+  if (!version || version.length > 40 || !stableVersionPattern.test(version)) {
+    errors.version = t('releaseValidationVersion');
+  }
+
+  addLocalizedValidationErrors(
+    errors,
+    'eyebrow',
+    app.eyebrow,
+    t('releaseEyebrow'),
+    600,
+    t
+  );
+  addLocalizedValidationErrors(
+    errors,
+    'title',
+    app.title,
+    t('releaseTitle'),
+    600,
+    t
+  );
+  addLocalizedValidationErrors(
+    errors,
+    'description',
+    app.description,
+    t('releaseDescription'),
+    600,
+    t
+  );
+  addLocalizedValidationErrors(
+    errors,
+    'requirements',
+    app.requirements,
+    t('releaseRequirements'),
+    600,
+    t
+  );
+  addLocalizedValidationErrors(
+    errors,
+    'architecture',
+    app.architecture,
+    t('releaseArchitecture'),
+    600,
+    t
+  );
+
+  if (app.features.length < 1 || app.features.length > 4) {
+    errors.features = t('releaseValidationFeatureCount');
+  }
+  app.features.forEach((feature, index) => {
+    addLocalizedValidationErrors(
+      errors,
+      `feature-${index}`,
+      feature,
+      `${t('releaseFeature')} ${index + 1}`,
+      180,
+      t
+    );
+  });
+
+  if (app.assets.length < 1 || app.assets.length > 4) {
+    errors.assets = t('releaseValidationAssetCount');
+  }
+  const seenIDs = new Set<string>();
+  let primaryCount = 0;
+  app.assets.forEach((asset, index) => {
+    const assetKey = `asset-${index}`;
+    const assetNumber = index + 1;
+    const assetID = asset.id.trim().toLowerCase();
+    if (!assetIDPattern.test(assetID) || seenIDs.has(assetID)) {
+      errors[`${assetKey}.id`] = t('releaseValidationAssetId', {
+        index: assetNumber,
+      });
+    }
+    seenIDs.add(assetID);
+
+    const fileName = asset.file_name.trim();
+    if (
+      !fileName ||
+      fileName.length > 180 ||
+      fileName.includes('/') ||
+      fileName.includes('\\')
+    ) {
+      errors[`${assetKey}.file_name`] = t('releaseValidationFileName', {
+        index: assetNumber,
+      });
+    }
+
+    addLocalizedValidationErrors(
+      errors,
+      `${assetKey}.label`,
+      asset.label,
+      `${t('releaseAssetLabel')} ${assetNumber}`,
+      100,
+      t
+    );
+
+    try {
+      const parsed = new URL(asset.url.trim());
+      if (parsed.protocol !== 'https:' || parsed.hostname !== 'github.com') {
+        throw new Error('invalid release URL');
+      }
+    } catch {
+      if (!errors[`${assetKey}.url`]) {
+        errors[`${assetKey}.url`] = t('releaseValidationUrl');
+      }
+    }
+
+    if (!Number.isSafeInteger(asset.size_bytes) || asset.size_bytes <= 0) {
+      errors[`${assetKey}.size_bytes`] = t('releaseValidationSize', {
+        index: assetNumber,
+      });
+    }
+    if (!sha256Pattern.test(asset.sha256.trim().toLowerCase())) {
+      errors[`${assetKey}.sha256`] = t('releaseValidationChecksum', {
+        index: assetNumber,
+      });
+    }
+    if (asset.primary) primaryCount += 1;
+  });
+
+  if (primaryCount !== 1) {
+    errors.primary = t('releaseValidationPrimary');
+  }
+  if (
+    (app.platform === 'android' || app.platform === 'windows') &&
+    app.assets.length !== 1
+  ) {
+    errors.assets = t('releaseValidationSingleAsset');
+  }
+  if (!reason.trim()) {
+    errors.reason = t('releaseValidationReason');
+  }
+  return errors;
+}
+
 function LocalizedFields({
   value,
   onChange,
   label,
+  fieldKey,
+  errors,
   multiline = false,
 }: {
   value: LocalizedText;
   onChange: (value: LocalizedText) => void;
   label: string;
+  fieldKey: string;
+  errors?: { id?: string; en?: string };
   multiline?: boolean;
 }) {
   const t = useTranslations('adminPage');
@@ -35,34 +226,40 @@ function LocalizedFields({
       <AdminFormField label={`${label} — ${t('languageIndonesian')}`} required>
         {multiline ? (
           <textarea
-            className={adminFieldClassName}
+            className={releaseFieldClass(errors?.id)}
             value={value.id}
+            aria-invalid={Boolean(errors?.id)}
             onChange={(event) => onChange({ ...value, id: event.target.value })}
             rows={3}
           />
         ) : (
           <input
-            className={adminFieldClassName}
+            className={releaseFieldClass(errors?.id)}
             value={value.id}
+            aria-invalid={Boolean(errors?.id)}
             onChange={(event) => onChange({ ...value, id: event.target.value })}
           />
         )}
+        <FieldError id={`${fieldKey}-id-error`} message={errors?.id} />
       </AdminFormField>
       <AdminFormField label={`${label} — ${t('languageEnglish')}`} required>
         {multiline ? (
           <textarea
-            className={adminFieldClassName}
+            className={releaseFieldClass(errors?.en)}
             value={value.en}
+            aria-invalid={Boolean(errors?.en)}
             onChange={(event) => onChange({ ...value, en: event.target.value })}
             rows={3}
           />
         ) : (
           <input
-            className={adminFieldClassName}
+            className={releaseFieldClass(errors?.en)}
             value={value.en}
+            aria-invalid={Boolean(errors?.en)}
             onChange={(event) => onChange({ ...value, en: event.target.value })}
           />
         )}
+        <FieldError id={`${fieldKey}-en-error`} message={errors?.en} />
       </AdminFormField>
     </div>
   );
@@ -83,9 +280,19 @@ function ReleaseEditor({
   const [draft, setDraft] = useState(() => cloneApp(app));
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
+  const [validationErrors, setValidationErrors] =
+    useState<ReleaseValidationErrors>({});
+
+  const updateDraft = (
+    updater: (current: AdminDownloadApp) => AdminDownloadApp
+  ) => {
+    setValidationErrors({});
+    setDraft(updater);
+  };
+  const fieldError = (key: string) => validationErrors[key];
 
   const setAsset = (index: number, next: DownloadAsset) => {
-    setDraft((current) => ({
+    updateDraft((current) => ({
       ...current,
       assets: current.assets.map((asset, itemIndex) =>
         itemIndex === index ? next : asset
@@ -93,7 +300,7 @@ function ReleaseEditor({
     }));
   };
   const setFeature = (index: number, next: LocalizedText) => {
-    setDraft((current) => ({
+    updateDraft((current) => ({
       ...current,
       features: current.features.map((feature, itemIndex) =>
         itemIndex === index ? next : feature
@@ -102,14 +309,26 @@ function ReleaseEditor({
   };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!reason.trim()) return;
+    const nextValidationErrors = validateReleaseDraft(draft, reason, t);
+    setValidationErrors(nextValidationErrors);
+    if (Object.keys(nextValidationErrors).length > 0) {
+      toastValidationError(t('releaseValidationSummary'));
+      return;
+    }
     setBusy(true);
     try {
       await save(draft.platform, draft, reason.trim());
       setReason('');
+      setValidationErrors({});
       toastSuccess(t('releaseSaved'));
     } catch (error) {
-      toastError(error, t('releaseSaveError'));
+      if (errorCode(error) === 'download_apps_failed') {
+        reportDevelopmentError('Release validation failed', error);
+        setValidationErrors({ _form: t('releaseServerValidation') });
+        toastValidationError(t('releaseServerValidation'));
+      } else {
+        toastError(error, t('releaseSaveError'));
+      }
     } finally {
       setBusy(false);
     }
@@ -117,7 +336,20 @@ function ReleaseEditor({
 
   return (
     <Card className="border-border bg-card shadow-soft overflow-hidden rounded-2xl">
-      <form onSubmit={submit} className="space-y-6 p-5 sm:p-6">
+      <form noValidate onSubmit={submit} className="space-y-6 p-5 sm:p-6">
+        {Object.keys(validationErrors).length > 0 ? (
+          <div
+            role="alert"
+            className="border-destructive/30 bg-destructive/5 text-destructive rounded-xl border p-4"
+          >
+            <p className="text-sm font-bold">{t('releaseValidationSummary')}</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5">
+              {Object.entries(validationErrors).map(([key, message]) => (
+                <li key={key}>{message}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <div className="border-border flex flex-wrap items-start justify-between gap-4 border-b pb-5">
           <div>
             <h2 className="text-navy flex items-center gap-2 text-lg font-bold">
@@ -133,7 +365,7 @@ function ReleaseEditor({
               type="checkbox"
               checked={draft.published}
               onChange={(event) =>
-                setDraft((current) => ({
+                updateDraft((current) => ({
                   ...current,
                   published: event.target.checked,
                 }))
@@ -147,15 +379,17 @@ function ReleaseEditor({
         <div className="grid gap-3 sm:grid-cols-2">
           <AdminFormField label={t('releaseVersion')} required>
             <input
-              className={adminFieldClassName}
+              className={releaseFieldClass(fieldError('version'))}
               value={draft.version}
+              aria-invalid={Boolean(fieldError('version'))}
               onChange={(event) =>
-                setDraft((current) => ({
+                updateDraft((current) => ({
                   ...current,
                   version: event.target.value,
                 }))
               }
             />
+            <FieldError message={fieldError('version')} />
           </AdminFormField>
           <AdminFormField label={t('releasePlatform')}>
             <input
@@ -167,37 +401,64 @@ function ReleaseEditor({
         </div>
         <LocalizedFields
           label={t('releaseEyebrow')}
+          fieldKey="eyebrow"
           value={draft.eyebrow}
+          errors={{
+            id: fieldError('eyebrow.id'),
+            en: fieldError('eyebrow.en'),
+          }}
           onChange={(eyebrow) =>
-            setDraft((current) => ({ ...current, eyebrow }))
+            updateDraft((current) => ({ ...current, eyebrow }))
           }
         />
         <LocalizedFields
           label={t('releaseTitle')}
+          fieldKey="title"
           value={draft.title}
-          onChange={(title) => setDraft((current) => ({ ...current, title }))}
+          errors={{
+            id: fieldError('title.id'),
+            en: fieldError('title.en'),
+          }}
+          onChange={(title) =>
+            updateDraft((current) => ({ ...current, title }))
+          }
         />
         <LocalizedFields
           label={t('releaseDescription')}
+          fieldKey="description"
           value={draft.description}
+          errors={{
+            id: fieldError('description.id'),
+            en: fieldError('description.en'),
+          }}
           onChange={(description) =>
-            setDraft((current) => ({ ...current, description }))
+            updateDraft((current) => ({ ...current, description }))
           }
           multiline
         />
         <div className="grid gap-4 lg:grid-cols-2">
           <LocalizedFields
             label={t('releaseRequirements')}
+            fieldKey="requirements"
             value={draft.requirements}
+            errors={{
+              id: fieldError('requirements.id'),
+              en: fieldError('requirements.en'),
+            }}
             onChange={(requirements) =>
-              setDraft((current) => ({ ...current, requirements }))
+              updateDraft((current) => ({ ...current, requirements }))
             }
           />
           <LocalizedFields
             label={t('releaseArchitecture')}
+            fieldKey="architecture"
             value={draft.architecture}
+            errors={{
+              id: fieldError('architecture.id'),
+              en: fieldError('architecture.en'),
+            }}
             onChange={(architecture) =>
-              setDraft((current) => ({ ...current, architecture }))
+              updateDraft((current) => ({ ...current, architecture }))
             }
           />
         </div>
@@ -213,7 +474,7 @@ function ReleaseEditor({
               size="sm"
               disabled={draft.features.length >= 4}
               onClick={() =>
-                setDraft((current) => ({
+                updateDraft((current) => ({
                   ...current,
                   features: [...current.features, { id: '', en: '' }],
                 }))
@@ -228,7 +489,12 @@ function ReleaseEditor({
               <div className="min-w-0 flex-1">
                 <LocalizedFields
                   label={`${t('releaseFeature')} ${index + 1}`}
+                  fieldKey={`feature-${index}`}
                   value={feature}
+                  errors={{
+                    id: fieldError(`feature-${index}.id`),
+                    en: fieldError(`feature-${index}.en`),
+                  }}
                   onChange={(next) => setFeature(index, next)}
                 />
               </div>
@@ -239,7 +505,7 @@ function ReleaseEditor({
                 className="text-destructive mt-7"
                 disabled={draft.features.length <= 1}
                 onClick={() =>
-                  setDraft((current) => ({
+                  updateDraft((current) => ({
                     ...current,
                     features: current.features.filter(
                       (_, itemIndex) => itemIndex !== index
@@ -255,17 +521,23 @@ function ReleaseEditor({
         </section>
 
         <section className="border-border space-y-4 border-t pt-5">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-navy text-sm font-bold">
-              {t('releaseAssets')}
-            </h3>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-navy text-sm font-bold">
+                {t('releaseAssets')}
+              </h3>
+              <FieldError
+                message={fieldError('assets') || fieldError('primary')}
+                className="mt-1"
+              />
+            </div>
             <Button
               type="button"
               variant="outline"
               size="sm"
               disabled={draft.assets.length >= 4}
               onClick={() =>
-                setDraft((current) => ({
+                updateDraft((current) => ({
                   ...current,
                   assets: [
                     ...current.assets,
@@ -302,7 +574,7 @@ function ReleaseEditor({
                       name={`${draft.platform}-primary`}
                       checked={asset.primary}
                       onChange={() =>
-                        setDraft((current) => ({
+                        updateDraft((current) => ({
                           ...current,
                           assets: current.assets.map((item, itemIndex) => ({
                             ...item,
@@ -321,7 +593,7 @@ function ReleaseEditor({
                     className="text-destructive"
                     disabled={draft.assets.length <= 1}
                     onClick={() =>
-                      setDraft((current) => ({
+                      updateDraft((current) => ({
                         ...current,
                         assets: current.assets.filter(
                           (_, itemIndex) => itemIndex !== index
@@ -337,17 +609,26 @@ function ReleaseEditor({
               <div className="grid gap-3 sm:grid-cols-2">
                 <AdminFormField label={t('releaseAssetId')} required>
                   <input
-                    className={adminFieldClassName}
+                    className={releaseFieldClass(
+                      fieldError(`asset-${index}.id`)
+                    )}
                     value={asset.id}
+                    aria-invalid={Boolean(fieldError(`asset-${index}.id`))}
                     onChange={(event) =>
                       setAsset(index, { ...asset, id: event.target.value })
                     }
                   />
+                  <FieldError message={fieldError(`asset-${index}.id`)} />
                 </AdminFormField>
                 <AdminFormField label={t('releaseFileName')} required>
                   <input
-                    className={adminFieldClassName}
+                    className={releaseFieldClass(
+                      fieldError(`asset-${index}.file_name`)
+                    )}
                     value={asset.file_name}
+                    aria-invalid={Boolean(
+                      fieldError(`asset-${index}.file_name`)
+                    )}
                     onChange={(event) =>
                       setAsset(index, {
                         ...asset,
@@ -355,30 +636,47 @@ function ReleaseEditor({
                       })
                     }
                   />
+                  <FieldError
+                    message={fieldError(`asset-${index}.file_name`)}
+                  />
                 </AdminFormField>
               </div>
               <LocalizedFields
                 label={t('releaseAssetLabel')}
+                fieldKey={`asset-${index}-label`}
                 value={asset.label}
+                errors={{
+                  id: fieldError(`asset-${index}.label.id`),
+                  en: fieldError(`asset-${index}.label.en`),
+                }}
                 onChange={(label) => setAsset(index, { ...asset, label })}
               />
               <AdminFormField label={t('releaseUrl')} required>
                 <input
                   type="url"
-                  className={adminFieldClassName}
+                  className={releaseFieldClass(
+                    fieldError(`asset-${index}.url`)
+                  )}
                   value={asset.url}
+                  aria-invalid={Boolean(fieldError(`asset-${index}.url`))}
                   onChange={(event) =>
                     setAsset(index, { ...asset, url: event.target.value })
                   }
                 />
+                <FieldError message={fieldError(`asset-${index}.url`)} />
               </AdminFormField>
               <div className="grid gap-3 sm:grid-cols-2">
                 <AdminFormField label={t('releaseSizeBytes')} required>
                   <input
                     type="number"
                     min="1"
-                    className={adminFieldClassName}
+                    className={releaseFieldClass(
+                      fieldError(`asset-${index}.size_bytes`)
+                    )}
                     value={asset.size_bytes || ''}
+                    aria-invalid={Boolean(
+                      fieldError(`asset-${index}.size_bytes`)
+                    )}
                     onChange={(event) =>
                       setAsset(index, {
                         ...asset,
@@ -386,15 +684,22 @@ function ReleaseEditor({
                       })
                     }
                   />
+                  <FieldError
+                    message={fieldError(`asset-${index}.size_bytes`)}
+                  />
                 </AdminFormField>
                 <AdminFormField label={t('releaseChecksum')} required>
                   <input
-                    className={adminFieldClassName}
+                    className={releaseFieldClass(
+                      fieldError(`asset-${index}.sha256`)
+                    )}
                     value={asset.sha256}
+                    aria-invalid={Boolean(fieldError(`asset-${index}.sha256`))}
                     onChange={(event) =>
                       setAsset(index, { ...asset, sha256: event.target.value })
                     }
                   />
+                  <FieldError message={fieldError(`asset-${index}.sha256`)} />
                 </AdminFormField>
               </div>
             </div>
@@ -402,16 +707,21 @@ function ReleaseEditor({
         </section>
         <AdminFormField label={t('changeReason')} required>
           <textarea
-            className={adminFieldClassName}
+            className={releaseFieldClass(fieldError('reason'))}
             rows={3}
             value={reason}
-            onChange={(event) => setReason(event.target.value)}
+            aria-invalid={Boolean(fieldError('reason'))}
+            onChange={(event) => {
+              setValidationErrors({});
+              setReason(event.target.value);
+            }}
             placeholder={t('releaseReasonPlaceholder')}
             required
           />
+          <FieldError message={fieldError('reason')} />
         </AdminFormField>
         <div className="flex justify-end">
-          <Button type="submit" disabled={busy || !reason.trim()}>
+          <Button type="submit" disabled={busy} aria-busy={busy}>
             <Save className="size-4" />
             {busy ? t('submitting') : t('saveRelease')}
           </Button>
