@@ -201,6 +201,7 @@
     "downloadQrTitle": "Download on Phone",
     "downloadQrDesc": "Open your camera or QR scanner on your Android phone to download the APK file directly.",
     "downloadQrClose": "Close",
+    "downloadQrOpenLink": "Open the download link directly",
     "downloadQrWindowsTitle": "Download on Computer",
     "downloadQrWindowsDesc": "Scan this QR code with your phone to share or save the MSI installer link.",
     "downloadWindowsEyebrow": "Windows Service · Desktop Agent",

@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Check,
   CheckCheck,
@@ -30,6 +31,22 @@ import {
 } from '@/hooks/use-public-download-apps';
 
 type QrSelection = { app: PublicDownloadApp; asset: DownloadAsset };
+
+const QrDownloadCode = dynamic(
+  () =>
+    import('@/components/landing/QrDownloadCode').then(
+      (module) => module.QrDownloadCode
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="inline-flex size-[248px] animate-pulse rounded-2xl bg-[#f4faff]"
+        aria-hidden="true"
+      />
+    ),
+  }
+);
 
 const platformOrder: DownloadPlatform[] = [
   'android',
@@ -127,6 +144,7 @@ function DownloadCard({
   const theme = themes[app.platform];
   const primaryAsset =
     app.assets.find((asset) => asset.primary) ?? app.assets[0];
+  const qrAsset = primaryAsset?.url.trim() ? primaryAsset : null;
   const isWide = app.platform === 'android';
 
   return (
@@ -227,12 +245,12 @@ function DownloadCard({
                 </span>
               </Button>
             ))}
-            {app.platform !== 'browser_extension' && primaryAsset ? (
+            {app.platform !== 'browser_extension' && qrAsset ? (
               <Button
                 type="button"
                 variant="outline"
                 size="lg"
-                onClick={() => onOpenQr(app, primaryAsset)}
+                onClick={() => onOpenQr(app, qrAsset)}
                 className={`rounded-full ${theme.secondary}`}
               >
                 <QrCode className="size-5" aria-hidden="true" />
@@ -506,24 +524,29 @@ export function DownloadSection() {
                 id={`${qrDialogId}-title`}
                 className="text-navy mt-4 text-xl font-extrabold"
               >
-                {t('downloadQrTitle')}
+                {qrSelection.app.platform === 'windows'
+                  ? t('downloadQrWindowsTitle')
+                  : t('downloadQrTitle')}
               </h3>
               <p className="text-navy/70 mt-2 text-xs leading-6 font-medium">
-                {localized(qrSelection.app.title, locale)}
+                {qrSelection.app.platform === 'windows'
+                  ? t('downloadQrWindowsDesc')
+                  : t('downloadQrDesc')}
               </p>
-              <div
-                className="border-sky/40 mx-auto mt-6 grid size-52 grid-cols-7 gap-1 rounded-2xl border-2 border-dashed bg-[#f4faff] p-3 text-[#1685a6]"
-                aria-hidden="true"
-              >
-                {Array.from({ length: 49 }, (_, index) => (
-                  <span
-                    key={index}
-                    className={
-                      (index * 7 + (index % 5)) % 3 === 0 ? 'bg-current' : ''
-                    }
-                  />
-                ))}
+              <div className="mt-6 flex justify-center">
+                <QrDownloadCode
+                  value={qrSelection.asset.url}
+                  title={localized(qrSelection.app.title, locale)}
+                />
               </div>
+              <a
+                href={qrSelection.asset.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex text-xs font-bold text-[#1685a6] underline underline-offset-4 hover:text-[#11748f]"
+              >
+                {t('downloadQrOpenLink')}
+              </a>
               <p className="text-navy/60 mt-4 text-[0.75rem] font-bold break-all">
                 {qrSelection.asset.file_name} •{' '}
                 {formatFileSize(qrSelection.asset.size_bytes, locale)}

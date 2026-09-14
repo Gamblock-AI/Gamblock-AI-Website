@@ -201,6 +201,7 @@
     "downloadQrTitle": "Unduh di Ponsel",
     "downloadQrDesc": "Buka kamera atau pemindai QR di HP Android Anda untuk mengunduh file APK secara langsung.",
     "downloadQrClose": "Tutup",
+    "downloadQrOpenLink": "Buka tautan unduhan langsung",
     "downloadQrWindowsTitle": "Unduh di Komputer",
     "downloadQrWindowsDesc": "Pindai kode QR ini menggunakan ponsel Anda untuk membagikan atau menyimpan tautan berkas installer MSI.",
     "downloadWindowsEyebrow": "Windows Service · Desktop Agent",
